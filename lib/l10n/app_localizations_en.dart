@@ -1542,7 +1542,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentChat_permissionFullDescription =>
-      'Run without prompts and allow files outside the workspace';
+      'Ask only to delete saved data or spend Anlas; allow outside files';
 
   @override
   String agentChat_approvalTitle(Object toolName) {
@@ -14677,7 +14677,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentSettings_permissionFullDescription =>
-      'Allow direct tool use and files outside the workspace. Use only for trusted tasks.';
+      'Allow direct tool use and files outside the workspace; deleting saved data or spending Anlas still asks first. Use only for trusted tasks.';
 
   @override
   String get agentSettings_webPreference => 'Web preference';
