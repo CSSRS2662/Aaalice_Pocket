@@ -12469,6 +12469,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get editor_toolMove => '移动';
 
   @override
+  String get editor_toolGroupInpaint => '重绘';
+
+  @override
+  String get editor_toolGroupEdit => '编辑';
+
+  @override
+  String get editor_toolGroupCommon => '通用';
+
+  @override
+  String get editor_toolMaskBrush => '蒙版画笔';
+
+  @override
+  String get editor_toolMaskEraser => '蒙版橡皮擦';
+
+  @override
+  String get editor_toolMaskColorFill => '按颜色填充蒙版';
+
+  @override
+  String get editor_toolMaskMagicWand => '蒙版魔棒';
+
+  @override
   String get editor_moveLayerHint => '拖动以移动整个当前图层。';
 
   @override
@@ -12488,9 +12509,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get editor_shortcutNudgeFar => '移动 10 像素';
-
-  @override
-  String get editor_maskBrushSettings => '蒙版画笔';
 
   @override
   String get selection_clearPixels => '删除选区内容';
@@ -28316,6 +28334,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get editor_toolMove => '移動';
 
   @override
+  String get editor_toolGroupInpaint => '重繪';
+
+  @override
+  String get editor_toolGroupEdit => '編輯';
+
+  @override
+  String get editor_toolGroupCommon => '通用';
+
+  @override
+  String get editor_toolMaskBrush => '蒙版畫筆';
+
+  @override
+  String get editor_toolMaskEraser => '蒙版橡皮擦';
+
+  @override
+  String get editor_toolMaskColorFill => '按顏色填充蒙版';
+
+  @override
+  String get editor_toolMaskMagicWand => '蒙版魔棒';
+
+  @override
   String get editor_moveLayerHint => '拖曳以移動整個目前圖層。';
 
   @override
@@ -28335,9 +28374,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get editor_shortcutNudgeFar => '移動 10 像素';
-
-  @override
-  String get editor_maskBrushSettings => '蒙版畫筆';
 
   @override
   String get selection_clearPixels => '刪除選區內容';
