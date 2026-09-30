@@ -166,11 +166,13 @@ class GeneratedImage {
   /// Whether the PNG is read from [storedPath] rather than held in memory.
   bool get isStored => _memoryBytes == null;
 
-  /// 创建新的生成图像（自动生成ID）
+  /// 创建新的生成图像；未指定 [id] 时自动生成。
   factory GeneratedImage.create(
     Uint8List bytes, {
     required int width,
     required int height,
+    String? id,
+    DateTime? createdAt,
     GeneratedImageKind kind = GeneratedImageKind.completed,
     NaiImageMetadata? metadata,
     FixedTagUsageSnapshot? fixedTagUsageSnapshot,
@@ -180,8 +182,9 @@ class GeneratedImage {
   }) {
     final encodedSize = NaiResolutionAdapter.readImageSize(bytes);
     return GeneratedImage(
-      id: const Uuid().v4(),
+      id: id ?? const Uuid().v4(),
       bytes: bytes,
+      createdAt: createdAt,
       width: encodedSize?.$1 ?? width,
       height: encodedSize?.$2 ?? height,
       kind: kind,
