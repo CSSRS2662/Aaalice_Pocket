@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../../../core/utils/app_logger.dart';
+import '../../../core/utils/inpaint_mask_utils.dart';
 import '../../../data/datasources/remote/nai_generation_transport.dart';
 import '../../../data/datasources/remote/nai_image_generation_api_service.dart';
 import '../../../data/models/image/image_params.dart';
@@ -448,7 +449,9 @@ class ImageGenerationCoordinator {
         if (_aborted(handle) || _skipCurrentRequest) return;
         // A server-side "Cancelled" result is a generation error. Only the
         // local run token maps cancellation to GenerationCancelled.
-        if (_isRemoteCancelled(error) || mode == _RequestMode.fallback) {
+        if (_isRemoteCancelled(error) ||
+            _isDeterministicFailure(error) ||
+            mode == _RequestMode.fallback) {
           rethrow;
         }
         if (_isConcurrencyLimited(error)) {
@@ -506,6 +509,7 @@ class ImageGenerationCoordinator {
         }
         if (_isRemoteCancelled(error) ||
             !isRetryableGenerationError(error) ||
+            _isDeterministicFailure(error) ||
             attempt >= _retryDelays.length) {
           rethrow;
         }
@@ -574,6 +578,11 @@ class ImageGenerationCoordinator {
 
   static bool _isRemoteCancelled(Object error) =>
       error.toString().toLowerCase().contains('cancelled');
+
+  // The request is rejected locally from the same inputs, so retrying only
+  // delays the error.
+  static bool _isDeterministicFailure(Object error) =>
+      EmptyInpaintMaskException.tryParse(error) != null;
 
   static bool _isConcurrencyLimited(Object error) {
     if (error is DioException) return error.response?.statusCode == 429;
