@@ -159,7 +159,6 @@ class NetworkSettingsSectionState
                           decoration: InputDecoration(
                             labelText: l10n.settings_proxyHost,
                             hintText: '127.0.0.1',
-                            border: const OutlineInputBorder(),
                             isDense: true,
                           ),
                           textInputAction: TextInputAction.next,
@@ -170,7 +169,6 @@ class NetworkSettingsSectionState
                           decoration: InputDecoration(
                             labelText: l10n.settings_proxyPort,
                             hintText: '7890',
-                            border: const OutlineInputBorder(),
                             isDense: true,
                           ),
                           keyboardType: TextInputType.number,
