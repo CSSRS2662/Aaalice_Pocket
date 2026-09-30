@@ -187,12 +187,6 @@ class PromptTag with _$PromptTag {
     }
     return '';
   }
-
-  /// 获取权重百分比显示
-  String get weightPercentText {
-    final percent = (weight * 100).round();
-    return '$percent%';
-  }
 }
 
 /// 标签列表扩展
