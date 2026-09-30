@@ -9,8 +9,11 @@ import '../../../providers/random_preset_provider.dart';
 import '../../../providers/tag_library_provider.dart';
 import '../../../themes/core/layered_surface_style.dart';
 import '../../common/translated_tag_text.dart';
+import '../../../../data/models/prompt/diy_category_references.dart';
+import '../../../../data/models/prompt/random_category.dart';
 import '../../../../data/models/prompt/random_tag_group.dart';
 import '../../../../data/models/prompt/tag_category.dart';
+import '../diy/diy_category_field.dart';
 import '../diy/panels/conditional_branch_panel.dart';
 import '../diy/panels/dependency_config_panel.dart';
 import '../diy/panels/visibility_rule_panel.dart';
@@ -379,14 +382,31 @@ class _TagGroupEditDialogState extends ConsumerState<_TagGroupEditDialog>
   late TextEditingController _nameController;
   late RandomTagGroup _editingTagGroup;
 
-  /// 获取当前预设的类别名称列表
-  List<String> get _availableCategories {
+  List<RandomCategory> get _presetCategories {
     final state = ref.read(randomPresetNotifierProvider);
     final preset = state.presets.firstWhereOrNull(
       (p) => p.id == widget.presetId,
     );
-    if (preset == null) return [];
-    return preset.categories.map((c) => c.name).toList();
+    return preset?.categories ?? const [];
+  }
+
+  /// DIY 规则按类别 ID 引用，界面显示本地化名称；重名时附上键名区分
+  List<DiyCategoryOption> get _categoryOptions {
+    final l10n = AppLocalizations.of(context)!;
+    final categories = <String, RandomCategory>{
+      for (final category in _presetCategories)
+        if (category.id.isNotEmpty) category.id: category,
+    }.values.toList();
+    final labels = categories.map(l10n.randomCategoryName).toList();
+    return [
+      for (var i = 0; i < categories.length; i++)
+        DiyCategoryOption(
+          id: categories[i].id,
+          label: labels.where((label) => label == labels[i]).length > 1
+              ? '${labels[i]} (${categories[i].key})'
+              : labels[i],
+        ),
+    ];
   }
 
   @override
@@ -398,7 +418,11 @@ class _TagGroupEditDialogState extends ConsumerState<_TagGroupEditDialog>
       initialIndex: widget.initialTabIndex,
     );
     _nameController = TextEditingController(text: widget.tagGroup.name);
-    _editingTagGroup = widget.tagGroup;
+    // 存量规则可能按类别名称或键名引用，打开时统一换成 ID，保存后生成器才能匹配
+    final resolver = DiyCategoryReferenceResolver(_presetCategories);
+    _editingTagGroup = widget.tagGroup.mapCategoryReferences(
+      resolver.canonicalId,
+    );
   }
 
   @override
@@ -986,7 +1010,7 @@ class _TagGroupEditDialogState extends ConsumerState<_TagGroupEditDialog>
             );
           });
         },
-        availableCategories: _availableCategories,
+        categoryOptions: _categoryOptions,
       ),
     );
   }
@@ -1004,7 +1028,7 @@ class _TagGroupEditDialogState extends ConsumerState<_TagGroupEditDialog>
             );
           });
         },
-        availableCategories: _availableCategories,
+        categoryOptions: _categoryOptions,
       ),
     );
   }
@@ -1039,7 +1063,7 @@ class _TagGroupEditDialogState extends ConsumerState<_TagGroupEditDialog>
             );
           });
         },
-        availableCategories: _availableCategories,
+        categoryOptions: _categoryOptions,
       ),
     );
   }
