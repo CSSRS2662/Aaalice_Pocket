@@ -28,6 +28,8 @@ import 'package:nai_launcher/presentation/themes/core/layered_surface_style.dart
 import 'package:nai_launcher/presentation/widgets/common/desktop_window_frame.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../../helpers/adaptive_panel_expectations.dart';
+
 class _NoopDesktopWindowController implements DesktopWindowController {
   @override
   void addListener(WindowListener listener) {}
@@ -544,6 +546,28 @@ void main() {
       findsNothing,
     );
     expect(tester.takeException(), isNull);
+
+    for (final (trigger, dialogKey) in [
+      ('连接配置', 'prompt-assistant-connection-dialog'),
+      ('新增规则', 'prompt-assistant-rule-dialog'),
+    ]) {
+      await tester.scrollUntilVisible(
+        find.text(trigger),
+        200,
+        scrollable: contentScrollable,
+      );
+      await tester.tap(find.text(trigger));
+      await tester.pumpAndSettle();
+      expect(find.byKey(ValueKey(dialogKey)), findsOneWidget);
+      // 服务商与连接配置弹窗沿用本分支的固定标题，只有规则弹窗随正文滚动
+      if (dialogKey == 'prompt-assistant-rule-dialog') {
+        expectPanelHeaderScrollsWithContent(tester, reason: dialogKey);
+      }
+      expect(tester.takeException(), isNull, reason: dialogKey);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byKey(ValueKey(dialogKey)), findsNothing);
+    }
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();

@@ -15,6 +15,8 @@ import 'package:nai_launcher/presentation/screens/watermark/watermark_editor_con
 import 'package:nai_launcher/presentation/screens/watermark/watermark_editor_launcher.dart';
 import 'package:nai_launcher/presentation/screens/watermark/watermark_editor_screen.dart';
 
+import '../../../helpers/adaptive_panel_expectations.dart';
+
 void main() {
   late Directory directory;
   late LocalStorageService storage;
@@ -313,6 +315,7 @@ void main() {
     expect(find.byKey(const ValueKey('adaptive-bottom-sheet')), findsOneWidget);
     final form = find.byKey(const ValueKey('watermark-color-form'));
     expect(form, findsOneWidget);
+    expectPanelHeaderScrollsWithContent(tester);
     expect(find.byType(Dialog), findsNothing);
     await tester.scrollUntilVisible(
       find.text('Confirm'),
