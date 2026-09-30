@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/data/models/prompt/post_process_rule.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/widgets/prompt/diy/panels/post_process_rule_panel.dart';
+import 'package:nai_launcher/presentation/widgets/common/surface_ink_well.dart';
 
 void main() {
   testWidgets('3x text stacks presets at 320px and keeps the wide row', (
@@ -39,8 +40,12 @@ void main() {
     );
     await tester.pump();
 
-    final sleeping = find.text('Sleeping Rule');
-    final mermaid = find.text('Mermaid Rule');
+    Finder preset(String label) => find.descendant(
+      of: find.byType(SurfaceInkWell),
+      matching: find.text(label),
+    );
+    final sleeping = preset('Sleeping Rule');
+    final mermaid = preset('Mermaid Rule');
     expect(sleeping, findsOneWidget);
     expect(mermaid, findsOneWidget);
     expect(
@@ -53,6 +58,8 @@ void main() {
     await tester.pump();
     expect(changedRules, hasLength(1));
     expect(changedRules!.single.id, 'sleeping_rule');
+    // 父级不重建时面板也要立即列出新规则
+    expect(find.text('Sleeping Rule'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
 
     tester.view.physicalSize = const Size(1800, 3600);
