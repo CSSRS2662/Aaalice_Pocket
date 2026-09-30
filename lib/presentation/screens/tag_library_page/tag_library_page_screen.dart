@@ -586,12 +586,12 @@ class _TagLibraryPageScreenState extends ConsumerState<TagLibraryPageScreen> {
   Widget _buildEntryItem(TagLibraryEntry entry, {bool showCategory = true}) {
     final state = ref.read(tagLibraryPageNotifierProvider);
     final selectionState = ref.watch(tagLibrarySelectionNotifierProvider);
-    final allIds = state.filteredEntries.map((e) => e.id).toList();
     final categoryName = _getCategoryName(state.categories, entry.categoryId);
 
     void toggleSelection() {
       final notifier = ref.read(tagLibrarySelectionNotifierProvider.notifier);
       if (HardwareKeyboard.instance.isShiftPressed) {
+        final allIds = state.filteredEntries.map((e) => e.id).toList();
         notifier.selectRange(entry.id, allIds);
       } else if (!selectionState.isActive) {
         notifier.enterAndSelect(entry.id);
