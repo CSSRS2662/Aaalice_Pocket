@@ -8,7 +8,6 @@ import '../../../../core/services/system_album.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../../core/utils/image_save_utils.dart';
 import '../../../../data/models/gallery/nai_image_metadata.dart';
-import '../../../../data/services/image_metadata_service.dart';
 import '../../../providers/image_generation_provider.dart';
 import '../../../utils/image_detail_opener.dart';
 import '../../../providers/system_album_provider.dart';
@@ -43,11 +42,6 @@ class GenerationSaveService {
       // 如果图像已保存，直接使用 filePath
       // 如果未保存，使用临时字节（这种情况在 auto-save 开启时应该很少）
       if (img.filePath != null && img.filePath!.isNotEmpty) {
-        // 加入预加载队列（如果尚未解析）
-        ImageMetadataService().enqueuePreload(
-          taskId: img.id,
-          filePath: img.filePath,
-        );
         return FileImageDetailData(
           filePath: img.filePath!,
           cachedBytes: img.bytes,

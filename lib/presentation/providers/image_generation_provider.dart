@@ -759,7 +759,6 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
           clearStreamPreview: true,
         );
         if (images.isNotEmpty) {
-          final lifecycle = _lifecycle();
           final settings = ref.read(imageSaveSettingsNotifierProvider);
           if (settings.autoSave) {
             await _saveImages(images, params, epoch: epoch);
@@ -767,7 +766,6 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
               return;
             }
           }
-          lifecycle.preloadMetadata(images);
         }
       case GenerationCancelled():
         _appendFailedSnapshots(event.runId);
@@ -1106,7 +1104,6 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
           ? null
           : result.albumLocations.firstOrNull;
     }
-    lifecycle.preloadMetadata([image]);
     return null;
   }
 

@@ -211,17 +211,6 @@ class GenerationResultLifecycleService {
     );
   }
 
-  void preloadMetadata(Iterable<GeneratedImage> images) {
-    final service = ImageMetadataService();
-    for (final image in images) {
-      service.enqueuePreload(
-        taskId: image.id,
-        filePath: image.filePath,
-        bytes: image.filePath == null ? image.bytes : null,
-      );
-    }
-  }
-
   (int, int)? _resolveImageSize(Uint8List bytes, {int? width, int? height}) {
     final encoded = NaiResolutionAdapter.readImageSize(bytes);
     if (encoded != null) return encoded;

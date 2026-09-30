@@ -1559,10 +1559,6 @@ class _HistoryPanelState extends ConsumerState<HistoryPanel> {
   ImageDetailData _createDetailData(GeneratedImage image) {
     final filePath = image.filePath;
     if (filePath != null && filePath.isNotEmpty) {
-      ImageMetadataService().enqueuePreload(
-        taskId: image.id,
-        filePath: filePath,
-      );
       return FileImageDetailData(
         filePath: filePath,
         cachedBytes: image.bytes,

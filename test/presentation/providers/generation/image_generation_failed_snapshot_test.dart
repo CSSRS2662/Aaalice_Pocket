@@ -15,7 +15,6 @@ import 'package:nai_launcher/data/datasources/remote/nai_image_generation_api_se
 import 'package:nai_launcher/data/models/image/image_params.dart';
 import 'package:nai_launcher/data/models/image/image_stream_chunk.dart';
 import 'package:nai_launcher/data/services/auth_provider.dart';
-import 'package:nai_launcher/presentation/providers/generation/generation_retry_wait_provider.dart';
 import 'package:nai_launcher/presentation/providers/generation/stream_snapshot_composition.dart';
 import 'package:nai_launcher/presentation/providers/image_generation_provider.dart';
 import 'package:nai_launcher/presentation/providers/image_save_settings_provider.dart';

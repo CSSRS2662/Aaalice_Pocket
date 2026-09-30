@@ -30,7 +30,6 @@ import '../../../../core/utils/vibe_file_parser.dart';
 import '../../../../data/models/fixed_tag/fixed_tag_usage_snapshot.dart';
 import '../../../../data/models/image/image_stream_chunk.dart';
 import '../../../providers/alias_resolver_service.dart';
-import '../../../../data/services/image_metadata_service.dart';
 import '../../../adaptive/window_size_class.dart';
 import '../../../providers/generation/generation_params_selectors.dart';
 import '../../../providers/generation/image_generation_selectors.dart';
@@ -1035,11 +1034,6 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
     // - 未保存的图像使用 GeneratedImageDetailData 作为 fallback
     final allImages = sequence.map((img) {
       if (img.filePath != null && img.filePath!.isNotEmpty) {
-        // 加入预加载队列（如果尚未解析）
-        ImageMetadataService().enqueuePreload(
-          taskId: img.id,
-          filePath: img.filePath,
-        );
         return FileImageDetailData(
           filePath: img.filePath!,
           cachedBytes: img.bytes,
