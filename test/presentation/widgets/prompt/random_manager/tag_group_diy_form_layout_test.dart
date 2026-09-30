@@ -28,7 +28,12 @@ const _group = RandomTagGroup(
     id: 'branch',
     name: 'Branch',
     branches: [
-      ConditionalBranch(name: 'Uniform', probability: 60),
+      ConditionalBranch(
+        name: 'Uniform',
+        probability: 60,
+        tagGroupIds: ['sailor', 'removed'],
+        conditions: {'cat-outfit': 'uniform', 'character_gender': 'girl'},
+      ),
       ConditionalBranch(name: 'Casual', probability: 40, enabled: false),
     ],
   ),
@@ -74,7 +79,22 @@ const _categories = [
     name: '发色',
     key: 'hairColor',
     isBuiltin: true,
-    groups: [_group],
+    groups: [
+      _group,
+      RandomTagGroup(id: 'sailor', name: 'Sailor uniform'),
+      // 已输出本词组，再被选为目标会形成循环
+      RandomTagGroup(
+        id: 'blazer',
+        name: 'Blazer',
+        conditionalBranchConfig: ConditionalBranchConfig(
+          id: 'blazer-branch',
+          name: 'Blazer branch',
+          branches: [
+            ConditionalBranch(name: 'Back', tagGroupIds: ['group']),
+          ],
+        ),
+      ),
+    ],
   ),
   RandomCategory(id: 'cat-outfit', name: 'Outfit', key: 'custom2'),
 ];
@@ -123,13 +143,17 @@ final _formCases = <_FormCase>[
     title: _l10n.randomManager_conditionalBranch,
     expandText: 'Uniform',
     controls: {
-      _buttons: 1,
-      () => find.byType(IconButton): 4,
+      _buttons: 2,
+      () => find.byType(IconButton): 6,
       () => find.byType(SurfaceInkWell): 2,
       () => find.byType(Slider): 1,
+      () => find.byType(FilterChip): 2,
+      () => find.byType(InputChip): 1,
+      () => find.byType(ChoiceChip): 2,
+      _dropdowns: 2,
       () => find.byType(Switch): 1,
-      // 分支名称，加上概率分步滑块的数值输入框
-      () => find.byType(EditableText): 2,
+      // 分支名称与条件字段，加上概率分步滑块的数值输入框
+      () => find.byType(EditableText): 4,
     },
   ),
   _FormCase(
