@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../../data/models/prompt/random_category.dart';
 import '../../../../data/models/prompt/tag_scope.dart';
+import '../../../adaptive/compact_control_metrics.dart';
+import '../../../adaptive/interaction_policy.dart';
 import '../../../providers/random_preset_provider.dart';
 import '../../../themes/core/layered_surface_style.dart';
+import '../../common/horizontal_segmented_control.dart';
 import 'add_tag_group_dialog.dart';
 import 'random_config_l10n.dart';
 import 'tag_group_card.dart';
@@ -258,7 +261,11 @@ class _CategoryEditor extends StatelessWidget {
                   onChanged: (value) =>
                       onCategoryChanged(category.copyWith(probability: value)),
                 );
-                if (constraints.maxWidth >= 620) {
+                // 放大文字后分段按钮本身就接近整行宽，同行排不下概率滑块
+                final sideBySide =
+                    constraints.maxWidth >= 620 &&
+                    MediaQuery.textScalerOf(context).scale(1) <= 1.5;
+                if (sideBySide) {
                   return Row(
                     children: [
                       scope,
@@ -270,7 +277,7 @@ class _CategoryEditor extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Align(alignment: Alignment.centerLeft, child: scope),
+                    HorizontalSegmentedControl(child: scope),
                     const SizedBox(height: 10),
                     probability,
                   ],
@@ -279,7 +286,11 @@ class _CategoryEditor extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
+          // 标题与添加按钮排不下同一行时，按钮换到标题下方
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 4,
             children: [
               Text(
                 context.l10n.randomManager_tagGroupList,
@@ -287,7 +298,6 @@ class _CategoryEditor extends StatelessWidget {
                   context,
                 ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
-              const Spacer(),
               if (!readOnly)
                 TextButton.icon(
                   onPressed: onAddGroup,
@@ -374,8 +384,11 @@ class _ScopeSelector extends StatelessWidget {
       onSelectionChanged: enabled
           ? (selection) => onChanged(selection.first)
           : null,
-      style: const ButtonStyle(
-        visualDensity: VisualDensity(horizontal: -2, vertical: -2),
+      // 触屏保留 48 高的命中区，精确指针下维持紧凑
+      style: ButtonStyle(
+        visualDensity: CompactControlMetrics.forPolicy(
+          context.interactionPolicy,
+        ).density,
       ),
     );
   }
@@ -392,38 +405,81 @@ class _ProbabilityEditor extends StatelessWidget {
   final bool enabled;
   final ValueChanged<double> onChanged;
 
+  /// Narrowest track kept beside the label before the label moves above it.
+  static const double _minTrackWidth = 120;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return Row(
-      children: [
-        Text(
-          context.l10n.randomManager_probability,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Slider(
-            value: value.clamp(0, 1),
-            divisions: 20,
-            onChanged: enabled ? onChanged : null,
-          ),
-        ),
-        SizedBox(
-          width: 42,
-          child: Text(
-            '${(value * 100).round()}%',
-            textAlign: TextAlign.end,
-            style: theme.textTheme.labelMedium?.copyWith(
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ),
-      ],
+    final label = context.l10n.randomManager_probability;
+    final labelStyle = theme.textTheme.labelMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
     );
+    final valueStyle = theme.textTheme.labelMedium?.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final slider = Slider(
+      value: value.clamp(0, 1),
+      divisions: 20,
+      onChanged: enabled ? onChanged : null,
+    );
+    final valueText = Text(
+      '${(value * 100).round()}%',
+      textAlign: TextAlign.end,
+      style: valueStyle,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // The readout column fits the widest value, "100%", at the current
+        // text scale so it never truncates or overflows.
+        final scaler = MediaQuery.textScalerOf(context);
+        final direction = Directionality.of(context);
+        final valueWidth = _textWidth('100%', valueStyle, scaler, direction);
+        final labelWidth = _textWidth(label, labelStyle, scaler, direction);
+        if (labelWidth + valueWidth + 16 + _minTrackWidth <=
+            constraints.maxWidth) {
+          return Row(
+            children: [
+              Text(label, style: labelStyle),
+              const SizedBox(width: 8),
+              Expanded(child: slider),
+              SizedBox(width: valueWidth + 8, child: valueText),
+            ],
+          );
+        }
+        // Narrow or enlarged text: label and readout above a full-width track.
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(child: Text(label, style: labelStyle)),
+                const SizedBox(width: 8),
+                valueText,
+              ],
+            ),
+            slider,
+          ],
+        );
+      },
+    );
+  }
+
+  static double _textWidth(
+    String text,
+    TextStyle? style,
+    TextScaler scaler,
+    TextDirection direction,
+  ) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textScaler: scaler,
+      textDirection: direction,
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
   }
 }
 
