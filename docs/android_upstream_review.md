@@ -10,6 +10,13 @@
 - 自 2026-09-26 起，`android-custom` 以快进方式推送到 fork 的 `main`；每次推送前确认，不强制推送。
 - 工具链以 `tool/android_build_environment.lock.json` 为准；上游升级 Flutter 时同步更新该文件。
 
+## 版本号与发布
+
+- 格式为 `<上游版本>-custom.<N>[.<M>]+<构建号>`，如 `4.2.1-custom.21.1+66`；构建号每次打包加 1，安装包名为 `Aaalice_Pocket_<版本名>_arm64.apk`。
+- `custom.<N>` 是发布版：只有决定发布时，才把上次发布以来的全部改动合为一次大版本升级（如 `custom.21` → `custom.22`），打 `pocket-v<版本名>` 标签，在 GitHub Releases 发布。标签不用 `v` 开头，避免触发上游继承的 Release 工作流，也不与上游标签重名。
+- 其余每次改动后的打包都是自用小版本，不发布：在最近的发布版后加 `.<M>`，从 1 起逐次加 1（`custom.21.1`、`custom.21.2`……`custom.21.10`），到下次发布时并入 `custom.22`。
+- 合并上游的新版本（如 4.3.0）后重置序号，版本名变为 `4.3.0-custom.1`。
+
 ## 有意分叉与合并规则
 
 | 领域 | 本分支做法 | 合并时的规则 |
@@ -22,7 +29,7 @@
 | 补全 | 中文否定与多关键词扩展；E5 语义补全（多视图 int8 包：基线文档 + AME 译名/别名/注释，标签取最高分，`E5VectorIndex`）；随包 AME 中文词库 `AmeZhLexicon` 提供中文别名反查并作为翻译的最后一级兜底；非 AI 搜索增强（`lib/core/autocomplete/lexical/`：同音/模糊音、全拼、自然码双拼、首字母、近似中文、中文拆词匹配英文 tag、英文纠错与词形，上下文共现与本机使用习惯排序），数据由 `tool/search_lexicon/` 从固定版本的 MIT 来源生成，本机索引在后台构建 | `e5CompletionSourceProvider` 放在 `e5_completion_source.dart`；只在上游的 `autocompleteServicesProvider` 中补 `semanticSource`、`supplementalSources`、`rankingSignals` 三行；上游修改 `CompletionRanker` 时保留新增匹配方式的优先级（全部在字面匹配之后）与 `boosts` 参数；上游修改 `FastTagService` 时保留 `lexicon` 参数与其在搜索、解析末尾的位置 |
 | Prompt | 分组编辑（展开的分区随内容完整展开、内部不滚动，只有分区列表滚动）、权重滑条、移动端工作台、长按权重工具条；移动端“角色 / 固定词 / 质量词”合为 `PromptRoleSegmentGroup`，各按钮新增 `segment` 呈现 | 保留；上游修改这些按钮的桌面外观时照常合并，`segment` 分支保持不变 |
 | 分组持久化 | `PromptGroupRecordStore` 按结果图内容哈希记录分区，不写进 PNG；复用参数时按标签比对（`PromptGroupRestoreRequest.samePromptTags`）后恢复，请求用后即清 | 与上游固定词记录一致；解析时在 `ImageMetadataService` 挂载，旧版写进 PNG 的 `aaalice_prompt_groups` 仍可读取且优先 |
-| 图片菜单 | “保存 → 复用参数 → 复用种子 → 收藏”开头（本轮图不含复用参数），无 Krita/Discord 项；本地画廊、智能体图片与在线画廊 AI TAG 图都能直接复用种子（`reuseImageSeed`）；收藏状态按文件共享（`imageFavoriteStatusProvider`，只由 `LocalGalleryNotifier` 写入），成功切换不弹提示 | 与上游新增的复制、删除等操作合并，危险操作排在最后；存盘复用上游 `GeneratedImageFileLink`；上游新增收藏入口时走 `LocalGalleryNotifier.toggleFavorite` 或 `toggleGeneratedImageFavorite` |
+| 图片菜单 | “保存 → 复用参数 → 复用种子 → 收藏”开头（本轮图不含复用参数），无 Krita/Discord 项；本地画廊、智能体图片与在线画廊 AI TAG 图都能直接复用种子（`reuseImageSeed`）；收藏状态按文件共享（`imageFavoriteStatusProvider`，只由 `LocalGalleryNotifier` 写入），成功切换不弹提示；“更多 → 读取图片元数据”选图后直接走与复用参数相同的 `ImageMetadataImportWorkflow`，不经过拖放与分享导入共用的图片用途对话框 | 与上游新增的复制、删除等操作合并，危险操作排在最后；存盘复用上游 `GeneratedImageFileLink`；上游新增收藏入口时走 `LocalGalleryNotifier.toggleFavorite` 或 `toggleGeneratedImageFavorite` |
 | 词库与固定词 | 词库圆形头像、应用内图库选图；词库条目统一为“头像 + 名称 + 更多”卡片（窄格竖排），列表视图并入单列，点按打开使用面板；固定词管理对话框改为只显示名称的 1/2/3 列网格（`fixed_tag_chip.dart`），点按启用、长按/右键打开详情（`fixed_tag_details_sheet.dart`），调整顺序为独立模式；删除对话框内的拖拽连线层与行式条目；列数偏好 `gridColumnsProvider` 只存本机 | 上游修改 `fixed_tags_columns.dart`、`fixed_tag_entry_tile.dart`、`fixed_tags_link_layer.dart` 时按网格结构落位，不恢复行列表与连线；联动在对话框里经详情进入 `showFixedTagLinkManager(showAllCandidates: true)`；侧栏 `fixed_tags_sidebar.dart` 照常合并 |
 | 触屏一致性 | 桌面专属入口在触屏补等价路径：在线画廊详情标签长按出菜单（`SimpleTagChip.onMenu`）、Vibe 菜单另列“替换现有 Vibe”、智能体结果图片触屏常驻“更多”；滚轮调权重与生成页布局设置、跟随鼠标、看图左右箭头、拖动改数在触屏隐藏；`ShortcutTooltip` 等在不支持快捷键配置的平台不显示组合键；说明文案按输入方式取 `*Touch` 版本；`usesDesktopGenerationLayout` 让触屏矮屏（手机横屏）保留工作台；查看器手指单击切换工具栏、下滑关闭（`DetailSwipeDismissController`）；文本选择菜单“相关标签”经 `AutocompleteOverlayHandle.showRelated` 触发 | 上游新增右键、悬停或快捷键交互时同步补触屏入口与触屏文案；上游修改 `generation_screen.dart` 的断点判断时保留 `usesDesktopGenerationLayout` |
 | 主题 | 只保留 Pocket 一套主题的浅色与深色，删除 16 套预设及其配色、字体、形状、动效预设；设置改为“浅色 / 深色 / 跟随系统”，新键 `theme_mode` 参与云同步；中性纯白 / 炭黑底色，强调色可选预设或自定义（`accent_color`，参与云同步）；输入框底色取画布与分组中更深的一层；`appBarTheme` 固定 surface 色面，内容滚到顶栏下方不变色 | 上游对主题预设与模块预设的修改一律丢弃；上游测试引用 `GrungePalette` 等旧配色时改用 `PocketPalette`；`AppTheme.getTheme` 只接收明暗、字体与强调色 |

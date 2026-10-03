@@ -19,6 +19,7 @@
 | 自动化验收 | [aaalice-runtime-verify](../.agents/skills/aaalice-runtime-verify/SKILL.md) | 自动启动会话，通过 MCP 操作应用并检查截图与运行错误 |
 | 云备份 | [协议与验证](cloud_sync.md)、[OAuth 配置](cloud_drive_oauth.md) | 持久化、传输、恢复、后端能力和平台注册 |
 | 应用发布 | [aaalice-launcher-release](../.agents/skills/aaalice-launcher-release/SKILL.md) | 版本号、更新日志、发布检查与 tag |
+| Android 分支 | [分叉清单](android_upstream_review.md) | Aaalice Pocket 与上游的差异、合并规则、版本号与发布 |
 | 标签数据 | [标签目录](../tool/tag_catalog/README.md)、[随机词库](../tool/random_tag_library/README.md) | 锁定来源、构建与校验 |
 | Krita | [插件说明](../krita_plugin/README.md) | 安装、连接、隔离预检与真实联动验收 |
 | MCP 服务 | [外部智能体接入](mcp_server.md) | 本地 MCP 端点、令牌与权限、stdio 代理 CLI、客户端配置 |
