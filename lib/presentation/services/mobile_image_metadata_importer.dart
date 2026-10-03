@@ -6,9 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/app_logger.dart';
 import '../../core/utils/localization_extension.dart';
-import '../utils/dropped_file_reader.dart';
 import '../widgets/common/app_toast.dart';
-import '../widgets/drop/global_drop_action_coordinator.dart';
+import 'image_metadata_import_workflow.dart';
 
 class PickedImageData {
   const PickedImageData({required this.fileName, required this.bytes});
@@ -25,13 +24,19 @@ typedef PickedImageProcessor =
       PickedImageData image,
     );
 
-/// Adapts a system-picked image to the shared desktop drop action flow.
+/// Reads the parameters of a system-picked image.
+///
+/// Uses the same flow as "reuse parameters" in favorites and history: choose
+/// the parameters to apply, apply them, then return to generation.
 class MobileImageMetadataImporter {
   MobileImageMetadataImporter({
     ImageBytesPicker? imageBytesPicker,
     PickedImageProcessor? imageProcessor,
+    ImageMetadataImportWorkflow? workflow,
   }) : _imageBytesPicker = imageBytesPicker ?? _pickImageBytes,
-       _imageProcessor = imageProcessor ?? _processImage;
+       _imageProcessor =
+           imageProcessor ??
+           _workflowProcessor(workflow ?? ImageMetadataImportWorkflow.shared);
 
   static final MobileImageMetadataImporter shared =
       MobileImageMetadataImporter();
@@ -98,18 +103,10 @@ class MobileImageMetadataImporter {
     return PickedImageData(fileName: file.name, bytes: bytes);
   }
 
-  static Future<void> _processImage(
-    BuildContext context,
-    WidgetRef ref,
-    PickedImageData image,
+  static PickedImageProcessor _workflowProcessor(
+    ImageMetadataImportWorkflow workflow,
   ) {
-    return GlobalDropActionCoordinator(
-      context: context,
-      ref: ref,
-      openGenerationAfterAction: true,
-      respectCurrentRouteDropTarget: false,
-    ).processDroppedFile(
-      DroppedFileData(fileName: image.fileName, bytes: image.bytes),
-    );
+    return (context, ref, image) =>
+        workflow.run(context: context, read: ref.read, bytes: image.bytes);
   }
 }

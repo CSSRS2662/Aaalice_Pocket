@@ -69,6 +69,52 @@ void main() {
     expect(processedImage?.bytes, [1, 2, 3]);
   });
 
+  testWidgets('picked image goes straight to the reuse-parameters flow', (
+    tester,
+  ) async {
+    Uint8List? readBytes;
+    var optionsOpened = false;
+    var applyCalls = 0;
+    final reports = <(ImageMetadataImportResult, int)>[];
+    final importer = MobileImageMetadataImporter(
+      imageBytesPicker: () async => PickedImageData(
+        fileName: 'picked.png',
+        bytes: Uint8List.fromList([7, 8, 9]),
+      ),
+      workflow: ImageMetadataImportWorkflow(
+        metadataReader: (bytes) async {
+          readBytes = bytes;
+          return const NaiImageMetadata(prompt: '1girl');
+        },
+        optionsPicker: (context, metadata) async {
+          optionsOpened = true;
+          return const MetadataImportOptions(importPrompt: true);
+        },
+        metadataApplier: (read, metadata, options, l10n) async {
+          applyCalls++;
+          return 1;
+        },
+        resultReporter: (context, result, appliedCount) {
+          reports.add((result, appliedCount));
+        },
+        generationPageOpener: (context) {},
+      ),
+    );
+
+    await _pumpAction(
+      tester,
+      action: (context, ref) => importer.run(context: context, ref: ref),
+    );
+
+    await tester.tap(find.text('run'));
+    await tester.pumpAndSettle();
+
+    expect(readBytes, [7, 8, 9]);
+    expect(optionsOpened, isTrue);
+    expect(applyCalls, 1);
+    expect(reports, [(ImageMetadataImportResult.applied, 1)]);
+  });
+
   testWidgets('missing metadata reports noMetadata without opening dialog', (
     tester,
   ) async {
