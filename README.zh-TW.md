@@ -13,14 +13,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/CSSRS2662/Aaalice_NAI_Launcher/releases/latest"><img src="https://img.shields.io/github/v/release/CSSRS2662/Aaalice_NAI_Launcher?include_prereleases&display_name=tag" alt="最新版本"></a>
+  <a href="https://github.com/CSSRS2662/Aaalice_Pocket/releases/latest"><img src="https://img.shields.io/github/v/release/CSSRS2662/Aaalice_Pocket?include_prereleases&display_name=tag" alt="最新版本"></a>
   <img src="https://img.shields.io/badge/Android-7.0%2B%20arm64-3ddc84?logo=android&logoColor=white" alt="Android 7.0+ arm64">
   <img src="https://img.shields.io/badge/license-MIT-5b8c5a" alt="MIT License">
   <a href="https://github.com/Aaalice233/Aaalice_NAI_Launcher"><img src="https://img.shields.io/badge/上游-NAI%20Launcher-6f7785" alt="上游專案 NAI Launcher"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/CSSRS2662/Aaalice_NAI_Launcher/releases/latest">下載最新版</a> ·
+  <a href="https://github.com/CSSRS2662/Aaalice_Pocket/releases/latest">下載最新版</a> ·
   <a href="https://github.com/Aaalice233/Aaalice_NAI_Launcher">上游專案</a> ·
   <a href="#-與上游的關係">與上游的關係</a>
 </p>
@@ -95,7 +95,7 @@ Aaalice Pocket 保留了上游在手機上可用的核心能力：
 
 ## ⚡ 下載與安裝
 
-1. 前往 [Releases](https://github.com/CSSRS2662/Aaalice_NAI_Launcher/releases/latest) 下載 `Aaalice_Pocket_<版本>_arm64.apk`，可用同一頁面的 `checksums.txt` 核對 SHA-256。
+1. 前往 [Releases](https://github.com/CSSRS2662/Aaalice_Pocket/releases/latest) 下載 `Aaalice_Pocket_<版本>_arm64.apk`，可用同一頁面的 `checksums.txt` 核對 SHA-256。
 2. 首次安裝時，依系統提示允許目前應用程式安裝未知來源軟體。
 3. 需要 Android 7.0 或更高版本、64 位元 ARM（arm64-v8a）裝置；安裝包內建離線標籤資料庫和語意補全模型，體積約 290MB。
 4. 之後升級直接覆蓋安裝即可，資料會保留。本分支與上游使用不同簽章，不能互相覆蓋安裝。

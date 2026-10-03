@@ -13,14 +13,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/CSSRS2662/Aaalice_NAI_Launcher/releases/latest"><img src="https://img.shields.io/github/v/release/CSSRS2662/Aaalice_NAI_Launcher?include_prereleases&display_name=tag" alt="Latest release"></a>
+  <a href="https://github.com/CSSRS2662/Aaalice_Pocket/releases/latest"><img src="https://img.shields.io/github/v/release/CSSRS2662/Aaalice_Pocket?include_prereleases&display_name=tag" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/Android-7.0%2B%20arm64-3ddc84?logo=android&logoColor=white" alt="Android 7.0+ arm64">
   <img src="https://img.shields.io/badge/license-MIT-5b8c5a" alt="MIT License">
   <a href="https://github.com/Aaalice233/Aaalice_NAI_Launcher"><img src="https://img.shields.io/badge/upstream-NAI%20Launcher-6f7785" alt="Upstream project NAI Launcher"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/CSSRS2662/Aaalice_NAI_Launcher/releases/latest">Download</a> ·
+  <a href="https://github.com/CSSRS2662/Aaalice_Pocket/releases/latest">Download</a> ·
   <a href="https://github.com/Aaalice233/Aaalice_NAI_Launcher">Upstream project</a> ·
   <a href="#-relationship-to-upstream">Relationship to upstream</a>
 </p>
@@ -95,7 +95,7 @@ All images in the screenshots were generated with NovelAI V5 Curated from random
 
 ## ⚡ Download and install
 
-1. Download `Aaalice_Pocket_<version>_arm64.apk` from [Releases](https://github.com/CSSRS2662/Aaalice_NAI_Launcher/releases/latest), and check its SHA-256 against `checksums.txt` on the same page.
+1. Download `Aaalice_Pocket_<version>_arm64.apk` from [Releases](https://github.com/CSSRS2662/Aaalice_Pocket/releases/latest), and check its SHA-256 against `checksums.txt` on the same page.
 2. On first install, allow the current app to install unknown apps when Android asks.
 3. Requires Android 7.0 or later on a 64-bit ARM (arm64-v8a) device. The package bundles the offline tag database and the semantic completion model, so it is about 290MB.
 4. To upgrade, install the new package over the old one; your data stays. This branch and upstream use different signatures, so neither can install over the other.
