@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -322,9 +323,19 @@ class _WeightAdjustToolbarWrapperState
       final editable = renderEditable;
       final selection = editable?.selection ?? widget.controller.selection;
       if (editable != null && selection.isValid && selection.start >= 0) {
-        final localCaretRect = editable.getLocalRectForCaret(
+        // Start at the selection's first character, spanning every line it
+        // wraps onto, so actions placed below clear the whole selection.
+        var localCaretRect = editable.getLocalRectForCaret(
           TextPosition(offset: selection.start),
         );
+        for (final box in editable.getBoxesForSelection(selection)) {
+          localCaretRect = Rect.fromLTRB(
+            localCaretRect.left,
+            math.min(localCaretRect.top, box.top),
+            localCaretRect.right,
+            math.max(localCaretRect.bottom, box.bottom),
+          );
+        }
         final editableToField = editable.getTransformTo(textFieldRenderBox);
         final caretInField = MatrixUtils.transformRect(
           editableToField,
@@ -475,11 +486,13 @@ class _WeightAdjustToolbar extends StatelessWidget {
     final caption = selected == null
         ? null
         : PromptWeightEditing.parseWeightSyntax(selected.text).baseText;
+    final touch = context.interactionPolicy.prefersTouchPresentation;
     return PromptActionOverlay(
       anchor: caretRect,
       overlaySize: overlaySize,
-      preferAbove: context.interactionPolicy.prefersTouchPresentation,
-      gap: context.interactionPolicy.prefersTouchPresentation ? 18 : 6,
+      gap: touch ? 18 : 6,
+      // Clear the selection handles that hang below touch selections.
+      gapBelow: touch ? 32 : 6,
       child: TextFieldTapRegion(
         child: Listener(
           onPointerDown: (_) => onInteractingChanged(true),

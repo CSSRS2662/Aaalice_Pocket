@@ -28,42 +28,71 @@ class PromptActionSurface extends StatelessWidget {
 
 /// Measures the real action content before positioning it. Translation length,
 /// text scaling and the keyboard therefore cannot invalidate a fixed height.
+///
+/// The actions sit above [anchor] when they fit there, otherwise below it, so
+/// they never cover the text they act on; only when neither side has room do
+/// they take the roomier one.
 class PromptActionOverlay extends StatelessWidget {
   const PromptActionOverlay({
     super.key,
     required this.anchor,
     required this.overlaySize,
     required this.child,
-    this.preferAbove = false,
     this.gap = 6,
+    this.gapBelow,
   });
   final Rect anchor;
   final Size overlaySize;
   final Widget child;
-  final bool preferAbove;
+
+  /// Space between [anchor] and the actions above it.
   final double gap;
+
+  /// Space between [anchor] and the actions below it, defaulting to [gap].
+  /// Touch selections hang their handles below the text.
+  final double? gapBelow;
+
+  /// Edges covered by system bars or the keyboard. A Scaffold or a sheet may
+  /// already have removed them for the field, yet they still cover the
+  /// overlay the actions are laid out in, so take the widest of each source.
+  static EdgeInsets _coveredEdges(BuildContext context) {
+    var edges = EdgeInsets.zero;
+    for (final media in [
+      MediaQuery.maybeOf(context),
+      for (final source in [
+        Scaffold.maybeOf(context)?.context,
+        Overlay.maybeOf(context)?.context,
+      ])
+        source?.getInheritedWidgetOfExactType<MediaQuery>()?.data,
+    ]) {
+      if (media == null) continue;
+      edges = EdgeInsets.fromLTRB(
+        math.max(edges.left, media.padding.left),
+        math.max(edges.top, media.padding.top),
+        math.max(edges.right, media.padding.right),
+        math.max(
+          edges.bottom,
+          math.max(media.padding.bottom, media.viewInsets.bottom),
+        ),
+      );
+    }
+    return edges;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold removes consumed keyboard insets from its body. The root overlay
-    // still spans the full view, so use the metrics above that resize boundary.
-    final media = MediaQuery.of(Scaffold.maybeOf(context)?.context ?? context);
-    final left = media.padding.left + 8;
-    final top = media.padding.top + 8;
-    final right = math.max(left, overlaySize.width - media.padding.right - 8);
-    final bottom = math.max(
-      top,
-      overlaySize.height -
-          math.max(media.padding.bottom, media.viewInsets.bottom) -
-          8,
-    );
+    final edges = _coveredEdges(context);
+    final left = edges.left + 8;
+    final top = edges.top + 8;
+    final right = math.max(left, overlaySize.width - edges.right - 8);
+    final bottom = math.max(top, overlaySize.height - edges.bottom - 8);
     return Positioned.fill(
       child: CustomSingleChildLayout(
         delegate: _PromptActionLayout(
           anchor,
           Rect.fromLTRB(left, top, right, bottom),
-          preferAbove: preferAbove,
           gap: gap,
+          gapBelow: gapBelow ?? gap,
         ),
         child: SingleChildScrollView(
           key: const ValueKey('prompt-action-viewport'),
@@ -78,13 +107,13 @@ class _PromptActionLayout extends SingleChildLayoutDelegate {
   const _PromptActionLayout(
     this.anchor,
     this.bounds, {
-    required this.preferAbove,
     required this.gap,
+    required this.gapBelow,
   });
   final Rect anchor;
   final Rect bounds;
-  final bool preferAbove;
   final double gap;
+  final double gapBelow;
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
       BoxConstraints(
@@ -93,8 +122,18 @@ class _PromptActionLayout extends SingleChildLayoutDelegate {
       );
   @override
   Offset getPositionForChild(Size size, Size childSize) {
-    final above = anchor.top - childSize.height - gap;
-    final y = preferAbove || above >= bounds.top ? above : anchor.bottom + gap;
+    final above = anchor.top - gap - childSize.height;
+    final below = anchor.bottom + gapBelow;
+    final double y;
+    if (above >= bounds.top) {
+      y = above;
+    } else if (below + childSize.height <= bounds.bottom) {
+      y = below;
+    } else {
+      final roomAbove = anchor.top - bounds.top;
+      final roomBelow = bounds.bottom - anchor.bottom;
+      y = roomAbove >= roomBelow ? above : below;
+    }
     return Offset(
       anchor.left.clamp(
         bounds.left,
@@ -111,6 +150,6 @@ class _PromptActionLayout extends SingleChildLayoutDelegate {
   bool shouldRelayout(_PromptActionLayout oldDelegate) =>
       anchor != oldDelegate.anchor ||
       bounds != oldDelegate.bounds ||
-      preferAbove != oldDelegate.preferAbove ||
-      gap != oldDelegate.gap;
+      gap != oldDelegate.gap ||
+      gapBelow != oldDelegate.gapBelow;
 }

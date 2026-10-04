@@ -821,6 +821,79 @@ void main() {
     },
   );
 
+  testWidgets('touch toolbar drops below a selection with no room above', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final prompt = TextEditingController(text: 'cat, dog');
+    final focus = FocusNode();
+    addTearDown(prompt.dispose);
+    addTearDown(focus.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            padding: const EdgeInsets.only(top: 24),
+            viewInsets: const EdgeInsets.only(bottom: 260),
+          ),
+          child: child!,
+        ),
+        home: InteractionPolicyScope(
+          initialPolicy: InteractionPolicy.touchFirst,
+          child: Scaffold(
+            body: Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                height: 160,
+                child: WeightAdjustToolbarWrapper(
+                  controller: prompt,
+                  focusNode: focus,
+                  child: ThemedInput(
+                    controller: prompt,
+                    focusNode: focus,
+                    maxLines: null,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    focus.requestFocus();
+    prompt.selection = const TextSelection(baseOffset: 0, extentOffset: 3);
+    await tester.pump();
+    await tester.pump();
+
+    final editable = tester
+        .state<EditableTextState>(find.byType(EditableText))
+        .renderEditable;
+    final selected = MatrixUtils.transformRect(
+      editable.getTransformTo(null),
+      editable.getBoxesForSelection(prompt.selection).single.toRect(),
+    );
+    final toolbar = tester.getRect(
+      find.byKey(const ValueKey('weight_adjust_toolbar_surface')),
+    );
+    // Below the selected word and its handles, still above the keyboard.
+    expect(toolbar.top, greaterThanOrEqualTo(selected.bottom + 22));
+    expect(toolbar.bottom, lessThanOrEqualTo(532));
+    expect(tester.takeException(), isNull);
+
+    prompt.selection = TextSelection.collapsed(offset: prompt.text.length);
+    focus.unfocus();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 250));
+    debugDefaultTargetPlatformOverride = null;
+  });
+
   testWidgets('double tap inside a weight block selects the whole block', (
     tester,
   ) async {
