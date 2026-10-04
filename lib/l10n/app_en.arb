@@ -680,11 +680,37 @@
   "prompt_addGroup": "Add Section",
   "prompt_groupHint": "Enter prompts in this section",
   "prompt_emptyGroup": "Empty section",
-  "prompt_reorderGroup": "Drag to reorder section",
-  "prompt_expandGroup": "Expand section",
-  "prompt_collapseGroup": "Collapse section",
   "prompt_deleteGroup": "Delete Section",
-  "prompt_deleteGroupConfirm": "Delete this section and its prompts?",
+  "prompt_groupLabel": "Section {index}",
+  "@prompt_groupLabel": {
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "prompt_groupPosition": "Section {index} of {total}",
+  "@prompt_groupPosition": {
+    "placeholders": {
+      "index": {},
+      "total": {}
+    }
+  },
+  "prompt_groupSwipeHint": "Swipe to switch",
+  "prompt_previousGroup": "Previous section",
+  "prompt_nextGroup": "Next section",
+  "prompt_groupEmptyHint": "Empty section · tap to add tags",
+  "prompt_groupOff": "Off",
+  "prompt_groupEnable": "Turn on section",
+  "prompt_groupDisable": "Turn off section",
+  "prompt_groupIncluded": "Use in prompt",
+  "prompt_groupDeleteAgain": "Tap again to delete",
+  "prompt_groupDeleted": "Deleted section {index}",
+  "@prompt_groupDeleted": {
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "prompt_groupDuplicate": "Duplicate section",
+  "prompt_groupMoveToFront": "Move to front",
   "prompt_positivePrompt": "Prompt",
   "prompt_negativePrompt": "Undesired Content",
   "prompt_mainPositive": "Main Prompt",

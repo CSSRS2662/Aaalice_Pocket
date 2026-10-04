@@ -126,12 +126,8 @@ class PromptAddGroupButton extends StatelessWidget {
               ? 'add_negative_prompt_group'
               : 'add_positive_prompt_group',
         ),
-        onTap: () {
-          final group = controller.groupsFor(controller.isNegativeMode).add();
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (group.focusNode.canRequestFocus) group.focusNode.requestFocus();
-          });
-        },
+        // The grid opens the new section in its editor.
+        onTap: () => controller.groupsFor(controller.isNegativeMode).add(),
         child: ConstrainedBox(
           constraints: BoxConstraints(
             minWidth: iconOnly ? 48 : 0,

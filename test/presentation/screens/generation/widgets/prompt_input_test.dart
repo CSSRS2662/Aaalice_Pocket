@@ -22,6 +22,7 @@ import 'package:nai_launcher/presentation/providers/character_prompt_provider.da
 import 'package:nai_launcher/presentation/providers/generation/generation_params_notifier.dart';
 import 'package:nai_launcher/presentation/providers/prompt_group_state_provider.dart';
 import 'package:nai_launcher/presentation/providers/prompt_token_counter_provider.dart';
+import 'package:nai_launcher/presentation/screens/generation/widgets/prompt_group_tile.dart';
 import 'package:nai_launcher/presentation/screens/generation/widgets/prompt_input.dart';
 import 'package:nai_launcher/presentation/themes/core/input_surface_style.dart';
 import 'package:nai_launcher/presentation/widgets/common/input_surface_container.dart';
@@ -591,25 +592,20 @@ void main() {
       closeTo(tester.getCenter(modeSwitch).dy, 0.1),
     );
     expect(tester.getRect(modeSwitch).right, tester.getRect(controls).right);
-    expect(find.text(l10n.prompt_addGroup), findsNothing);
+    // The toolbar button is icon-only; the grid's add tile carries the label.
+    expect(
+      find.descendant(of: addGroup, matching: find.text(l10n.prompt_addGroup)),
+      findsNothing,
+    );
 
     final groups = find.byKey(
       const ValueKey('generation_positive_prompt_groups'),
     );
     expect(groups, findsOneWidget);
-    final groupAssistant = find.descendant(
-      of: groups,
-      matching: find.byType(PromptAssistantOverlay),
-    );
-    final groupMenu = find.descendant(
-      of: groups,
-      matching: find.byType(PopupMenuButton<String>),
-    );
-    expect(groupAssistant, findsOneWidget);
-    expect(groupMenu, findsOneWidget);
+    // Sections are tiles; their editor and tools open in a sheet.
     expect(
-      tester.getRect(groupAssistant).right,
-      lessThanOrEqualTo(tester.getRect(groupMenu).left),
+      find.descendant(of: groups, matching: find.byType(EditableText)),
+      findsNothing,
     );
     expect(
       find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
@@ -648,29 +644,46 @@ void main() {
       expect(tester.getSize(action).width, greaterThanOrEqualTo(44));
     }
 
-    var editors = find.descendant(
+    final tiles = find.descendant(
       of: groups,
-      matching: find.byType(EditableText),
+      matching: find.byType(PromptGroupTile),
     );
-    expect(editors, findsOneWidget);
-    await tester.enterText(editors.first, '1girl, blue eyes,');
+    expect(tiles, findsOneWidget);
+    await tester.tap(tiles.first);
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.byType(PromptAssistantOverlay),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('prompt_group_edit_menu')),
+      findsOneWidget,
+    );
+    await tester.enterText(_sheetEditor(), '1girl, blue eyes,');
     await tester.pump();
-    expect(find.text('1girl'), findsOneWidget);
-    expect(find.text('+1'), findsOneWidget);
+    await _closeSheet(tester);
+    expect(find.text('1girl, blue eyes'), findsOneWidget);
 
+    // A new section opens in the editor straight away.
     await tester.tap(find.byKey(const ValueKey('add_positive_prompt_group')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('prompt_group_edit_title')),
+      findsOneWidget,
+    );
+    await tester.enterText(_sheetEditor(), ', school_uniform');
     await tester.pump();
-    editors = find.descendant(of: groups, matching: find.byType(EditableText));
-    expect(editors, findsNWidgets(2));
-    await tester.enterText(editors.last, ', school_uniform');
-    await tester.pump();
+    await _closeSheet(tester);
 
     expect(
       container.read(generationParamsNotifierProvider).prompt,
       '1girl, blue eyes, school_uniform',
     );
 
-    await tester.tap(find.byType(Checkbox).first);
+    await tester.tap(_keyPrefix('prompt_group_enabled_').first);
     await tester.pump();
     expect(
       container.read(generationParamsNotifierProvider).prompt,
@@ -718,10 +731,10 @@ void main() {
     );
     expect(groups, findsOneWidget);
     final texts = tester
-        .widgetList<EditableText>(
-          find.descendant(of: groups, matching: find.byType(EditableText)),
+        .widgetList<PromptGroupTile>(
+          find.descendant(of: groups, matching: find.byType(PromptGroupTile)),
         )
-        .map((field) => field.controller.text)
+        .map((tile) => tile.section.controller.text)
         .toList();
     expect(texts, ['1girl,School_Uniform', 'smile,\noutdoors,', 'rain']);
     // The generation prompt now matches the partitions exactly, so the next
@@ -774,7 +787,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('手机分组词框随内容完全展开，只由分组列表滚动', (tester) async {
+  testWidgets('手机分组以两列卡片显示，长分区只显示两行并以 +N 计数', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(400, 800);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -792,26 +805,24 @@ void main() {
     final list = find.byKey(
       const ValueKey('generation_positive_prompt_groups'),
     );
-    final field = find
-        .descendant(of: list, matching: find.byType(EditableText))
-        .first;
-    final longText = List.generate(40, (index) => 'tag_$index,\n').join();
-    await tester.enterText(field, longText);
-    await tester.pump();
-
-    final fieldScroll = tester.state<ScrollableState>(
-      find.descendant(of: field, matching: find.byType(Scrollable)).first,
+    final tile = find.descendant(
+      of: list,
+      matching: find.byType(PromptGroupTile),
     );
-    expect(fieldScroll.position.maxScrollExtent, 0);
-    final listScroll = tester.state<ScrollableState>(
-      find.descendant(of: list, matching: find.byType(Scrollable)).first,
-    );
-    expect(listScroll.position.maxScrollExtent, greaterThan(0));
-
-    // A vertical drag on the box scrolls the group list.
-    await tester.drag(field, const Offset(0, -200));
+    await tester.tap(tile.first);
+    await tester.pumpAndSettle();
+    final longText = List.generate(40, (index) => 'tag_$index').join(', ');
+    await tester.enterText(_sheetEditor(), longText);
     await tester.pump();
-    expect(listScroll.position.pixels, greaterThan(0));
+    await _closeSheet(tester);
+
+    // Whole tags fill two lines; the rest is counted instead of ellipsized.
+    expect(find.textContaining(RegExp(r'^tag_0, .* \+\d+$')), findsOneWidget);
+    final tileRect = tester.getRect(tile.first);
+    expect(tileRect.height, lessThan(120));
+    final addTile = find.byKey(const ValueKey('prompt_group_add_tile'));
+    expect(tester.getRect(addTile).top, tileRect.top);
+    expect(tester.getRect(addTile).left, greaterThan(tileRect.right));
     expect(tester.takeException(), isNull);
   });
 
@@ -2212,6 +2223,25 @@ void main() {
     }
   }
 }
+
+Finder _sheetEditor() => find
+    .descendant(
+      of: find.byType(BottomSheet),
+      matching: find.byType(EditableText),
+    )
+    .first;
+
+Future<void> _closeSheet(WidgetTester tester) async {
+  // The barrier above the sheet closes it, as a tap outside does.
+  await tester.tapAt(const Offset(200, 12));
+  await tester.pumpAndSettle();
+}
+
+Finder _keyPrefix(String prefix) => find.byWidgetPredicate(
+  (widget) =>
+      widget.key is ValueKey<String> &&
+      (widget.key! as ValueKey<String>).value.startsWith(prefix),
+);
 
 Future<ProviderContainer> _pumpMobilePromptHarness(
   WidgetTester tester, {

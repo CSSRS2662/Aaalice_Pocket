@@ -1658,19 +1658,55 @@ class AppLocalizationsJa extends AppLocalizations {
   String get prompt_emptyGroup => '空のセクション';
 
   @override
-  String get prompt_reorderGroup => 'ドラッグしてセクションを並べ替え';
-
-  @override
-  String get prompt_expandGroup => 'セクションを展開';
-
-  @override
-  String get prompt_collapseGroup => 'セクションを折りたたむ';
-
-  @override
   String get prompt_deleteGroup => 'セクションを削除';
 
   @override
-  String get prompt_deleteGroupConfirm => 'このセクションとプロンプトを削除しますか？';
+  String prompt_groupLabel(Object index) {
+    return 'セクション $index';
+  }
+
+  @override
+  String prompt_groupPosition(Object index, Object total) {
+    return 'セクション $index / $total';
+  }
+
+  @override
+  String get prompt_groupSwipeHint => '左右にスワイプで切り替え';
+
+  @override
+  String get prompt_previousGroup => '前のセクション';
+
+  @override
+  String get prompt_nextGroup => '次のセクション';
+
+  @override
+  String get prompt_groupEmptyHint => '空のセクション・タップしてタグを追加';
+
+  @override
+  String get prompt_groupOff => '無効';
+
+  @override
+  String get prompt_groupEnable => 'セクションを有効にする';
+
+  @override
+  String get prompt_groupDisable => 'セクションを無効にする';
+
+  @override
+  String get prompt_groupIncluded => '生成に使用';
+
+  @override
+  String get prompt_groupDeleteAgain => 'もう一度タップで削除';
+
+  @override
+  String prompt_groupDeleted(Object index) {
+    return 'セクション $index を削除しました';
+  }
+
+  @override
+  String get prompt_groupDuplicate => 'セクションを複製';
+
+  @override
+  String get prompt_groupMoveToFront => '先頭に移動';
 
   @override
   String get prompt_positivePrompt => 'プロンプト';

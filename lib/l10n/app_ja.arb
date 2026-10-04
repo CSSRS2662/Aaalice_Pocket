@@ -672,11 +672,37 @@
   "prompt_addGroup": "セクションを追加",
   "prompt_groupHint": "このセクションにプロンプトを入力",
   "prompt_emptyGroup": "空のセクション",
-  "prompt_reorderGroup": "ドラッグしてセクションを並べ替え",
-  "prompt_expandGroup": "セクションを展開",
-  "prompt_collapseGroup": "セクションを折りたたむ",
   "prompt_deleteGroup": "セクションを削除",
-  "prompt_deleteGroupConfirm": "このセクションとプロンプトを削除しますか？",
+  "prompt_groupLabel": "セクション {index}",
+  "@prompt_groupLabel": {
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "prompt_groupPosition": "セクション {index} / {total}",
+  "@prompt_groupPosition": {
+    "placeholders": {
+      "index": {},
+      "total": {}
+    }
+  },
+  "prompt_groupSwipeHint": "左右にスワイプで切り替え",
+  "prompt_previousGroup": "前のセクション",
+  "prompt_nextGroup": "次のセクション",
+  "prompt_groupEmptyHint": "空のセクション・タップしてタグを追加",
+  "prompt_groupOff": "無効",
+  "prompt_groupEnable": "セクションを有効にする",
+  "prompt_groupDisable": "セクションを無効にする",
+  "prompt_groupIncluded": "生成に使用",
+  "prompt_groupDeleteAgain": "もう一度タップで削除",
+  "prompt_groupDeleted": "セクション {index} を削除しました",
+  "@prompt_groupDeleted": {
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "prompt_groupDuplicate": "セクションを複製",
+  "prompt_groupMoveToFront": "先頭に移動",
   "prompt_positivePrompt": "プロンプト",
   "prompt_negativePrompt": "除外したい要素",
   "prompt_mainPositive": "メイン プロンプト (正)",

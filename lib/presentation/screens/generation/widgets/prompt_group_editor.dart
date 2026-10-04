@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/localization_extension.dart';
-import '../../../prompt_assistant/providers/prompt_assistant_history_provider.dart';
-import '../../../prompt_assistant/widgets/prompt_assistant_overlay.dart';
-import '../../../providers/image_generation_provider.dart';
-import '../../../themes/core/input_surface_style.dart';
-import '../../../themes/core/layered_surface_style.dart';
-import '../../../widgets/autocomplete/autocomplete.dart';
-import '../../../widgets/prompt/unified/unified_prompt_config.dart';
-import '../../../widgets/prompt/unified/unified_prompt_input.dart';
+import 'prompt_group_actions.dart';
 import 'prompt_group_controller.dart';
+import 'prompt_group_edit_sheet.dart';
+import 'prompt_group_grid.dart';
 import 'prompt_input_controller.dart';
 import 'prompt_input_models.dart';
 
-class PromptGroupEditor extends ConsumerWidget {
+/// Grouped prompt mode: a grid of section tiles, each edited in its own sheet.
+///
+/// Every change to the sections is recombined into the generation prompt.
+class PromptGroupEditor extends StatelessWidget {
   const PromptGroupEditor({
     super.key,
     required this.controller,
@@ -27,93 +24,34 @@ class PromptGroupEditor extends ConsumerWidget {
   final PromptInputViewData viewData;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final negative = controller.isNegativeMode;
     final groups = controller.groupsFor(negative);
-    final sections = groups.sections;
-    final list = ReorderableListView.builder(
+    final grid = PromptGroupGrid(
       key: ValueKey(
         negative
-            ? 'generation_negative_prompt_groups'
-            : 'generation_positive_prompt_groups',
+            ? 'generation_negative_prompt_group_grid'
+            : 'generation_positive_prompt_group_grid',
       ),
-      padding: EdgeInsets.zero,
-      buildDefaultDragHandles: false,
-      itemCount: sections.length,
-      onReorder: (oldIndex, newIndex) {
-        FocusManager.instance.primaryFocus?.unfocus();
-        groups.reorder(oldIndex, newIndex);
-        _commit(negative);
-      },
-      proxyDecorator: (child, _, animation) => AnimatedBuilder(
-        animation: animation,
-        builder: (context, child) => Material(
-          color: Colors.transparent,
-          elevation: 8 * animation.value,
-          borderRadius: BorderRadius.circular(8),
-          child: child,
-        ),
-        child: child,
-      ),
-      itemBuilder: (context, index) => Padding(
-        key: ValueKey('prompt_group_${sections[index].id}'),
-        padding: const EdgeInsets.only(bottom: 8),
-        child: _PromptGroupCard(
-          section: sections[index],
-          index: index,
-          negative: negative,
-          viewData: viewData,
-          onChanged: () => _commit(negative),
-          onEnabledChanged: (enabled) {
-            groups.setEnabled(sections[index].id, enabled);
-            _commit(negative);
-          },
-          onToggleCollapsed: () => groups.toggleCollapsed(sections[index].id),
-          onDelete: () => _delete(context, groups, sections[index], negative),
-          onOpenAssistantSettings: commands.openAssistantSettings,
-          onComfyuiImport: negative ? null : commands.importComfyuiPrompt,
-        ),
-      ),
+      groups: groups,
+      onOpen: (id) => _open(context, groups, id, negative),
+      onShowActions: (id) => _showActions(context, groups, id, negative),
+      onToggleEnabled: (id) => _toggle(groups, id, negative),
+      onDelete: (id) => _delete(context, groups, id, negative),
+      onReordered: () => _commit(negative),
     );
-
+    final listKey = ValueKey(
+      negative
+          ? 'generation_negative_prompt_groups'
+          : 'generation_positive_prompt_groups',
+    );
     return LayoutBuilder(
       builder: (context, constraints) {
         final bounded =
             constraints.hasBoundedHeight && constraints.maxHeight.isFinite;
-        if (bounded) {
-          return list;
-        }
-        return ReorderableListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          buildDefaultDragHandles: false,
-          itemCount: sections.length,
-          onReorder: (oldIndex, newIndex) {
-            groups.reorder(oldIndex, newIndex);
-            _commit(negative);
-          },
-          itemBuilder: (context, index) => Padding(
-            key: ValueKey('prompt_group_unbounded_${sections[index].id}'),
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _PromptGroupCard(
-              section: sections[index],
-              index: index,
-              negative: negative,
-              viewData: viewData,
-              onChanged: () => _commit(negative),
-              onEnabledChanged: (enabled) {
-                groups.setEnabled(sections[index].id, enabled);
-                _commit(negative);
-              },
-              onToggleCollapsed: () =>
-                  groups.toggleCollapsed(sections[index].id),
-              onDelete: () =>
-                  _delete(context, groups, sections[index], negative),
-              onOpenAssistantSettings: commands.openAssistantSettings,
-              onComfyuiImport: negative ? null : commands.importComfyuiPrompt,
-            ),
-          ),
-        );
+        return bounded
+            ? SingleChildScrollView(key: listKey, child: grid)
+            : KeyedSubtree(key: listKey, child: grid);
       },
     );
   }
@@ -127,236 +65,100 @@ class PromptGroupEditor extends ConsumerWidget {
     }
   }
 
-  Future<void> _delete(
-    BuildContext context,
-    PromptGroupCollection groups,
-    PromptGroupSection section,
-    bool negative,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.prompt_deleteGroup),
-        content: Text(context.l10n.prompt_deleteGroupConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(context.l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(context.l10n.common_delete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-    groups.remove(section.id);
+  void _toggle(PromptGroupCollection groups, String id, bool negative) {
+    final section = groups.sectionById(id);
+    if (section == null) return;
+    groups.setEnabled(id, !section.enabled);
     _commit(negative);
   }
-}
 
-class _PromptGroupCard extends ConsumerWidget {
-  const _PromptGroupCard({
-    required this.section,
-    required this.index,
-    required this.negative,
-    required this.viewData,
-    required this.onChanged,
-    required this.onEnabledChanged,
-    required this.onToggleCollapsed,
-    required this.onDelete,
-    required this.onOpenAssistantSettings,
-    required this.onComfyuiImport,
-  });
+  void _duplicate(PromptGroupCollection groups, String id, bool negative) {
+    if (groups.duplicate(id) != null) _commit(negative);
+  }
 
-  final PromptGroupSection section;
-  final int index;
-  final bool negative;
-  final PromptInputViewData viewData;
-  final VoidCallback onChanged;
-  final ValueChanged<bool> onEnabledChanged;
-  final VoidCallback onToggleCollapsed;
-  final VoidCallback onDelete;
-  final VoidCallback onOpenAssistantSettings;
-  final PromptImportCallback? onComfyuiImport;
+  void _moveToFront(PromptGroupCollection groups, String id, bool negative) {
+    groups.move(id, 0);
+    _commit(negative);
+  }
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).colorScheme;
-    final enableAutocomplete = ref.watch(autocompleteSettingsProvider);
-    final enableHighlight = ref.watch(highlightEmphasisSettingsProvider);
-    final enableAutoFormat = ref.watch(autoFormatPromptSettingsProvider);
-    final enableSdSyntaxAutoConvert = ref.watch(
-      sdSyntaxAutoConvertSettingsProvider,
-    );
-    final modeSessionId = negative
-        ? PromptHistorySessionIds.generationNegative
-        : PromptHistorySessionIds.generationPrompt;
-    final historySessionId = '${modeSessionId}_group_${section.id}';
-    final summaryParts = section.controller.text
-        .trim()
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .split(',')
-        .map((part) => part.trim())
-        .where((part) => part.isNotEmpty)
-        .toList(growable: false);
-    final summary = summaryParts.isEmpty
-        ? context.l10n.prompt_emptyGroup
-        : summaryParts.first;
-    final remainingSummaryCount = summaryParts.length - 1;
-
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 160),
-      opacity: section.enabled ? 1 : 0.58,
-      child: Material(
-        color: sectionSurfaceColor(colors),
-        borderRadius: BorderRadius.circular(8),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Checkbox(
-                  key: ValueKey('prompt_group_enabled_${section.id}'),
-                  value: section.enabled,
-                  onChanged: (value) => onEnabledChanged(value ?? false),
-                ),
-                Tooltip(
-                  message: context.l10n.prompt_reorderGroup,
-                  child: ReorderableDragStartListener(
-                    index: index,
-                    child: const SizedBox.square(
-                      dimension: 48,
-                      child: Icon(Icons.drag_indicator_rounded, size: 22),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          summary,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: colors.onSurfaceVariant),
-                        ),
-                      ),
-                      if (remainingSummaryCount > 0) ...[
-                        const SizedBox(width: 4),
-                        Text(
-                          '+$remainingSummaryCount',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: colors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                PromptAssistantOverlay(
-                  key: ValueKey('prompt_group_assistant_${section.id}'),
-                  placement: PromptAssistantPlacement.inline,
-                  expandInPlace: false,
-                  iconOnly: true,
-                  compactDesktopToolbar: true,
-                  supportsTagMode: true,
-                  tagModeSessionId: modeSessionId,
-                  sessionId: historySessionId,
-                  controller: section.controller,
-                  onChanged: (_) => onChanged(),
-                  onOpenSettings: onOpenAssistantSettings,
-                ),
-                PopupMenuButton<String>(
-                  key: ValueKey('prompt_group_menu_${section.id}'),
-                  tooltip: context.l10n.common_moreActions,
-                  onSelected: (value) {
-                    if (value == 'delete') onDelete();
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.delete_outline_rounded,
-                            color: colors.error,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            context.l10n.common_delete,
-                            style: TextStyle(color: colors.error),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  key: ValueKey('prompt_group_collapse_${section.id}'),
-                  tooltip: section.collapsed
-                      ? context.l10n.prompt_expandGroup
-                      : context.l10n.prompt_collapseGroup,
-                  onPressed: onToggleCollapsed,
-                  icon: Icon(
-                    section.collapsed
-                        ? Icons.expand_more_rounded
-                        : Icons.expand_less_rounded,
-                  ),
-                ),
-              ],
-            ),
-            // An open group always shows its whole text: a box with its own
-            // scroll inside the scrolling group list made vertical drags
-            // ambiguous. Only the header button folds a group away.
-            if (!section.collapsed)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                child: KeyedSubtree(
-                  key: ValueKey('prompt_group_body_${section.id}'),
-                  child: UnifiedPromptInput(
-                    key: ValueKey('prompt_group_input_${section.id}'),
-                    controller: section.controller,
-                    focusNode: section.focusNode,
-                    sessionId: historySessionId,
-                    tagModeSessionId: modeSessionId,
-                    surfaceColor: inputSurfaceFillColor(colors),
-                    config: UnifiedPromptConfig(
-                      enableSyntaxHighlight: enableHighlight,
-                      numericEmphasisEnabled: viewData.numericEmphasisEnabled,
-                      enableAutocomplete: enableAutocomplete,
-                      enableAutoFormat: enableAutoFormat,
-                      enableSdSyntaxAutoConvert: enableSdSyntaxAutoConvert,
-                      enableComfyuiImport: !negative,
-                      enableTagMode: true,
-                      autocompleteConfig: AutocompleteConfig(
-                        showTranslation: true,
-                        showCategory: !negative,
-                        showCount: !negative,
-                        autoInsertComma: true,
-                      ),
-                      hintText: context.l10n.prompt_groupHint,
-                    ),
-                    decoration: const InputDecoration(
-                      contentPadding: EdgeInsets.all(12),
-                    ),
-                    minLines: viewData.isMaximized ? 6 : 4,
-                    maxLines: null,
-                    fitContent: true,
-                    enableAssistant: false,
-                    showTagModeSwitch: false,
-                    onOpenAssistantSettings: onOpenAssistantSettings,
-                    onComfyuiImport: onComfyuiImport,
-                    onChanged: (_) => onChanged(),
-                  ),
-                ),
-              ),
-          ],
+  /// Deletes at once; the snack bar offers undo instead of a confirmation.
+  void _delete(
+    BuildContext context,
+    PromptGroupCollection groups,
+    String id,
+    bool negative,
+  ) {
+    final removed = groups.remove(id);
+    if (removed == null) return;
+    _commit(negative);
+    final l10n = context.l10n;
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l10n.prompt_groupDeleted(removed.index + 1)),
+          action: SnackBarAction(
+            label: l10n.common_undo,
+            onPressed: () {
+              if (!context.mounted) return;
+              groups.restoreRemoved(removed);
+              _commit(negative);
+            },
+          ),
         ),
+      );
+  }
+
+  Future<void> _open(
+    BuildContext context,
+    PromptGroupCollection groups,
+    String id,
+    bool negative,
+  ) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    return showPromptGroupEditSheet(
+      context,
+      groups: groups,
+      sectionId: id,
+      negative: negative,
+      numericEmphasisEnabled: viewData.numericEmphasisEnabled,
+      callbacks: PromptGroupEditCallbacks(
+        onChanged: () => _commit(negative),
+        onToggleEnabled: (id) => _toggle(groups, id, negative),
+        onDuplicate: (id) => _duplicate(groups, id, negative),
+        onMoveToFront: (id) => _moveToFront(groups, id, negative),
+        onDelete: (id) {
+          if (context.mounted) _delete(context, groups, id, negative);
+        },
+        onOpenAssistantSettings: commands.openAssistantSettings,
+        onComfyuiImport: negative ? null : commands.importComfyuiPrompt,
       ),
     );
+  }
+
+  Future<void> _showActions(
+    BuildContext context,
+    PromptGroupCollection groups,
+    String id,
+    bool negative,
+  ) async {
+    final action = await showPromptGroupActions(
+      context,
+      groups: groups,
+      sectionId: id,
+    );
+    if (action == null || !context.mounted) return;
+    switch (action) {
+      case PromptGroupAction.toggleEnabled:
+        _toggle(groups, id, negative);
+      case PromptGroupAction.edit:
+        await _open(context, groups, id, negative);
+      case PromptGroupAction.duplicate:
+        _duplicate(groups, id, negative);
+      case PromptGroupAction.moveToFront:
+        _moveToFront(groups, id, negative);
+      case PromptGroupAction.delete:
+        _delete(context, groups, id, negative);
+    }
   }
 }

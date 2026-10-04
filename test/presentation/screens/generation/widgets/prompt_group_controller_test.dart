@@ -147,4 +147,60 @@ void main() {
     expect(controller.promptController.text, '1girl, school uniform');
     expect(controller.negativeController.text, 'old negative');
   });
+
+  group('PromptGroupCollection editing', () {
+    PromptGroupCollection collectionOf(List<String> texts) {
+      final groups = PromptGroupCollection.fromJson([
+        for (final (index, text) in texts.indexed)
+          {'id': 's$index', 'text': text},
+      ], fallbackText: '');
+      addTearDown(groups.dispose);
+      return groups;
+    }
+
+    List<String> texts(PromptGroupCollection groups) => [
+      for (final section in groups.sections) section.controller.text,
+    ];
+
+    test('remove can be undone at the same position with the same id', () {
+      final groups = collectionOf(['a', 'b', 'c']);
+      groups.setEnabled('s1', false);
+
+      final removed = groups.remove('s1')!;
+      expect(texts(groups), ['a', 'c']);
+      expect(removed.index, 1);
+
+      groups.restoreRemoved(removed);
+      expect(texts(groups), ['a', 'b', 'c']);
+      expect(groups.sections[1].id, 's1');
+      expect(groups.sections[1].enabled, isFalse);
+      expect(groups.remove('missing'), isNull);
+    });
+
+    test('duplicate inserts a copy right after the source', () {
+      final groups = collectionOf(['a', 'b']);
+      final copy = groups.duplicate('s0')!;
+      expect(texts(groups), ['a', 'a', 'b']);
+      expect(groups.sections[1].id, copy.id);
+      expect(copy.id, isNot('s0'));
+    });
+
+    test('move places a section at the target index', () {
+      final groups = collectionOf(['a', 'b', 'c', 'd']);
+      groups.move('s0', 2);
+      expect(texts(groups), ['b', 'c', 'a', 'd']);
+      groups.move('s3', 0);
+      expect(texts(groups), ['d', 'b', 'c', 'a']);
+      groups.move('s1', 99);
+      expect(texts(groups), ['d', 'c', 'a', 'b']);
+    });
+
+    test('a new section asks the editor to open it once', () {
+      final groups = collectionOf(['a']);
+      expect(groups.takeEditRequest(), isNull);
+      final added = groups.add();
+      expect(groups.takeEditRequest(), added.id);
+      expect(groups.takeEditRequest(), isNull);
+    });
+  });
 }

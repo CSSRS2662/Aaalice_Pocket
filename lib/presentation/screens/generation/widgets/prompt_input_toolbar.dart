@@ -452,16 +452,9 @@ class PromptInputBottomActions extends ConsumerWidget {
               ),
             ),
             tooltip: context.l10n.prompt_addGroup,
-            onPressed: () {
-              final group = controller
-                  .groupsFor(controller.isNegativeMode)
-                  .add();
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (group.focusNode.canRequestFocus) {
-                  group.focusNode.requestFocus();
-                }
-              });
-            },
+            // The grid opens the new section in its editor.
+            onPressed: () =>
+                controller.groupsFor(controller.isNegativeMode).add(),
             icon: const Icon(
               Icons.add_circle_outline_rounded,
               size: PromptFooterStyle.iconSize,

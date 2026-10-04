@@ -1697,20 +1697,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prompt_emptyGroup => 'Empty section';
 
   @override
-  String get prompt_reorderGroup => 'Drag to reorder section';
-
-  @override
-  String get prompt_expandGroup => 'Expand section';
-
-  @override
-  String get prompt_collapseGroup => 'Collapse section';
-
-  @override
   String get prompt_deleteGroup => 'Delete Section';
 
   @override
-  String get prompt_deleteGroupConfirm =>
-      'Delete this section and its prompts?';
+  String prompt_groupLabel(Object index) {
+    return 'Section $index';
+  }
+
+  @override
+  String prompt_groupPosition(Object index, Object total) {
+    return 'Section $index of $total';
+  }
+
+  @override
+  String get prompt_groupSwipeHint => 'Swipe to switch';
+
+  @override
+  String get prompt_previousGroup => 'Previous section';
+
+  @override
+  String get prompt_nextGroup => 'Next section';
+
+  @override
+  String get prompt_groupEmptyHint => 'Empty section · tap to add tags';
+
+  @override
+  String get prompt_groupOff => 'Off';
+
+  @override
+  String get prompt_groupEnable => 'Turn on section';
+
+  @override
+  String get prompt_groupDisable => 'Turn off section';
+
+  @override
+  String get prompt_groupIncluded => 'Use in prompt';
+
+  @override
+  String get prompt_groupDeleteAgain => 'Tap again to delete';
+
+  @override
+  String prompt_groupDeleted(Object index) {
+    return 'Deleted section $index';
+  }
+
+  @override
+  String get prompt_groupDuplicate => 'Duplicate section';
+
+  @override
+  String get prompt_groupMoveToFront => 'Move to front';
 
   @override
   String get prompt_positivePrompt => 'Prompt';

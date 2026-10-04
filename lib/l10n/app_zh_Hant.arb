@@ -630,11 +630,37 @@
   "prompt_addGroup": "新增分區",
   "prompt_groupHint": "在此分區輸入提示詞",
   "prompt_emptyGroup": "空白分區",
-  "prompt_reorderGroup": "拖動排序分區",
-  "prompt_expandGroup": "展開分區",
-  "prompt_collapseGroup": "收合分區",
   "prompt_deleteGroup": "刪除分區",
-  "prompt_deleteGroupConfirm": "刪除這個分區及其中的提示詞？",
+  "prompt_groupLabel": "分區 {index}",
+  "@prompt_groupLabel": {
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "prompt_groupPosition": "分區 {index} / {total}",
+  "@prompt_groupPosition": {
+    "placeholders": {
+      "index": {},
+      "total": {}
+    }
+  },
+  "prompt_groupSwipeHint": "左右滑動切換",
+  "prompt_previousGroup": "上一個分區",
+  "prompt_nextGroup": "下一個分區",
+  "prompt_groupEmptyHint": "空白分區 · 輕觸新增標籤",
+  "prompt_groupOff": "已停用",
+  "prompt_groupEnable": "啟用分區",
+  "prompt_groupDisable": "停用分區",
+  "prompt_groupIncluded": "參與生成",
+  "prompt_groupDeleteAgain": "再點一次刪除",
+  "prompt_groupDeleted": "已刪除分區 {index}",
+  "@prompt_groupDeleted": {
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "prompt_groupDuplicate": "複製分區",
+  "prompt_groupMoveToFront": "移到最前",
   "prompt_positivePrompt": "正向提示詞",
   "prompt_negativePrompt": "負向提示詞",
   "prompt_mainPositive": "主提示詞（正面）",

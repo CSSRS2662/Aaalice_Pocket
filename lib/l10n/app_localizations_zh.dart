@@ -1635,19 +1635,55 @@ class AppLocalizationsZh extends AppLocalizations {
   String get prompt_emptyGroup => '空分区';
 
   @override
-  String get prompt_reorderGroup => '拖动排序分区';
-
-  @override
-  String get prompt_expandGroup => '展开分区';
-
-  @override
-  String get prompt_collapseGroup => '折叠分区';
-
-  @override
   String get prompt_deleteGroup => '删除分区';
 
   @override
-  String get prompt_deleteGroupConfirm => '删除这个分区及其中的提示词？';
+  String prompt_groupLabel(Object index) {
+    return '分区 $index';
+  }
+
+  @override
+  String prompt_groupPosition(Object index, Object total) {
+    return '分区 $index / $total';
+  }
+
+  @override
+  String get prompt_groupSwipeHint => '左右滑动切换';
+
+  @override
+  String get prompt_previousGroup => '上一个分区';
+
+  @override
+  String get prompt_nextGroup => '下一个分区';
+
+  @override
+  String get prompt_groupEmptyHint => '空分区 · 轻击添加标签';
+
+  @override
+  String get prompt_groupOff => '已停用';
+
+  @override
+  String get prompt_groupEnable => '启用分区';
+
+  @override
+  String get prompt_groupDisable => '停用分区';
+
+  @override
+  String get prompt_groupIncluded => '参与生成';
+
+  @override
+  String get prompt_groupDeleteAgain => '再点一次删除';
+
+  @override
+  String prompt_groupDeleted(Object index) {
+    return '已删除分区 $index';
+  }
+
+  @override
+  String get prompt_groupDuplicate => '复制分区';
+
+  @override
+  String get prompt_groupMoveToFront => '移到最前';
 
   @override
   String get prompt_positivePrompt => '正向提示词';
@@ -16759,19 +16795,55 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get prompt_emptyGroup => '空白分區';
 
   @override
-  String get prompt_reorderGroup => '拖動排序分區';
-
-  @override
-  String get prompt_expandGroup => '展開分區';
-
-  @override
-  String get prompt_collapseGroup => '收合分區';
-
-  @override
   String get prompt_deleteGroup => '刪除分區';
 
   @override
-  String get prompt_deleteGroupConfirm => '刪除這個分區及其中的提示詞？';
+  String prompt_groupLabel(Object index) {
+    return '分區 $index';
+  }
+
+  @override
+  String prompt_groupPosition(Object index, Object total) {
+    return '分區 $index / $total';
+  }
+
+  @override
+  String get prompt_groupSwipeHint => '左右滑動切換';
+
+  @override
+  String get prompt_previousGroup => '上一個分區';
+
+  @override
+  String get prompt_nextGroup => '下一個分區';
+
+  @override
+  String get prompt_groupEmptyHint => '空白分區 · 輕觸新增標籤';
+
+  @override
+  String get prompt_groupOff => '已停用';
+
+  @override
+  String get prompt_groupEnable => '啟用分區';
+
+  @override
+  String get prompt_groupDisable => '停用分區';
+
+  @override
+  String get prompt_groupIncluded => '參與生成';
+
+  @override
+  String get prompt_groupDeleteAgain => '再點一次刪除';
+
+  @override
+  String prompt_groupDeleted(Object index) {
+    return '已刪除分區 $index';
+  }
+
+  @override
+  String get prompt_groupDuplicate => '複製分區';
+
+  @override
+  String get prompt_groupMoveToFront => '移到最前';
 
   @override
   String get prompt_positivePrompt => '正向提示詞';

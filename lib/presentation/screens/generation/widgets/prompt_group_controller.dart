@@ -5,6 +5,9 @@ import '../../../widgets/prompt/nai_syntax_controller.dart';
 
 enum PromptEditorMode { single, grouped }
 
+/// What [PromptGroupCollection.remove] took out, enough to put it back.
+typedef RemovedPromptGroup = ({int index, PromptGroupSectionSnapshot snapshot});
+
 /// One user-defined prompt partition.
 ///
 /// Partitions deliberately have no title or category: their meaning belongs to
@@ -79,6 +82,9 @@ class PromptGroupCollection extends ChangeNotifier {
   static int _nextId = 0;
   final List<PromptGroupSection> _sections = [];
 
+  /// A section the editor UI should open next; set when one is added.
+  String? _editRequest;
+
   List<PromptGroupSection> get sections => List.unmodifiable(_sections);
 
   String get effectiveText => joinPromptSections(
@@ -100,18 +106,74 @@ class PromptGroupCollection extends ChangeNotifier {
     return '${DateTime.now().microsecondsSinceEpoch}_$_nextId';
   }
 
+  /// Adds an empty section and asks the editor UI to open it.
   PromptGroupSection add() {
     final section = PromptGroupSection(id: _newId(), text: '');
     _insert(section);
+    _editRequest = section.id;
     notifyListeners();
     return section;
   }
 
-  void remove(String id) {
-    final index = _sections.indexWhere((section) => section.id == id);
-    if (index < 0) return;
+  /// Returns and clears the section the editor UI should open, if any.
+  String? takeEditRequest() {
+    final id = _editRequest;
+    _editRequest = null;
+    return id;
+  }
+
+  PromptGroupSection? sectionById(String id) => _find(id);
+
+  int indexOf(String id) => _sections.indexWhere((section) => section.id == id);
+
+  RemovedPromptGroup? remove(String id) {
+    final index = indexOf(id);
+    if (index < 0) return null;
     final removed = _sections.removeAt(index);
+    final snapshot = removed.toSnapshot();
     removed.dispose();
+    notifyListeners();
+    return (index: index, snapshot: snapshot);
+  }
+
+  /// Undoes [remove], keeping the section's id and position.
+  void restoreRemoved(RemovedPromptGroup removed) {
+    if (_find(removed.snapshot.id) != null) return;
+    final snapshot = removed.snapshot;
+    _insert(
+      PromptGroupSection(
+        id: snapshot.id,
+        text: snapshot.text,
+        enabled: snapshot.enabled,
+        collapsed: snapshot.collapsed,
+      ),
+      removed.index.clamp(0, _sections.length).toInt(),
+    );
+    notifyListeners();
+  }
+
+  /// Inserts a copy right after the section and returns it.
+  PromptGroupSection? duplicate(String id) {
+    final index = indexOf(id);
+    if (index < 0) return null;
+    final source = _sections[index];
+    final copy = PromptGroupSection(
+      id: _newId(),
+      text: source.controller.text,
+      enabled: source.enabled,
+    );
+    _insert(copy, index + 1);
+    notifyListeners();
+    return copy;
+  }
+
+  /// Moves a section so it ends up at [toIndex] in the new order.
+  void move(String id, int toIndex) {
+    final from = indexOf(id);
+    if (from < 0) return;
+    final target = toIndex.clamp(0, _sections.length - 1).toInt();
+    if (target == from) return;
+    _sections.insert(target, _sections.removeAt(from));
     notifyListeners();
   }
 

@@ -3158,35 +3158,95 @@ abstract class AppLocalizations {
   /// **'Empty section'**
   String get prompt_emptyGroup;
 
-  /// No description provided for @prompt_reorderGroup.
-  ///
-  /// In en, this message translates to:
-  /// **'Drag to reorder section'**
-  String get prompt_reorderGroup;
-
-  /// No description provided for @prompt_expandGroup.
-  ///
-  /// In en, this message translates to:
-  /// **'Expand section'**
-  String get prompt_expandGroup;
-
-  /// No description provided for @prompt_collapseGroup.
-  ///
-  /// In en, this message translates to:
-  /// **'Collapse section'**
-  String get prompt_collapseGroup;
-
   /// No description provided for @prompt_deleteGroup.
   ///
   /// In en, this message translates to:
   /// **'Delete Section'**
   String get prompt_deleteGroup;
 
-  /// No description provided for @prompt_deleteGroupConfirm.
+  /// No description provided for @prompt_groupLabel.
   ///
   /// In en, this message translates to:
-  /// **'Delete this section and its prompts?'**
-  String get prompt_deleteGroupConfirm;
+  /// **'Section {index}'**
+  String prompt_groupLabel(Object index);
+
+  /// No description provided for @prompt_groupPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Section {index} of {total}'**
+  String prompt_groupPosition(Object index, Object total);
+
+  /// No description provided for @prompt_groupSwipeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe to switch'**
+  String get prompt_groupSwipeHint;
+
+  /// No description provided for @prompt_previousGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous section'**
+  String get prompt_previousGroup;
+
+  /// No description provided for @prompt_nextGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Next section'**
+  String get prompt_nextGroup;
+
+  /// No description provided for @prompt_groupEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty section · tap to add tags'**
+  String get prompt_groupEmptyHint;
+
+  /// No description provided for @prompt_groupOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get prompt_groupOff;
+
+  /// No description provided for @prompt_groupEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on section'**
+  String get prompt_groupEnable;
+
+  /// No description provided for @prompt_groupDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off section'**
+  String get prompt_groupDisable;
+
+  /// No description provided for @prompt_groupIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Use in prompt'**
+  String get prompt_groupIncluded;
+
+  /// No description provided for @prompt_groupDeleteAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap again to delete'**
+  String get prompt_groupDeleteAgain;
+
+  /// No description provided for @prompt_groupDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted section {index}'**
+  String prompt_groupDeleted(Object index);
+
+  /// No description provided for @prompt_groupDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate section'**
+  String get prompt_groupDuplicate;
+
+  /// No description provided for @prompt_groupMoveToFront.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to front'**
+  String get prompt_groupMoveToFront;
 
   /// No description provided for @prompt_positivePrompt.
   ///
