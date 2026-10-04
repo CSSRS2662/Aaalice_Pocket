@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../themes/core/layered_surface_style.dart';
 import '../themes/theme_extension.dart';
+import 'keyboard_settled_padding.dart';
 import 'window_size_class.dart';
 
 /// Builds a panel body with the presenter-owned scroll controller.
@@ -215,6 +216,10 @@ class AdaptivePresenter {
     bool restoreFocus = true,
     bool showHeader = true,
     AnimationStyle? sheetAnimationStyle,
+
+    /// False makes the sheet jump above the keyboard once it has opened
+    /// instead of sliding along with it; see [KeyboardSettledPadding].
+    bool animateKeyboardInset = true,
   }) async {
     assert(!showHeader || title != null || titleBuilder != null);
     final resolvedTitleBuilder =
@@ -252,14 +257,10 @@ class AdaptivePresenter {
           context,
         ).colorScheme.scrim.withValues(alpha: 0.4),
         sheetAnimationStyle: sheetAnimationStyle,
-        builder: (sheetContext) => AnimatedPadding(
-          duration: MediaQuery.disableAnimationsOf(sheetContext)
-              ? Duration.zero
-              : motion.fastDuration,
-          curve: motion.standardCurve,
-          padding: EdgeInsets.only(
-            bottom: _activeRouteViewInsetBottom(sheetContext),
-          ),
+        builder: (sheetContext) => _keyboardInset(
+          sheetContext,
+          animate: animateKeyboardInset,
+          motion: motion,
           child: DraggableScrollableSheet(
             expand: false,
             initialChildSize: initialChildSize,
@@ -447,6 +448,23 @@ class _CenteredFormPanelState extends State<_CenteredFormPanel> {
       ),
     );
   }
+}
+
+Widget _keyboardInset(
+  BuildContext context, {
+  required bool animate,
+  required AppThemeExtension motion,
+  required Widget child,
+}) {
+  if (!animate) return KeyboardSettledPadding(child: child);
+  return AnimatedPadding(
+    duration: MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : motion.fastDuration,
+    curve: motion.standardCurve,
+    padding: EdgeInsets.only(bottom: _activeRouteViewInsetBottom(context)),
+    child: child,
+  );
 }
 
 double _activeRouteViewInsetBottom(BuildContext context) {

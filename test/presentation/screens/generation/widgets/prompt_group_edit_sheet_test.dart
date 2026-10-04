@@ -109,6 +109,25 @@ void main() {
     expect(toolbar.bottom, greaterThan(740));
   });
 
+  testWidgets('opening a section puts the caret at the end, ready to type', (
+    tester,
+  ) async {
+    final (groups, _) = await _openSheet(tester);
+    final section = groups.sectionById('s1')!;
+    expect(section.focusNode.hasFocus, isTrue);
+    expect(
+      section.controller.selection,
+      TextSelection.collapsed(offset: section.controller.text.length),
+    );
+
+    // Moving on while typing keeps the keyboard on the next section.
+    await tester.tap(find.byKey(const ValueKey('prompt_group_edit_next')));
+    await tester.pumpAndSettle();
+    final next = groups.sectionById('s2')!;
+    expect(next.focusNode.hasFocus, isTrue);
+    expect(next.controller.selection.baseOffset, next.controller.text.length);
+  });
+
   testWidgets('narrow screens with large text still fit without overflow', (
     tester,
   ) async {

@@ -58,6 +58,7 @@ Future<void> showPromptGroupEditSheet(
     minChildSize: 0.5,
     maxChildSize: 0.92,
     showHeader: false,
+    animateKeyboardInset: false,
     builder: (context, _) => _PromptGroupEditor(
       groups: groups,
       current: current,
@@ -102,15 +103,22 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
   @override
   void initState() {
     super.initState();
-    // A new, empty section is opened to be typed into straight away.
-    final section = widget.groups.sectionById(widget.current.value);
-    if (section != null && section.controller.text.trim().isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && section.focusNode.canRequestFocus) {
-          section.focusNode.requestFocus();
-        }
-      });
-    }
+    // Opening a section is for typing: caret at the end, keyboard up.
+    _focusAtEndAfterBuild();
+  }
+
+  void _focusAtEndAfterBuild() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final section = widget.groups.sectionById(widget.current.value);
+      if (!mounted || section == null || !section.focusNode.canRequestFocus) {
+        return;
+      }
+      final controller = section.controller;
+      controller.selection = TextSelection.collapsed(
+        offset: controller.text.length,
+      );
+      section.focusNode.requestFocus();
+    });
   }
 
   String get _modeSessionId => widget.negative
@@ -121,9 +129,12 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
     final groups = widget.groups;
     final index = groups.indexOf(widget.current.value) + by;
     if (index < 0 || index >= groups.sections.length) return;
-    FocusManager.instance.primaryFocus?.unfocus();
+    final typing =
+        groups.sectionById(widget.current.value)?.focusNode.hasFocus ?? false;
     _direction = by.sign;
     widget.current.value = groups.sections[index].id;
+    // Keep the keyboard up when moving on while typing.
+    if (typing) _focusAtEndAfterBuild();
   }
 
   void _close() => Navigator.of(context).maybePop();
