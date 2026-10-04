@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/localization_extension.dart';
+import '../../../providers/tag_library_page_provider.dart';
+import '../../tag_library_page/widgets/entry_add_dialog.dart';
 import 'prompt_group_actions.dart';
 import 'prompt_group_controller.dart';
 import 'prompt_group_edit_sheet.dart';
@@ -14,7 +17,7 @@ import 'prompt_input_models.dart';
 /// Grouped prompt mode: a grid of section tiles, each edited in its own sheet.
 ///
 /// Every change to the sections is recombined into the generation prompt.
-class PromptGroupEditor extends StatefulWidget {
+class PromptGroupEditor extends ConsumerStatefulWidget {
   const PromptGroupEditor({
     super.key,
     required this.controller,
@@ -27,7 +30,7 @@ class PromptGroupEditor extends StatefulWidget {
   final PromptInputViewData viewData;
 
   @override
-  State<PromptGroupEditor> createState() => _PromptGroupEditorState();
+  ConsumerState<PromptGroupEditor> createState() => _PromptGroupEditorState();
 }
 
 /// A deletion that can still be undone from the floating bar.
@@ -39,7 +42,7 @@ class _PendingUndo {
   final bool negative;
 }
 
-class _PromptGroupEditorState extends State<PromptGroupEditor> {
+class _PromptGroupEditorState extends ConsumerState<PromptGroupEditor> {
   static const Duration _undoDuration = Duration(seconds: 4);
   static const double _undoBarSpace = 72;
 
@@ -216,6 +219,18 @@ class _PromptGroupEditorState extends State<PromptGroupEditor> {
     );
   }
 
+  /// Opens the library's entry form with the section's prompt; the title,
+  /// category and preview image are filled in there before saving.
+  Future<void> _saveToLibrary(PromptGroupCollection groups, String id) async {
+    final text = groups.sectionById(id)?.controller.text.trim() ?? '';
+    if (text.isEmpty) return;
+    await EntryAddDialog.show(
+      context,
+      categories: ref.read(tagLibraryPageCategoriesProvider),
+      initialContent: text,
+    );
+  }
+
   Future<void> _showActions(
     PromptGroupCollection groups,
     String id,
@@ -236,6 +251,8 @@ class _PromptGroupEditorState extends State<PromptGroupEditor> {
         _duplicate(groups, id, negative);
       case PromptGroupAction.moveToFront:
         _moveToFront(groups, id, negative);
+      case PromptGroupAction.saveToLibrary:
+        await _saveToLibrary(groups, id);
       case PromptGroupAction.delete:
         _delete(groups, id, negative);
     }

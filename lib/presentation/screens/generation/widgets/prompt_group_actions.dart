@@ -6,7 +6,14 @@ import '../../../adaptive/adaptive_presenter.dart';
 import '../../../adaptive/content_sized_adaptive_form.dart';
 import 'prompt_group_controller.dart';
 
-enum PromptGroupAction { toggleEnabled, edit, duplicate, moveToFront, delete }
+enum PromptGroupAction {
+  toggleEnabled,
+  edit,
+  duplicate,
+  moveToFront,
+  saveToLibrary,
+  delete,
+}
 
 /// Section menu opened by a long press (or right click) on a grid tile.
 /// Returns the chosen action; the caller performs it after the menu closes.
@@ -29,10 +36,16 @@ Future<PromptGroupAction?> showPromptGroupActions(
     title: title,
     builder: (context, scrollController) {
       final colors = Theme.of(context).colorScheme;
-      Widget item(PromptGroupAction action, IconData icon, String label) {
+      Widget item(
+        PromptGroupAction action,
+        IconData icon,
+        String label, {
+        bool enabled = true,
+      }) {
         final danger = action == PromptGroupAction.delete;
         return ListTile(
           key: ValueKey('prompt_group_action_${action.name}'),
+          enabled: enabled,
           leading: Icon(icon, color: danger ? colors.error : null),
           title: Text(
             label,
@@ -65,6 +78,13 @@ Future<PromptGroupAction?> showPromptGroupActions(
             PromptGroupAction.moveToFront,
             Icons.vertical_align_top_rounded,
             l10n.prompt_groupMoveToFront,
+          ),
+          // An empty section has nothing to keep.
+          item(
+            PromptGroupAction.saveToLibrary,
+            Icons.bookmark_add_outlined,
+            l10n.tagLibrary_saveToLibrary,
+            enabled: section.controller.text.trim().isNotEmpty,
           ),
           item(
             PromptGroupAction.delete,
