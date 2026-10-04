@@ -206,6 +206,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_undo => 'Undo';
 
   @override
+  String get common_done => 'Done';
+
+  @override
   String get common_redo => 'Redo';
 
   @override
@@ -1708,9 +1711,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String prompt_groupPosition(Object index, Object total) {
     return 'Section $index of $total';
   }
-
-  @override
-  String get prompt_groupSwipeHint => 'Swipe to switch';
 
   @override
   String get prompt_previousGroup => 'Previous section';

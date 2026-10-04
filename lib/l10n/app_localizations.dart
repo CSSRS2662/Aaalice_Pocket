@@ -461,6 +461,12 @@ abstract class AppLocalizations {
   /// **'Undo'**
   String get common_undo;
 
+  /// No description provided for @common_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get common_done;
+
   /// No description provided for @common_redo.
   ///
   /// In en, this message translates to:
@@ -3175,12 +3181,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Section {index} of {total}'**
   String prompt_groupPosition(Object index, Object total);
-
-  /// No description provided for @prompt_groupSwipeHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Swipe to switch'**
-  String get prompt_groupSwipeHint;
 
   /// No description provided for @prompt_previousGroup.
   ///

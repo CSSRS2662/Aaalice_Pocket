@@ -99,6 +99,7 @@
     }
   },
   "common_undo": "Undo",
+  "common_done": "Done",
   "common_redo": "Redo",
   "common_refresh": "Refresh",
   "common_download": "Download",
@@ -694,7 +695,6 @@
       "total": {}
     }
   },
-  "prompt_groupSwipeHint": "Swipe to switch",
   "prompt_previousGroup": "Previous section",
   "prompt_nextGroup": "Next section",
   "prompt_groupEmptyHint": "Empty section · tap to add tags",

@@ -201,6 +201,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_undo => '撤销';
 
   @override
+  String get common_done => '完成';
+
+  @override
   String get common_redo => '重做';
 
   @override
@@ -1646,9 +1649,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String prompt_groupPosition(Object index, Object total) {
     return '分区 $index / $total';
   }
-
-  @override
-  String get prompt_groupSwipeHint => '左右滑动切换';
 
   @override
   String get prompt_previousGroup => '上一个分区';
@@ -15361,6 +15361,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get common_undo => '撤銷';
 
   @override
+  String get common_done => '完成';
+
+  @override
   String get common_redo => '重做';
 
   @override
@@ -16806,9 +16809,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String prompt_groupPosition(Object index, Object total) {
     return '分區 $index / $total';
   }
-
-  @override
-  String get prompt_groupSwipeHint => '左右滑動切換';
 
   @override
   String get prompt_previousGroup => '上一個分區';

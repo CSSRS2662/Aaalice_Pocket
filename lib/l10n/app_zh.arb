@@ -99,6 +99,7 @@
     }
   },
   "common_undo": "撤销",
+  "common_done": "完成",
   "common_redo": "重做",
   "common_refresh": "刷新",
   "common_download": "下载",
@@ -649,7 +650,6 @@
       "total": {}
     }
   },
-  "prompt_groupSwipeHint": "左右滑动切换",
   "prompt_previousGroup": "上一个分区",
   "prompt_nextGroup": "下一个分区",
   "prompt_groupEmptyHint": "空分区 · 轻击添加标签",

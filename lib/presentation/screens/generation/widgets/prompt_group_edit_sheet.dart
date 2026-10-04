@@ -7,8 +7,9 @@ import '../../../prompt_assistant/providers/prompt_assistant_history_provider.da
 import '../../../prompt_assistant/widgets/prompt_assistant_overlay.dart';
 import '../../../providers/image_generation_provider.dart';
 import '../../../themes/core/input_surface_style.dart';
-import '../../../themes/core/layered_surface_style.dart';
 import '../../../widgets/autocomplete/autocomplete.dart';
+import '../../../widgets/prompt/prompt_footer_style.dart';
+import '../../../widgets/prompt/prompt_tag_mode_toggle.dart';
 import '../../../widgets/prompt/unified/unified_prompt_config.dart';
 import '../../../widgets/prompt/unified/unified_prompt_input.dart';
 import 'prompt_group_controller.dart';
@@ -38,8 +39,9 @@ class PromptGroupEditCallbacks {
   final PromptImportCallback? onComfyuiImport;
 }
 
-/// Opens one section in a bottom sheet (a dialog on wide windows). Swiping
-/// the title or using its arrows moves to the neighbouring sections.
+/// Opens one section as a full-height editor: a navigation row on top, the
+/// prompt field filling the middle and the editing tools at the bottom, so
+/// with the keyboard up the tools sit right above it.
 Future<void> showPromptGroupEditSheet(
   BuildContext context, {
   required PromptGroupCollection groups,
@@ -52,18 +54,16 @@ Future<void> showPromptGroupEditSheet(
   String? pendingDelete;
   return AdaptivePresenter.showPanel<void>(
     context: context,
-    initialChildSize: 0.9,
+    initialChildSize: 0.92,
     minChildSize: 0.5,
-    maxChildSize: 0.9,
-    titleBuilder: (context) =>
-        _PromptGroupEditTitle(groups: groups, current: current),
-    builder: (context, scrollController) => _PromptGroupEditBody(
+    maxChildSize: 0.92,
+    showHeader: false,
+    builder: (context, _) => _PromptGroupEditor(
       groups: groups,
       current: current,
       negative: negative,
       numericEmphasisEnabled: numericEmphasisEnabled,
       callbacks: callbacks,
-      scrollController: scrollController,
       onDeleteRequested: (id) => pendingDelete = id,
     ),
   ).whenComplete(() {
@@ -73,93 +73,13 @@ Future<void> showPromptGroupEditSheet(
   });
 }
 
-void _step(
-  PromptGroupCollection groups,
-  ValueNotifier<String> current,
-  int by,
-) {
-  final index = groups.indexOf(current.value) + by;
-  if (index < 0 || index >= groups.sections.length) return;
-  FocusManager.instance.primaryFocus?.unfocus();
-  current.value = groups.sections[index].id;
-}
-
-class _PromptGroupEditTitle extends StatelessWidget {
-  const _PromptGroupEditTitle({required this.groups, required this.current});
-
-  final PromptGroupCollection groups;
-  final ValueNotifier<String> current;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    return ListenableBuilder(
-      listenable: Listenable.merge([groups, current]),
-      builder: (context, _) {
-        final index = groups.indexOf(current.value);
-        final total = groups.sections.length;
-        return Row(
-          children: [
-            IconButton(
-              key: const ValueKey('prompt_group_edit_previous'),
-              tooltip: l10n.prompt_previousGroup,
-              onPressed: index > 0 ? () => _step(groups, current, -1) : null,
-              icon: const Icon(Icons.chevron_left_rounded),
-            ),
-            Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onHorizontalDragEnd: (details) {
-                  final velocity = details.primaryVelocity ?? 0;
-                  if (velocity.abs() < 250) return;
-                  _step(groups, current, velocity < 0 ? 1 : -1);
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.prompt_groupPosition(index + 1, total),
-                      key: const ValueKey('prompt_group_edit_title'),
-                      style: theme.textTheme.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      l10n.prompt_groupSwipeHint,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            IconButton(
-              key: const ValueKey('prompt_group_edit_next'),
-              tooltip: l10n.prompt_nextGroup,
-              onPressed: index >= 0 && index < total - 1
-                  ? () => _step(groups, current, 1)
-                  : null,
-              icon: const Icon(Icons.chevron_right_rounded),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _PromptGroupEditBody extends ConsumerStatefulWidget {
-  const _PromptGroupEditBody({
+class _PromptGroupEditor extends ConsumerStatefulWidget {
+  const _PromptGroupEditor({
     required this.groups,
     required this.current,
     required this.negative,
     required this.numericEmphasisEnabled,
     required this.callbacks,
-    required this.scrollController,
     required this.onDeleteRequested,
   });
 
@@ -168,15 +88,15 @@ class _PromptGroupEditBody extends ConsumerStatefulWidget {
   final bool negative;
   final bool numericEmphasisEnabled;
   final PromptGroupEditCallbacks callbacks;
-  final ScrollController scrollController;
   final ValueChanged<String> onDeleteRequested;
 
   @override
-  ConsumerState<_PromptGroupEditBody> createState() =>
-      _PromptGroupEditBodyState();
+  ConsumerState<_PromptGroupEditor> createState() => _PromptGroupEditorState();
 }
 
-class _PromptGroupEditBodyState extends ConsumerState<_PromptGroupEditBody> {
+class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
+  /// Direction of the last section change, for the slide between sections.
+  int _direction = 0;
   bool _closing = false;
 
   @override
@@ -193,6 +113,29 @@ class _PromptGroupEditBodyState extends ConsumerState<_PromptGroupEditBody> {
     }
   }
 
+  String get _modeSessionId => widget.negative
+      ? PromptHistorySessionIds.generationNegative
+      : PromptHistorySessionIds.generationPrompt;
+
+  void _step(int by) {
+    final groups = widget.groups;
+    final index = groups.indexOf(widget.current.value) + by;
+    if (index < 0 || index >= groups.sections.length) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    _direction = by.sign;
+    widget.current.value = groups.sections[index].id;
+  }
+
+  void _close() => Navigator.of(context).maybePop();
+
+  void _closeOnce() {
+    if (_closing) return;
+    _closing = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _close();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -203,127 +146,71 @@ class _PromptGroupEditBodyState extends ConsumerState<_PromptGroupEditBody> {
           _closeOnce();
           return const SizedBox.shrink();
         }
-        return ListView(
-          controller: widget.scrollController,
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        final inputKey = ValueKey('prompt_group_input_${section.id}');
+        final content = Column(
           children: [
-            _buildTools(context, section),
-            const SizedBox(height: 12),
-            KeyedSubtree(
-              key: ValueKey('prompt_group_input_${section.id}'),
-              child: _buildInput(context, section),
+            _EditorHeader(
+              index: widget.groups.indexOf(section.id),
+              total: widget.groups.sections.length,
+              onStep: _step,
+              onDone: _close,
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _slideBetweenSections(
+                  context,
+                  inputKey,
+                  KeyedSubtree(
+                    key: inputKey,
+                    child: _buildInput(context, section),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 12, 12),
+              child: _buildToolbar(context, section),
             ),
           ],
+        );
+        // Centered dialogs on wide windows give a loose height.
+        return LayoutBuilder(
+          builder: (context, constraints) => constraints.hasBoundedHeight
+              ? content
+              : SizedBox(height: 560, child: content),
         );
       },
     );
   }
 
-  void _closeOnce() {
-    if (_closing) return;
-    _closing = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) Navigator.of(context).maybePop();
-    });
-  }
-
-  String get _modeSessionId => widget.negative
-      ? PromptHistorySessionIds.generationNegative
-      : PromptHistorySessionIds.generationPrompt;
-
-  Widget _buildTools(BuildContext context, PromptGroupSection section) {
-    final l10n = context.l10n;
-    final colors = Theme.of(context).colorScheme;
-    final callbacks = widget.callbacks;
-    return Row(
-      children: [
-        Flexible(
-          child: Material(
-            color: sectionSurfaceColor(colors),
-            borderRadius: BorderRadius.circular(12),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              key: const ValueKey('prompt_group_edit_enabled'),
-              onTap: () => callbacks.onToggleEnabled(section.id),
-              child: Padding(
-                padding: const EdgeInsetsDirectional.only(start: 4, end: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ExcludeFocus(
-                      child: Switch.adaptive(
-                        value: section.enabled,
-                        onChanged: (_) => callbacks.onToggleEnabled(section.id),
-                      ),
-                    ),
-                    Flexible(
-                      child: Text(
-                        l10n.prompt_groupIncluded,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        const Spacer(),
-        PromptAssistantOverlay(
-          key: ValueKey('prompt_group_assistant_${section.id}'),
-          placement: PromptAssistantPlacement.inline,
-          expandInPlace: false,
-          iconOnly: true,
-          compactDesktopToolbar: true,
-          supportsTagMode: true,
-          tagModeSessionId: _modeSessionId,
-          sessionId: '${_modeSessionId}_group_${section.id}',
-          controller: section.controller,
-          onChanged: (_) => callbacks.onChanged(),
-          onOpenSettings: callbacks.onOpenAssistantSettings,
-        ),
-        PopupMenuButton<String>(
-          key: const ValueKey('prompt_group_edit_menu'),
-          tooltip: l10n.common_moreActions,
-          onSelected: (value) {
-            switch (value) {
-              case 'duplicate':
-                callbacks.onDuplicate(section.id);
-              case 'front':
-                callbacks.onMoveToFront(section.id);
-              case 'delete':
-                // Deleted once the sheet has closed, where undo is offered.
-                widget.onDeleteRequested(section.id);
-                Navigator.of(context).maybePop();
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'duplicate',
-              child: _MenuRow(
-                icon: Icons.copy_all_rounded,
-                label: l10n.prompt_groupDuplicate,
-              ),
-            ),
-            PopupMenuItem(
-              value: 'front',
-              child: _MenuRow(
-                icon: Icons.vertical_align_top_rounded,
-                label: l10n.prompt_groupMoveToFront,
-              ),
-            ),
-            PopupMenuItem(
-              value: 'delete',
-              child: _MenuRow(
-                icon: Icons.delete_outline_rounded,
-                label: l10n.prompt_deleteGroup,
-                color: colors.error,
-              ),
-            ),
-          ],
-        ),
-      ],
+  /// The incoming section slides in from the side it was asked for; the
+  /// outgoing one leaves towards the other side.
+  Widget _slideBetweenSections(
+    BuildContext context,
+    Key currentKey,
+    Widget child,
+  ) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    final direction = _direction.toDouble();
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (current, previous) =>
+          Stack(fit: StackFit.expand, children: [...previous, ?current]),
+      transitionBuilder: (child, animation) {
+        final incoming = child.key == currentKey;
+        final offset = Tween<Offset>(
+          begin: Offset(0.12 * (incoming ? direction : -direction), 0),
+          end: Offset.zero,
+        ).animate(animation);
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(position: offset, child: child),
+        );
+      },
+      child: child,
     );
   }
 
@@ -354,14 +241,269 @@ class _PromptGroupEditBodyState extends ConsumerState<_PromptGroupEditBody> {
         ),
         hintText: context.l10n.prompt_groupHint,
       ),
-      decoration: const InputDecoration(contentPadding: EdgeInsets.all(12)),
-      minLines: 8,
+      decoration: const InputDecoration(contentPadding: EdgeInsets.all(14)),
       maxLines: null,
-      fitContent: true,
+      expands: true,
       enableAssistant: false,
+      showTagModeSwitch: false,
       onOpenAssistantSettings: callbacks.onOpenAssistantSettings,
       onComfyuiImport: callbacks.onComfyuiImport,
       onChanged: (_) => callbacks.onChanged(),
+    );
+  }
+
+  Widget _buildToolbar(BuildContext context, PromptGroupSection section) {
+    final callbacks = widget.callbacks;
+    return Row(
+      children: [
+        Flexible(
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: _IncludeToggle(
+              enabled: section.enabled,
+              onTap: () => callbacks.onToggleEnabled(section.id),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        PromptAssistantOverlay(
+          key: ValueKey('prompt_group_assistant_${section.id}'),
+          placement: PromptAssistantPlacement.inline,
+          expandInPlace: false,
+          iconOnly: true,
+          compactDesktopToolbar: true,
+          supportsTagMode: true,
+          tagModeSessionId: _modeSessionId,
+          sessionId: '${_modeSessionId}_group_${section.id}',
+          controller: section.controller,
+          onChanged: (_) => callbacks.onChanged(),
+          onOpenSettings: callbacks.onOpenAssistantSettings,
+        ),
+        const SizedBox(width: 4),
+        PromptTagModeToggle(sessionId: _modeSessionId),
+        _buildMenu(context, section),
+      ],
+    );
+  }
+
+  Widget _buildMenu(BuildContext context, PromptGroupSection section) {
+    final l10n = context.l10n;
+    final colors = Theme.of(context).colorScheme;
+    final callbacks = widget.callbacks;
+    return PopupMenuButton<String>(
+      key: const ValueKey('prompt_group_edit_menu'),
+      tooltip: l10n.common_moreActions,
+      icon: const Icon(Icons.more_horiz_rounded),
+      onSelected: (value) {
+        switch (value) {
+          case 'duplicate':
+            callbacks.onDuplicate(section.id);
+          case 'front':
+            callbacks.onMoveToFront(section.id);
+          case 'delete':
+            // Deleted once the sheet has closed, where undo is offered.
+            widget.onDeleteRequested(section.id);
+            _close();
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'duplicate',
+          child: _MenuRow(
+            icon: Icons.copy_all_rounded,
+            label: l10n.prompt_groupDuplicate,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'front',
+          child: _MenuRow(
+            icon: Icons.vertical_align_top_rounded,
+            label: l10n.prompt_groupMoveToFront,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: _MenuRow(
+            icon: Icons.delete_outline_rounded,
+            label: l10n.prompt_deleteGroup,
+            color: colors.error,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Section position with neighbours: arrows around a swipeable title with
+/// page dots, and Done on the right.
+class _EditorHeader extends StatelessWidget {
+  const _EditorHeader({
+    required this.index,
+    required this.total,
+    required this.onStep,
+    required this.onDone,
+  });
+
+  /// More dots than this stop telling anything at a glance.
+  static const int maxDots = 9;
+
+  final int index;
+  final int total;
+  final ValueChanged<int> onStep;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(4, 2, 12, 6),
+      child: Row(
+        children: [
+          // The title keeps all spare width; actions stay at their size.
+          Expanded(
+            child: Row(
+              children: [
+                IconButton(
+                  key: const ValueKey('prompt_group_edit_previous'),
+                  tooltip: l10n.prompt_previousGroup,
+                  onPressed: index > 0 ? () => onStep(-1) : null,
+                  icon: const Icon(Icons.chevron_left_rounded),
+                ),
+                Flexible(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onHorizontalDragEnd: (details) {
+                      final velocity = details.primaryVelocity ?? 0;
+                      if (velocity.abs() >= 250) onStep(velocity < 0 ? 1 : -1);
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(text: l10n.prompt_groupLabel(index + 1)),
+                              TextSpan(
+                                text: ' / $total',
+                                style: TextStyle(
+                                  color: colors.onSurfaceVariant,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                          key: const ValueKey('prompt_group_edit_title'),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (total > 1 && total <= maxDots) ...[
+                          const SizedBox(height: 6),
+                          _PageDots(index: index, total: total),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                IconButton(
+                  key: const ValueKey('prompt_group_edit_next'),
+                  tooltip: l10n.prompt_nextGroup,
+                  onPressed: index < total - 1 ? () => onStep(1) : null,
+                  icon: const Icon(Icons.chevron_right_rounded),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.tonal(
+            key: const ValueKey('prompt_group_edit_done'),
+            onPressed: onDone,
+            child: Text(l10n.common_done),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PageDots extends StatelessWidget {
+  const _PageDots({required this.index, required this.total});
+
+  final int index;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 180);
+    return ExcludeSemantics(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var dot = 0; dot < total; dot++)
+            AnimatedContainer(
+              duration: duration,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              width: dot == index ? 14 : 5,
+              height: 5,
+              decoration: BoxDecoration(
+                color: dot == index ? colors.primary : colors.outlineVariant,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Whether the section goes into the prompt, as a pill the size of the
+/// neighbouring text/tag toggle.
+class _IncludeToggle extends StatelessWidget {
+  const _IncludeToggle({required this.enabled, required this.onTap});
+
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = Theme.of(context).colorScheme;
+    final foreground = enabled
+        ? colors.onPrimaryContainer
+        : colors.onSurfaceVariant;
+    return Semantics(
+      toggled: enabled,
+      child: Tooltip(
+        message: enabled ? l10n.prompt_groupDisable : l10n.prompt_groupEnable,
+        child: TextButton.icon(
+          key: const ValueKey('prompt_group_edit_enabled'),
+          onPressed: onTap,
+          style: PromptFooterStyle.button(context).copyWith(
+            backgroundColor: WidgetStatePropertyAll(
+              enabled ? colors.primaryContainer : colors.surfaceContainerHigh,
+            ),
+            foregroundColor: WidgetStatePropertyAll(foreground),
+          ),
+          icon: Icon(
+            enabled
+                ? Icons.check_circle_rounded
+                : Icons.do_not_disturb_on_outlined,
+            size: PromptFooterStyle.iconSize,
+          ),
+          label: Text(
+            enabled ? l10n.prompt_groupIncluded : l10n.prompt_groupOff,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
     );
   }
 }

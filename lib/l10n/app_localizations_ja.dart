@@ -203,6 +203,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get common_undo => '元に戻す';
 
   @override
+  String get common_done => '完了';
+
+  @override
   String get common_redo => 'やり直し';
 
   @override
@@ -1669,9 +1672,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String prompt_groupPosition(Object index, Object total) {
     return 'セクション $index / $total';
   }
-
-  @override
-  String get prompt_groupSwipeHint => '左右にスワイプで切り替え';
 
   @override
   String get prompt_previousGroup => '前のセクション';

@@ -95,6 +95,7 @@
     }
   },
   "common_undo": "元に戻す",
+  "common_done": "完了",
   "common_redo": "やり直し",
   "common_refresh": "更新",
   "common_download": "ダウンロード",
@@ -686,7 +687,6 @@
       "total": {}
     }
   },
-  "prompt_groupSwipeHint": "左右にスワイプで切り替え",
   "prompt_previousGroup": "前のセクション",
   "prompt_nextGroup": "次のセクション",
   "prompt_groupEmptyHint": "空のセクション・タップしてタグを追加",
