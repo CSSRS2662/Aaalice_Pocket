@@ -39,6 +39,8 @@ class _HarnessState extends State<_Harness> {
 void main() {
   late List<double> childInsets;
 
+  setUp(KeyboardSettledPadding.resetKnownKeyboardHeight);
+
   Future<_HarnessState> pump(WidgetTester tester) async {
     childInsets = [];
     await tester.pumpWidget(_Harness(childInsets: childInsets));
