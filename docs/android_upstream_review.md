@@ -7,14 +7,14 @@
 - 上游：`Aaalice233/Aaalice_NAI_Launcher`，2026-09-15 起由协作者接手维护，仍在持续更新。
 - `main` 只跟随 `upstream/main`；全部定制在 `android-custom`。
 - 每次合并前创建 `backup/android-custom-before-upstream-YYYYMMDD`，在独立本地分支合并验证后再快进 `android-custom`。
-- 自 2026-09-26 起，`android-custom` 以快进方式推送到 fork 的 `main`；每次推送前确认，不强制推送。
+- `android-custom` 只在发布大版本时以快进方式推送到 fork（`CSSRS2662/Aaalice_Pocket`）的 `main`，推送前确认，不强制推送；自用小版本的提交只留在本地。
 - 工具链以 `tool/android_build_environment.lock.json` 为准；上游升级 Flutter 时同步更新该文件。
 
 ## 版本号与发布
 
 - 格式为 `<上游版本>-custom.<N>[.<M>]+<构建号>`，如 `4.2.1-custom.21.1+66`；构建号每次打包加 1，安装包名为 `Aaalice_Pocket_<版本名>_arm64.apk`。
-- `custom.<N>` 是发布版：只有决定发布时，才把上次发布以来的全部改动合为一次大版本升级（如 `custom.21` → `custom.22`），打 `pocket-v<版本名>` 标签，在 GitHub Releases 发布。标签不用 `v` 开头，避免触发上游继承的 Release 工作流，也不与上游标签重名。
-- 其余每次改动后的打包都是自用小版本，不发布：在最近的发布版后加 `.<M>`，从 1 起逐次加 1（`custom.21.1`、`custom.21.2`……`custom.21.10`），到下次发布时并入 `custom.22`。
+- `custom.<N>` 是发布版：只有决定发布时，才把上次发布以来的全部改动合为一次大版本升级（如 `custom.21` → `custom.22`），连同代码一起推送，打 `pocket-v<版本名>` 标签，在 GitHub Releases 发布。标签不用 `v` 开头，避免触发上游继承的 Release 工作流，也不与上游标签重名。
+- 其余每次改动后的打包都是自用小版本，不发布也不推送代码：在最近的发布版后加 `.<M>`，从 1 起逐次加 1（`custom.21.1`、`custom.21.2`……`custom.21.10`），到下次发布时并入 `custom.22`。
 - 合并上游的新版本（如 4.3.0）后重置序号，版本名变为 `4.3.0-custom.1`。
 
 ## 有意分叉与合并规则
