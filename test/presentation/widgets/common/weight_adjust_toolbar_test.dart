@@ -9,6 +9,7 @@ import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
 import 'package:nai_launcher/presentation/widgets/common/themed_input.dart';
 import 'package:nai_launcher/presentation/widgets/common/weight_adjust_toolbar.dart';
+import 'package:nai_launcher/presentation/widgets/prompt/prompt_weight_editing.dart';
 import 'package:nai_launcher/presentation/widgets/prompt/unified/unified_prompt_config.dart';
 import 'package:nai_launcher/presentation/widgets/prompt/unified/unified_prompt_input.dart';
 
@@ -820,6 +821,60 @@ void main() {
     },
   );
 
+  testWidgets('double tap inside a weight block selects the whole block', (
+    tester,
+  ) async {
+    const body = 'cat, 1.40::smile::, dog';
+    final prompt = TextEditingController(text: body);
+    final focus = FocusNode();
+    final page = ScrollController();
+    _registerCleanup(tester, prompt, focus, page);
+    await _pumpHarness(
+      tester,
+      prompt: prompt,
+      focus: focus,
+      page: page,
+      enableWheelAdjustment: true,
+    );
+
+    await _doubleTapInside(tester, prompt, body.indexOf('smile') + 2);
+    expect(prompt.selection.textInside(body), '1.40::smile::');
+
+    expect(PromptWeightEditing.applyWeight(prompt, 1.5), isTrue);
+    expect(prompt.text, 'cat, 1.50::smile::, dog');
+    expect(prompt.selection.textInside(prompt.text), '1.50::smile::');
+  });
+
+  testWidgets('only a double tap widens a selection inside a block', (
+    tester,
+  ) async {
+    const body = 'cat, 1.40::smile::, dog';
+    final prompt = TextEditingController(text: body);
+    final focus = FocusNode();
+    final page = ScrollController();
+    _registerCleanup(tester, prompt, focus, page);
+    await _pumpHarness(
+      tester,
+      prompt: prompt,
+      focus: focus,
+      page: page,
+      enableWheelAdjustment: true,
+    );
+
+    await _doubleTapInside(tester, prompt, 1);
+    expect(prompt.selection.textInside(body), 'cat');
+
+    // Selections not made by a double tap keep their exact range.
+    await tester.pump(const Duration(seconds: 1));
+    final inner = body.indexOf('smile');
+    prompt.selection = TextSelection(
+      baseOffset: inner,
+      extentOffset: inner + 'smile'.length,
+    );
+    await tester.pumpAndSettle();
+    expect(prompt.selection.textInside(body), 'smile');
+  });
+
   testWidgets('narrow 3x toolbar stays on-screen and supports keyboard', (
     tester,
   ) async {
@@ -926,6 +981,27 @@ void _registerControllerSwapCleanup(
       prompt.dispose();
     }
   });
+}
+
+Future<void> _doubleTapInside(
+  WidgetTester tester,
+  TextEditingController prompt,
+  int offset,
+) async {
+  final editable = tester.state<EditableTextState>(
+    find.byWidgetPredicate(
+      (widget) => widget is EditableText && widget.controller == prompt,
+    ),
+  );
+  final render = editable.renderEditable;
+  final target = MatrixUtils.transformRect(
+    render.getTransformTo(null),
+    render.getLocalRectForCaret(TextPosition(offset: offset)),
+  ).center;
+  await tester.tapAt(target);
+  await tester.pump(const Duration(milliseconds: 50));
+  await tester.tapAt(target);
+  await tester.pumpAndSettle();
 }
 
 Future<void> _pumpHarness(

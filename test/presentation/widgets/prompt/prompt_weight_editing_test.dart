@@ -54,4 +54,54 @@ void main() {
     );
     expect(PromptWeightEditing.withWeight('cat', 4), '3.00::cat::');
   });
+
+  group('enclosingWeightBlock', () {
+    TextSelection? blockFor(String text, String word, {int occurrence = 0}) {
+      var start = -1;
+      for (var i = 0; i <= occurrence; i++) {
+        start = text.indexOf(word, start + 1);
+      }
+      return PromptWeightEditing.enclosingWeightBlock(
+        text,
+        TextSelection(baseOffset: start, extentOffset: start + word.length),
+      );
+    }
+
+    String? selected(String text, TextSelection? selection) =>
+        selection?.textInside(text);
+
+    test('widens a word to its whole block without the separator', () {
+      const text = 'smile, 1.40::smile::, blush';
+      expect(
+        selected(text, blockFor(text, 'smile', occurrence: 1)),
+        '1.40::smile::',
+      );
+      expect(selected(text, blockFor(text, '1.40')), '1.40::smile::');
+    });
+
+    test('a word in a weighted group selects the whole group', () {
+      const text = 'cat, 1.2::smile, blush::';
+      expect(selected(text, blockFor(text, 'blush')), '1.2::smile, blush::');
+    });
+
+    test('numeric weights do not nest, so a reset stays one block', () {
+      // NAI closes the block at the first `::`; `1.5::` only resets weight.
+      const text = '1.2::1.5::smile::, blush';
+      expect(selected(text, blockFor(text, 'smile')), '1.2::1.5::smile::');
+    });
+
+    test('leaves plain tags and complete blocks alone', () {
+      const text = 'smile, 1.40::smile::, blush';
+      expect(blockFor(text, 'blush'), isNull);
+      expect(blockFor(text, 'smile'), isNull);
+      expect(blockFor(text, '1.40::smile::'), isNull);
+      expect(
+        PromptWeightEditing.enclosingWeightBlock(
+          text,
+          const TextSelection.collapsed(offset: 14),
+        ),
+        isNull,
+      );
+    });
+  });
 }

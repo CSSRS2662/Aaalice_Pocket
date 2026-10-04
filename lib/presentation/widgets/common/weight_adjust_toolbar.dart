@@ -86,6 +86,14 @@ class _WeightAdjustToolbarWrapperState
   bool _toolbarVisible = false;
   Timer? _blurTimer;
 
+  /// A double tap selects one word; inside `1.4::smile::` it is widened to the
+  /// whole weight block for a short window after the second press.
+  static const Duration _doubleTapSelectionWindow = Duration(milliseconds: 600);
+  PointerDownEvent? _lastPointerDown;
+
+  /// Runs while a double tap's word selection may still arrive.
+  Timer? _doubleTapWindow;
+
   @override
   void initState() {
     super.initState();
@@ -132,6 +140,7 @@ class _WeightAdjustToolbarWrapperState
   @override
   void dispose() {
     _blurTimer?.cancel();
+    _doubleTapWindow?.cancel();
     _isInteractingWithToolbar = false;
     _toolbarVisible = false;
     widget.controller.removeListener(_onSelectionChanged);
@@ -157,6 +166,34 @@ class _WeightAdjustToolbarWrapperState
     if (!widget.enabled || _isInteractingWithToolbar) return;
 
     _syncToolbarWithControllerSelection();
+    if (_doubleTapWindow != null) scheduleMicrotask(_widenDoubleTapSelection);
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    final previous = _lastPointerDown;
+    _lastPointerDown = event;
+    final isDoubleTap =
+        previous != null &&
+        event.timeStamp - previous.timeStamp <= kDoubleTapTimeout &&
+        (event.position - previous.position).distance <= kDoubleTapSlop;
+    _doubleTapWindow?.cancel();
+    _doubleTapWindow = null;
+    if (!isDoubleTap) return;
+    _doubleTapWindow = Timer(
+      _doubleTapSelectionWindow,
+      () => _doubleTapWindow = null,
+    );
+    scheduleMicrotask(_widenDoubleTapSelection);
+  }
+
+  void _widenDoubleTapSelection() {
+    if (!mounted || !widget.enabled || _doubleTapWindow == null) return;
+    final controller = widget.controller;
+    final block = PromptWeightEditing.enclosingWeightBlock(
+      controller.text,
+      controller.selection,
+    );
+    if (block != null) controller.selection = block;
   }
 
   void _syncToolbarWithControllerSelection() {
@@ -240,6 +277,7 @@ class _WeightAdjustToolbarWrapperState
   @override
   Widget build(BuildContext context) {
     return Listener(
+      onPointerDown: _handlePointerDown,
       onPointerSignal: _handlePointerSignal,
       child: OverlayPortal.overlayChildLayoutBuilder(
         controller: _overlayController,

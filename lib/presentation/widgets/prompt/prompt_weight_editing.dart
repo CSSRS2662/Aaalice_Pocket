@@ -23,6 +23,9 @@ class PromptWeightEditing {
     dotAll: true,
   );
   static final RegExp _bracketShell = RegExp(r'^[\{\[]+$');
+  static final RegExp _numericBlockOpening = RegExp(
+    r'^-?(?:\d+(?:\.\d*)?|\.\d+)::',
+  );
 
   static bool protectNegativeBlockSyntax(TextEditingController controller) {
     final selection = controller.selection;
@@ -61,6 +64,45 @@ class PromptWeightEditing {
       return true;
     }
     return true;
+  }
+
+  /// The innermost numeric weight block such as `1.4::smile::` that contains
+  /// [selection], excluding the separator after it.
+  ///
+  /// A double tap selects a single word, which inside a block is only the tag
+  /// (or the number); weighting that nests a second block instead of changing
+  /// this one. Returns null outside a block or when it is already selected.
+  static TextSelection? enclosingWeightBlock(
+    String text,
+    TextSelection selection,
+  ) {
+    if (!selection.isValid ||
+        selection.isCollapsed ||
+        selection.start < 0 ||
+        selection.end > text.length) {
+      return null;
+    }
+    PromptEditSpan? block;
+    void visit(Iterable<PromptEditSpan> spans) {
+      for (final span in spans) {
+        if (selection.start < span.start || selection.end > span.end) continue;
+        if (span.complete &&
+            !span.disabled &&
+            span.raw.endsWith('::') &&
+            _numericBlockOpening.hasMatch(span.raw)) {
+          block = span;
+        }
+        visit(span.children);
+      }
+    }
+
+    visit(PromptEditDocument.parse(text));
+    final found = block;
+    if (found == null ||
+        (found.start == selection.start && found.end == selection.end)) {
+      return null;
+    }
+    return TextSelection(baseOffset: found.start, extentOffset: found.end);
   }
 
   static bool hasSelection(TextEditingController controller) {
