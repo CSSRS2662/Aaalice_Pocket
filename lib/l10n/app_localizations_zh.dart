@@ -4379,6 +4379,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get randomMode_disabledTip => '抽卡模式\n点击开启后每次生成自动随机提示词';
 
   @override
+  String get randomMode_touchTip => '点按：随机生成提示词\n长按：开启抽卡模式';
+
+  @override
+  String get randomMode_touchEnabledTip => '抽卡模式已开启，每次生成后自动随机新提示词\n点按关闭';
+
+  @override
+  String get randomMode_turnedOn => '抽卡模式已开启，点按骰子关闭';
+
+  @override
+  String get randomMode_turnedOff => '抽卡模式已关闭';
+
+  @override
+  String get prompt_clearAll => '清空提示词';
+
+  @override
+  String get prompt_clearAllPositiveContent =>
+      '将清空正面提示词的全部内容（含所有分区）并移除全部角色，无法撤销。固定词不受影响。';
+
+  @override
+  String get prompt_clearAllNegativeContent => '将清空负面提示词的全部内容（含所有分区），无法撤销。';
+
+  @override
+  String get prompt_clearAllAlsoNegative => '同时清空负面提示词';
+
+  @override
+  String get prompt_clearAllAlsoPositive => '同时清空正面提示词与角色';
+
+  @override
   String get batchSize_title => '批次大小';
 
   @override
@@ -19537,6 +19565,34 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get randomMode_disabledTip => '抽卡模式\n點選開啟後每次生成自動隨機提示詞';
+
+  @override
+  String get randomMode_touchTip => '點按：隨機產生提示詞\n長按：開啟抽卡模式';
+
+  @override
+  String get randomMode_touchEnabledTip => '抽卡模式已開啟，每次生成後自動隨機新提示詞\n點按關閉';
+
+  @override
+  String get randomMode_turnedOn => '抽卡模式已開啟，點按骰子關閉';
+
+  @override
+  String get randomMode_turnedOff => '抽卡模式已關閉';
+
+  @override
+  String get prompt_clearAll => '清空提示詞';
+
+  @override
+  String get prompt_clearAllPositiveContent =>
+      '將清空正面提示詞的全部內容（含所有分區）並移除全部角色，無法復原。固定詞不受影響。';
+
+  @override
+  String get prompt_clearAllNegativeContent => '將清空負面提示詞的全部內容（含所有分區），無法復原。';
+
+  @override
+  String get prompt_clearAllAlsoNegative => '同時清空負面提示詞';
+
+  @override
+  String get prompt_clearAllAlsoPositive => '同時清空正面提示詞與角色';
 
   @override
   String get batchSize_title => '批次大小';

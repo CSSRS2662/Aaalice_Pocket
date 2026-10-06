@@ -11,10 +11,10 @@ import '../../../prompt_assistant/widgets/prompt_assistant_quick_settings.dart';
 import '../../../providers/character_prompt_provider.dart';
 import '../../../providers/image_generation_provider.dart';
 import '../../../providers/pending_prompt_provider.dart';
-import '../../../providers/prompt_config_provider.dart';
 import '../../../widgets/character/mobile_character_manager_sheet.dart';
 import '../../../widgets/common/app_toast.dart';
 import 'prompt_input_controller.dart';
+import 'random_prompt_action.dart';
 
 /// Coordinates prompt commands that span providers, navigation and editors.
 class PromptInputCoordinator {
@@ -218,39 +218,8 @@ class PromptInputCoordinator {
   }
 
   Future<void> generateRandomPrompt() async {
-    try {
-      await _ref
-          .read(imageGenerationNotifierProvider.notifier)
-          .generateAndApplyRandomPrompt();
-      final characters = _ref
-          .read(characterPromptNotifierProvider)
-          .characters
-          .where(
-            (character) => character.enabled && character.prompt.isNotEmpty,
-          )
-          .length;
-      if (characters > 0) _showGeneratedCharacters(characters);
-    } catch (error) {
-      _showRandomError(error);
-    }
-  }
-
-  void _showGeneratedCharacters(int characters) {
     if (!_mounted()) return;
-    final context = _context();
-    AppToast.success(
-      context,
-      context.l10n.tagLibrary_generatedCharacters(characters.toString()),
-    );
-  }
-
-  void _showRandomError(Object error) {
-    if (!_mounted()) return;
-    final context = _context();
-    final message = error is UnsupportedRandomPromptModelException
-        ? context.l10n.randomPrompt_unsupportedModelHint
-        : context.l10n.tagLibrary_generateFailed(error.toString());
-    AppToast.error(context, message);
+    await applyRandomPrompt(_context(), _ref);
   }
 
   void openAssistantSettings() {

@@ -4578,6 +4578,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'Random mode\nClick to auto-randomize prompts on generation';
 
   @override
+  String get randomMode_touchTip =>
+      'Tap: random prompt\nLong press: turn on random mode';
+
+  @override
+  String get randomMode_touchEnabledTip =>
+      'Random mode is on: the prompt is randomized after each generation\nTap to turn off';
+
+  @override
+  String get randomMode_turnedOn =>
+      'Random mode is on. Tap the dice to turn it off';
+
+  @override
+  String get randomMode_turnedOff => 'Random mode is off';
+
+  @override
+  String get prompt_clearAll => 'Clear prompt';
+
+  @override
+  String get prompt_clearAllPositiveContent =>
+      'Clears the whole prompt (every section) and removes all characters. This can\'t be undone. Fixed tags are kept.';
+
+  @override
+  String get prompt_clearAllNegativeContent =>
+      'Clears all undesired content (every section). This can\'t be undone.';
+
+  @override
+  String get prompt_clearAllAlsoNegative => 'Also clear undesired content';
+
+  @override
+  String get prompt_clearAllAlsoPositive =>
+      'Also clear the prompt and characters';
+
+  @override
   String get batchSize_title => 'Batch Size';
 
   @override

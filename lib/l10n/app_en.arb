@@ -1983,6 +1983,15 @@
 
   "randomMode_enabledTip": "Random mode enabled\nAuto-randomize prompt after each generation",
   "randomMode_disabledTip": "Random mode\nClick to auto-randomize prompts on generation",
+  "randomMode_touchTip": "Tap: random prompt\nLong press: turn on random mode",
+  "randomMode_touchEnabledTip": "Random mode is on: the prompt is randomized after each generation\nTap to turn off",
+  "randomMode_turnedOn": "Random mode is on. Tap the dice to turn it off",
+  "randomMode_turnedOff": "Random mode is off",
+  "prompt_clearAll": "Clear prompt",
+  "prompt_clearAllPositiveContent": "Clears the whole prompt (every section) and removes all characters. This can't be undone. Fixed tags are kept.",
+  "prompt_clearAllNegativeContent": "Clears all undesired content (every section). This can't be undone.",
+  "prompt_clearAllAlsoNegative": "Also clear undesired content",
+  "prompt_clearAllAlsoPositive": "Also clear the prompt and characters",
 
   "batchSize_title": "Batch Size",
   "batchSize_tooltip": "{count} images per request",

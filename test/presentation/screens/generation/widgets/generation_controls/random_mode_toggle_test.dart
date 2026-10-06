@@ -1,11 +1,67 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
+import 'package:nai_launcher/presentation/providers/image_generation_provider.dart';
 import 'package:nai_launcher/presentation/screens/generation/widgets/generation_controls/random_mode_toggle.dart';
 
+import '../../../../../helpers/memory_local_storage.dart';
+
 void main() {
+  testWidgets('in the phone bar a long press turns random mode on, a tap off', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localStorageServiceProvider.overrideWith(
+            (ref) => MemoryLocalStorage(),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Center(
+              child: Consumer(
+                builder: (context, ref, _) => RandomModeToggle(
+                  enabled: ref.watch(randomPromptModeProvider),
+                  tapGeneratesPrompt: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(RandomModeToggle)),
+    );
+    final button = find.byType(RandomModeToggle);
+    // The long press is the button's, so the tooltip only opens manually.
+    expect(
+      tester.widget<Tooltip>(find.byType(Tooltip)).triggerMode,
+      TooltipTriggerMode.manual,
+    );
+
+    await tester.longPress(button);
+    await tester.pumpAndSettle();
+    expect(container.read(randomPromptModeProvider), isTrue);
+    expect(find.text('抽卡模式已开启，点按骰子关闭'), findsOneWidget);
+
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    expect(container.read(randomPromptModeProvider), isFalse);
+    expect(find.text('抽卡模式已关闭'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 10));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('touch policy keeps random-mode control at least 48dp', (
     tester,
   ) async {

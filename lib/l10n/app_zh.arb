@@ -1895,6 +1895,15 @@
 
   "randomMode_enabledTip": "抽卡模式已开启\n每次生成后自动随机新提示词",
   "randomMode_disabledTip": "抽卡模式\n点击开启后每次生成自动随机提示词",
+  "randomMode_touchTip": "点按：随机生成提示词\n长按：开启抽卡模式",
+  "randomMode_touchEnabledTip": "抽卡模式已开启，每次生成后自动随机新提示词\n点按关闭",
+  "randomMode_turnedOn": "抽卡模式已开启，点按骰子关闭",
+  "randomMode_turnedOff": "抽卡模式已关闭",
+  "prompt_clearAll": "清空提示词",
+  "prompt_clearAllPositiveContent": "将清空正面提示词的全部内容（含所有分区）并移除全部角色，无法撤销。固定词不受影响。",
+  "prompt_clearAllNegativeContent": "将清空负面提示词的全部内容（含所有分区），无法撤销。",
+  "prompt_clearAllAlsoNegative": "同时清空负面提示词",
+  "prompt_clearAllAlsoPositive": "同时清空正面提示词与角色",
 
   "batchSize_title": "批次大小",
   "batchSize_tooltip": "每次请求生成 {count} 张",

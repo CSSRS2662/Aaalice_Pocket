@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,17 +7,26 @@ import 'package:nai_launcher/core/utils/localization_extension.dart';
 import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
 import 'package:nai_launcher/presentation/providers/image_generation_provider.dart';
 import 'package:nai_launcher/presentation/themes/theme_extension.dart';
+import 'package:nai_launcher/presentation/widgets/common/app_toast.dart';
+
+import '../random_prompt_action.dart';
 
 /// 抽卡模式状态按钮。
+///
+/// With [tapGeneratesPrompt] a tap draws one random prompt and a long press
+/// turns random mode on; while it is on, a tap turns it off. Otherwise a tap
+/// toggles the mode.
 class RandomModeToggle extends ConsumerStatefulWidget {
   const RandomModeToggle({
     super.key,
     required this.enabled,
     this.compact = false,
+    this.tapGeneratesPrompt = false,
   });
 
   final bool enabled;
   final bool compact;
+  final bool tapGeneratesPrompt;
 
   @override
   ConsumerState<RandomModeToggle> createState() => _RandomModeToggleState();
@@ -23,6 +34,31 @@ class RandomModeToggle extends ConsumerStatefulWidget {
 
 class _RandomModeToggleState extends ConsumerState<RandomModeToggle> {
   bool _hovered = false;
+  bool _drawing = false;
+
+  void _toggleMode() {
+    ref.read(randomPromptModeProvider.notifier).toggle();
+    if (!widget.tapGeneratesPrompt) return;
+    // The same dice also draws prompts, so say which way the mode went.
+    AppToast.info(
+      context,
+      widget.enabled
+          ? context.l10n.randomMode_turnedOff
+          : context.l10n.randomMode_turnedOn,
+    );
+  }
+
+  void _handleTap() {
+    if (!widget.tapGeneratesPrompt || widget.enabled) {
+      _toggleMode();
+      return;
+    }
+    if (_drawing) return;
+    _drawing = true;
+    unawaited(
+      applyRandomPrompt(context, ref).whenComplete(() => _drawing = false),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +69,12 @@ class _RandomModeToggleState extends ConsumerState<RandomModeToggle> {
     final controlExtent = widget.compact
         ? 36.0
         : context.interactionPolicy.minimumControlExtent;
-    final tooltip = widget.enabled
-        ? context.l10n.randomMode_enabledTip
-        : context.l10n.randomMode_disabledTip;
+    final tooltip = switch ((widget.tapGeneratesPrompt, widget.enabled)) {
+      (true, true) => context.l10n.randomMode_touchEnabledTip,
+      (true, false) => context.l10n.randomMode_touchTip,
+      (false, true) => context.l10n.randomMode_enabledTip,
+      (false, false) => context.l10n.randomMode_disabledTip,
+    };
     final baseColor = widget.enabled
         ? colors.primaryContainer
         : Colors.transparent;
@@ -49,6 +88,10 @@ class _RandomModeToggleState extends ConsumerState<RandomModeToggle> {
       label: tooltip,
       child: Tooltip(
         message: tooltip,
+        // A long press belongs to the button here, not to the tooltip.
+        triggerMode: widget.tapGeneratesPrompt
+            ? TooltipTriggerMode.manual
+            : null,
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
           onEnter: (_) => setState(() => _hovered = true),
@@ -70,8 +113,10 @@ class _RandomModeToggleState extends ConsumerState<RandomModeToggle> {
               ),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
-                onTap: () =>
-                    ref.read(randomPromptModeProvider.notifier).toggle(),
+                onTap: _handleTap,
+                onLongPress: widget.tapGeneratesPrompt && !widget.enabled
+                    ? _toggleMode
+                    : null,
                 child: Center(
                   child: AnimatedRotation(
                     key: const ValueKey('random-mode-dice-rotation'),

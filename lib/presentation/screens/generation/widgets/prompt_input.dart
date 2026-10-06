@@ -284,6 +284,7 @@ class _FullPromptInput extends ConsumerWidget {
       bool showTransparentBackground = true,
       bool showEditorModeButton = true,
       bool showClearButton = true,
+      bool clearAllInsteadOfRandom = false,
     }) => PromptInputFooter(
       target: negative
           ? PromptTokenCountTarget.negative
@@ -296,6 +297,7 @@ class _FullPromptInput extends ConsumerWidget {
               commands: commands,
               showEditorModeButton: showEditorModeButton,
               showClearButton: showClearButton,
+              clearAllInsteadOfRandom: clearAllInsteadOfRandom,
             )
           : null,
     );
@@ -313,6 +315,7 @@ class _FullPromptInput extends ConsumerWidget {
               showTransparentBackground: false,
               showEditorModeButton: false,
               showClearButton: false,
+              clearAllInsteadOfRandom: true,
             ),
           );
         }

@@ -15,6 +15,7 @@ import '../../../widgets/prompt/quality_tags_selector.dart';
 import '../../../widgets/prompt/regex_rules_dialog.dart';
 import '../../../widgets/prompt/toolbar/toolbar.dart';
 import '../../../widgets/prompt/uc_preset_selector.dart';
+import 'prompt_clear_all_button.dart';
 import 'prompt_group_controller.dart';
 import 'prompt_input_controller.dart';
 import 'prompt_editor_mode_switch.dart';
@@ -401,6 +402,7 @@ class PromptInputBottomActions extends ConsumerWidget {
     required this.commands,
     this.showClearButton = true,
     this.showEditorModeButton = true,
+    this.clearAllInsteadOfRandom = false,
   });
 
   final PromptInputController controller;
@@ -408,9 +410,21 @@ class PromptInputBottomActions extends ConsumerWidget {
   final bool showClearButton;
   final bool showEditorModeButton;
 
+  /// Puts the confirmed clear-all action where the random prompt button sits;
+  /// the phone workbench draws random prompts from the dice in its bottom bar.
+  final bool clearAllInsteadOfRandom;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final showRandomTools = ref.watch(randomPromptToolsVisibilityProvider);
+    final showRandomTools =
+        !clearAllInsteadOfRandom &&
+        ref.watch(randomPromptToolsVisibilityProvider);
+    final buttonStyle = PromptFooterStyle.button(context).copyWith(
+      padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+      fixedSize: WidgetStatePropertyAll(
+        Size.square(PromptFooterStyle.height(context)),
+      ),
+    );
     final nextMode = controller.isGroupedMode
         ? PromptEditorMode.single
         : PromptEditorMode.grouped;
@@ -461,13 +475,17 @@ class PromptInputBottomActions extends ConsumerWidget {
             ),
           ),
         PromptEditorToolbar(
-          buttonStyle: PromptFooterStyle.button(context).copyWith(
-            padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-            fixedSize: WidgetStatePropertyAll(
-              Size.square(PromptFooterStyle.height(context)),
-            ),
-          ),
+          buttonStyle: buttonStyle,
           actionIconSize: PromptFooterStyle.iconSize,
+          leadingActions: [
+            if (clearAllInsteadOfRandom)
+              PromptClearAllButton(
+                controller: controller,
+                commands: commands,
+                style: buttonStyle,
+                iconSize: PromptFooterStyle.iconSize,
+              ),
+          ],
           config: PromptEditorToolbarConfig.mainEditor.copyWith(
             showRandomButton: showRandomTools,
             showFullscreenButton: false,

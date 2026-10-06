@@ -8134,6 +8134,60 @@ abstract class AppLocalizations {
   /// **'Random mode\nClick to auto-randomize prompts on generation'**
   String get randomMode_disabledTip;
 
+  /// No description provided for @randomMode_touchTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap: random prompt\nLong press: turn on random mode'**
+  String get randomMode_touchTip;
+
+  /// No description provided for @randomMode_touchEnabledTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Random mode is on: the prompt is randomized after each generation\nTap to turn off'**
+  String get randomMode_touchEnabledTip;
+
+  /// No description provided for @randomMode_turnedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Random mode is on. Tap the dice to turn it off'**
+  String get randomMode_turnedOn;
+
+  /// No description provided for @randomMode_turnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Random mode is off'**
+  String get randomMode_turnedOff;
+
+  /// No description provided for @prompt_clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear prompt'**
+  String get prompt_clearAll;
+
+  /// No description provided for @prompt_clearAllPositiveContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears the whole prompt (every section) and removes all characters. This can\'t be undone. Fixed tags are kept.'**
+  String get prompt_clearAllPositiveContent;
+
+  /// No description provided for @prompt_clearAllNegativeContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears all undesired content (every section). This can\'t be undone.'**
+  String get prompt_clearAllNegativeContent;
+
+  /// No description provided for @prompt_clearAllAlsoNegative.
+  ///
+  /// In en, this message translates to:
+  /// **'Also clear undesired content'**
+  String get prompt_clearAllAlsoNegative;
+
+  /// No description provided for @prompt_clearAllAlsoPositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Also clear the prompt and characters'**
+  String get prompt_clearAllAlsoPositive;
+
   /// No description provided for @batchSize_title.
   ///
   /// In en, this message translates to:

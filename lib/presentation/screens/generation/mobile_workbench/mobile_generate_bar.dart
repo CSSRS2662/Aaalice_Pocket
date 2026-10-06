@@ -116,6 +116,7 @@ class MobileGenerateBar extends StatelessWidget {
                         child: RandomModeToggle(
                           enabled: data.randomModeEnabled,
                           compact: true,
+                          tapGeneratesPrompt: true,
                         ),
                       ),
                     ),

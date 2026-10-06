@@ -453,10 +453,18 @@ void main() {
       find.descendant(of: footer, matching: bottomActions),
       findsOneWidget,
     );
+    // Random prompts come from the dice in the bottom bar; this spot clears.
     expect(
       find.descendant(
         of: bottomActions,
         matching: find.byIcon(Icons.casino_outlined),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: bottomActions,
+        matching: find.byKey(const ValueKey('generation_prompt_clear_all')),
       ),
       findsOneWidget,
     );
@@ -538,6 +546,42 @@ void main() {
     ]) {
       expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
     }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('手机清空提示词先确认，可一并清空负面', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(400, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final container = await _pumpMobilePromptHarness(tester);
+    final params = container.read(generationParamsNotifierProvider.notifier);
+    params.updatePrompt('1girl, smile');
+    params.updateNegativePrompt('lowres');
+    await tester.pump();
+    String prompt() => container.read(generationParamsNotifierProvider).prompt;
+    String negative() =>
+        container.read(generationParamsNotifierProvider).negativePrompt;
+
+    final clearAll = find.byKey(const ValueKey('generation_prompt_clear_all'));
+    final l10n = AppLocalizations.of(tester.element(clearAll))!;
+    await tester.tap(clearAll);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.prompt_clearAllPositiveContent), findsOneWidget);
+    await tester.tap(find.text(l10n.common_cancel));
+    await tester.pumpAndSettle();
+    expect(prompt(), '1girl, smile');
+    expect(negative(), 'lowres');
+
+    await tester.tap(clearAll);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.prompt_clearAllAlsoNegative));
+    await tester.pump();
+    await tester.tap(find.text(l10n.toolbar_clear));
+    await tester.pumpAndSettle();
+    expect(prompt(), isEmpty);
+    expect(negative(), isEmpty);
     expect(tester.takeException(), isNull);
   });
 

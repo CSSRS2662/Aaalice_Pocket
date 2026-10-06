@@ -4464,6 +4464,36 @@ class AppLocalizationsJa extends AppLocalizations {
       'ランダムモード\nクリックすると、生成時にプロンプトが自動的にランダム化されます';
 
   @override
+  String get randomMode_touchTip => 'タップ：ランダムプロンプトを生成\n長押し：ランダムモードをオン';
+
+  @override
+  String get randomMode_touchEnabledTip =>
+      'ランダムモードがオンです：生成のたびにプロンプトを自動でランダム化します\nタップでオフ';
+
+  @override
+  String get randomMode_turnedOn => 'ランダムモードをオンにしました。サイコロをタップでオフ';
+
+  @override
+  String get randomMode_turnedOff => 'ランダムモードをオフにしました';
+
+  @override
+  String get prompt_clearAll => 'プロンプトをクリア';
+
+  @override
+  String get prompt_clearAllPositiveContent =>
+      'プロンプト全体（すべてのセクション）を消去し、すべてのキャラクターを削除します。元に戻せません。固定タグは保持されます。';
+
+  @override
+  String get prompt_clearAllNegativeContent =>
+      '除外したい要素をすべて（すべてのセクション）消去します。元に戻せません。';
+
+  @override
+  String get prompt_clearAllAlsoNegative => '除外したい要素も消去';
+
+  @override
+  String get prompt_clearAllAlsoPositive => 'プロンプトとキャラクターも消去';
+
+  @override
   String get batchSize_title => 'バッチサイズ';
 
   @override
