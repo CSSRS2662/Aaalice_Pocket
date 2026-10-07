@@ -81,6 +81,37 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('a tile is two lines tall with the dot and cross at its ends', (
+    tester,
+  ) async {
+    final (groups, _) = await _pumpGrid(tester);
+    final tile = tester.getRect(_tile('s0'));
+    // 2 × 13 × 1.45 text plus 9 above and below.
+    expect(tile.height, 56);
+    final dot = tester.getRect(
+      find.byKey(const ValueKey('prompt_group_enabled_s0')),
+    );
+    final cross = tester.getRect(_cross('s0'));
+    for (final control in [dot, cross]) {
+      expect(control.width, 44);
+      expect(control.height, tile.height);
+    }
+    expect(dot.left, tile.left);
+    expect(cross.right, tile.right);
+    final text = tester.getRect(
+      find.descendant(of: _tile('s0'), matching: find.byType(RichText)).first,
+    );
+    expect(text.left, greaterThanOrEqualTo(dot.right));
+    expect(text.right, lessThanOrEqualTo(cross.left));
+
+    // Off is shown by the hollow dot and faded text, not a label.
+    groups.setEnabled('s0', false);
+    await tester.pump();
+    expect(find.text(_l10n(tester).prompt_groupOff), findsNothing);
+    expect(tester.getRect(_tile('s0')).height, 56);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('tap opens a section and the dot toggles it', (tester) async {
     final (_, calls) = await _pumpGrid(tester);
     await tester.tap(_tile('s1'));

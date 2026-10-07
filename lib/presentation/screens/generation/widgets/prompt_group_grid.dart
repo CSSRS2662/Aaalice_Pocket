@@ -38,8 +38,9 @@ class PromptGroupGrid extends StatefulWidget {
   static const double gap = 10;
   static const int maxColumns = 4;
 
-  /// Narrowest tile at normal text size; large text widens it.
-  static const double minTileWidth = 150;
+  /// Narrowest tile at normal text size; large text widens it. The dot and
+  /// cross take 88 of it, leaving room for the first tags.
+  static const double minTileWidth = 160;
 
   @override
   State<PromptGroupGrid> createState() => _PromptGroupGridState();

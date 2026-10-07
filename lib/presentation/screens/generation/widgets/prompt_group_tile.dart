@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
@@ -12,21 +14,23 @@ import 'prompt_group_summary.dart';
 class PromptGroupTileMetrics {
   const PromptGroupTileMetrics._(this.textStyle, this.height);
 
-  /// Size of the corner controls; also their touch target.
+  /// Width of the dot and the cross at the two ends of a tile, and the least
+  /// height of their touch targets.
   static const double controlExtent = 44;
-  static const double horizontalPadding = 12;
-  static const double bottomPadding = 10;
+  static const double verticalPadding = 9;
 
+  /// A tile is as tall as its two summary lines.
   factory PromptGroupTileMetrics.of(BuildContext context) {
     final style = Theme.of(
       context,
     ).textTheme.bodyMedium!.copyWith(fontSize: 13, height: 1.45);
     final lineHeight =
         MediaQuery.textScalerOf(context).scale(style.fontSize!) * style.height!;
+    final textHeight =
+        PromptGroupSummary.maxLines * lineHeight + 2 * verticalPadding;
     return PromptGroupTileMetrics._(
       style,
-      (controlExtent + PromptGroupSummary.maxLines * lineHeight + bottomPadding)
-          .ceilToDouble(),
+      math.max(controlExtent, textHeight).ceilToDouble(),
     );
   }
 
@@ -34,9 +38,9 @@ class PromptGroupTileMetrics {
   final double height;
 }
 
-/// One prompt section in the grid: enable dot, two-line summary and a
-/// two-tap delete cross. Gestures for opening, menus and dragging belong to
-/// the grid.
+/// One prompt section in the grid, two summary lines tall: the enable dot at
+/// the start, the summary, and a two-tap delete cross at the end. Gestures
+/// for opening, menus and dragging belong to the grid.
 class PromptGroupTile extends StatelessWidget {
   const PromptGroupTile({
     super.key,
@@ -84,73 +88,49 @@ class PromptGroupTile extends StatelessWidget {
         child: InkWell(
           key: ValueKey('prompt_group_tile_${section.id}'),
           onTap: onOpen,
-          child: Stack(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  PromptGroupTileMetrics.horizontalPadding,
-                  PromptGroupTileMetrics.controlExtent,
-                  PromptGroupTileMetrics.horizontalPadding,
-                  PromptGroupTileMetrics.bottomPadding,
-                ),
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 160),
-                  opacity: enabled ? 1 : 0.5,
-                  child: Semantics(
-                    label: [
-                      label,
-                      if (!enabled) l10n.prompt_groupOff,
-                      plainText.isEmpty ? l10n.prompt_emptyGroup : plainText,
-                    ].join('，'),
-                    excludeSemantics: true,
-                    child: PromptGroupSummary(
-                      text: section.controller.text,
-                      style: metrics.textStyle.copyWith(
-                        color: colors.onSurface,
-                      ),
-                      emptyLabel: l10n.prompt_groupEmptyHint,
-                    ),
-                  ),
-                ),
+              _EnableDot(
+                key: ValueKey('prompt_group_enabled_${section.id}'),
+                enabled: enabled,
+                tooltip: enabled
+                    ? l10n.prompt_groupDisable
+                    : l10n.prompt_groupEnable,
+                onTap: onToggleEnabled,
               ),
-              PositionedDirectional(
-                start: 0,
-                top: 0,
-                child: _EnableDot(
-                  key: ValueKey('prompt_group_enabled_${section.id}'),
-                  enabled: enabled,
-                  tooltip: enabled
-                      ? l10n.prompt_groupDisable
-                      : l10n.prompt_groupEnable,
-                  onTap: onToggleEnabled,
-                ),
-              ),
-              if (!enabled)
-                PositionedDirectional(
-                  start: PromptGroupTileMetrics.controlExtent - 4,
-                  top: 0,
-                  height: PromptGroupTileMetrics.controlExtent,
-                  child: Center(
-                    child: Text(
-                      l10n.prompt_groupOff,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colors.onSurfaceVariant,
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 160),
+                    opacity: enabled ? 1 : 0.5,
+                    child: Semantics(
+                      label: [
+                        label,
+                        if (!enabled) l10n.prompt_groupOff,
+                        plainText.isEmpty ? l10n.prompt_emptyGroup : plainText,
+                      ].join('，'),
+                      excludeSemantics: true,
+                      child: PromptGroupSummary(
+                        text: section.controller.text,
+                        style: metrics.textStyle.copyWith(
+                          color: colors.onSurface,
+                        ),
+                        emptyLabel: l10n.prompt_groupEmptyHint,
                       ),
                     ),
                   ),
                 ),
-              PositionedDirectional(
-                end: 0,
-                top: 0,
-                child: _DeleteCross(
-                  key: ValueKey('prompt_group_delete_${section.id}'),
-                  armed: deleteArmed,
-                  tooltip: deleteArmed
-                      ? l10n.prompt_groupDeleteAgain
-                      : l10n.prompt_deleteGroup,
-                  onTap: onDeleteTap,
-                  onTapOutside: onDisarmDelete,
-                ),
+              ),
+              _DeleteCross(
+                key: ValueKey('prompt_group_delete_${section.id}'),
+                armed: deleteArmed,
+                tooltip: deleteArmed
+                    ? l10n.prompt_groupDeleteAgain
+                    : l10n.prompt_deleteGroup,
+                onTap: onDeleteTap,
+                onTapOutside: onDisarmDelete,
               ),
             ],
           ),
@@ -201,8 +181,8 @@ class _EnableDot extends StatelessWidget {
         child: InkResponse(
           onTap: onTap,
           radius: 22,
-          child: SizedBox.square(
-            dimension: PromptGroupTileMetrics.controlExtent,
+          child: SizedBox(
+            width: PromptGroupTileMetrics.controlExtent,
             child: Center(
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 160),
@@ -261,8 +241,8 @@ class _DeleteCross extends StatelessWidget {
           child: InkResponse(
             onTap: onTap,
             radius: 22,
-            child: SizedBox.square(
-              dimension: PromptGroupTileMetrics.controlExtent,
+            child: SizedBox(
+              width: PromptGroupTileMetrics.controlExtent,
               child: Center(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 120),

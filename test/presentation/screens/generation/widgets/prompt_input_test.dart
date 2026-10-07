@@ -709,7 +709,8 @@ void main() {
     await tester.enterText(_sheetEditor(), '1girl, blue eyes,');
     await tester.pump();
     await _closeSheet(tester);
-    expect(find.text('1girl, blue eyes'), findsOneWidget);
+    // The tile between the dot and cross shows the start of the section.
+    expect(find.textContaining(RegExp(r'^1girl\b')), findsOneWidget);
 
     // A new section opens in the editor straight away.
     await tester.tap(find.byKey(const ValueKey('add_positive_prompt_group')));
@@ -861,7 +862,7 @@ void main() {
     await _closeSheet(tester);
 
     // Whole tags fill two lines; the rest is counted instead of ellipsized.
-    expect(find.textContaining(RegExp(r'^tag_0, .* \+\d+$')), findsOneWidget);
+    expect(find.textContaining(RegExp(r'^tag_0\b.* \+\d+$')), findsOneWidget);
     final tileRect = tester.getRect(tile.first);
     expect(tileRect.height, lessThan(120));
     final addTile = find.byKey(const ValueKey('prompt_group_add_tile'));
