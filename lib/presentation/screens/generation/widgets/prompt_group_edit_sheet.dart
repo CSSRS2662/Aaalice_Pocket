@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/autocomplete/prompt_token_parser.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../adaptive/adaptive_presenter.dart';
 import '../../../prompt_assistant/providers/prompt_assistant_history_provider.dart';
@@ -211,8 +212,6 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
                       _HeaderTools.menu => [toggle],
                       _HeaderTools.none => [toggle, menu],
                     },
-                    // Everything below: a narrower comma key keeps the row.
-                    commaWidth: onTop == _HeaderTools.none ? 48 : 64,
                   ),
                 ),
               ],
@@ -268,44 +267,21 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
         ],
       );
 
-  /// Types ", " at the caret so tags can be split without leaving Chinese
-  /// input. Next to a comma it only moves past it, never doubling it.
+  /// Ends the tag at the caret with ", " without leaving Chinese input.
   void _insertComma(PromptGroupSection section) {
     final controller = section.controller;
     final text = controller.text;
     final selection = controller.selection;
-    final caret = selection.isValid
-        ? selection.end.clamp(0, text.length)
-        : text.length;
-    final before = text.substring(0, caret).trimRight();
-    final after = text.substring(caret);
-    final String next;
-    final int offset;
-    if (before.isEmpty) {
-      // Nothing to separate from yet.
-      next = text;
-      offset = caret;
-    } else if (before.endsWith(',')) {
-      next = '$before ${after.trimLeft()}';
-      offset = before.length + 1;
-    } else if (after.trimLeft().startsWith(',')) {
-      final comma = caret + after.indexOf(',');
-      var end = comma + 1;
-      while (end < text.length && text.codeUnitAt(end) == 0x20) {
-        end++;
-      }
-      next = text;
-      offset = end;
-    } else {
-      next = '$before, ${after.trimLeft()}';
-      offset = before.length + 2;
-    }
+    final next = PromptTokenParser.insertSeparator(
+      text: text,
+      cursorPosition: selection.isValid ? selection.end : text.length,
+    );
     controller.value = TextEditingValue(
-      text: next,
-      selection: TextSelection.collapsed(offset: offset),
+      text: next.text,
+      selection: TextSelection.collapsed(offset: next.cursorPosition),
     );
     if (!section.focusNode.hasFocus) section.focusNode.requestFocus();
-    if (next != text) widget.callbacks.onChanged();
+    if (next.text != text) widget.callbacks.onChanged();
   }
 
   Widget _buildInput(BuildContext context, PromptGroupSection section) {
@@ -359,7 +335,6 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
     BuildContext context,
     PromptGroupSection section, {
     required List<Widget> tools,
-    required double commaWidth,
   }) {
     final callbacks = widget.callbacks;
     final row = Row(
@@ -388,10 +363,7 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
             ),
             for (final tool in tools) ...[const SizedBox(width: 4), tool],
             const SizedBox(width: 8),
-            _CommaKey(
-              width: commaWidth,
-              onPressed: () => _insertComma(section),
-            ),
+            _CommaKey(onPressed: () => _insertComma(section)),
           ],
         ),
       ],
@@ -703,50 +675,41 @@ class _IncludeToggle extends StatelessWidget {
   }
 }
 
-/// A key-like button that types an English comma, so tags can be split
-/// without switching the keyboard out of Chinese input. It shares the
-/// neutral fill of the text/tag toggle and keeps the field focused.
+/// A key-like button labelled 分词 that ends the tag at the caret with an
+/// English comma, so tags can be split without switching the keyboard out of
+/// Chinese input. It shares the neutral fill of the text/tag toggle and keeps
+/// the field focused.
 class _CommaKey extends StatelessWidget {
-  const _CommaKey({required this.width, required this.onPressed});
+  const _CommaKey({required this.onPressed});
 
-  final double width;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final height = PromptFooterStyle.height(context);
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     return TextFieldTapRegion(
       child: Tooltip(
         message: context.l10n.prompt_insertComma,
         child: TextButton(
           key: const ValueKey('prompt_group_edit_comma'),
           onPressed: onPressed,
-          style: PromptFooterStyle.button(context, width: width).copyWith(
+          style: PromptFooterStyle.button(context, width: 64).copyWith(
             backgroundColor: WidgetStatePropertyAll(
               colors.surfaceContainerHigh,
             ),
             foregroundColor: WidgetStatePropertyAll(colors.onSurface),
-            padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-          ),
-          child: ExcludeSemantics(
-            child: SizedBox(
-              width: width,
-              height: height,
-              // A comma hangs below the baseline; lift it to the middle.
-              child: Align(
-                alignment: const Alignment(0, -0.35),
-                child: Text(
-                  ',',
-                  style: TextStyle(
-                    fontSize: height * 0.75,
-                    height: 1,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+            padding: const WidgetStatePropertyAll(
+              EdgeInsets.symmetric(horizontal: 16),
+            ),
+            textStyle: WidgetStatePropertyAll(
+              theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1,
               ),
             ),
           ),
+          child: Text(context.l10n.prompt_splitTag, maxLines: 1),
         ),
       ),
     );

@@ -706,6 +706,12 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
           onSelected: _selectIndex,
           onClose: _closeOverlay,
           onOpenSettings: _openAutocompleteSettings,
+          // On touch the popup may cover the editor's own 分词 key.
+          onInsertSeparator:
+              context.interactionPolicy.prefersTouchPresentation &&
+                  !(widget.config?.treatSpacesAsSeparators ?? false)
+              ? _insertSeparator
+              : null,
           isRelatedPinned: _pinnedRelatedTag != null,
           onToggleRelatedPin: _orchestrator!.state.query?.relatedTag == null
               ? null
@@ -713,6 +719,28 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
         ),
       ),
     );
+  }
+
+  /// Ends the tag at the caret with ", ", like the editor's 分词 key, and
+  /// carries on with what fits next.
+  void _insertSeparator() {
+    final value = widget.controller.value;
+    final caret = value.selection.isValid
+        ? value.selection.end
+        : value.text.length;
+    final next = PromptTokenParser.insertSeparator(
+      text: value.text,
+      cursorPosition: caret,
+    );
+    widget.controller.value = TextEditingValue(
+      text: next.text,
+      selection: TextSelection.collapsed(offset: next.cursorPosition),
+    );
+    // A new comma goes through the text listener; only stepping past an
+    // existing one needs the follow-up here.
+    if (next.text == value.text && !_continueFromContext()) {
+      _dismissOverlay('separator without a new slot');
+    }
   }
 
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {

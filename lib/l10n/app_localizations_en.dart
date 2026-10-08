@@ -1751,6 +1751,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prompt_insertComma => 'Insert a comma';
 
   @override
+  String get prompt_splitTag => 'Split';
+
+  @override
   String get prompt_positivePrompt => 'Prompt';
 
   @override

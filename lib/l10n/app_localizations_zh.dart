@@ -1689,6 +1689,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get prompt_insertComma => '插入逗号分隔';
 
   @override
+  String get prompt_splitTag => '分词';
+
+  @override
   String get prompt_positivePrompt => '正向提示词';
 
   @override
@@ -16902,6 +16905,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get prompt_insertComma => '插入逗號分隔';
+
+  @override
+  String get prompt_splitTag => '分詞';
 
   @override
   String get prompt_positivePrompt => '正向提示詞';

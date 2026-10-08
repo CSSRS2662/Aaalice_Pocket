@@ -1712,6 +1712,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get prompt_insertComma => 'カンマを挿入';
 
   @override
+  String get prompt_splitTag => '区切る';
+
+  @override
   String get prompt_positivePrompt => 'プロンプト';
 
   @override

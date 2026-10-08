@@ -45,6 +45,7 @@ class CompletionOverlay extends StatelessWidget {
     required this.onSelected,
     required this.onClose,
     required this.onOpenSettings,
+    this.onInsertSeparator,
     this.isRelatedPinned = false,
     this.onToggleRelatedPin,
   });
@@ -63,6 +64,9 @@ class CompletionOverlay extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final VoidCallback onClose;
   final VoidCallback onOpenSettings;
+
+  /// Ends the tag being written with a comma; shown when given.
+  final VoidCallback? onInsertSeparator;
   final bool isRelatedPinned;
   final VoidCallback? onToggleRelatedPin;
 
@@ -91,6 +95,7 @@ class CompletionOverlay extends StatelessWidget {
       isRelatedPinned: isRelatedPinned,
       onToggleRelatedPin: onToggleRelatedPin,
       onOpenSettings: showFooter ? null : onOpenSettings,
+      onInsertSeparator: showFooter ? null : onInsertSeparator,
       onClose: onClose,
     );
     return LayoutBuilder(
@@ -229,6 +234,7 @@ class CompletionOverlay extends StatelessWidget {
                         dictionaryState: dictionaryState,
                         cooccurrenceDataPackState: cooccurrenceDataPackState,
                         onOpenSettings: onOpenSettings,
+                        onInsertSeparator: onInsertSeparator,
                       ),
                   ],
                 ),
@@ -336,6 +342,7 @@ class _CompletionHeader extends StatelessWidget {
     required this.onToggleRelatedPin,
     required this.onOpenSettings,
     required this.onClose,
+    this.onInsertSeparator,
   });
 
   final String query;
@@ -344,6 +351,7 @@ class _CompletionHeader extends StatelessWidget {
   final bool isRelatedPinned;
   final VoidCallback? onToggleRelatedPin;
   final VoidCallback? onOpenSettings;
+  final VoidCallback? onInsertSeparator;
   final VoidCallback onClose;
 
   @override
@@ -462,6 +470,10 @@ class _CompletionHeader extends StatelessWidget {
                     ),
                   ),
                 const SizedBox(width: 2),
+              ],
+              if (onInsertSeparator case final split?) ...[
+                _SplitButton(onPressed: split),
+                const SizedBox(width: 4),
               ],
               if (onOpenSettings != null)
                 _NonFocusableIconButton(
@@ -1043,6 +1055,7 @@ class _CompletionFooter extends StatelessWidget {
     required this.dictionaryState,
     required this.cooccurrenceDataPackState,
     required this.onOpenSettings,
+    this.onInsertSeparator,
   });
 
   final CompletionState state;
@@ -1050,6 +1063,7 @@ class _CompletionFooter extends StatelessWidget {
   final ZhDictionaryState dictionaryState;
   final CooccurrenceDataPackState cooccurrenceDataPackState;
   final VoidCallback onOpenSettings;
+  final VoidCallback? onInsertSeparator;
 
   @override
   Widget build(BuildContext context) {
@@ -1105,6 +1119,11 @@ class _CompletionFooter extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onInsertSeparator case final split?) ...[
+                const SizedBox(width: 8),
+                _SplitButton(onPressed: split),
+                const SizedBox(width: 6),
+              ],
               Container(
                 height: 19,
                 width: 1,
@@ -1431,6 +1450,45 @@ class _StatusIndicator extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A tonal 分词 pill that ends the tag being written with a comma, standing in
+/// for the editor's own key while the popup covers it. Like the other popup
+/// controls it never takes focus from the field.
+class _SplitButton extends StatelessWidget {
+  const _SplitButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Focus(
+      canRequestFocus: false,
+      descendantsAreFocusable: false,
+      child: Tooltip(
+        message: context.l10n.prompt_insertComma,
+        child: TextButton(
+          key: const ValueKey('autocomplete-popup-split'),
+          onPressed: onPressed,
+          style: TextButton.styleFrom(
+            minimumSize: const Size(56, 32),
+            tapTargetSize: MaterialTapTargetSize.padded,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            backgroundColor: colors.secondaryContainer,
+            foregroundColor: colors.onSecondaryContainer,
+            shape: const StadiumBorder(),
+            textStyle: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1,
+            ),
+          ),
+          child: Text(context.l10n.prompt_splitTag, maxLines: 1),
         ),
       ),
     );

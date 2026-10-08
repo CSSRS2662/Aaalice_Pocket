@@ -227,6 +227,36 @@ class PromptTokenParser {
     );
   }
 
+  /// Types ", " at [cursorPosition] to end the tag before it, so tags can be
+  /// split without an English keyboard. Next to a comma it only moves past
+  /// it, never doubling it; with nothing before the caret it does nothing.
+  static ({String text, int cursorPosition}) insertSeparator({
+    required String text,
+    required int cursorPosition,
+  }) {
+    final caret = cursorPosition.clamp(0, text.length);
+    final before = text.substring(0, caret).trimRight();
+    final after = text.substring(caret);
+    if (before.isEmpty) return (text: text, cursorPosition: caret);
+    if (before.endsWith(',')) {
+      return (
+        text: '$before ${after.trimLeft()}',
+        cursorPosition: before.length + 1,
+      );
+    }
+    if (after.trimLeft().startsWith(',')) {
+      var end = caret + after.indexOf(',') + 1;
+      while (end < text.length && text.codeUnitAt(end) == 0x20) {
+        end++;
+      }
+      return (text: text, cursorPosition: end);
+    }
+    return (
+      text: '$before, ${after.trimLeft()}',
+      cursorPosition: before.length + 2,
+    );
+  }
+
   /// Whether the caret sits where a new tag would go after earlier ones:
   /// an empty slot following a comma or line break.
   static bool isContinuationSlot({

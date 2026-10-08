@@ -3254,6 +3254,12 @@ abstract class AppLocalizations {
   /// **'Insert a comma'**
   String get prompt_insertComma;
 
+  /// No description provided for @prompt_splitTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get prompt_splitTag;
+
   /// No description provided for @prompt_positivePrompt.
   ///
   /// In en, this message translates to:

@@ -704,6 +704,7 @@
   "prompt_groupDuplicate": "セクションを複製",
   "prompt_groupMoveToFront": "先頭に移動",
   "prompt_insertComma": "カンマを挿入",
+  "prompt_splitTag": "区切る",
   "prompt_positivePrompt": "プロンプト",
   "prompt_negativePrompt": "除外したい要素",
   "prompt_mainPositive": "メイン プロンプト (正)",

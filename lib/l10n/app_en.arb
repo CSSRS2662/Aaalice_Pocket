@@ -712,6 +712,7 @@
   "prompt_groupDuplicate": "Duplicate section",
   "prompt_groupMoveToFront": "Move to front",
   "prompt_insertComma": "Insert a comma",
+  "prompt_splitTag": "Split",
   "prompt_positivePrompt": "Prompt",
   "prompt_negativePrompt": "Undesired Content",
   "prompt_mainPositive": "Main Prompt",

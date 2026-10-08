@@ -667,6 +667,7 @@
   "prompt_groupDuplicate": "复制分区",
   "prompt_groupMoveToFront": "移到最前",
   "prompt_insertComma": "插入逗号分隔",
+  "prompt_splitTag": "分词",
   "prompt_positivePrompt": "正向提示词",
   "prompt_negativePrompt": "负向提示词",
   "prompt_mainPositive": "主提示词（正面）",
