@@ -359,7 +359,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get auth_loginRequiredQueueExecution => '请先登录，再启动 NovelAI 生成队列。';
 
   @override
-  String get auth_loginRequiredDirectorTools => '请先登录，再使用 NovelAI Director Tools。';
+  String get auth_loginRequiredDirectorTools =>
+      '请先登录，再使用 NovelAI Director Tools。';
 
   @override
   String get auth_loginRequiredNovelAiUpscale => '请先登录，再使用 NovelAI 云端超分。';
@@ -440,10 +441,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get auth_thirdPartyTokenHint => '请输入第三方站点提供的 API Token';
 
   @override
-  String get auth_thirdPartyCompatibilityHint => '第三方站点需兼容 NovelAI 图像生成 API；Token 将按 Bearer 方式发送。未实现 /user/subscription 的站点将跳过订阅信息。';
+  String get auth_thirdPartyCompatibilityHint =>
+      '第三方站点需兼容 NovelAI 图像生成 API；Token 将按 Bearer 方式发送。未实现 /user/subscription 的站点将跳过订阅信息。';
 
   @override
-  String get auth_thirdPartyStreamingHint => '如果第三方站点不支持流式生成，请前往「设置 > 生成 > 图像输出」，关闭「流式预览」后再生成。';
+  String get auth_thirdPartyStreamingHint =>
+      '如果第三方站点不支持流式生成，请前往「设置 > 生成 > 图像输出」，关闭「流式预览」后再生成。';
 
   @override
   String get anlas_thirdPartyUnavailable => '当前站点不提供 Anlas 余额信息';
@@ -510,10 +513,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get auth_error_credentialsLoginUnavailable => '账号密码登录当前不可用';
 
   @override
-  String get auth_error_credentialsLoginUnavailable_hint => 'NovelAI 官网账号密码登录需要网页安全验证，客户端无法完成，请改用 Persistent API Token。';
+  String get auth_error_credentialsLoginUnavailable_hint =>
+      'NovelAI 官网账号密码登录需要网页安全验证，客户端无法完成，请改用 Persistent API Token。';
 
   @override
-  String get auth_error_endpointIncompatible => '该地址下未发现 NAI 兼容接口，请确认 API 地址是站点提供的服务根地址';
+  String get auth_error_endpointIncompatible =>
+      '该地址下未发现 NAI 兼容接口，请确认 API 地址是站点提供的服务根地址';
 
   @override
   String get auth_error_serverError => '服务器错误';
@@ -567,7 +572,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get auth_troubleshoot_serverStatus_title => '检查服务器状态';
 
   @override
-  String get auth_troubleshoot_serverStatus_desc => '访问 NovelAI 状态页面或社区查看服务中断情况';
+  String get auth_troubleshoot_serverStatus_desc =>
+      '访问 NovelAI 状态页面或社区查看服务中断情况';
 
   @override
   String get common_paste => '粘贴';
@@ -666,7 +672,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_generationStreamPreview => '流式预览';
 
   @override
-  String get settings_generationStreamPreviewSubtitle => '生成时显示中间图像；关闭后将直接等待最终图像。';
+  String get settings_generationStreamPreviewSubtitle =>
+      '生成时显示中间图像；关闭后将直接等待最终图像。';
 
   @override
   String get settings_alphaModeTitle => '透明图像 Alpha 模式';
@@ -678,10 +685,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_alphaModePremultiplied => '预乘（Premultiplied）';
 
   @override
-  String get settings_alphaModeStraightDescription => '保留未乘 Alpha 的 RGB，适合继续编辑，也是 NovelAI 官网默认值。';
+  String get settings_alphaModeStraightDescription =>
+      '保留未乘 Alpha 的 RGB，适合继续编辑，也是 NovelAI 官网默认值。';
 
   @override
-  String get settings_alphaModePremultipliedDescription => 'RGB 已乘 Alpha，适合要求预乘输入的合成与渲染流程。';
+  String get settings_alphaModePremultipliedDescription =>
+      'RGB 已乘 Alpha，适合要求预乘输入的合成与渲染流程。';
 
   @override
   String get settings_promptAssistant => '提示词助手';
@@ -763,13 +772,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_fileLogging => '记录应用日志';
 
   @override
-  String get settings_fileLoggingSubtitle => '默认关闭；仅在排查问题时开启。开启后会写入 Documents/NAI_Launcher/logs，关闭后不再创建或写入日志文件。';
+  String get settings_fileLoggingSubtitle =>
+      '默认关闭；仅在排查问题时开启。开启后会写入 Documents/NAI_Launcher/logs，关闭后不再创建或写入日志文件。';
 
   @override
   String get settings_exportDiagnosticLogs => '导出诊断日志';
 
   @override
-  String get settings_exportDiagnosticLogsSubtitle => '导出最近日志和基础设备信息；会自动隐藏凭据与本地路径。';
+  String get settings_exportDiagnosticLogsSubtitle =>
+      '导出最近日志和基础设备信息；会自动隐藏凭据与本地路径。';
 
   @override
   String get settings_exportDiagnosticLogsInProgress => '正在导出诊断日志';
@@ -908,7 +919,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generation_streamingUnsupported => '站点不支持流式生成';
 
   @override
-  String get generation_streamingUnsupportedHint => '请前往「设置 > 生成 > 图像输出」，关闭「流式预览」后重试。';
+  String get generation_streamingUnsupportedHint =>
+      '请前往「设置 > 生成 > 图像输出」，关闭「流式预览」后重试。';
 
   @override
   String get generation_params => '参数';
@@ -1436,7 +1448,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generation_failedStreamSnapshot => '失败快照';
 
   @override
-  String get generation_failedStreamSnapshotHint => '生成未完成，仅保留最后一帧预览；不可保存、收藏或用于图生图';
+  String get generation_failedStreamSnapshotHint =>
+      '生成未完成，仅保留最后一帧预览；不可保存、收藏或用于图生图';
 
   @override
   String get generation_noHistory => '暂无历史记录';
@@ -1461,7 +1474,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String generation_deleteImagesWithFilesConfirm(Object count, Object fileCount) {
+  String generation_deleteImagesWithFilesConfirm(
+    Object count,
+    Object fileCount,
+  ) {
     return '从历史记录中删除选中的 $count 张图片，并永久删除其中 $fileCount 个已保存到本地图库的文件？此操作不可撤销。';
   }
 
@@ -1490,7 +1506,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generation_opusUsageRefill => '额度会随时间自动恢复';
 
   @override
-  String get generation_opusUsageExhausted => 'Opus 免费额度已用完，V5 生成将消耗 Anlas，额度会随时间自动恢复';
+  String get generation_opusUsageExhausted =>
+      'Opus 免费额度已用完，V5 生成将消耗 Anlas，额度会随时间自动恢复';
 
   @override
   String get generation_imageSize => '图像尺寸';
@@ -1831,7 +1848,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get prompt_cooccurrenceRecommendation => '共现标签推荐';
 
   @override
-  String get prompt_cooccurrenceRecommendationSubtitle => '选中标签后自动推荐，也可按 Ctrl+Shift+Space 或 Ctrl+单击';
+  String get prompt_cooccurrenceRecommendationSubtitle =>
+      '选中标签后自动推荐，也可按 Ctrl+Shift+Space 或 Ctrl+单击';
 
   @override
   String get prompt_regexRulesManage => '正则替换规则…';
@@ -1855,7 +1873,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get regexRules_title => '正则替换规则';
 
   @override
-  String get regexRules_hint => '规则按顺序作用于整段提示词，早于 SD 转换和自动格式化执行。替换内容里可用 \$1、\$2 引用捕获组。';
+  String get regexRules_hint =>
+      '规则按顺序作用于整段提示词，早于 SD 转换和自动格式化执行。替换内容里可用 \$1、\$2 引用捕获组。';
 
   @override
   String get regexRules_empty => '还没有规则，点下面的按钮新建一条';
@@ -2020,7 +2039,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get img2img_inpaintStrengthHint => '值越高，蒙版区域与当前源图差异越大';
 
   @override
-  String get img2img_inpaintPendingHint => '点击“局部重绘”进入画布，用画笔、橡皮或选区工具标出需要重绘的区域。返回这里后，点击主生成按钮即可只重绘蒙版区域。';
+  String get img2img_inpaintPendingHint =>
+      '点击“局部重绘”进入画布，用画笔、橡皮或选区工具标出需要重绘的区域。返回这里后，点击主生成按钮即可只重绘蒙版区域。';
 
   @override
   String get img2img_inpaintReadyHint => '遮罩已载入。当前会按局部重绘方式提交，只有蒙版区域会被重新生成。';
@@ -2035,7 +2055,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get img2img_directorTools => '导演工具';
 
   @override
-  String get img2img_directorToolsHint => '将当前源图送入导演工具处理。处理完成后，可以把结果回填为新的源图继续生成。';
+  String get img2img_directorToolsHint =>
+      '将当前源图送入导演工具处理。处理完成后，可以把结果回填为新的源图继续生成。';
 
   @override
   String get img2img_directorPrompt => '附加提示词';
@@ -2116,7 +2137,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get img2img_directorPixelSnap => '像素对齐';
 
   @override
-  String get img2img_directorPixelSnapHint => '完全在本机计算，不消耗 Anlas、不联网。大图可能要几秒到十几秒。';
+  String get img2img_directorPixelSnapHint =>
+      '完全在本机计算，不消耗 Anlas、不联网。大图可能要几秒到十几秒。';
 
   @override
   String get img2img_directorPixelSnapPalette => '调色板';
@@ -2140,7 +2162,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get img2img_directorPixelSnapAvoidOverRefiningOn => '始终保留检测到的像素尺寸。';
 
   @override
-  String get img2img_directorPixelSnapAvoidOverRefiningOff => '更细的像素尺寸更贴合原图时会改用它。';
+  String get img2img_directorPixelSnapAvoidOverRefiningOff =>
+      '更细的像素尺寸更贴合原图时会改用它。';
 
   @override
   String get img2img_directorPixelSnapUpscale => '放大回原尺寸';
@@ -2207,10 +2230,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get img2img_focusedInpaint => 'Focused Inpainting（聚焦重绘）';
 
   @override
-  String get img2img_focusedInpaintEnabledHint => '已启用。请在重绘编辑器左上角按钮里调整聚焦区域与 Minimum Context Area。';
+  String get img2img_focusedInpaintEnabledHint =>
+      '已启用。请在重绘编辑器左上角按钮里调整聚焦区域与 Minimum Context Area。';
 
   @override
-  String get img2img_focusedInpaintDisabledHint => '默认是普通重绘；如需聚焦重绘，请在重绘编辑器左上角按钮中开启并框选区域。';
+  String get img2img_focusedInpaintDisabledHint =>
+      '默认是普通重绘；如需聚焦重绘，请在重绘编辑器左上角按钮中开启并框选区域。';
 
   @override
   String get img2img_disabled => '未启用';
@@ -2231,25 +2256,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get img2img_upscaleModel => '超分模型';
 
   @override
-  String get img2img_noSeedvr2Models => '未发现可用的 SeedVR2 模型，请刷新模型列表，并检查 ComfyUI 原生 models/diffusion_models、models/vae 或 SeedVR2 自定义节点模型目录。';
+  String get img2img_noSeedvr2Models =>
+      '未发现可用的 SeedVR2 模型，请刷新模型列表，并检查 ComfyUI 原生 models/diffusion_models、models/vae 或 SeedVR2 自定义节点模型目录。';
 
   @override
-  String get img2img_noRegularUpscaleModels => '未发现普通超分模型，请刷新模型列表或检查 models/upscale_models。';
+  String get img2img_noRegularUpscaleModels =>
+      '未发现普通超分模型，请刷新模型列表或检查 models/upscale_models。';
 
   @override
-  String get img2img_useNativeSeedvr2Workflow => '将使用 ComfyUI 原生 SeedVR2 一步超分流程。';
+  String get img2img_useNativeSeedvr2Workflow =>
+      '将使用 ComfyUI 原生 SeedVR2 一步超分流程。';
 
   @override
-  String get img2img_useSeedvr2TiledWorkflow => '将使用 SeedVR2TilingUpscaler 分块超分流程。';
+  String get img2img_useSeedvr2TiledWorkflow =>
+      '将使用 SeedVR2TilingUpscaler 分块超分流程。';
 
   @override
   String get img2img_useSeedvr2Workflow => '将使用 SeedVR2VideoUpscaler 流程。';
 
   @override
-  String get img2img_useRegularUpscaleWorkflow => '将使用 UpscaleModelLoader + ImageUpscaleWithModel 流程，并用 Lanczos 修正到目标倍率。';
+  String get img2img_useRegularUpscaleWorkflow =>
+      '将使用 UpscaleModelLoader + ImageUpscaleWithModel 流程，并用 Lanczos 修正到目标倍率。';
 
   @override
-  String get img2img_useRtxUpscaleWorkflow => '将使用 RTX Video Super Resolution 流程，无需选择模型。';
+  String get img2img_useRtxUpscaleWorkflow =>
+      '将使用 RTX Video Super Resolution 流程，无需选择模型。';
 
   @override
   String get img2img_refreshModelList => '刷新模型列表';
@@ -2312,7 +2343,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get img2img_seedvr2EngineResolvedLegacy => '当前使用已安装的 SeedVR2 自定义节点。';
 
   @override
-  String get img2img_seedvr2EngineUnavailable => '当前选择的 SeedVR2 引擎或所需模型不可用，请刷新模型列表或切换引擎。';
+  String get img2img_seedvr2EngineUnavailable =>
+      '当前选择的 SeedVR2 引擎或所需模型不可用，请刷新模型列表或切换引擎。';
 
   @override
   String get img2img_seedvr2VaeTileHint => '设置 SeedVR2 VAE 编码与解码的分块尺寸。';
@@ -2321,25 +2353,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get img2img_seedvr2UseTiledUpscale => '使用分块放大';
 
   @override
-  String get img2img_seedvr2UseTiledUpscaleHint => '启用后改用 SeedVR2TilingUpscaler，适合大图或显存压力较高的场景。';
+  String get img2img_seedvr2UseTiledUpscaleHint =>
+      '启用后改用 SeedVR2TilingUpscaler，适合大图或显存压力较高的场景。';
 
   @override
-  String get settings_comfyUiSeedvr2EmbedNaiMetadata => '在 SeedVR2 结果中写入 NAI 生成参数';
+  String get settings_comfyUiSeedvr2EmbedNaiMetadata =>
+      '在 SeedVR2 结果中写入 NAI 生成参数';
 
   @override
-  String get settings_comfyUiSeedvr2EmbedNaiMetadataHint => '默认关闭。开启后会写入启动器当前的提示词和生成参数；关闭时保留 ComfyUI 返回的原始 PNG 元数据。';
+  String get settings_comfyUiSeedvr2EmbedNaiMetadataHint =>
+      '默认关闭。开启后会写入启动器当前的提示词和生成参数；关闭时保留 ComfyUI 返回的原始 PNG 元数据。';
 
   @override
   String get img2img_seedvr2TileSize => '分块图块大小';
 
   @override
-  String get img2img_seedvr2TileSizeHint => '同时控制 SeedVR2TilingUpscaler 的 tile_width / tile_height。';
+  String get img2img_seedvr2TileSizeHint =>
+      '同时控制 SeedVR2TilingUpscaler 的 tile_width / tile_height。';
 
   @override
   String get img2img_seedvr2BlocksToSwap => '内存卸载层数';
 
   @override
-  String get img2img_seedvr2BlocksToSwapHint => '把多少 DiT 层放在内存里、推理时再逐层送入显存。调高更省显存但更吃内存也更慢；显存充裕可调低甚至设为 0。显存不足报错时请调高。';
+  String get img2img_seedvr2BlocksToSwapHint =>
+      '把多少 DiT 层放在内存里、推理时再逐层送入显存。调高更省显存但更吃内存也更慢；显存充裕可调低甚至设为 0。显存不足报错时请调高。';
 
   @override
   String get img2img_upscalePanelOpened => '已打开图生图超分面板';
@@ -2408,7 +2445,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get editor_magicWandColorArea => '颜色区域';
 
   @override
-  String get editor_magicWandSmartHelp => '点击要选择的对象。首次使用会从 MIT Han Lab 下载约 133 MiB 的 EfficientViT-SAM L0 模型（Apache-2.0），之后保存在本地。';
+  String get editor_magicWandSmartHelp =>
+      '点击要选择的对象。首次使用会从 MIT Han Lab 下载约 133 MiB 的 EfficientViT-SAM L0 模型（Apache-2.0），之后保存在本地。';
 
   @override
   String get editor_magicWandColorHelp => '点击颜色相近的连续区域。适合边界清晰的纯色图像，无需下载模型。';
@@ -2582,7 +2620,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get editor_transformCrop => '旋转 / 翻转 / 裁剪';
 
   @override
-  String get editor_transformCropDescription => '几何操作已经独立出来，点击后会先生成预览，确认应用后才写回图层。';
+  String get editor_transformCropDescription =>
+      '几何操作已经独立出来，点击后会先生成预览，确认应用后才写回图层。';
 
   @override
   String get editor_effectPreviewHint => '预览不会修改原图；点击应用后才会把结果写入当前活动图层和撤销历史。';
@@ -2777,7 +2816,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get editor_focusBrush => '画笔';
 
   @override
-  String get editor_focusContextHint => '外框是实际送去 Focused Inpaint 的区域，内框是主要重绘区域；两框之间的带宽就是 Minimum Context Area。';
+  String get editor_focusContextHint =>
+      '外框是实际送去 Focused Inpaint 的区域，内框是主要重绘区域；两框之间的带宽就是 Minimum Context Area。';
 
   @override
   String get editor_compressionTitle => '输出分辨率';
@@ -2789,15 +2829,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get editor_compressionUncompressed => '保持编辑工作尺寸，不执行压缩。';
 
   @override
-  String get editor_compressionApplyOnDone => '工作画布保持原样；点击“完成”时使用 Pica Lanczos3 执行一次压缩。';
+  String get editor_compressionApplyOnDone =>
+      '工作画布保持原样；点击“完成”时使用 Pica Lanczos3 执行一次压缩。';
 
   @override
-  String editor_compressionSizeSummary(int workWidth, int workHeight, int targetWidth, int targetHeight) {
+  String editor_compressionSizeSummary(
+    int workWidth,
+    int workHeight,
+    int targetWidth,
+    int targetHeight,
+  ) {
     return '工作尺寸 $workWidth×$workHeight → 输出尺寸 $targetWidth×$targetHeight';
   }
 
   @override
-  String editor_compressionNormalSummary(int normalWidth, int normalHeight, int minimumWidth, int minimumHeight) {
+  String editor_compressionNormalSummary(
+    int normalWidth,
+    int normalHeight,
+    int minimumWidth,
+    int minimumHeight,
+  ) {
     return 'Normal（约 1MP）为 $normalWidth×$normalHeight；最低档为 $minimumWidth×$minimumHeight。';
   }
 
@@ -2805,15 +2856,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get editor_compressionUnavailable => '当前工作画布已经低于最低压缩档，不能继续降低分辨率。';
 
   @override
-  String get editor_compressionFocusLimited => '当前 Focused Inpaint 选区在更高分辨率下会超过请求面积上限，因此滑条上限已收紧。';
+  String get editor_compressionFocusLimited =>
+      '当前 Focused Inpaint 选区在更高分辨率下会超过请求面积上限，因此滑条上限已收紧。';
 
   @override
-  String editor_compressionClampedToLimit(int targetWidth, int targetHeight, int clampedWidth, int clampedHeight) {
+  String editor_compressionClampedToLimit(
+    int targetWidth,
+    int targetHeight,
+    int clampedWidth,
+    int clampedHeight,
+  ) {
     return '所选 $targetWidth×$targetHeight 超过请求面积上限，实际会按 $clampedWidth×$clampedHeight 发送。';
   }
 
   @override
-  String editor_focusRequestSummary(int outerWidth, int outerHeight, int requestWidth, int requestHeight, int cost) {
+  String editor_focusRequestSummary(
+    int outerWidth,
+    int outerHeight,
+    int requestWidth,
+    int requestHeight,
+    int cost,
+  ) {
     return '外层裁剪 $outerWidth×$outerHeight，实际发送 $requestWidth×$requestHeight，预计 $cost Anlas。';
   }
 
@@ -3279,10 +3342,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get onlineGallery_tagDetailsIncomplete => '部分作品的完整标签获取失败，未验证的作品已排除；请重试以补全结果。';
+  String get onlineGallery_tagDetailsIncomplete =>
+      '部分作品的完整标签获取失败，未验证的作品已排除；请重试以补全结果。';
 
   @override
-  String get onlineGallery_unsupportedMetatag => '当前来源或模式不支持元标签语法，请改用普通标签或切换到来源搜索。';
+  String get onlineGallery_unsupportedMetatag =>
+      '当前来源或模式不支持元标签语法，请改用普通标签或切换到来源搜索。';
 
   @override
   String onlineGallery_multiTagScanning(int requests, int candidates) {
@@ -3409,7 +3474,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_replaceConfig => '替换配置';
 
   @override
-  String get onlineGallery_replaceConfigDescription => '选择要同时替换的生成配置；未选择的项目会保留当前值';
+  String get onlineGallery_replaceConfigDescription =>
+      '选择要同时替换的生成配置；未选择的项目会保留当前值';
 
   @override
   String get onlineGallery_replaceConfigNaiOnly => '仅包含可识别 NovelAI 配置的图片支持此选项';
@@ -3504,7 +3570,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_fuzzySearch => '模糊匹配';
 
   @override
-  String get onlineGallery_fuzzySearchTooltip => '开启后使用 *tag* 匹配相近标签；关闭时按 Danbooru 精确标签搜索';
+  String get onlineGallery_fuzzySearchTooltip =>
+      '开启后使用 *tag* 匹配相近标签；关闭时按 Danbooru 精确标签搜索';
 
   @override
   String get onlineGallery_blacklistShort => '屏蔽';
@@ -3525,7 +3592,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_outputFilterTitle => '输出过滤标签';
 
   @override
-  String get onlineGallery_outputFilterSubtitle => '图片仍会正常显示；这些标签只会从复制、发送和队列提示词中精确剔除。';
+  String get onlineGallery_outputFilterSubtitle =>
+      '图片仍会正常显示；这些标签只会从复制、发送和队列提示词中精确剔除。';
 
   @override
   String get onlineGallery_outputFilterAddHint => '添加需要从输出中剔除的标签';
@@ -3543,7 +3611,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_outputFilterClearTitle => '清空输出过滤？';
 
   @override
-  String get onlineGallery_outputFilterClearConfirm => '清空后，水印和马赛克等标签也会重新出现在复制与发送的提示词中。';
+  String get onlineGallery_outputFilterClearConfirm =>
+      '清空后，水印和马赛克等标签也会重新出现在复制与发送的提示词中。';
 
   @override
   String get onlineGallery_addTagToOutputFilter => '加入输出过滤';
@@ -3564,10 +3633,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_blacklistMenuHint => '隐藏包含此标签的画廊图片';
 
   @override
-  String get onlineGallery_outputFilteredTagTooltip => '此标签会在复制、发送和加入队列时被剔除；右键可管理';
+  String get onlineGallery_outputFilteredTagTooltip =>
+      '此标签会在复制、发送和加入队列时被剔除；右键可管理';
 
   @override
-  String get onlineGallery_outputFilteredTagTooltipTouch => '此标签会在复制、发送和加入队列时被剔除；长按可管理';
+  String get onlineGallery_outputFilteredTagTooltipTouch =>
+      '此标签会在复制、发送和加入队列时被剔除；长按可管理';
 
   @override
   String get onlineGallery_tagContextMenuTooltip => '右键可加入黑名单或输出过滤';
@@ -3592,13 +3663,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_blacklistSubtitle => '所有在线画廊共用这份列表；离线时仍会正常屏蔽。';
 
   @override
-  String get onlineGallery_blacklistCloudDescription => '已连接 Danbooru；本地修改会在安全合并后同步';
+  String get onlineGallery_blacklistCloudDescription =>
+      '已连接 Danbooru；本地修改会在安全合并后同步';
 
   @override
-  String get onlineGallery_blacklistCloudLoginRequired => '本地黑名单仍然有效；登录 Danbooru 后可以同步';
+  String get onlineGallery_blacklistCloudLoginRequired =>
+      '本地黑名单仍然有效；登录 Danbooru 后可以同步';
 
   @override
-  String get onlineGallery_blacklistCloudUnavailable => '本地黑名单仍然有效；验证 Danbooru 连接后会恢复云端同步';
+  String get onlineGallery_blacklistCloudUnavailable =>
+      '本地黑名单仍然有效；验证 Danbooru 连接后会恢复云端同步';
 
   @override
   String get onlineGallery_addBlacklistTagHint => '添加黑名单标签';
@@ -3616,7 +3690,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_pushBlacklistConfirmTitle => '用统一列表覆盖云端？';
 
   @override
-  String get onlineGallery_pushBlacklistConfirmBody => '这会完整替换 Danbooru 云端黑名单。普通自动同步不会删除无法识别的高级规则，但本次全量推送会删除它们。';
+  String get onlineGallery_pushBlacklistConfirmBody =>
+      '这会完整替换 Danbooru 云端黑名单。普通自动同步不会删除无法识别的高级规则，但本次全量推送会删除它们。';
 
   @override
   String get onlineGallery_blacklistPushSucceeded => '已用本地黑名单覆盖云端';
@@ -3666,15 +3741,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_blacklistClearTitle => '清空统一黑名单？';
 
   @override
-  String get onlineGallery_blacklistClearBody => '画廊将立即停止使用这些标签过滤。云端不会自动清空，可以撤销本次操作。';
+  String get onlineGallery_blacklistClearBody =>
+      '画廊将立即停止使用这些标签过滤。云端不会自动清空，可以撤销本次操作。';
 
   @override
-  String onlineGallery_blacklistPullSummary(Object added, Object existing, Object skipped, Object opaque) {
+  String onlineGallery_blacklistPullSummary(
+    Object added,
+    Object existing,
+    Object skipped,
+    Object opaque,
+  ) {
     return '已新增 $added 项，已有 $existing 项，跳过已删除 $skipped 项；保留 $opaque 条云端高级规则';
   }
 
   @override
-  String onlineGallery_blacklistPushDiff(Object added, Object removed, Object opaque) {
+  String onlineGallery_blacklistPushDiff(
+    Object added,
+    Object removed,
+    Object opaque,
+  ) {
     return '云端将新增 $added 项、删除 $removed 项，并删除 $opaque 条高级规则。';
   }
 
@@ -3682,7 +3767,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_blacklistCloudEmptyConfirm => '确认清空云端黑名单';
 
   @override
-  String get onlineGallery_blacklistMigrationConfirm => '此列表包含旧版本中无法确认账号归属的云端标签；确认将它们同步到当前账号';
+  String get onlineGallery_blacklistMigrationConfirm =>
+      '此列表包含旧版本中无法确认账号归属的云端标签；确认将它们同步到当前账号';
 
   @override
   String get onlineGallery_bulkFavorite => '批量收藏';
@@ -3696,7 +3782,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String onlineGallery_queueBatchCompleted(Object added, Object prepareFailed, Object queueSkipped) {
+  String onlineGallery_queueBatchCompleted(
+    Object added,
+    Object prepareFailed,
+    Object queueSkipped,
+  ) {
     return '已加入 $added 个任务；$prepareFailed 个未能准备；$queueSkipped 个因队列已满未加入';
   }
 
@@ -3722,7 +3812,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String onlineGallery_downloadSelectedCompletedWithSkipped(Object success, Object failed, Object skipped) {
+  String onlineGallery_downloadSelectedCompletedWithSkipped(
+    Object success,
+    Object failed,
+    Object skipped,
+  ) {
     return '下载完成：成功 $success，失败 $failed，跳过 $skipped 个纯文本词条';
   }
 
@@ -3751,10 +3845,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_gelbooruApiInvalid => 'Gelbooru 凭据已失效';
 
   @override
-  String get onlineGallery_gelbooruCredentialsRequired => '请先配置 Gelbooru User ID 和 API Key 以查看网站收藏。';
+  String get onlineGallery_gelbooruCredentialsRequired =>
+      '请先配置 Gelbooru User ID 和 API Key 以查看网站收藏。';
 
   @override
-  String get onlineGallery_gelbooruCredentialsInvalid => 'Gelbooru 凭据已失效，请重新配置。';
+  String get onlineGallery_gelbooruCredentialsInvalid =>
+      'Gelbooru 凭据已失效，请重新配置。';
 
   @override
   String get onlineGallery_gelbooruRateLimited => 'Gelbooru 请求过于频繁，请稍后再试。';
@@ -3766,7 +3862,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_gelbooruServerError => 'Gelbooru 服务器暂时不可用，请稍后再试。';
 
   @override
-  String get onlineGallery_gelbooruNetworkError => '无法连接 Gelbooru，请检查网络设置或代理配置。';
+  String get onlineGallery_gelbooruNetworkError =>
+      '无法连接 Gelbooru，请检查网络设置或代理配置。';
 
   @override
   String get onlineGallery_gelbooruMalformedResponse => 'Gelbooru 返回了无法解析的数据。';
@@ -3778,7 +3875,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_aiTagQuery => '搜索作品、作者、标题、标签或模型';
 
   @override
-  String get onlineGallery_aiTagPromptQuery => 'AI Prompt 搜索（可搜索 artist: 等 Prompt 原文）';
+  String get onlineGallery_aiTagPromptQuery =>
+      'AI Prompt 搜索（可搜索 artist: 等 Prompt 原文）';
 
   @override
   String get onlineGallery_sourceQuickTagCloud => '法典图鉴';
@@ -3906,7 +4004,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_artistHunt => '仅画师串';
 
   @override
-  String get onlineGallery_artistHuntTooltip => '只显示正向 Prompt 中明确包含 artist: 标签的图片';
+  String get onlineGallery_artistHuntTooltip =>
+      '只显示正向 Prompt 中明确包含 artist: 标签的图片';
 
   @override
   String get onlineGallery_copyArtistChain => '复制画师串';
@@ -3915,7 +4014,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_copyPrompt => '复制提示词';
 
   @override
-  String get onlineGallery_promptCopyDescription => '选择要复制的原始提示词类别。正向与负向内容会以纯文本块分隔。';
+  String get onlineGallery_promptCopyDescription =>
+      '选择要复制的原始提示词类别。正向与负向内容会以纯文本块分隔。';
 
   @override
   String get onlineGallery_promptCopyCategoryHint => '按来源提供的标签类别复制';
@@ -4041,7 +4141,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_gelbooruReadOnly => '只读收藏';
 
   @override
-  String get onlineGallery_gelbooruFavoritesSortHint => '按帖子 ID 从新到旧排列，不保证与网站收藏时间顺序一致。';
+  String get onlineGallery_gelbooruFavoritesSortHint =>
+      '按帖子 ID 从新到旧排列，不保证与网站收藏时间顺序一致。';
 
   @override
   String get tooltip_fullscreenEdit => '全屏编辑';
@@ -4104,7 +4205,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gelbooru_configureTitle => '配置 Gelbooru API';
 
   @override
-  String get gelbooru_configureHint => '输入 Gelbooru 账户设置页提供的 User ID 和 API Key。应用不会收集密码或浏览器 Cookie。';
+  String get gelbooru_configureHint =>
+      '输入 Gelbooru 账户设置页提供的 User ID 和 API Key。应用不会收集密码或浏览器 Cookie。';
 
   @override
   String get gelbooru_userId => 'User ID';
@@ -4137,7 +4239,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gelbooru_invalidInput => '请输入有效的 User ID 和 API Key。';
 
   @override
-  String get gelbooru_invalidCredentials => 'Gelbooru 拒绝了这些凭据，请检查 User ID 和 API Key。';
+  String get gelbooru_invalidCredentials =>
+      'Gelbooru 拒绝了这些凭据，请检查 User ID 和 API Key。';
 
   @override
   String get gelbooru_rateLimited => '请求过于频繁，请稍后再试。';
@@ -4266,7 +4369,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ucPreset_addToNegative => '添加到负面提示词开头:';
 
   @override
-  String get ucPreset_nsfwHint => '💡 如需生成成人内容，请在正面提示词中添加 nsfw，负面提示词中的 nsfw 将自动移除';
+  String get ucPreset_nsfwHint =>
+      '💡 如需生成成人内容，请在正面提示词中添加 nsfw，负面提示词中的 nsfw 将自动移除';
 
   @override
   String get ucPreset_addFromLibrary => '从词库添加';
@@ -4296,7 +4400,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get prompt_clearAll => '清空提示词';
 
   @override
-  String get prompt_clearAllPositiveContent => '将清空正面提示词的全部内容（含所有分区）并移除全部角色，无法撤销。固定词不受影响。';
+  String get prompt_clearAllPositiveContent =>
+      '将清空正面提示词的全部内容（含所有分区）并移除全部角色，无法撤销。固定词不受影响。';
 
   @override
   String get prompt_clearAllNegativeContent => '将清空负面提示词的全部内容（含所有分区），无法撤销。';
@@ -4524,7 +4629,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generation_invalidResolution => '分辨率无效';
 
   @override
-  String generation_invalidResolutionHint(int width, int height, int suggestedWidth, int suggestedHeight) {
+  String generation_invalidResolutionHint(
+    int width,
+    int height,
+    int suggestedWidth,
+    int suggestedHeight,
+  ) {
     return '$width×$height 无法用于生成。宽度和高度必须是 64 的倍数、单边不能超过 4096，且总像素不能超过 3,145,728。最接近的可用尺寸是 $suggestedWidth×$suggestedHeight。';
   }
 
@@ -4709,7 +4819,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get randomPrompt_unsupportedModel => '当前模型不支持官网随机词库';
 
   @override
-  String get randomPrompt_unsupportedModelHint => '当前模型没有对应的 NovelAI 官网随机方案。请选择受支持的 NovelAI 模型，或使用自己的自定义预设。';
+  String get randomPrompt_unsupportedModelHint =>
+      '当前模型没有对应的 NovelAI 官网随机方案。请选择受支持的 NovelAI 模型，或使用自己的自定义预设。';
 
   @override
   String get naiMode_noTags => '暂无标签';
@@ -4927,7 +5038,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get characterCountConfig_mainPromptLabel => '主提示词标签';
 
   @override
-  String get characterCountConfig_mainPromptHint => '例如：solo, 2girls, 1girl 1boy';
+  String get characterCountConfig_mainPromptHint =>
+      '例如：solo, 2girls, 1girl 1boy';
 
   @override
   String get characterCountConfig_personCount => '人数：';
@@ -5110,7 +5222,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get randomManager_resetDefaultTitle => '重置为默认配置';
 
   @override
-  String get randomManager_resetDefaultContent => '将恢复官方默认配置。\n您添加的自定义词组会被保留但禁用。';
+  String get randomManager_resetDefaultContent =>
+      '将恢复官方默认配置。\n您添加的自定义词组会被保留但禁用。';
 
   @override
   String get randomManager_resetDefaultConfirm => '确认重置';
@@ -5318,7 +5431,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scope_character => '角色';
 
   @override
-  String get scope_characterTooltip => '提示词将只出现在角色提示词内\n每个角色单独生成\n适合：发色、眵色、服装、表情等';
+  String get scope_characterTooltip =>
+      '提示词将只出现在角色提示词内\n每个角色单独生成\n适合：发色、眵色、服装、表情等';
 
   @override
   String get scope_all => '通用';
@@ -5373,7 +5487,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localGallery_categoryPanelTitle => '分类';
 
   @override
-  String get localGallery_searchFilenamePromptPlaceholder => '搜索文件名/Prompt，逗号分隔交集搜索...';
+  String get localGallery_searchFilenamePromptPlaceholder =>
+      '搜索文件名/Prompt，逗号分隔交集搜索...';
 
   @override
   String get localGallery_selectCurrentPage => '选择本页';
@@ -5452,7 +5567,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localGallery_protectedDeleteCategoryTitle => '保护模式：确认删除分类';
 
   @override
-  String get localGallery_protectedDeleteCategoryContent => '将删除此分类记录，文件夹及内容会保留。请再次确认。';
+  String get localGallery_protectedDeleteCategoryContent =>
+      '将删除此分类记录，文件夹及内容会保留。请再次确认。';
 
   @override
   String get localGallery_confirmDelete => '确认删除';
@@ -5516,7 +5632,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localGallery_zipMetadataTitle => '导出 ZIP 压缩包';
 
   @override
-  String get localGallery_zipMetadataDescription => '选择压缩包内的图片是否保留内嵌元数据。原始图片文件不会被修改。';
+  String get localGallery_zipMetadataDescription =>
+      '选择压缩包内的图片是否保留内嵌元数据。原始图片文件不会被修改。';
 
   @override
   String get localGallery_zipIncludeMetadata => '保留元数据';
@@ -5528,7 +5645,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localGallery_zipExcludeMetadata => '移除全部元数据';
 
   @override
-  String get localGallery_zipExcludeMetadataDescription => '仅为压缩包生成净化副本，清除 PNG 文本块、EXIF 和 NovelAI 隐写水印数据。';
+  String get localGallery_zipExcludeMetadataDescription =>
+      '仅为压缩包生成净化副本，清除 PNG 文本块、EXIF 和 NovelAI 隐写水印数据。';
 
   @override
   String bulkMetadataEdit_title(Object count) {
@@ -5908,7 +6026,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localGallery_permissionRequiredTitle => '需要存储权限';
 
   @override
-  String get localGallery_permissionRequiredContent => '本地画廊需要访问存储权限才能扫描您生成的图片。\n\n请在设置中授予权限后重试。';
+  String get localGallery_permissionRequiredContent =>
+      '本地画廊需要访问存储权限才能扫描您生成的图片。\n\n请在设置中授予权限后重试。';
 
   @override
   String get localGallery_openSettings => '打开设置';
@@ -5917,7 +6036,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localGallery_firstTimeTipTitle => '使用提示';
 
   @override
-  String get localGallery_firstTimeTipContent => '右键点击（桌面端）或长按（移动端）图片可以：\n\n• 复制 Prompt\n• 复制 Seed\n• 查看完整元数据';
+  String get localGallery_firstTimeTipContent =>
+      '右键点击（桌面端）或长按（移动端）图片可以：\n\n• 复制 Prompt\n• 复制 Seed\n• 查看完整元数据';
 
   @override
   String get localGallery_gotIt => '知道了';
@@ -6449,7 +6569,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String fixedTags_columnFilteredCount(Object enabled, Object total, Object shown) {
+  String fixedTags_columnFilteredCount(
+    Object enabled,
+    Object total,
+    Object shown,
+  ) {
     return '$enabled/$total · 显示 $shown';
   }
 
@@ -6579,10 +6703,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reversePrompt_characterThreshold => '角色标签阈值';
 
   @override
-  String get reversePrompt_taggerFilterHint => '只输出 General / Character 分类标签；Rating、Artist、Copyright、Meta 等分类会被过滤。';
+  String get reversePrompt_taggerFilterHint =>
+      '只输出 General / Character 分类标签；Rating、Artist、Copyright、Meta 等分类会被过滤。';
 
   @override
-  String get reversePrompt_replacementEmptyHint => '替换目标角色为空。这里从词库选择一个角色作为替换目标，不会注入到正向提示词。';
+  String get reversePrompt_replacementEmptyHint =>
+      '替换目标角色为空。这里从词库选择一个角色作为替换目标，不会注入到正向提示词。';
 
   @override
   String get reversePrompt_selectReplacementCharacter => '从词库选择替换目标角色';
@@ -6609,7 +6735,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reversePrompt_dropUnreadable => '拖入源未提供可读取的图片文件或图片链接';
 
   @override
-  String get reversePrompt_needImageAndMethod => '请先添加图片，并至少启用 ONNX tagger 或 LLM 反推';
+  String get reversePrompt_needImageAndMethod =>
+      '请先添加图片，并至少启用 ONNX tagger 或 LLM 反推';
 
   @override
   String get reversePrompt_stagePreparing => '准备反推';
@@ -6705,7 +6832,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get promptAssistant_customRequestLabel => '你的修改需求';
 
   @override
-  String get promptAssistant_customRequestHint => '例如：更阴森、增加雨夜街道背景、让动作更有张力，只返回最终提示词';
+  String get promptAssistant_customRequestHint =>
+      '例如：更阴森、增加雨夜街道背景、让动作更有张力，只返回最终提示词';
 
   @override
   String get promptAssistant_addReferenceImage => '添加参考图';
@@ -6778,16 +6906,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get promptAssistant_webAccessBackendExaApi => 'Exa API';
 
   @override
-  String get promptAssistant_webAccessBackendAutoDescription => '优先使用已配置的 SearXNG，失败后回退到 Exa 匿名 MCP 额度';
+  String get promptAssistant_webAccessBackendAutoDescription =>
+      '优先使用已配置的 SearXNG，失败后回退到 Exa 匿名 MCP 额度';
 
   @override
-  String get promptAssistant_webAccessBackendSearxngDescription => '仅使用配置的私有 SearXNG 实例';
+  String get promptAssistant_webAccessBackendSearxngDescription =>
+      '仅使用配置的私有 SearXNG 实例';
 
   @override
-  String get promptAssistant_webAccessBackendExaMcpDescription => '无需 API Key，使用 Exa 托管的免费额度并受其限流约束';
+  String get promptAssistant_webAccessBackendExaMcpDescription =>
+      '无需 API Key，使用 Exa 托管的免费额度并受其限流约束';
 
   @override
-  String get promptAssistant_webAccessBackendExaApiDescription => '使用你的 Exa 账号与 API 额度，此模式可能产生费用';
+  String get promptAssistant_webAccessBackendExaApiDescription =>
+      '使用你的 Exa 账号与 API 额度，此模式可能产生费用';
 
   @override
   String get promptAssistant_webAccessResultCount => '默认结果数';
@@ -6850,7 +6982,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get promptAssistant_providerManagement => '服务商管理';
 
   @override
-  String get promptAssistant_providerManagementSubtitle => '支持 OpenAI Chat / Responses、Anthropic、Gemini、DeepSeek、LM Studio、Ollama、Pollinations 和自定义兼容端点';
+  String get promptAssistant_providerManagementSubtitle =>
+      '支持 OpenAI Chat / Responses、Anthropic、Gemini、DeepSeek、LM Studio、Ollama、Pollinations 和自定义兼容端点';
 
   @override
   String get promptAssistant_apiKeyConfigured => 'API Key: 已配置';
@@ -6896,7 +7029,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get promptAssistant_ruleTemplates => '规则模板';
 
   @override
-  String get promptAssistant_ruleTemplatesSubtitle => '系统提示词按“规则 + 用户输入 + 任务参数”组装';
+  String get promptAssistant_ruleTemplatesSubtitle =>
+      '系统提示词按“规则 + 用户输入 + 任务参数”组装';
 
   @override
   String get promptAssistant_addRule => '新增规则';
@@ -6934,10 +7068,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get promptAssistant_clearCurrentApiKey => '清空当前 API Key';
 
   @override
-  String get promptAssistant_protocolSupportsImagePayload => '当前协议支持图片载荷，仍需模型本身支持视觉输入';
+  String get promptAssistant_protocolSupportsImagePayload =>
+      '当前协议支持图片载荷，仍需模型本身支持视觉输入';
 
   @override
-  String get promptAssistant_protocolTextOnlyWarning => '当前协议默认仅文本，开启后也可能被服务端拒绝';
+  String get promptAssistant_protocolTextOnlyWarning =>
+      '当前协议默认仅文本，开启后也可能被服务端拒绝';
 
   @override
   String get promptAssistant_addRuleTitle => '新增规则';
@@ -7379,7 +7515,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tagLibrary_contentHint => '输入提示词内容，支持智能补全';
 
   @override
-  String get tagLibrary_characterNegativeSyntaxHelp => '角色词库可用 negative(...) 保存独立负面提示词，例如：girl, blue eyes, negative(red hair, glasses)';
+  String get tagLibrary_characterNegativeSyntaxHelp =>
+      '角色词库可用 negative(...) 保存独立负面提示词，例如：girl, blue eyes, negative(red hair, glasses)';
 
   @override
   String get settings_network => '网络';
@@ -7394,7 +7531,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_proxyDisabled => '直接连接网络';
 
   @override
-  String get settings_proxyTrafficDisclosure => '代理启用后，NovelAI API 流量（包括认证请求）会通过系统代理或手动代理发送。只使用你信任的代理。';
+  String get settings_proxyTrafficDisclosure =>
+      '代理启用后，NovelAI API 流量（包括认证请求）会通过系统代理或手动代理发送。只使用你信任的代理。';
 
   @override
   String get settings_proxyMode => '代理模式';
@@ -7697,13 +7835,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_showRandomPromptTools => '显示随机提示词工具';
 
   @override
-  String get settings_showRandomPromptToolsSubtitle => '在生成页显示“随机提示词”按钮和“抽卡模式”开关';
+  String get settings_showRandomPromptToolsSubtitle =>
+      '在生成页显示“随机提示词”按钮和“抽卡模式”开关';
 
   @override
   String get settings_enablePromptWeightScroll => '滚轮调整提示词权重';
 
   @override
-  String get settings_enablePromptWeightScrollSubtitle => '选中提示词时，滚轮仅调整权重，不再触发页面滚动等其他滚轮操作';
+  String get settings_enablePromptWeightScrollSubtitle =>
+      '选中提示词时，滚轮仅调整权重，不再触发页面滚动等其他滚轮操作';
 
   @override
   String settings_queueRetryCountMax(Object count) {
@@ -7879,7 +8019,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get metadataImport_fixedSourceUnknown => '来源：图片未记录，无法确认';
 
   @override
-  String get metadataImport_unknownFixedTagsHint => '图片没有记录固定词。请选择如何处理当前已启用的固定词。';
+  String get metadataImport_unknownFixedTagsHint =>
+      '图片没有记录固定词。请选择如何处理当前已启用的固定词。';
 
   @override
   String get metadataImport_disableCurrentFixedTags => '关闭当前固定词（推荐）';
@@ -7949,7 +8090,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String metadataImport_preciseReferenceDetail(int index, Object type, Object strength, Object fidelity) {
+  String metadataImport_preciseReferenceDetail(
+    int index,
+    Object type,
+    Object strength,
+    Object fidelity,
+  ) {
     return '参考$index: $type (强度 $strength%, 保真 $fidelity%)';
   }
 
@@ -8564,7 +8710,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vibeLibrary_deleteCategoryTitle => '确认删除';
 
   @override
-  String get vibeLibrary_deleteCategoryContent => '确定要删除此分类吗？分类下的 Vibe 将被移动到未分类。';
+  String get vibeLibrary_deleteCategoryContent =>
+      '确定要删除此分类吗？分类下的 Vibe 将被移动到未分类。';
 
   @override
   String get vibeLibrary_sortTooltip => '排序方式';
@@ -8579,10 +8726,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vibeLibrary_enterSelectionMode => '进入选择模式';
 
   @override
-  String get vibeLibrary_importTooltip => '导入 Vibe 文件或 PNG/JPG/JPEG/WEBP 图片（右键查看更多选项）';
+  String get vibeLibrary_importTooltip =>
+      '导入 Vibe 文件或 PNG/JPG/JPEG/WEBP 图片（右键查看更多选项）';
 
   @override
-  String get vibeLibrary_importTooltipTouch => '导入 Vibe 文件或 PNG/JPG/JPEG/WEBP 图片';
+  String get vibeLibrary_importTooltipTouch =>
+      '导入 Vibe 文件或 PNG/JPG/JPEG/WEBP 图片';
 
   @override
   String get vibeLibrary_exportTooltip => '导出 Vibe 到文件';
@@ -8646,7 +8795,8 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get vibeLibrary_dropImportHint => '拖拽 .naiv4vibe/.naiv4vibebundle/.png/.jpg/.jpeg/.webp 文件或文件夹到此处导入';
+  String get vibeLibrary_dropImportHint =>
+      '拖拽 .naiv4vibe/.naiv4vibebundle/.png/.jpg/.jpeg/.webp 文件或文件夹到此处导入';
 
   @override
   String get vibeLibrary_importing => '正在导入...';
@@ -8932,7 +9082,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vibe_export_singleFile => '单文件 (.naiv4vibe)';
 
   @override
-  String get vibe_export_singleFileDescription => '将每个 Vibe 导出为单独文件，适合分享单个 Vibe';
+  String get vibe_export_singleFileDescription =>
+      '将每个 Vibe 导出为单独文件，适合分享单个 Vibe';
 
   @override
   String get vibe_export_bundleFile => '打包文件 (.naiv4vibebundle)';
@@ -8969,7 +9120,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vibe_export_pngCarrierImage => 'PNG 载体图片';
 
   @override
-  String get vibe_export_noUsablePngCarrier => '这个 Vibe 没有可直接使用的 PNG 载体图片。你可以选择外部 PNG 图片作为载体。';
+  String get vibe_export_noUsablePngCarrier =>
+      '这个 Vibe 没有可直接使用的 PNG 载体图片。你可以选择外部 PNG 图片作为载体。';
 
   @override
   String get vibe_export_selectExternalPngImage => '选择外部 PNG 图片...';
@@ -9066,13 +9218,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vibe_export_exportBundleDescription => '导出为 .naiv4vibebundle 文件';
 
   @override
-  String get vibe_export_exportAsFilesDescription => '导出为 .naiv4vibe 或 .naiv4vibebundle 文件';
+  String get vibe_export_exportAsFilesDescription =>
+      '导出为 .naiv4vibe 或 .naiv4vibebundle 文件';
 
   @override
   String get vibe_export_exportAsZip => '导出为 ZIP';
 
   @override
-  String get vibe_export_exportAsZipDescription => '将选中的 Vibe 库条目作为独立文件打包为 .zip';
+  String get vibe_export_exportAsZipDescription =>
+      '将选中的 Vibe 库条目作为独立文件打包为 .zip';
 
   @override
   String get vibe_export_compressData => '压缩数据';
@@ -9087,13 +9241,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vibe_export_exportAsPng => '导出为 PNG';
 
   @override
-  String get vibe_export_pngInternalBundleUnsupported => '导出单个 Bundle 内部 Vibe 时不支持嵌入图片';
+  String get vibe_export_pngInternalBundleUnsupported =>
+      '导出单个 Bundle 内部 Vibe 时不支持嵌入图片';
 
   @override
   String get vibe_export_embedVibeDataIntoPng => '将 Vibe 数据写入 PNG 元数据';
 
   @override
-  String get vibe_export_batchPngUsesFirstImage => '批量导出会使用每个 Vibe 的第一张可用图片，没有图片的条目会自动跳过。';
+  String get vibe_export_batchPngUsesFirstImage =>
+      '批量导出会使用每个 Vibe 的第一张可用图片，没有图片的条目会自动跳过。';
 
   @override
   String get vibe_export_exportCarrierImage => '导出载体图片';
@@ -9105,7 +9261,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vibe_export_exportAsEncodings => '导出为编码';
 
   @override
-  String get vibe_export_exportAsEncodingsDescription => '将数据导出为编码 (JSON 或 Base64)';
+  String get vibe_export_exportAsEncodingsDescription =>
+      '将数据导出为编码 (JSON 或 Base64)';
 
   @override
   String get vibe_export_jsonDescription => '导出为格式化 JSON 文件，便于阅读和编辑';
@@ -9117,7 +9274,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vibe_export_selectAtLeastOneMethod => '请选择至少一种导出方式';
 
   @override
-  String get vibe_export_batchPngUnsupported => '批量 Vibe 导出不支持嵌入 PNG。请使用单个 Vibe 导出界面。';
+  String get vibe_export_batchPngUnsupported =>
+      '批量 Vibe 导出不支持嵌入 PNG。请使用单个 Vibe 导出界面。';
 
   @override
   String get vibe_export_selectPngCarrier => '请选择用于导出的 PNG 载体图片';
@@ -9503,10 +9661,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_restartRequiredTitle => '需要重启应用';
 
   @override
-  String get settings_changePathConfirm => '更改数据存储路径后，需要重启应用才能生效。\\n\\n新路径将在下次启动时生效。是否继续？';
+  String get settings_changePathConfirm =>
+      '更改数据存储路径后，需要重启应用才能生效。\\n\\n新路径将在下次启动时生效。是否继续？';
 
   @override
-  String get settings_resetPathConfirm => '重置数据存储路径后，需要重启应用才能生效。\\n\\n默认路径将在下次启动时生效。是否继续？';
+  String get settings_resetPathConfirm =>
+      '重置数据存储路径后，需要重启应用才能生效。\\n\\n默认路径将在下次启动时生效。是否继续？';
 
   @override
   String get settings_kritaBridgeEnable => '启用 Krita 本地桥接';
@@ -9632,10 +9792,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_mcpServerRegenerateTokenTitle => '重新生成接入令牌';
 
   @override
-  String get settings_mcpServerRegenerateTokenMessage => '当前令牌会立即失效，已连接的客户端将断开。请在所有客户端配置中更新新令牌。';
+  String get settings_mcpServerRegenerateTokenMessage =>
+      '当前令牌会立即失效，已连接的客户端将断开。请在所有客户端配置中更新新令牌。';
 
   @override
-  String get settings_mcpServerAnlasNotice => '任何可能消耗 Anlas 的操作都会在启动器内单独确认，与权限模式无关。';
+  String get settings_mcpServerAnlasNotice =>
+      '任何可能消耗 Anlas 的操作都会在启动器内单独确认，与权限模式无关。';
 
   @override
   String settings_mcpServerPendingApproval(Object client, Object tool) {
@@ -9685,7 +9847,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_mcpServerAgentPromptTitle => '推荐：让智能体自己配置';
 
   @override
-  String get settings_mcpServerAgentPromptHint => '把以下提示词发给要接入的智能体，它会读取配置文档并自行完成安装。提示词不含令牌，令牌由随包 CLI 在本机读取。';
+  String get settings_mcpServerAgentPromptHint =>
+      '把以下提示词发给要接入的智能体，它会读取配置文档并自行完成安装。提示词不含令牌，令牌由随包 CLI 在本机读取。';
 
   @override
   String get settings_mcpServerClaudeCodeHint => '在终端运行以下命令注册服务器。';
@@ -9697,13 +9860,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_mcpServerCursorHint => '把以下内容合并进 Cursor 的 mcp.json 配置文件。';
 
   @override
-  String get settings_mcpServerCherryStudioHint => '在 Cherry Studio 的 MCP 服务器设置中用“从 JSON 导入”粘贴以下内容；timeout 单位为秒，已留足应用内审批时间。';
+  String get settings_mcpServerCherryStudioHint =>
+      '在 Cherry Studio 的 MCP 服务器设置中用“从 JSON 导入”粘贴以下内容；timeout 单位为秒，已留足应用内审批时间。';
 
   @override
-  String get settings_mcpServerPiHint => 'Pi 本体不带 MCP，需先安装 pi-mcp-adapter 包，再把以下内容合并进 ~/.pi/agent/mcp.json。';
+  String get settings_mcpServerPiHint =>
+      'Pi 本体不带 MCP，需先安装 pi-mcp-adapter 包，再把以下内容合并进 ~/.pi/agent/mcp.json。';
 
   @override
-  String get settings_mcpServerClaudeDesktopHint => '把以下内容合并进 Claude Desktop 配置；它通过随包 CLI 以 stdio 方式接入。';
+  String get settings_mcpServerClaudeDesktopHint =>
+      '把以下内容合并进 Claude Desktop 配置；它通过随包 CLI 以 stdio 方式接入。';
 
   @override
   String get settings_fontScale => '字体大小';
@@ -9739,7 +9905,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_generationLayout_webStyle => '官网式布局';
 
   @override
-  String get settings_generationLayout_webStyleDescription => '提示词与设置固定在最左栏，类似 NovelAI 官网';
+  String get settings_generationLayout_webStyleDescription =>
+      '提示词与设置固定在最左栏，类似 NovelAI 官网';
 
   @override
   String get settings_historyClickBehavior => '历史记录点击行为';
@@ -9754,10 +9921,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_historyClickBehavior_linked => '官网式联动';
 
   @override
-  String get settings_historyClickBehavior_linkedDescription => '单击切换中央预览，双击或长按打开详情，并支持左右方向键浏览';
+  String get settings_historyClickBehavior_linkedDescription =>
+      '单击切换中央预览，双击或长按打开详情，并支持左右方向键浏览';
 
   @override
-  String get settings_historyClickBehavior_linkedDescriptionTouch => '单击切换中央预览，双击或长按打开详情';
+  String get settings_historyClickBehavior_linkedDescriptionTouch =>
+      '单击切换中央预览，双击或长按打开详情';
 
   @override
   String get image_viewDetail => '查看详情';
@@ -9772,7 +9941,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discordShare_verifyTitle => '验证 Discord 成员身份';
 
   @override
-  String get discordShare_verifyDescription => '分享前需要在浏览器中登录 Discord。应用只会获得你的公开身份和服务器成员状态。';
+  String get discordShare_verifyDescription =>
+      '分享前需要在浏览器中登录 Discord。应用只会获得你的公开身份和服务器成员状态。';
 
   @override
   String get discordShare_verifyButton => '前往 Discord 验证';
@@ -9787,7 +9957,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discordShare_joinRequired => '请先加入 Aaalice Discord 服务器';
 
   @override
-  String get discordShare_joinDescription => '只有服务器成员可以向社区频道分享图片。加入后返回这里重新验证即可。';
+  String get discordShare_joinDescription =>
+      '只有服务器成员可以向社区频道分享图片。加入后返回这里重新验证即可。';
 
   @override
   String get discordShare_joinServer => '加入 Discord 服务器';
@@ -9843,7 +10014,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discordShare_keepMetadata => '保留图像元数据';
 
   @override
-  String get discordShare_keepMetadataHint => '默认关闭。关闭时会清除 PNG 文本、EXIF 和 NAI 隐写元数据后再上传。';
+  String get discordShare_keepMetadataHint =>
+      '默认关闭。关闭时会清除 PNG 文本、EXIF 和 NAI 隐写元数据后再上传。';
 
   @override
   String get discordShare_privacyHint => '发送内容会上传到 Discord；请检查提示词和附言中是否包含隐私信息。';
@@ -9898,7 +10070,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discordShare_errorDelivery => 'Discord 频道发送失败，请稍后重试';
 
   @override
-  String get settings_defaultImagesPath => '默认 (Documents/NAI_Launcher/images/)';
+  String get settings_defaultImagesPath =>
+      '默认 (Documents/NAI_Launcher/images/)';
 
   @override
   String settings_defaultVibePath(Object path) {
@@ -9912,7 +10085,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_protectionMode => '保护模式';
 
   @override
-  String get settings_protectionModeSubtitle => '开启后按下方子项保护本地资产、分享副本、高消耗和高频生图操作；关闭时保留子项配置但不生效。';
+  String get settings_protectionModeSubtitle =>
+      '开启后按下方子项保护本地资产、分享副本、高消耗和高频生图操作；关闭时保留子项配置但不生效。';
 
   @override
   String get settings_protectionFeatures => '保护功能';
@@ -9921,25 +10095,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_copyDragWatermarkTitle => '复制/拖拽时添加水印';
 
   @override
-  String get settings_copyDragWatermarkSubtitle => '使用已保存的默认水印方案。添加水印不会清除元数据；如需清除，请开启上方“复制/拖拽时移除全部元数据”。';
+  String get settings_copyDragWatermarkSubtitle =>
+      '使用已保存的默认水印方案。添加水印不会清除元数据；如需清除，请开启上方“复制/拖拽时移除全部元数据”。';
 
   @override
   String get settings_stripMetadataTitle => '复制/拖拽时移除全部元数据';
 
   @override
-  String get settings_stripMetadataSubtitle => '复制、拖拽及 MCP 图片返回时清除 PNG 文本块、EXIF 与 NAI 隐写水印，不修改本地原图；MCP 保留原分辨率，其 saved_path 指向的图库原图不受影响。';
+  String get settings_stripMetadataSubtitle =>
+      '复制、拖拽及 MCP 图片返回时清除 PNG 文本块、EXIF 与 NAI 隐写水印，不修改本地原图；MCP 保留原分辨率，其 saved_path 指向的图库原图不受影响。';
 
   @override
   String get settings_confirmDangerousActionsTitle => '危险资产操作二次确认';
 
   @override
-  String get settings_confirmDangerousActionsSubtitle => '删除、移动、批量移动等本地资产操作会额外弹出保护确认。';
+  String get settings_confirmDangerousActionsSubtitle =>
+      '删除、移动、批量移动等本地资产操作会额外弹出保护确认。';
 
   @override
   String get settings_warnExternalImageSendTitle => '发送到外部服务前提示';
 
   @override
-  String get settings_warnExternalImageSendSubtitle => '把本地图片发送到 LLM、NovelAI、ComfyUI 等外部边界前进行确认。';
+  String get settings_warnExternalImageSendSubtitle =>
+      '把本地图片发送到 LLM、NovelAI、ComfyUI 等外部边界前进行确认。';
 
   @override
   String get settings_preventOverwriteTitle => '导出时避免覆盖已有文件';
@@ -9971,7 +10149,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_limitGenerationIntervalTitle => '限制生图频率';
 
   @override
-  String get settings_limitGenerationIntervalSubtitle => '开启后，两次生图开始时间必须至少间隔设定秒数；冷却期间生图按钮不可点击。';
+  String get settings_limitGenerationIntervalSubtitle =>
+      '开启后，两次生图开始时间必须至少间隔设定秒数；冷却期间生图按钮不可点击。';
 
   @override
   String get settings_generationIntervalTitle => '生图间隔';
@@ -10057,7 +10236,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_comfyUiCustomWorkflows => '自定义工作流';
 
   @override
-  String get settings_comfyUiNoCustomWorkflows => '暂无自定义工作流，点击“导入”添加 ComfyUI 工作流';
+  String get settings_comfyUiNoCustomWorkflows =>
+      '暂无自定义工作流，点击“导入”添加 ComfyUI 工作流';
 
   @override
   String settings_comfyUiSlotCount(Object count) {
@@ -10114,31 +10294,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get comfyWorkflow_seedvr2UpscaleName => 'SeedVR2 超分';
 
   @override
-  String get comfyWorkflow_seedvr2UpscaleDescription => '使用 SeedVR2 AI 模型进行超分辨率放大，效果优秀';
+  String get comfyWorkflow_seedvr2UpscaleDescription =>
+      '使用 SeedVR2 AI 模型进行超分辨率放大，效果优秀';
 
   @override
   String get comfyWorkflow_seedvr2LegacyUpscaleName => 'SeedVR2 兼容节点超分';
 
   @override
-  String get comfyWorkflow_seedvr2LegacyUpscaleDescription => '使用已安装的 SeedVR2VideoUpscaler 自定义节点进行超分';
+  String get comfyWorkflow_seedvr2LegacyUpscaleDescription =>
+      '使用已安装的 SeedVR2VideoUpscaler 自定义节点进行超分';
 
   @override
   String get comfyWorkflow_seedvr2TiledUpscaleName => 'SeedVR2 分块超分';
 
   @override
-  String get comfyWorkflow_seedvr2TiledUpscaleDescription => '使用 SeedVR2TilingUpscaler 分块放大，降低大图显存压力';
+  String get comfyWorkflow_seedvr2TiledUpscaleDescription =>
+      '使用 SeedVR2TilingUpscaler 分块放大，降低大图显存压力';
 
   @override
   String get comfyWorkflow_modelUpscaleName => 'ComfyUI 普通超分模型';
 
   @override
-  String get comfyWorkflow_modelUpscaleDescription => '使用 ComfyUI UpscaleModelLoader 加载普通超分模型，并用 Lanczos 修正最终倍率';
+  String get comfyWorkflow_modelUpscaleDescription =>
+      '使用 ComfyUI UpscaleModelLoader 加载普通超分模型，并用 Lanczos 修正最终倍率';
 
   @override
   String get comfyWorkflow_rtxUpscaleName => 'RTX 超分';
 
   @override
-  String get comfyWorkflow_rtxUpscaleDescription => '使用 Nvidia RTX Video Super Resolution 节点进行本地放大';
+  String get comfyWorkflow_rtxUpscaleDescription =>
+      '使用 Nvidia RTX Video Super Resolution 节点进行本地放大';
 
   @override
   String get comfyWorkflowSlot_inputImage => '输入图像';
@@ -10219,31 +10404,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get promptAssistant_defaultOptimizeRuleName => '默认优化规则';
 
   @override
-  String get promptAssistant_defaultOptimizeRuleContent => '你是提示词优化助手。保留用户意图，补充可执行的视觉细节，并只输出一行可直接使用的逗号分隔提示词。';
+  String get promptAssistant_defaultOptimizeRuleContent =>
+      '你是提示词优化助手。保留用户意图，补充可执行的视觉细节，并只输出一行可直接使用的逗号分隔提示词。';
 
   @override
   String get promptAssistant_defaultTranslateRuleName => '默认翻译规则';
 
   @override
-  String get promptAssistant_defaultTranslateRuleContent => '你是翻译助手。自动识别源语言，在中文和英文之间翻译，并只返回译文，不要解释。';
+  String get promptAssistant_defaultTranslateRuleContent =>
+      '你是翻译助手。自动识别源语言，在中文和英文之间翻译，并只返回译文，不要解释。';
 
   @override
   String get promptAssistant_defaultReverseRuleName => '默认反推规则';
 
   @override
-  String get promptAssistant_defaultReverseRuleContent => '你是图像反推提示词助手。根据图像和可选 tagger 结果，输出适用于 NovelAI 的英文逗号分隔提示词。保留主体、角色、风格、服装、动作、构图、光照和背景。不要解释。';
+  String get promptAssistant_defaultReverseRuleContent =>
+      '你是图像反推提示词助手。根据图像和可选 tagger 结果，输出适用于 NovelAI 的英文逗号分隔提示词。保留主体、角色、风格、服装、动作、构图、光照和背景。不要解释。';
 
   @override
   String get promptAssistant_defaultCharacterReplaceRuleName => '默认角色替换规则';
 
   @override
-  String get promptAssistant_defaultCharacterReplaceRuleContent => '你是角色替换助手。将输入提示词中的原角色身份、发型、服装和外观替换为目标角色，同时保留动作、构图、背景、风格、镜头和质量标签。只输出替换后的一行提示词。';
+  String get promptAssistant_defaultCharacterReplaceRuleContent =>
+      '你是角色替换助手。将输入提示词中的原角色身份、发型、服装和外观替换为目标角色，同时保留动作、构图、背景、风格、镜头和质量标签。只输出替换后的一行提示词。';
 
   @override
   String get promptAssistant_defaultCustomRuleName => '默认自定义规则';
 
   @override
-  String get promptAssistant_defaultCustomRuleContent => '你是提示词改写助手。根据当前提示词、用户需求和可选参考图修改提示词。只输出最终可直接使用的一行提示词，不要解释。';
+  String get promptAssistant_defaultCustomRuleContent =>
+      '你是提示词改写助手。根据当前提示词、用户需求和可选参考图修改提示词。只输出最终可直接使用的一行提示词，不要解释。';
 
   @override
   String get cacheStats_title => '缓存统计';
@@ -10293,7 +10483,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get galleryCache_rescanTitle => '重新扫描画廊';
 
   @override
-  String get galleryCache_rescanContent => '这将执行以下操作：\n\n1. 检查数据一致性（标记不存在的文件）\n2. 扫描新文件和变更的文件\n3. 重新尝试历史上未提取成功的元数据（含失败记录）\n\n此操作不会清空已有数据，也不会删除图片文件。';
+  String get galleryCache_rescanContent =>
+      '这将执行以下操作：\n\n1. 检查数据一致性（标记不存在的文件）\n2. 扫描新文件和变更的文件\n3. 重新尝试历史上未提取成功的元数据（含失败记录）\n\n此操作不会清空已有数据，也不会删除图片文件。';
 
   @override
   String get galleryCache_startScan => '开始扫描';
@@ -10368,7 +10559,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get workflowImport_defaultName => '自定义工作流';
 
   @override
-  String get workflowImport_fileInstructions => '请选择 ComfyUI 导出的 workflow_api.json 文件。\n\n在 ComfyUI 中，点击菜单 → 导出 (API格式) 即可获得此文件。';
+  String get workflowImport_fileInstructions =>
+      '请选择 ComfyUI 导出的 workflow_api.json 文件。\n\n在 ComfyUI 中，点击菜单 → 导出 (API格式) 即可获得此文件。';
 
   @override
   String workflowImport_nodeCount(Object count) {
@@ -10422,7 +10614,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get workflowImport_category => '分类';
 
   @override
-  String get workflowImport_slotsHint => '勾选需要暴露给 UI 的槽位。输入/输出槽位建议保留；不需要用户调整的参数可以取消勾选。';
+  String get workflowImport_slotsHint =>
+      '勾选需要暴露给 UI 的槽位。输入/输出槽位建议保留；不需要用户调整的参数可以取消勾选。';
 
   @override
   String get workflowImport_inputSection => '输入';
@@ -10434,7 +10627,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get workflowImport_parameterSection => '参数';
 
   @override
-  String get workflowImport_noSlotsWarning => '未检测到任何可用槽位。该工作流可能无法正常集成。\n请确认工作流中包含 LoadImage 和 SaveImage/SaveImageWebsocket 节点。';
+  String get workflowImport_noSlotsWarning =>
+      '未检测到任何可用槽位。该工作流可能无法正常集成。\n请确认工作流中包含 LoadImage 和 SaveImage/SaveImageWebsocket 节点。';
 
   @override
   String workflowImport_nodeRef(Object node) {
@@ -10485,7 +10679,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shortcut_settings_reset_all_title => '重置所有快捷键';
 
   @override
-  String get shortcut_settings_reset_all_confirm => '确定要将所有快捷键重置为默认设置吗？此操作不可撤销。';
+  String get shortcut_settings_reset_all_confirm =>
+      '确定要将所有快捷键重置为默认设置吗？此操作不可撤销。';
 
   @override
   String get shortcut_settings_reset_to_default => '重置为默认';
@@ -10894,7 +11089,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get detail_copyPromptTitle => '复制正面提示词';
 
   @override
-  String get detail_copyPromptDescription => '勾选需要复制的提示词类别。固定词可能包含私密串或个人标记，请确认后再分享。';
+  String get detail_copyPromptDescription =>
+      '勾选需要复制的提示词类别。固定词可能包含私密串或个人标记，请确认后再分享。';
 
   @override
   String get detail_promptCategoryMain => '主体提示词';
@@ -10978,7 +11174,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diyGuide_hierarchyDescription => 'DIY 系统采用三级分类结构来组织提示词，便于管理和检索。';
 
   @override
-  String get diyGuide_hierarchyExample => 'Category (分类): 角色特征\n  -> Group (分组): 发型\n      -> Tag (标签): 长发, 短发, 双马尾';
+  String get diyGuide_hierarchyExample =>
+      'Category (分类): 角色特征\n  -> Group (分组): 发型\n      -> Tag (标签): 长发, 短发, 双马尾';
 
   @override
   String get diyGuide_selectionModeTitle => '选择模式 (Selection Mode)';
@@ -10987,7 +11184,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diyGuide_selectionModeDescription => '决定从一个分组(Group)中选取多少个标签。';
 
   @override
-  String get diyGuide_selectionModeExample => '• Random (随机): 每次随机选取一个 (如：随机发色)\n• All (全选): 选取组内所有标签 (如：固定特征组合)';
+  String get diyGuide_selectionModeExample =>
+      '• Random (随机): 每次随机选取一个 (如：随机发色)\n• All (全选): 选取组内所有标签 (如：固定特征组合)';
 
   @override
   String get diyGuide_weightTitle => '权重控制 (Weight)';
@@ -10996,7 +11194,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diyGuide_weightDescription => '调整特定提示词在生成过程中的影响力。';
 
   @override
-  String get diyGuide_weightExample => '• 增强: 用花括号包裹 masterpiece = 1.05 倍权重\n• 强力增强: 三层花括号包裹 masterpiece = 1.16 倍权重\n• 减弱: [bad hands] = 0.95 倍权重';
+  String get diyGuide_weightExample =>
+      '• 增强: 用花括号包裹 masterpiece = 1.05 倍权重\n• 强力增强: 三层花括号包裹 masterpiece = 1.16 倍权重\n• 减弱: [bad hands] = 0.95 倍权重';
 
   @override
   String get diyGuide_genderTitle => '性别限制 (Gender)';
@@ -11005,7 +11204,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diyGuide_genderDescription => '限制标签仅对特定性别的角色生效，避免生成错误的特征。';
 
   @override
-  String get diyGuide_genderExample => '• Female: 仅女性角色可用 (如：裙子)\n• Male: 仅男性角色可用 (如：胡须)\n• Any: 通用 (如：T恤)';
+  String get diyGuide_genderExample =>
+      '• Female: 仅女性角色可用 (如：裙子)\n• Male: 仅男性角色可用 (如：胡须)\n• Any: 通用 (如：T恤)';
 
   @override
   String get diyGuide_scopeTitle => '作用域 (Scope)';
@@ -11014,7 +11214,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diyGuide_scopeDescription => '定义标签是作用于角色本身、背景环境还是全局画面。';
 
   @override
-  String get diyGuide_scopeExample => '• Character: 角色特征 (眼睛, 头发)\n• Background: 环境描述 (蓝天, 室内)\n• Global: 画风, 质量词 (best quality)';
+  String get diyGuide_scopeExample =>
+      '• Character: 角色特征 (眼睛, 头发)\n• Background: 环境描述 (蓝天, 室内)\n• Global: 画风, 质量词 (best quality)';
 
   @override
   String get diyGuide_conditionalTitle => '条件分支 (Conditional)';
@@ -11023,16 +11224,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diyGuide_conditionalDescription => '基于已选标签或其他条件来动态决定后续标签。';
 
   @override
-  String get diyGuide_conditionalExample => 'IF (已选 \"下雨\")\n  THEN 添加 \"雨伞\", \"湿衣服\"\n  ELSE 添加 \"晴朗\"';
+  String get diyGuide_conditionalExample =>
+      'IF (已选 \"下雨\")\n  THEN 添加 \"雨伞\", \"湿衣服\"\n  ELSE 添加 \"晴朗\"';
 
   @override
   String get diyGuide_dependenciesTitle => '依赖引用 (Dependencies)';
 
   @override
-  String get diyGuide_dependenciesDescription => '建立标签间的关联，选中一个标签时自动引入相关联的其他标签。';
+  String get diyGuide_dependenciesDescription =>
+      '建立标签间的关联，选中一个标签时自动引入相关联的其他标签。';
 
   @override
-  String get diyGuide_dependenciesExample => '选中 \"JK制服\" -> 自动引入 \"学校背景\", \"书包\"';
+  String get diyGuide_dependenciesExample =>
+      '选中 \"JK制服\" -> 自动引入 \"学校背景\", \"书包\"';
 
   @override
   String get diyGuide_visibilityTitle => '可见性规则 (Visibility)';
@@ -11050,7 +11254,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diyGuide_timeDescription => '根据现实时间或设定的模拟时间触发特定标签。';
 
   @override
-  String get diyGuide_timeExample => '• 06:00-18:00 -> 添加 \"daylight\"\n• 18:00-06:00 -> 添加 \"night\"';
+  String get diyGuide_timeExample =>
+      '• 06:00-18:00 -> 添加 \"daylight\"\n• 18:00-06:00 -> 添加 \"night\"';
 
   @override
   String get diyGuide_postProcessingTitle => '后处理规则 (Post-processing)';
@@ -11059,7 +11264,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diyGuide_postProcessingDescription => '在提示词生成最后阶段进行文本替换或清理。';
 
   @override
-  String get diyGuide_postProcessingExample => '将所有 \"blue eyes\" 替换为 \"azure eyes\" 以获得更独特的描述';
+  String get diyGuide_postProcessingExample =>
+      '将所有 \"blue eyes\" 替换为 \"azure eyes\" 以获得更独特的描述';
 
   @override
   String get diyGuide_emphasisTitle => '强调概率 (Emphasis)';
@@ -11068,7 +11274,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diyGuide_emphasisDescription => '为标签随机添加权重符号的概率，增加结果的多样性。';
 
   @override
-  String get diyGuide_emphasisExample => '设置 30% 概率: 约有 1/3 的机会输出加权 tag，2/3 的机会输出普通 tag';
+  String get diyGuide_emphasisExample =>
+      '设置 30% 概率: 约有 1/3 的机会输出加权 tag，2/3 的机会输出普通 tag';
 
   @override
   String get naiRules_title => 'NAI 随机规则说明';
@@ -11107,7 +11314,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get naiRules_dynamicTagWeightTitle => '标签权重动态调整';
 
   @override
-  String get naiRules_dynamicTagWeightSubtitle => '包含动作、服饰、表情、背景等多个维度的随机组合，根据画面主题动态调整各类别的抽取权重';
+  String get naiRules_dynamicTagWeightSubtitle =>
+      '包含动作、服饰、表情、背景等多个维度的随机组合，根据画面主题动态调整各类别的抽取权重';
 
   @override
   String get naiRules_specialMechanisms => '特殊机制';
@@ -11119,7 +11327,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get naiRules_seasonalLibraryTitle => '季节词库';
 
   @override
-  String get naiRules_seasonalLibrarySubtitle => '自动匹配季节特征，包含季节性服饰、天气、光照效果和环境氛围';
+  String get naiRules_seasonalLibrarySubtitle =>
+      '自动匹配季节特征，包含季节性服饰、天气、光照效果和环境氛围';
 
   @override
   String get naiRules_v4CharacterPositioning => 'V4 多角色位置';
@@ -11128,7 +11337,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get naiRules_smartPositionTitle => '智能位置分配';
 
   @override
-  String get naiRules_smartPositionSubtitle => '在 V4 模型下，使用 character positioning 语法精确控制多角色站位';
+  String get naiRules_smartPositionSubtitle =>
+      '在 V4 模型下，使用 character positioning 语法精确控制多角色站位';
 
   @override
   String get comfyImport_detectedTitle => '检测到 ComfyUI 多角色提示词';
@@ -11256,7 +11466,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get model3d_addLayerTooltip => '添加 3D 模型图层';
 
   @override
-  String get model3d_webview2Missing => '3D 编辑器需要 Microsoft Edge WebView2 运行时。Windows 10/11 通常已自带;若缺失请从微软官网安装 Evergreen 版本后重试。';
+  String get model3d_webview2Missing =>
+      '3D 编辑器需要 Microsoft Edge WebView2 运行时。Windows 10/11 通常已自带;若缺失请从微软官网安装 Evergreen 版本后重试。';
 
   @override
   String get nav_preciseRefLibrary => '精准参考库';
@@ -11286,7 +11497,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get preciseRefLib_exportTitle => '导出精准参考配置包';
 
   @override
-  String get preciseRefLib_exportSelectionHint => '选择要包含的精准参考；所选内容会打包为一个 .naipreciseref 文件。';
+  String get preciseRefLib_exportSelectionHint =>
+      '选择要包含的精准参考；所选内容会打包为一个 .naipreciseref 文件。';
 
   @override
   String preciseRefLib_exportConfirm(int count) {
@@ -11970,7 +12182,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String diy_timeRangeSummary(String name, int startMonth, int startDay, int endMonth, int endDay) {
+  String diy_timeRangeSummary(
+    String name,
+    int startMonth,
+    int startDay,
+    int endMonth,
+    int endDay,
+  ) {
     return '$name（$startMonth 月 $startDay 日至 $endMonth 月 $endDay 日）';
   }
 
@@ -12174,7 +12392,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get editor_toolFrame => '取景框';
 
   @override
-  String get editor_frameToolHint => '在框内按住拖动可整体移动取景框，拖动边缘可调整尺寸。框外内容会保留并压暗显示，只有框内部分会送去生成；移动时至少与原图重叠 64 像素。';
+  String get editor_frameToolHint =>
+      '在框内按住拖动可整体移动取景框，拖动边缘可调整尺寸。框外内容会保留并压暗显示，只有框内部分会送去生成；移动时至少与原图重叠 64 像素。';
 
   @override
   String editor_frameSizeReadout(int width, int height) {
@@ -12212,7 +12431,8 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get editor_frameToolHintPasteBack => '在框内按住拖动可按 64 像素一格移动取景框，拖动边缘可调整尺寸。只有框内部分会送去生成；框外还有原图时，结果按蒙版贴回整张图，框外内容保持不变。框须与原图重叠至少 64 像素。';
+  String get editor_frameToolHintPasteBack =>
+      '在框内按住拖动可按 64 像素一格移动取景框，拖动边缘可调整尺寸。只有框内部分会送去生成；框外还有原图时，结果按蒙版贴回整张图，框外内容保持不变。框须与原图重叠至少 64 像素。';
 
   @override
   String editor_frameRequestReadout(int width, int height) {
@@ -12236,7 +12456,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get editor_compressionFrameLimited => '取景框在更高分辨率下会超过请求面积上限，因此滑条上限已收紧。';
 
   @override
-  String get img2img_focusOutpaintHint => '聚焦外扩：只发送取景框内的部分，生成结果按蒙版贴回整张图。可在重绘编辑器里用取景框工具调整位置。';
+  String get img2img_focusOutpaintHint =>
+      '聚焦外扩：只发送取景框内的部分，生成结果按蒙版贴回整张图。可在重绘编辑器里用取景框工具调整位置。';
 
   @override
   String get savePreset_title => '另存为预设';
@@ -12276,10 +12497,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_highRefreshRate => '高刷新率';
 
   @override
-  String get settings_highRefreshRate_description => '以屏幕支持的最高刷新率运行，动画与滑动更流畅，耗电略增；关闭后由系统决定';
+  String get settings_highRefreshRate_description =>
+      '以屏幕支持的最高刷新率运行，动画与滑动更流畅，耗电略增；关闭后由系统决定';
 
   @override
-  String get generation_varietyPlusDescription => '生成初期跳过 CFG 引导，构图、姿势与配色更多变；想稳定复现同一张图时关闭。';
+  String get generation_varietyPlusDescription =>
+      '生成初期跳过 CFG 引导，构图、姿势与配色更多变；想稳定复现同一张图时关闭。';
 
   @override
   String get autocomplete_searchEnhancementTitle => '搜索增强';
@@ -12330,7 +12553,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_contextRanking => '按上下文排序';
 
   @override
-  String get autocomplete_contextRankingSubtitle => '优先常与光标附近 tag 一起出现的结果，需要共现数据包';
+  String get autocomplete_contextRankingSubtitle =>
+      '优先常与光标附近 tag 一起出现的结果，需要共现数据包';
 
   @override
   String get autocomplete_personalRanking => '按使用习惯排序';
@@ -12351,7 +12575,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_pairLearning => '学习我的搭配习惯';
 
   @override
-  String get autocomplete_pairLearningSubtitle => '记住你常在哪些词后面接哪些词，相关标签优先推荐它们；关闭后不再记录和使用，已学到的保留。只保存在本机，不同步';
+  String get autocomplete_pairLearningSubtitle =>
+      '记住你常在哪些词后面接哪些词，相关标签优先推荐它们；关闭后不再记录和使用，已学到的保留。只保存在本机，不同步';
 
   @override
   String get autocomplete_clearPairHistory => '清空搭配记录';
@@ -12435,7 +12660,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_openOnTagClick => '点击标签时显示补全';
 
   @override
-  String get autocomplete_openOnTagClickSubtitle => '开启后，点击已有标签会打开普通补全菜单；Ctrl/Command + 点击仍显示相关标签';
+  String get autocomplete_openOnTagClickSubtitle =>
+      '开启后，点击已有标签会打开普通补全菜单；Ctrl/Command + 点击仍显示相关标签';
 
   @override
   String get autocomplete_openOnTagClickSubtitleTouch => '开启后，点击已有标签会打开普通补全菜单';
@@ -12450,10 +12676,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_relatedTagsTitle => '共现与相关标签推荐';
 
   @override
-  String get autocomplete_relatedTagsSubtitle => '选中补全、点“分词”或“联想”后，按前后已写的词推荐接下来的标签；在标签上按 Ctrl+Shift+Space、Ctrl+单击或点“相关标签”只看该词的相关标签';
+  String get autocomplete_relatedTagsSubtitle =>
+      '选中补全、点“分词”或“联想”后，按前后已写的词推荐接下来的标签；在标签上按 Ctrl+Shift+Space、Ctrl+单击或点“相关标签”只看该词的相关标签';
 
   @override
-  String get autocomplete_relatedTagsSubtitleTouch => '选中补全、点“分词”或“联想”后，按前后已写的词推荐接下来的标签；选中词条后点“相关标签”只看该词的相关标签';
+  String get autocomplete_relatedTagsSubtitleTouch =>
+      '选中补全、点“分词”或“联想”后，按前后已写的词推荐接下来的标签；选中词条后点“相关标签”只看该词的相关标签';
 
   @override
   String get autocomplete_relatedTagsAction => '相关标签';
@@ -12468,7 +12696,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_llmTranslation => '使用 Prompt Assistant 补译缺失汉化';
 
   @override
-  String get autocomplete_llmRouteMissing => '请先在 Prompt Assistant 中配置 Translate 路由';
+  String get autocomplete_llmRouteMissing =>
+      '请先在 Prompt Assistant 中配置 Translate 路由';
 
   @override
   String autocomplete_llmRoute(String route) {
@@ -12487,7 +12716,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_cooccurrenceAutoDownload => '自动下载本地相关标签数据';
 
   @override
-  String get autocomplete_cooccurrenceAutoDownloadSubtitle => '相关标签功能开启时，在进入主页后后台下载安装；不影响基础补全';
+  String get autocomplete_cooccurrenceAutoDownloadSubtitle =>
+      '相关标签功能开启时，在进入主页后后台下载安装；不影响基础补全';
 
   @override
   String get autocomplete_downloadNow => '立即下载';
@@ -12501,7 +12731,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_cooccurrenceChecking => '正在检查本地数据…';
 
   @override
-  String autocomplete_cooccurrenceDownloading(String downloaded, String total, String speed) {
+  String autocomplete_cooccurrenceDownloading(
+    String downloaded,
+    String total,
+    String speed,
+  ) {
     return '正在下载 $downloaded / $total · $speed。当前仍可使用在线结果。';
   }
 
@@ -12512,7 +12746,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_cooccurrenceInstalling => '正在安全安装并切换数据库…';
 
   @override
-  String autocomplete_cooccurrenceReady(String version, int count, String size) {
+  String autocomplete_cooccurrenceReady(
+    String version,
+    int count,
+    String size,
+  ) {
     return '版本 $version · $count 组关系 · 占用 $size';
   }
 
@@ -12548,7 +12786,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_cooccurrenceRemoveTitle => '删除本地相关标签数据？';
 
   @override
-  String get autocomplete_cooccurrenceRemoveConfirm => '删除后将立即释放磁盘空间，并继续使用在线相关标签。';
+  String get autocomplete_cooccurrenceRemoveConfirm =>
+      '删除后将立即释放磁盘空间，并继续使用在线相关标签。';
 
   @override
   String get autocomplete_cooccurrenceStopAutoDownload => '同时关闭自动下载，避免下次启动重新安装';
@@ -12587,16 +12826,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_zhNotInstalled => '未安装；英文补全仍可正常使用';
 
   @override
-  String get autocomplete_zhInstallPrompt => '可安装 ffdkj 汉化库以显示中文并支持中文反查；词库将直接从上游下载。';
+  String get autocomplete_zhInstallPrompt =>
+      '可安装 ffdkj 汉化库以显示中文并支持中文反查；词库将直接从上游下载。';
 
   @override
-  String get autocomplete_zhErrorMetadataRateLimited => 'GitHub 请求过于频繁，暂时无法检查词库更新；请稍后重试。';
+  String get autocomplete_zhErrorMetadataRateLimited =>
+      'GitHub 请求过于频繁，暂时无法检查词库更新；请稍后重试。';
 
   @override
-  String get autocomplete_zhErrorMetadataAccessDenied => 'GitHub 拒绝了词库信息请求；请稍后重试或切换网络。';
+  String get autocomplete_zhErrorMetadataAccessDenied =>
+      'GitHub 拒绝了词库信息请求；请稍后重试或切换网络。';
 
   @override
-  String get autocomplete_zhErrorDownloadAccessDenied => 'GitHub 拒绝下载 ffdkj 词库；请稍后重试或切换网络。';
+  String get autocomplete_zhErrorDownloadAccessDenied =>
+      'GitHub 拒绝下载 ffdkj 词库；请稍后重试或切换网络。';
 
   @override
   String get autocomplete_zhErrorNetwork => '无法连接 ffdkj GitHub 上游；请检查网络后重试。';
@@ -12672,7 +12915,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_statusOnlineOnly => '仅在线';
 
   @override
-  String get autocomplete_statusOnlineOnlyTooltip => '本地相关标签数据尚未就绪，当前只显示 Danbooru 在线结果';
+  String get autocomplete_statusOnlineOnlyTooltip =>
+      '本地相关标签数据尚未就绪，当前只显示 Danbooru 在线结果';
 
   @override
   String get autocomplete_statusDictionary => '汉化';
@@ -12898,22 +13142,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_title => '备份与恢复';
 
   @override
-  String get cloudSync_description => '将设置、提示词等内容推送到你自己的 WebDAV 或 GitHub，或从云端备份拉取到当前设备。';
+  String get cloudSync_description =>
+      '将设置、提示词等内容推送到你自己的 WebDAV 或 GitHub，或从云端备份拉取到当前设备。';
 
   @override
   String get cloudSync_restoringConnection => '正在恢复连接';
 
   @override
-  String get cloudSync_restoringConnectionDescription => '正在检查此设备保存的账号，请稍候，无需重新登录。';
+  String get cloudSync_restoringConnectionDescription =>
+      '正在检查此设备保存的账号，请稍候，无需重新登录。';
 
   @override
-  String get cloudSync_googleDriveUnavailable => 'Google Drive 暂不可用：应用授权审核尚未通过。';
+  String get cloudSync_googleDriveUnavailable =>
+      'Google Drive 暂不可用：应用授权审核尚未通过。';
 
   @override
   String get cloudSync_disconnected => '尚未连接';
 
   @override
-  String get cloudSync_oneClickDescription => '选择存储服务并填写账号信息。保存只会验证并记住连接，不会推送或拉取数据。';
+  String get cloudSync_oneClickDescription =>
+      '选择存储服务并填写账号信息。保存只会验证并记住连接，不会推送或拉取数据。';
 
   @override
   String get cloudSync_saveConnection => '保存连接';
@@ -12934,7 +13182,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_chooseBackend => '备份到哪里';
 
   @override
-  String get cloudSync_chooseBackendDescription => '先选择同步目的地，再连接账号并选择要同步的内容。凭据只保存在设备安全存储中。';
+  String get cloudSync_chooseBackendDescription =>
+      '先选择同步目的地，再连接账号并选择要同步的内容。凭据只保存在设备安全存储中。';
 
   @override
   String cloudSync_oauthDescription(String provider) {
@@ -12950,7 +13199,8 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get cloudSync_errorOAuthAuthorizationFailed => '应用尚未获准访问该云端服务。请检查授权页面中的提示后重试。';
+  String get cloudSync_errorOAuthAuthorizationFailed =>
+      '应用尚未获准访问该云端服务。请检查授权页面中的提示后重试。';
 
   @override
   String cloudSync_accountConnected(String provider) {
@@ -12973,7 +13223,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_allowInsecureHttp => '允许不安全的 HTTP';
 
   @override
-  String get cloudSync_allowInsecureHttpWarning => 'HTTP 会以明文传输 WebDAV 凭据和备份数据。仅在可信内网且明确了解风险时启用。';
+  String get cloudSync_allowInsecureHttpWarning =>
+      'HTTP 会以明文传输 WebDAV 凭据和备份数据。仅在可信内网且明确了解风险时启用。';
 
   @override
   String get cloudSync_username => '用户名';
@@ -13003,7 +13254,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_manualBackupOnly => '只支持手动推送与拉取';
 
   @override
-  String get cloudSync_manualBackupOnlyDescription => '此服务无法可靠处理多台设备同时修改。这里不会自动合并或覆盖，只按你的选择推送或拉取。';
+  String get cloudSync_manualBackupOnlyDescription =>
+      '此服务无法可靠处理多台设备同时修改。这里不会自动合并或覆盖，只按你的选择推送或拉取。';
 
   @override
   String get cloudSync_chooseBackupContents => '选择备份内容';
@@ -13039,7 +13291,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_onlineGalleryFavorites => '在线画廊收藏';
 
   @override
-  String get cloudSync_onlineGalleryFavoritesDescription => '仅保存来源 ID 与恢复所需信息，不保存原图';
+  String get cloudSync_onlineGalleryFavoritesDescription =>
+      '仅保存来源 ID 与恢复所需信息，不保存原图';
 
   @override
   String get cloudSync_galleryAlbums => '本地画廊相册';
@@ -13083,10 +13336,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_rebuildCompactBackup => '清理旧备份并重新建立';
 
   @override
-  String get cloudSync_rebuildCompactBackupDescription => '删除当前云端备份空间并按现有选择上传新的精简备份。服务商保留的历史版本不会被重写。';
+  String get cloudSync_rebuildCompactBackupDescription =>
+      '删除当前云端备份空间并按现有选择上传新的精简备份。服务商保留的历史版本不会被重写。';
 
   @override
-  String get cloudSync_rebuildCompactBackupConfirm => '删除当前云端备份并立即上传新的精简备份吗？此操作不能撤销。';
+  String get cloudSync_rebuildCompactBackupConfirm =>
+      '删除当前云端备份并立即上传新的精简备份吗？此操作不能撤销。';
 
   @override
   String get cloudSync_kindSettings => '设置';
@@ -13107,7 +13362,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_agentSystemPrompt => '自定义系统提示词';
 
   @override
-  String get cloudSync_agentSystemPromptDescription => '保存你修改的提示词和使用方式；模型与账号信息仍只保留在此设备。';
+  String get cloudSync_agentSystemPromptDescription =>
+      '保存你修改的提示词和使用方式；模型与账号信息仍只保留在此设备。';
 
   @override
   String get cloudSync_skillsBackup => '备份已选 Skill';
@@ -13203,22 +13459,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_providerWarning => '存储服务提示';
 
   @override
-  String get cloudSync_warningGoogleDriveWeakCas => 'Google Drive 无法保证文件内容的原子条件更新，因此此连接仅支持显式手动推送与拉取。';
+  String get cloudSync_warningGoogleDriveWeakCas =>
+      'Google Drive 无法保证文件内容的原子条件更新，因此此连接仅支持显式手动推送与拉取。';
 
   @override
-  String get cloudSync_warningGithubPublicRepository => '当前 GitHub 仓库是公开仓库，备份内容也会公开。私密数据请改用私有仓库。';
+  String get cloudSync_warningGithubPublicRepository =>
+      '当前 GitHub 仓库是公开仓库，备份内容也会公开。私密数据请改用私有仓库。';
 
   @override
-  String get cloudSync_warningWebDavWeakCas => '此服务器无法保证安全的条件更新。当前仅支持手动备份，后续写入可能替换同一个 HEAD。';
+  String get cloudSync_warningWebDavWeakCas =>
+      '此服务器无法保证安全的条件更新。当前仅支持手动备份，后续写入可能替换同一个 HEAD。';
 
   @override
-  String get cloudSync_warningWebDavUnverifiedCas => 'WebDAV 连接已通过只读验证，但尚未验证安全的条件写入。当前仅支持手动推送与拉取。';
+  String get cloudSync_warningWebDavUnverifiedCas =>
+      'WebDAV 连接已通过只读验证，但尚未验证安全的条件写入。当前仅支持手动推送与拉取。';
 
   @override
   String get cloudSync_githubHistoryRetention => 'GitHub 空间说明';
 
   @override
-  String get cloudSync_githubHistoryRetentionDescription => '删除云端备份后，GitHub 的旧提交仍会占用仓库空间。需要彻底清理时，请在 GitHub 中新建仓库。';
+  String get cloudSync_githubHistoryRetentionDescription =>
+      '删除云端备份后，GitHub 的旧提交仍会占用仓库空间。需要彻底清理时，请在 GitHub 中新建仓库。';
 
   @override
   String get cloudSync_upToDate => '已连接';
@@ -13242,13 +13503,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_pushConfirmTitle => '推送本机数据？';
 
   @override
-  String get cloudSync_pushConfirmDescription => '将以当前本机数据创建新的云端备份，并把云端当前版本切换到该备份。';
+  String get cloudSync_pushConfirmDescription =>
+      '将以当前本机数据创建新的云端备份，并把云端当前版本切换到该备份。';
 
   @override
   String get cloudSync_pullConfirmTitle => '拉取云端数据？';
 
   @override
-  String get cloudSync_pullConfirmDescription => '将使用云端最新备份更新本机已选择的数据。尚未推送的本机更改可能被替换。';
+  String get cloudSync_pullConfirmDescription =>
+      '将使用云端最新备份更新本机已选择的数据。尚未推送的本机更改可能被替换。';
 
   @override
   String get cloudSync_pause => '暂停';
@@ -13353,7 +13616,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_snapshotHistory => '以前的备份';
 
   @override
-  String get cloudSync_snapshotHistoryDescription => '可以先查看某次备份会带来哪些变化，再决定是否恢复。当前数据不会直接被覆盖。';
+  String get cloudSync_snapshotHistoryDescription =>
+      '可以先查看某次备份会带来哪些变化，再决定是否恢复。当前数据不会直接被覆盖。';
 
   @override
   String get cloudSync_noSnapshots => '还没有可恢复的备份。';
@@ -13370,13 +13634,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_restorePreviewTitle => '恢复前确认';
 
   @override
-  String get cloudSync_restorePreviewDescription => '检查恢复后会新增、更新或删除哪些内容。确认前不会修改当前数据。';
+  String get cloudSync_restorePreviewDescription =>
+      '检查恢复后会新增、更新或删除哪些内容。确认前不会修改当前数据。';
 
   @override
   String get cloudSync_mergePreviewTitle => '合并内容确认';
 
   @override
-  String get cloudSync_mergePreviewDescription => '本机和云端的数据不同。请检查变化并选择要保留的内容。确认前不会修改数据。';
+  String get cloudSync_mergePreviewDescription =>
+      '本机和云端的数据不同。请检查变化并选择要保留的内容。确认前不会修改数据。';
 
   @override
   String get cloudSync_previewAwaitingConfirmation => '请先确认下方变化。';
@@ -13390,7 +13656,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String cloudSync_previewCounts(Object added, Object modified, Object deleted) {
+  String cloudSync_previewCounts(
+    Object added,
+    Object modified,
+    Object deleted,
+  ) {
     return '新增 $added · 修改 $modified · 删除 $deleted';
   }
 
@@ -13407,7 +13677,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_ffdkjIntentTitle => '检测到词库设置';
 
   @override
-  String get cloudSync_ffdkjIntentDescription => '另一台设备安装了 ffdkj 中文词库。词库文件不会通过云端传输。';
+  String get cloudSync_ffdkjIntentDescription =>
+      '另一台设备安装了 ffdkj 中文词库。词库文件不会通过云端传输。';
 
   @override
   String get cloudSync_ffdkjInstallWarning => '是否从 ffdkj 官方来源下载并安装中文词库？';
@@ -13419,7 +13690,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSync_deleteRemoteNamespace => '删除云端备份';
 
   @override
-  String get cloudSync_deleteRemoteNamespaceDescription => '删除 Aaalice 在此服务中保存的全部备份，不会删除当前设备的数据。';
+  String get cloudSync_deleteRemoteNamespaceDescription =>
+      '删除 Aaalice 在此服务中保存的全部备份，不会删除当前设备的数据。';
 
   @override
   String get cloudSync_deleteRemoteConfirm => '确定删除全部云端备份吗？当前设备的数据会保留。';
@@ -13509,7 +13781,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentSettings_dockLayout => '右栏布局';
 
   @override
-  String get agentSettings_dockLayoutDescription => '独占切换时右栏一次只显示聊天或历史；分栏则同时显示两者。';
+  String get agentSettings_dockLayoutDescription =>
+      '独占切换时右栏一次只显示聊天或历史；分栏则同时显示两者。';
 
   @override
   String get agentSettings_dockExclusive => '独占切换';
@@ -13524,7 +13797,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentSettings_floatingWindow => '以浮窗显示聊天';
 
   @override
-  String get agentSettings_floatingWindowDescription => '浮窗常驻所有页面，可拖动和调整大小；开启后右栏只显示历史。';
+  String get agentSettings_floatingWindowDescription =>
+      '浮窗常驻所有页面，可拖动和调整大小；开启后右栏只显示历史。';
 
   @override
   String get agentSettings_chatModel => '聊天模型';
@@ -13533,7 +13807,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentSettings_providerModel => '供应商 / 模型';
 
   @override
-  String get agentSettings_modelManagedInIntegrations => '供应商、API Key 与模型发现仍在“集成”中统一管理。';
+  String get agentSettings_modelManagedInIntegrations =>
+      '供应商、API Key 与模型发现仍在“集成”中统一管理。';
 
   @override
   String get agentSettings_manageProviders => '管理服务商';
@@ -13553,7 +13828,8 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get agentSettings_contextWindowUnknown => '内置目录未收录该模型，无法自动判断窗口。不填写则无法显示上下文用量，也无法压缩上下文。';
+  String get agentSettings_contextWindowUnknown =>
+      '内置目录未收录该模型，无法自动判断窗口。不填写则无法显示上下文用量，也无法压缩上下文。';
 
   @override
   String get agentSettings_contextWindowUnknownHint => '例如 128000';
@@ -13571,19 +13847,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentSettings_permissionSafe => '安全';
 
   @override
-  String get agentSettings_permissionSafeDescription => '仅运行只读和低风险操作，不弹出敏感操作授权。';
+  String get agentSettings_permissionSafeDescription =>
+      '仅运行只读和低风险操作，不弹出敏感操作授权。';
 
   @override
   String get agentSettings_permissionAsk => '敏感操作前询问';
 
   @override
-  String get agentSettings_permissionAskDescription => '默认模式。写文件、执行生成等敏感操作前先请求确认。';
+  String get agentSettings_permissionAskDescription =>
+      '默认模式。写文件、执行生成等敏感操作前先请求确认。';
 
   @override
   String get agentSettings_permissionFull => '完全访问';
 
   @override
-  String get agentSettings_permissionFullDescription => '允许访问工作区外文件并直接执行工具。仅在信任当前任务时使用。';
+  String get agentSettings_permissionFullDescription =>
+      '允许访问工作区外文件并直接执行工具。仅在信任当前任务时使用。';
 
   @override
   String get agentSettings_webPreference => '联网偏好';
@@ -13592,7 +13871,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentSettings_webEnabled => '允许智能体使用 Web 工具';
 
   @override
-  String get agentSettings_webDescription => '开启后模型可搜索并读取公开网页；关闭后相关工具会从运行时工具表移除。';
+  String get agentSettings_webDescription =>
+      '开启后模型可搜索并读取公开网页；关闭后相关工具会从运行时工具表移除。';
 
   @override
   String get agentSettings_systemPrompt => '系统提示词';
@@ -13604,19 +13884,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentSettings_previewFinalPrompt => '预览最终提示词';
 
   @override
-  String get agentSettings_systemPromptDescription => '直接用自然语言描述你的要求，无需填写占位符。工作目录、联网状态、Skills 与应用执行规则由程序自动补充，可预览最终发送的内容。';
+  String get agentSettings_systemPromptDescription =>
+      '直接用自然语言描述你的要求，无需填写占位符。工作目录、联网状态、Skills 与应用执行规则由程序自动补充，可预览最终发送的内容。';
 
   @override
   String get agentSettings_promptModeAppend => '补充要求';
 
   @override
-  String get agentSettings_promptModeAppendDescription => '推荐：保留内置正文，再加入你的偏好。留空即使用内置正文。';
+  String get agentSettings_promptModeAppendDescription =>
+      '推荐：保留内置正文，再加入你的偏好。留空即使用内置正文。';
 
   @override
   String get agentSettings_promptModeOverride => '替换正文';
 
   @override
-  String get agentSettings_promptModeOverrideDescription => '用下方内容替换内置正文，适合自定义角色、工作方式与回复风格。工作目录、Skills 和应用执行规则仍自动加入；结构化工具定义照常发送。';
+  String get agentSettings_promptModeOverrideDescription =>
+      '用下方内容替换内置正文，适合自定义角色、工作方式与回复风格。工作目录、Skills 和应用执行规则仍自动加入；结构化工具定义照常发送。';
 
   @override
   String get agentSettings_systemPromptHint => '例如：优先给出简洁结论；修改提示词前先说明影响。';
@@ -13649,7 +13932,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentSettings_profilePrivacy => '此文件不包含 API Key、Token、聊天记录或本机路径。';
 
   @override
-  String get agentSettings_profilePending => '未安装的模型或 Skill 不会伪装为可用；偏好会保留，待以后安装后生效。';
+  String get agentSettings_profilePending =>
+      '未安装的模型或 Skill 不会伪装为可用；偏好会保留，待以后安装后生效。';
 
   @override
   String get agentSettings_reloadSkills => '重新扫描';
@@ -13687,10 +13971,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentSettings_noDiagnostics => '未发现诊断问题';
 
   @override
-  String get agentSettings_skillExplicitOnly => '该 Skill 只能由用户显式调用，不会出现在模型可见列表中';
+  String get agentSettings_skillExplicitOnly =>
+      '该 Skill 只能由用户显式调用，不会出现在模型可见列表中';
 
   @override
-  String get agentSettings_exportPrivacy => '只会导出明确勾选的 Skill；.env、密钥、Token、Git 与依赖目录不会打包。';
+  String get agentSettings_exportPrivacy =>
+      '只会导出明确勾选的 Skill；.env、密钥、Token、Git 与依赖目录不会打包。';
 
   @override
   String get agentSettings_continueExport => '继续导出';
@@ -13710,7 +13996,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentSettings_skillsTitle => 'Skills';
 
   @override
-  String get agentSettings_skillsSourceHint => '当前图片项目中的 Skill 会自动启用；Pi 用户与用户全局 Skill 仅在手动开启后使用。';
+  String get agentSettings_skillsSourceHint =>
+      '当前图片项目中的 Skill 会自动启用；Pi 用户与用户全局 Skill 仅在手动开启后使用。';
 
   @override
   String get agentSettings_skillTransfer => '导入或导出';
@@ -13820,7 +14107,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_watermarkPreserveMetadata => '水印副本保留元数据';
 
   @override
-  String get settings_watermarkPreserveMetadataHint => '关闭时清除 PNG 文本、EXIF、NovelAI 隐写数据、提示词和种子；开启时把原图中受支持的元数据安全写入新 PNG。';
+  String get settings_watermarkPreserveMetadataHint =>
+      '关闭时清除 PNG 文本、EXIF、NovelAI 隐写数据、提示词和种子；开启时把原图中受支持的元数据安全写入新 PNG。';
 
   @override
   String get settings_watermarkEditDefault => '编辑默认水印';
@@ -13832,13 +14120,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_watermarkLayoutByOrientation => '按图片方向分别记忆布局';
 
   @override
-  String get settings_watermarkLayoutByOrientationHint => '文字和样式共用，竖图、方图与横图分别保存位置。';
+  String get settings_watermarkLayoutByOrientationHint =>
+      '文字和样式共用，竖图、方图与横图分别保存位置。';
 
   @override
   String get settings_watermarkConfigMigrated => '旧版水印配置已迁移供检查，请保存以确认当前默认方案。';
 
   @override
-  String get settings_watermarkConfigCorrupted => '水印配置无法读取，当前显示安全默认值；保存后才会替换损坏数据。';
+  String get settings_watermarkConfigCorrupted =>
+      '水印配置无法读取，当前显示安全默认值；保存后才会替换损坏数据。';
 
   @override
   String get watermark_actionCreate => '创建水印副本…';
@@ -13898,7 +14188,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get watermark_logoMissing => '已保存的 Logo 缺失，请重新选择后再保存。';
 
   @override
-  String get watermark_logoImportFailed => '无法导入 Logo。请选择尺寸受支持且有效的静态 PNG、JPEG 或 WebP 图片。';
+  String get watermark_logoImportFailed =>
+      '无法导入 Logo。请选择尺寸受支持且有效的静态 PNG、JPEG 或 WebP 图片。';
 
   @override
   String get watermark_opacity => '透明度';
@@ -14035,7 +14326,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get watermark_failedGeneric => '无法创建水印副本，请检查图片后重试。';
 
   @override
-  String get watermark_systemGalleryExportFailed => '副本已保存在 Aaalice 中，但未能添加到系统图库。';
+  String get watermark_systemGalleryExportFailed =>
+      '副本已保存在 Aaalice 中，但未能添加到系统图库。';
 
   @override
   String get watermark_galleryRefreshFailed => '副本已保存，但图库未能刷新；重新打开图库即可重试。';
@@ -14065,13 +14357,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get watermark_moveDown => '向下移动图层';
 
   @override
-  String get watermark_sourceLoadFailed => '无法打开此图片。请确认文件是有效的静态 PNG、JPEG、WebP 或 BMP 图片后重试。';
+  String get watermark_sourceLoadFailed =>
+      '无法打开此图片。请确认文件是有效的静态 PNG、JPEG、WebP 或 BMP 图片后重试。';
 
   @override
   String get promptAssistant_responseTimeoutTitle => '响应等待超时';
 
   @override
-  String get promptAssistant_responseTimeoutDescription => '反推、优化、翻译、角色替换和自定义改写共用。默认 5 分钟；模型思考较慢时可调长，仍可随时取消。不影响连接超时和智能体聊天。';
+  String get promptAssistant_responseTimeoutDescription =>
+      '反推、优化、翻译、角色替换和自定义改写共用。默认 5 分钟；模型思考较慢时可调长，仍可随时取消。不影响连接超时和智能体聊天。';
 
   @override
   String get tagMode_label => '标签模式';
@@ -14155,7 +14449,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_mosaicPreserveMetadata => '保留支持的生成元数据';
 
   @override
-  String get settings_mosaicPreserveMetadataHint => '用于隐私发布时建议关闭，避免提示词、种子等信息随图片保留。';
+  String get settings_mosaicPreserveMetadataHint =>
+      '用于隐私发布时建议关闭，避免提示词、种子等信息随图片保留。';
 
   @override
   String get settings_mosaicRememberStyle => '记住上次打码样式';
@@ -14191,7 +14486,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mosaic_sourceMissing => '找不到原图';
 
   @override
-  String get mosaic_sourceMissingHint => '当前图片看起来是打码副本，但关联原图已不存在。请手动选择原图，避免重复叠加打码。';
+  String get mosaic_sourceMissingHint =>
+      '当前图片看起来是打码副本，但关联原图已不存在。请手动选择原图，避免重复叠加打码。';
 
   @override
   String get mosaic_chooseOriginal => '选择原图';
@@ -14293,7 +14589,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mosaic_delete => '删除区域';
 
   @override
-  String get mosaic_keyboardHint => '快捷键：方向键移动，Shift+方向键快速移动，Delete 删除，Ctrl+D 复制，Ctrl+Z/Y 撤销或重做。';
+  String get mosaic_keyboardHint =>
+      '快捷键：方向键移动，Shift+方向键快速移动，Delete 删除，Ctrl+D 复制，Ctrl+Z/Y 撤销或重做。';
 
   @override
   String get mosaic_canvasHint => '在空白处拖动绘制；区域可选择、移动、缩放、锁定、复制或暂时禁用。';
@@ -14359,7 +14656,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get promptAssistant_concurrencyInvalid => '请输入大于 0 的整数';
 
   @override
-  String get promptAssistant_concurrencyAutoDescription => '从 5 个并发开始，根据请求结果自动升降；该提供商的所有提示词助手任务共享额度。';
+  String get promptAssistant_concurrencyAutoDescription =>
+      '从 5 个并发开始，根据请求结果自动升降；该提供商的所有提示词助手任务共享额度。';
 
   @override
   String get promptAssistant_thinkingLevel => '思考等级';
@@ -14421,30 +14719,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String agentTool_resultCount(String kind, int count) {
-    String _temp0 = intl.Intl.selectLogic(
-      kind,
-      {
-        'results': '找到 $count 条结果',
-        'sites': '来自 $count 个站点',
-        'read': '已读取 $count 字',
-        'displayed': '已展示 $count 张图片',
-        'inspected': '已查看 $count 张图片',
-        'pendingPreview': '本次返回 $count 个待处理任务',
-        'failedPreview': '本次返回 $count 个失败任务',
-        'prepared': '已准备 $count 个任务，等待确认',
-        'retried': '已重新入队 $count 个任务',
-        'updatedText': '已更新文本，共 $count 字',
-        'tags': '找到 $count 个标签',
-        'entries': '本次返回 $count 个条目',
-        'categories': '本次返回 $count 个分类',
-        'sources': '本次返回 $count 个来源',
-        'images': '本次返回 $count 张图片',
-        'characters': '本次返回 $count 个角色',
-        'skills': '已加载 $count 个技能',
-        'diagnostics': '本次返回 $count 条诊断',
-        'other': '本次返回 $count 项',
-      },
-    );
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'results': '找到 $count 条结果',
+      'sites': '来自 $count 个站点',
+      'read': '已读取 $count 字',
+      'displayed': '已展示 $count 张图片',
+      'inspected': '已查看 $count 张图片',
+      'pendingPreview': '本次返回 $count 个待处理任务',
+      'failedPreview': '本次返回 $count 个失败任务',
+      'prepared': '已准备 $count 个任务，等待确认',
+      'retried': '已重新入队 $count 个任务',
+      'updatedText': '已更新文本，共 $count 字',
+      'tags': '找到 $count 个标签',
+      'entries': '本次返回 $count 个条目',
+      'categories': '本次返回 $count 个分类',
+      'sources': '本次返回 $count 个来源',
+      'images': '本次返回 $count 张图片',
+      'characters': '本次返回 $count 个角色',
+      'skills': '已加载 $count 个技能',
+      'diagnostics': '本次返回 $count 条诊断',
+      'other': '本次返回 $count 项',
+    });
     return '$_temp0';
   }
 
@@ -14524,7 +14819,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dlss_saveCopy => '另存增强图像';
 
   @override
-  String get dlss_source => '组件来自 video2dlssnr 的公开 Release。安装会下载完整包，仅提取所需组件，并进行真实增强测试。';
+  String get dlss_source =>
+      '组件来自 video2dlssnr 的公开 Release。安装会下载完整包，仅提取所需组件，并进行真实增强测试。';
 
   @override
   String get dlss_structure => '结构强度';
@@ -14641,7 +14937,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dlss_saveFailed => '保存失败，请检查图像保存目录及磁盘空间';
 
   @override
-  String get dlss_compareHint => '完整分辨率对比，默认适应窗口。点击 100% 查看原尺寸像素；拖动图像查看局部，拖动分割线对比。';
+  String get dlss_compareHint =>
+      '完整分辨率对比，默认适应窗口。点击 100% 查看原尺寸像素；拖动图像查看局部，拖动分割线对比。';
 
   @override
   String get dlss_skin => '皮肤结构强度';
@@ -14653,28 +14950,35 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dlss_autoMask => '自动遮罩';
 
   @override
-  String get dlss_styleHint => '选择运行库的风格模式 0 / 1 / 2，不改变尺寸。“默认、自然、电影感”沿用上游名称，尚未验证与官方 Model A/B/C 的对应关系。';
+  String get dlss_styleHint =>
+      '选择运行库的风格模式 0 / 1 / 2，不改变尺寸。“默认、自然、电影感”沿用上游名称，尚未验证与官方 Model A/B/C 的对应关系。';
 
   @override
-  String get dlss_intensityHint => '控制 NR 整体效果，范围 0～1。0 关闭 NR 效果，1 为完整强度；当前运行库中更高数值与 1 的输出一致。SR 放大与输出混合分别控制。';
+  String get dlss_intensityHint =>
+      '控制 NR 整体效果，范围 0～1。0 关闭 NR 效果，1 为完整强度；当前运行库中更高数值与 1 的输出一致。SR 放大与输出混合分别控制。';
 
   @override
-  String get dlss_detailHint => '控制 NR 对整体画面的影响，不单独控制材质细节。0 保留 NR 输入（开启 SR 时为放大后的图像）；1 按“NR 颜色贡献”设置应用增强结果；大于 1 放大两者差异，可能使效果夸张或失真。';
+  String get dlss_detailHint =>
+      '控制 NR 对整体画面的影响，不单独控制材质细节。0 保留 NR 输入（开启 SR 时为放大后的图像）；1 按“NR 颜色贡献”设置应用增强结果；大于 1 放大两者差异，可能使效果夸张或失真。';
 
   @override
   String get dlss_colorHint => '0 保留原图色相，但仍采用增强后的明暗；1 采用增强后的颜色。越低越接近原图的配色。';
 
   @override
-  String get dlss_structureHint => '控制材质纹理、局部明暗与结构变化，并非普通锐化。1 为基准，常用 0～2；大于 1 仍有效，高值可能产生颗粒、色偏和细节失真。';
+  String get dlss_structureHint =>
+      '控制材质纹理、局部明暗与结构变化，并非普通锐化。1 为基准，常用 0～2；大于 1 仍有效，高值可能产生颗粒、色偏和细节失真。';
 
   @override
-  String get dlss_toneHint => '控制较大范围的光照、明暗和颜色变化。1 为基准，常用 0～2；不是固定的亮度或对比度调节。0 不会关闭结构效果，也不保证输出与原图颜色完全一致。';
+  String get dlss_toneHint =>
+      '控制较大范围的光照、明暗和颜色变化。1 为基准，常用 0～2；不是固定的亮度或对比度调节。0 不会关闭结构效果，也不保证输出与原图颜色完全一致。';
 
   @override
-  String get dlss_skinHint => '调整自动遮罩识别区域的皮肤结构；需开启自动遮罩。-1 使用模型默认，0 及以上显式指定强度；负值均使用默认。当前运行库关闭自动遮罩后此项不改变输出。';
+  String get dlss_skinHint =>
+      '调整自动遮罩识别区域的皮肤结构；需开启自动遮罩。-1 使用模型默认，0 及以上显式指定强度；负值均使用默认。当前运行库关闭自动遮罩后此项不改变输出。';
 
   @override
-  String get dlss_autoMaskHint => '启用模型内部的区域遮罩，并使皮肤结构强度生效。当前无法预览其识别区域；关闭可能改变局部效果，但不会关闭整体 NR。';
+  String get dlss_autoMaskHint =>
+      '启用模型内部的区域遮罩，并使皮肤结构强度生效。当前无法预览其识别区域；关闭可能改变局部效果，但不会关闭整体 NR。';
 
   @override
   String get dlss_invalidNumber => '请输入此参数支持的有效数值。';
@@ -14683,7 +14987,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dlss_scale => 'SR 放大倍率';
 
   @override
-  String get dlss_scaleHint => '先用 DLSS SR 放大，再进行 NR。默认 2 倍；1 倍跳过 SR，仅按原尺寸进行 NR。可手动输入小数，输出每边不能超过 16384 像素，实际可用大小取决于显存。';
+  String get dlss_scaleHint =>
+      '先用 DLSS SR 放大，再进行 NR。默认 2 倍；1 倍跳过 SR，仅按原尺寸进行 NR。可手动输入小数，输出每边不能超过 16384 像素，实际可用大小取决于显存。';
 
   @override
   String get dlss_finalizing => 'NR 已完成，正在准备对比图…';
@@ -14884,10 +15189,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get stamina_rulesTitle => '规则';
 
   @override
-  String get stamina_ruleConsumes => '消耗体力：V5，标准尺寸（面积不超过 1024×1024），不超过 28 步，每个请求的第一张。';
+  String get stamina_ruleConsumes =>
+      '消耗体力：V5，标准尺寸（面积不超过 1024×1024），不超过 28 步，每个请求的第一张。';
 
   @override
-  String get stamina_ruleAnlas => '按 Anlas 计费：大尺寸、超过 28 步、一次请求多张时的其余张数，以及体力耗尽后的生成。';
+  String get stamina_ruleAnlas =>
+      '按 Anlas 计费：大尺寸、超过 28 步、一次请求多张时的其余张数，以及体力耗尽后的生成。';
 
   @override
   String get stamina_ruleOtherModels => 'V4.5 及更早模型不受体力限制。';
@@ -14917,7 +15224,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
 class AppLocalizationsZhHant extends AppLocalizationsZh {
-  AppLocalizationsZhHant(): super('zh_Hant');
+  AppLocalizationsZhHant() : super('zh_Hant');
 
   @override
   String get sidebarSort_title => '排序方式';
@@ -15270,7 +15577,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get auth_loginRequiredQueueExecution => '請先登入，再啟動 NovelAI 生成佇列。';
 
   @override
-  String get auth_loginRequiredDirectorTools => '請先登入，再使用 NovelAI Director Tools。';
+  String get auth_loginRequiredDirectorTools =>
+      '請先登入，再使用 NovelAI Director Tools。';
 
   @override
   String get auth_loginRequiredNovelAiUpscale => '請先登入，再使用 NovelAI 雲端超分。';
@@ -15351,10 +15659,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get auth_thirdPartyTokenHint => '請輸入第三方站點提供的 API Token';
 
   @override
-  String get auth_thirdPartyCompatibilityHint => '第三方站點需相容 NovelAI 影像生成 API；Token 將按 Bearer 方式傳送。未實作 /user/subscription 的站點將略過訂閱資訊。';
+  String get auth_thirdPartyCompatibilityHint =>
+      '第三方站點需相容 NovelAI 影像生成 API；Token 將按 Bearer 方式傳送。未實作 /user/subscription 的站點將略過訂閱資訊。';
 
   @override
-  String get auth_thirdPartyStreamingHint => '若第三方站點不支援串流生成，請前往「設定 > 生成 > 影象輸出」，關閉「串流預覽」後再生成。';
+  String get auth_thirdPartyStreamingHint =>
+      '若第三方站點不支援串流生成，請前往「設定 > 生成 > 影象輸出」，關閉「串流預覽」後再生成。';
 
   @override
   String get anlas_thirdPartyUnavailable => '目前站點不提供 Anlas 餘額資訊';
@@ -15421,10 +15731,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get auth_error_credentialsLoginUnavailable => '賬號密碼登入當前不可用';
 
   @override
-  String get auth_error_credentialsLoginUnavailable_hint => 'NovelAI 官網賬號密碼登入需要網頁安全驗證，客戶端無法完成，請改用 Persistent API Token。';
+  String get auth_error_credentialsLoginUnavailable_hint =>
+      'NovelAI 官網賬號密碼登入需要網頁安全驗證，客戶端無法完成，請改用 Persistent API Token。';
 
   @override
-  String get auth_error_endpointIncompatible => '該地址下未發現 NAI 相容介面，請確認 API 地址是站點提供的服務根地址';
+  String get auth_error_endpointIncompatible =>
+      '該地址下未發現 NAI 相容介面，請確認 API 地址是站點提供的服務根地址';
 
   @override
   String get auth_error_serverError => '伺服器錯誤';
@@ -15478,7 +15790,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get auth_troubleshoot_serverStatus_title => '檢查伺服器狀態';
 
   @override
-  String get auth_troubleshoot_serverStatus_desc => '訪問 NovelAI 狀態頁面或社群檢視服務中斷情況';
+  String get auth_troubleshoot_serverStatus_desc =>
+      '訪問 NovelAI 狀態頁面或社群檢視服務中斷情況';
 
   @override
   String get common_paste => '貼上';
@@ -15577,7 +15890,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_generationStreamPreview => '串流預覽';
 
   @override
-  String get settings_generationStreamPreviewSubtitle => '生成時顯示中間圖像；關閉後將直接等待最終圖像。';
+  String get settings_generationStreamPreviewSubtitle =>
+      '生成時顯示中間圖像；關閉後將直接等待最終圖像。';
 
   @override
   String get settings_alphaModeTitle => '透明影象 Alpha 模式';
@@ -15589,10 +15903,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_alphaModePremultiplied => '預乘（Premultiplied）';
 
   @override
-  String get settings_alphaModeStraightDescription => '保留未乘 Alpha 的 RGB，適合繼續編輯，也是 NovelAI 官網預設值。';
+  String get settings_alphaModeStraightDescription =>
+      '保留未乘 Alpha 的 RGB，適合繼續編輯，也是 NovelAI 官網預設值。';
 
   @override
-  String get settings_alphaModePremultipliedDescription => 'RGB 已乘 Alpha，適合要求預乘輸入的合成與渲染流程。';
+  String get settings_alphaModePremultipliedDescription =>
+      'RGB 已乘 Alpha，適合要求預乘輸入的合成與渲染流程。';
 
   @override
   String get settings_promptAssistant => '提示詞助手';
@@ -15674,13 +15990,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_fileLogging => '記錄應用日誌';
 
   @override
-  String get settings_fileLoggingSubtitle => '預設關閉；僅在排查問題時開啟。開啟後會寫入 Documents/NAI_Launcher/logs，關閉後不再建立或寫入日誌檔案。';
+  String get settings_fileLoggingSubtitle =>
+      '預設關閉；僅在排查問題時開啟。開啟後會寫入 Documents/NAI_Launcher/logs，關閉後不再建立或寫入日誌檔案。';
 
   @override
   String get settings_exportDiagnosticLogs => '匯出診斷日誌';
 
   @override
-  String get settings_exportDiagnosticLogsSubtitle => '匯出最近日誌和基本裝置資訊；會自動隱藏憑證與本機路徑。';
+  String get settings_exportDiagnosticLogsSubtitle =>
+      '匯出最近日誌和基本裝置資訊；會自動隱藏憑證與本機路徑。';
 
   @override
   String get settings_exportDiagnosticLogsInProgress => '正在匯出診斷日誌';
@@ -15819,7 +16137,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get generation_streamingUnsupported => '站點不支援串流生成';
 
   @override
-  String get generation_streamingUnsupportedHint => '請前往「設定 > 生成 > 影象輸出」，關閉「串流預覽」後重試。';
+  String get generation_streamingUnsupportedHint =>
+      '請前往「設定 > 生成 > 影象輸出」，關閉「串流預覽」後重試。';
 
   @override
   String get generation_params => '引數';
@@ -16347,7 +16666,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get generation_failedStreamSnapshot => '失敗快照';
 
   @override
-  String get generation_failedStreamSnapshotHint => '生成未完成，僅保留最後一幀預覽；不可儲存、收藏或用於圖生圖';
+  String get generation_failedStreamSnapshotHint =>
+      '生成未完成，僅保留最後一幀預覽；不可儲存、收藏或用於圖生圖';
 
   @override
   String get generation_noHistory => '暫無歷史記錄';
@@ -16372,7 +16692,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String generation_deleteImagesWithFilesConfirm(Object count, Object fileCount) {
+  String generation_deleteImagesWithFilesConfirm(
+    Object count,
+    Object fileCount,
+  ) {
     return '從歷史記錄中刪除選取的 $count 張圖片，並永久刪除其中 $fileCount 個已儲存到本機圖庫的檔案？此操作不可撤銷。';
   }
 
@@ -16401,7 +16724,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get generation_opusUsageRefill => '額度會隨時間自動恢復';
 
   @override
-  String get generation_opusUsageExhausted => 'Opus 免費額度已用完，V5 生成將消耗 Anlas，額度會隨時間自動恢復';
+  String get generation_opusUsageExhausted =>
+      'Opus 免費額度已用完，V5 生成將消耗 Anlas，額度會隨時間自動恢復';
 
   @override
   String get generation_imageSize => '影象尺寸';
@@ -16742,7 +17066,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get prompt_cooccurrenceRecommendation => '共現標籤推薦';
 
   @override
-  String get prompt_cooccurrenceRecommendationSubtitle => '選中標籤後自動推薦，也可按 Ctrl+Shift+Space 或 Ctrl+單擊';
+  String get prompt_cooccurrenceRecommendationSubtitle =>
+      '選中標籤後自動推薦，也可按 Ctrl+Shift+Space 或 Ctrl+單擊';
 
   @override
   String get prompt_regexRulesManage => '正則替換規則…';
@@ -16766,7 +17091,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get regexRules_title => '正則替換規則';
 
   @override
-  String get regexRules_hint => '規則按順序作用於整段提示詞，早於 SD 轉換和自動格式化執行。替換內容裡可用 \$1、\$2 引用捕獲組。';
+  String get regexRules_hint =>
+      '規則按順序作用於整段提示詞，早於 SD 轉換和自動格式化執行。替換內容裡可用 \$1、\$2 引用捕獲組。';
 
   @override
   String get regexRules_empty => '還沒有規則，點下面的按鈕新建一條';
@@ -16931,7 +17257,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get img2img_inpaintStrengthHint => '值越高，蒙版區域與當前源圖差異越大';
 
   @override
-  String get img2img_inpaintPendingHint => '點選“區域性重繪”進入畫布，用畫筆、橡皮或選區工具標出需要重繪的區域。返回這裡後，點選主生成按鈕即可只重繪蒙版區域。';
+  String get img2img_inpaintPendingHint =>
+      '點選“區域性重繪”進入畫布，用畫筆、橡皮或選區工具標出需要重繪的區域。返回這裡後，點選主生成按鈕即可只重繪蒙版區域。';
 
   @override
   String get img2img_inpaintReadyHint => '遮罩已載入。當前會按區域性重繪方式提交，只有蒙版區域會被重新生成。';
@@ -16946,7 +17273,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get img2img_directorTools => '導演工具';
 
   @override
-  String get img2img_directorToolsHint => '將當前源圖送入導演工具處理。處理完成後，可以把結果回填為新的源圖繼續生成。';
+  String get img2img_directorToolsHint =>
+      '將當前源圖送入導演工具處理。處理完成後，可以把結果回填為新的源圖繼續生成。';
 
   @override
   String get img2img_directorPrompt => '附加提示詞';
@@ -17027,7 +17355,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get img2img_directorPixelSnap => '像素對齊';
 
   @override
-  String get img2img_directorPixelSnapHint => '完全在本機計算，不消耗 Anlas、不連網。大圖可能要幾秒到十幾秒。';
+  String get img2img_directorPixelSnapHint =>
+      '完全在本機計算，不消耗 Anlas、不連網。大圖可能要幾秒到十幾秒。';
 
   @override
   String get img2img_directorPixelSnapPalette => '調色盤';
@@ -17051,7 +17380,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get img2img_directorPixelSnapAvoidOverRefiningOn => '始終保留偵測到的像素尺寸。';
 
   @override
-  String get img2img_directorPixelSnapAvoidOverRefiningOff => '更細的像素尺寸更貼合原圖時會改用它。';
+  String get img2img_directorPixelSnapAvoidOverRefiningOff =>
+      '更細的像素尺寸更貼合原圖時會改用它。';
 
   @override
   String get img2img_directorPixelSnapUpscale => '放大回原尺寸';
@@ -17118,10 +17448,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get img2img_focusedInpaint => 'Focused Inpainting（聚焦重繪）';
 
   @override
-  String get img2img_focusedInpaintEnabledHint => '已啟用。請在重繪編輯器左上角按鈕裡調整聚焦區域與 Minimum Context Area。';
+  String get img2img_focusedInpaintEnabledHint =>
+      '已啟用。請在重繪編輯器左上角按鈕裡調整聚焦區域與 Minimum Context Area。';
 
   @override
-  String get img2img_focusedInpaintDisabledHint => '預設是普通重繪；如需聚焦重繪，請在重繪編輯器左上角按鈕中開啟並框選區域。';
+  String get img2img_focusedInpaintDisabledHint =>
+      '預設是普通重繪；如需聚焦重繪，請在重繪編輯器左上角按鈕中開啟並框選區域。';
 
   @override
   String get img2img_disabled => '未啟用';
@@ -17142,25 +17474,31 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get img2img_upscaleModel => '超分模型';
 
   @override
-  String get img2img_noSeedvr2Models => '未發現可用的 SeedVR2 模型，請重新整理模型列表，並檢查 ComfyUI 原生 models/diffusion_models、models/vae 或 SeedVR2 自定義節點模型目錄。';
+  String get img2img_noSeedvr2Models =>
+      '未發現可用的 SeedVR2 模型，請重新整理模型列表，並檢查 ComfyUI 原生 models/diffusion_models、models/vae 或 SeedVR2 自定義節點模型目錄。';
 
   @override
-  String get img2img_noRegularUpscaleModels => '未發現普通超分模型，請重新整理模型列表或檢查 models/upscale_models。';
+  String get img2img_noRegularUpscaleModels =>
+      '未發現普通超分模型，請重新整理模型列表或檢查 models/upscale_models。';
 
   @override
-  String get img2img_useNativeSeedvr2Workflow => '將使用 ComfyUI 原生 SeedVR2 一步超分流程。';
+  String get img2img_useNativeSeedvr2Workflow =>
+      '將使用 ComfyUI 原生 SeedVR2 一步超分流程。';
 
   @override
-  String get img2img_useSeedvr2TiledWorkflow => '將使用 SeedVR2TilingUpscaler 分塊超分流程。';
+  String get img2img_useSeedvr2TiledWorkflow =>
+      '將使用 SeedVR2TilingUpscaler 分塊超分流程。';
 
   @override
   String get img2img_useSeedvr2Workflow => '將使用 SeedVR2VideoUpscaler 流程。';
 
   @override
-  String get img2img_useRegularUpscaleWorkflow => '將使用 UpscaleModelLoader + ImageUpscaleWithModel 流程，並用 Lanczos 修正到目標倍率。';
+  String get img2img_useRegularUpscaleWorkflow =>
+      '將使用 UpscaleModelLoader + ImageUpscaleWithModel 流程，並用 Lanczos 修正到目標倍率。';
 
   @override
-  String get img2img_useRtxUpscaleWorkflow => '將使用 RTX Video Super Resolution 流程，無需選擇模型。';
+  String get img2img_useRtxUpscaleWorkflow =>
+      '將使用 RTX Video Super Resolution 流程，無需選擇模型。';
 
   @override
   String get img2img_refreshModelList => '重新整理模型列表';
@@ -17223,7 +17561,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get img2img_seedvr2EngineResolvedLegacy => '當前使用已安裝的 SeedVR2 自定義節點。';
 
   @override
-  String get img2img_seedvr2EngineUnavailable => '當前選擇的 SeedVR2 引擎或所需模型不可用，請重新整理模型列表或切換引擎。';
+  String get img2img_seedvr2EngineUnavailable =>
+      '當前選擇的 SeedVR2 引擎或所需模型不可用，請重新整理模型列表或切換引擎。';
 
   @override
   String get img2img_seedvr2VaeTileHint => '設定 SeedVR2 VAE 編碼與解碼的分塊尺寸。';
@@ -17232,25 +17571,30 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get img2img_seedvr2UseTiledUpscale => '使用分塊放大';
 
   @override
-  String get img2img_seedvr2UseTiledUpscaleHint => '啟用後改用 SeedVR2TilingUpscaler，適合大圖或視訊記憶體壓力較高的場景。';
+  String get img2img_seedvr2UseTiledUpscaleHint =>
+      '啟用後改用 SeedVR2TilingUpscaler，適合大圖或視訊記憶體壓力較高的場景。';
 
   @override
-  String get settings_comfyUiSeedvr2EmbedNaiMetadata => '在 SeedVR2 結果中寫入 NAI 生成引數';
+  String get settings_comfyUiSeedvr2EmbedNaiMetadata =>
+      '在 SeedVR2 結果中寫入 NAI 生成引數';
 
   @override
-  String get settings_comfyUiSeedvr2EmbedNaiMetadataHint => '預設關閉。開啟後會寫入啟動器當前的提示詞和生成引數；關閉時保留 ComfyUI 返回的原始 PNG 後設資料。';
+  String get settings_comfyUiSeedvr2EmbedNaiMetadataHint =>
+      '預設關閉。開啟後會寫入啟動器當前的提示詞和生成引數；關閉時保留 ComfyUI 返回的原始 PNG 後設資料。';
 
   @override
   String get img2img_seedvr2TileSize => '分塊圖塊大小';
 
   @override
-  String get img2img_seedvr2TileSizeHint => '同時控制 SeedVR2TilingUpscaler 的 tile_width / tile_height。';
+  String get img2img_seedvr2TileSizeHint =>
+      '同時控制 SeedVR2TilingUpscaler 的 tile_width / tile_height。';
 
   @override
   String get img2img_seedvr2BlocksToSwap => '記憶體解除安裝層數';
 
   @override
-  String get img2img_seedvr2BlocksToSwapHint => '把多少 DiT 層放在記憶體裡、推理時再逐層送入視訊記憶體。調高更省視訊記憶體但更吃記憶體也更慢；視訊記憶體充裕可調低甚至設為 0。視訊記憶體不足報錯時請調高。';
+  String get img2img_seedvr2BlocksToSwapHint =>
+      '把多少 DiT 層放在記憶體裡、推理時再逐層送入視訊記憶體。調高更省視訊記憶體但更吃記憶體也更慢；視訊記憶體充裕可調低甚至設為 0。視訊記憶體不足報錯時請調高。';
 
   @override
   String get img2img_upscalePanelOpened => '已開啟圖生圖超分面板';
@@ -17319,7 +17663,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get editor_magicWandColorArea => '顏色區域';
 
   @override
-  String get editor_magicWandSmartHelp => '點選要選擇的物件。首次使用會從 MIT Han Lab 下載約 133 MiB 的 EfficientViT-SAM L0 模型（Apache-2.0），之後儲存在本地。';
+  String get editor_magicWandSmartHelp =>
+      '點選要選擇的物件。首次使用會從 MIT Han Lab 下載約 133 MiB 的 EfficientViT-SAM L0 模型（Apache-2.0），之後儲存在本地。';
 
   @override
   String get editor_magicWandColorHelp => '點選顏色相近的連續區域。適合邊界清晰的純色影象，無需下載模型。';
@@ -17493,7 +17838,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get editor_transformCrop => '旋轉 / 翻轉 / 裁剪';
 
   @override
-  String get editor_transformCropDescription => '幾何操作已經獨立出來，點選後會先生成預覽，確認應用後才寫回圖層。';
+  String get editor_transformCropDescription =>
+      '幾何操作已經獨立出來，點選後會先生成預覽，確認應用後才寫回圖層。';
 
   @override
   String get editor_effectPreviewHint => '預覽不會修改原圖；點選應用後才會把結果寫入當前活動圖層和撤銷歷史。';
@@ -17688,7 +18034,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get editor_focusBrush => '畫筆';
 
   @override
-  String get editor_focusContextHint => '外框是實際送去 Focused Inpaint 的區域，內框是主要重繪區域；兩框之間的頻寬就是 Minimum Context Area。';
+  String get editor_focusContextHint =>
+      '外框是實際送去 Focused Inpaint 的區域，內框是主要重繪區域；兩框之間的頻寬就是 Minimum Context Area。';
 
   @override
   String get editor_compressionTitle => '輸出解析度';
@@ -17700,15 +18047,26 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get editor_compressionUncompressed => '保持編輯工作尺寸，不執行壓縮。';
 
   @override
-  String get editor_compressionApplyOnDone => '工作畫布保持原樣；點選“完成”時使用 Pica Lanczos3 執行一次壓縮。';
+  String get editor_compressionApplyOnDone =>
+      '工作畫布保持原樣；點選“完成”時使用 Pica Lanczos3 執行一次壓縮。';
 
   @override
-  String editor_compressionSizeSummary(int workWidth, int workHeight, int targetWidth, int targetHeight) {
+  String editor_compressionSizeSummary(
+    int workWidth,
+    int workHeight,
+    int targetWidth,
+    int targetHeight,
+  ) {
     return '工作尺寸 $workWidth×$workHeight → 輸出尺寸 $targetWidth×$targetHeight';
   }
 
   @override
-  String editor_compressionNormalSummary(int normalWidth, int normalHeight, int minimumWidth, int minimumHeight) {
+  String editor_compressionNormalSummary(
+    int normalWidth,
+    int normalHeight,
+    int minimumWidth,
+    int minimumHeight,
+  ) {
     return 'Normal（約 1MP）為 $normalWidth×$normalHeight；最低檔為 $minimumWidth×$minimumHeight。';
   }
 
@@ -17716,15 +18074,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get editor_compressionUnavailable => '當前工作畫布已經低於最低壓縮檔，不能繼續降低解析度。';
 
   @override
-  String get editor_compressionFocusLimited => '當前 Focused Inpaint 選區在更高解析度下會超過請求面積上限，因此滑條上限已收緊。';
+  String get editor_compressionFocusLimited =>
+      '當前 Focused Inpaint 選區在更高解析度下會超過請求面積上限，因此滑條上限已收緊。';
 
   @override
-  String editor_compressionClampedToLimit(int targetWidth, int targetHeight, int clampedWidth, int clampedHeight) {
+  String editor_compressionClampedToLimit(
+    int targetWidth,
+    int targetHeight,
+    int clampedWidth,
+    int clampedHeight,
+  ) {
     return '所選 $targetWidth×$targetHeight 超過請求面積上限，實際會以 $clampedWidth×$clampedHeight 傳送。';
   }
 
   @override
-  String editor_focusRequestSummary(int outerWidth, int outerHeight, int requestWidth, int requestHeight, int cost) {
+  String editor_focusRequestSummary(
+    int outerWidth,
+    int outerHeight,
+    int requestWidth,
+    int requestHeight,
+    int cost,
+  ) {
     return '外層裁剪 $outerWidth×$outerHeight，實際傳送 $requestWidth×$requestHeight，預計 $cost Anlas。';
   }
 
@@ -18190,10 +18560,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get onlineGallery_tagDetailsIncomplete => '部分作品的完整標籤取得失敗，未驗證的作品已排除；請重試以補齊結果。';
+  String get onlineGallery_tagDetailsIncomplete =>
+      '部分作品的完整標籤取得失敗，未驗證的作品已排除；請重試以補齊結果。';
 
   @override
-  String get onlineGallery_unsupportedMetatag => '目前來源或模式不支援元標籤語法，請改用一般標籤或切換至來源搜尋。';
+  String get onlineGallery_unsupportedMetatag =>
+      '目前來源或模式不支援元標籤語法，請改用一般標籤或切換至來源搜尋。';
 
   @override
   String onlineGallery_multiTagScanning(int requests, int candidates) {
@@ -18320,7 +18692,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_replaceConfig => '取代設定';
 
   @override
-  String get onlineGallery_replaceConfigDescription => '選擇要同時取代的生成設定；未選擇的項目會保留目前值';
+  String get onlineGallery_replaceConfigDescription =>
+      '選擇要同時取代的生成設定；未選擇的項目會保留目前值';
 
   @override
   String get onlineGallery_replaceConfigNaiOnly => '僅包含可識別 NovelAI 設定的圖片支援此選項';
@@ -18415,7 +18788,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_fuzzySearch => '模糊匹配';
 
   @override
-  String get onlineGallery_fuzzySearchTooltip => '開啟後使用 *tag* 匹配相近標籤；關閉時按 Danbooru 精確標籤搜尋';
+  String get onlineGallery_fuzzySearchTooltip =>
+      '開啟後使用 *tag* 匹配相近標籤；關閉時按 Danbooru 精確標籤搜尋';
 
   @override
   String get onlineGallery_blacklistShort => '屏蔽';
@@ -18436,7 +18810,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_outputFilterTitle => '輸出過濾標籤';
 
   @override
-  String get onlineGallery_outputFilterSubtitle => '圖片仍會正常顯示；這些標籤只會從複製、傳送和佇列提示詞中精確剔除。';
+  String get onlineGallery_outputFilterSubtitle =>
+      '圖片仍會正常顯示；這些標籤只會從複製、傳送和佇列提示詞中精確剔除。';
 
   @override
   String get onlineGallery_outputFilterAddHint => '新增需要從輸出中剔除的標籤';
@@ -18454,7 +18829,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_outputFilterClearTitle => '清空輸出過濾？';
 
   @override
-  String get onlineGallery_outputFilterClearConfirm => '清空後，水印和馬賽克等標籤也會重新出現在複製與傳送的提示詞中。';
+  String get onlineGallery_outputFilterClearConfirm =>
+      '清空後，水印和馬賽克等標籤也會重新出現在複製與傳送的提示詞中。';
 
   @override
   String get onlineGallery_addTagToOutputFilter => '加入輸出過濾';
@@ -18475,10 +18851,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_blacklistMenuHint => '隱藏包含此標籤的畫廊圖片';
 
   @override
-  String get onlineGallery_outputFilteredTagTooltip => '此標籤會在複製、傳送和加入佇列時被剔除；右鍵可管理';
+  String get onlineGallery_outputFilteredTagTooltip =>
+      '此標籤會在複製、傳送和加入佇列時被剔除；右鍵可管理';
 
   @override
-  String get onlineGallery_outputFilteredTagTooltipTouch => '此標籤會在複製、傳送和加入佇列時被剔除；長按可管理';
+  String get onlineGallery_outputFilteredTagTooltipTouch =>
+      '此標籤會在複製、傳送和加入佇列時被剔除；長按可管理';
 
   @override
   String get onlineGallery_tagContextMenuTooltip => '右鍵可加入黑名單或輸出過濾';
@@ -18503,13 +18881,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_blacklistSubtitle => '所有線上畫廊共用這份清單；離線時仍會正常屏蔽。';
 
   @override
-  String get onlineGallery_blacklistCloudDescription => '已連接 Danbooru；本機修改會在安全合併後同步';
+  String get onlineGallery_blacklistCloudDescription =>
+      '已連接 Danbooru；本機修改會在安全合併後同步';
 
   @override
-  String get onlineGallery_blacklistCloudLoginRequired => '本機黑名單仍然有效；登入 Danbooru 後可以同步';
+  String get onlineGallery_blacklistCloudLoginRequired =>
+      '本機黑名單仍然有效；登入 Danbooru 後可以同步';
 
   @override
-  String get onlineGallery_blacklistCloudUnavailable => '本機黑名單仍然有效；驗證 Danbooru 連線後會恢復雲端同步';
+  String get onlineGallery_blacklistCloudUnavailable =>
+      '本機黑名單仍然有效；驗證 Danbooru 連線後會恢復雲端同步';
 
   @override
   String get onlineGallery_addBlacklistTagHint => '新增黑名單標籤';
@@ -18527,7 +18908,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_pushBlacklistConfirmTitle => '使用統一清單覆寫雲端？';
 
   @override
-  String get onlineGallery_pushBlacklistConfirmBody => '這會完整取代 Danbooru 雲端黑名單。一般自動同步會保留無法識別的進階規則，但本次完整推送會刪除它們。';
+  String get onlineGallery_pushBlacklistConfirmBody =>
+      '這會完整取代 Danbooru 雲端黑名單。一般自動同步會保留無法識別的進階規則，但本次完整推送會刪除它們。';
 
   @override
   String get onlineGallery_blacklistPushSucceeded => '已使用本機黑名單覆寫雲端清單';
@@ -18577,15 +18959,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_blacklistClearTitle => '清空統一黑名單？';
 
   @override
-  String get onlineGallery_blacklistClearBody => '畫廊將立即停止使用這些標籤過濾。雲端不會自動清空，可以復原本次操作。';
+  String get onlineGallery_blacklistClearBody =>
+      '畫廊將立即停止使用這些標籤過濾。雲端不會自動清空，可以復原本次操作。';
 
   @override
-  String onlineGallery_blacklistPullSummary(Object added, Object existing, Object skipped, Object opaque) {
+  String onlineGallery_blacklistPullSummary(
+    Object added,
+    Object existing,
+    Object skipped,
+    Object opaque,
+  ) {
     return '已新增 $added 項，已有 $existing 項，略過已刪除 $skipped 項；保留 $opaque 條雲端進階規則';
   }
 
   @override
-  String onlineGallery_blacklistPushDiff(Object added, Object removed, Object opaque) {
+  String onlineGallery_blacklistPushDiff(
+    Object added,
+    Object removed,
+    Object opaque,
+  ) {
     return '雲端將新增 $added 項、刪除 $removed 項，並刪除 $opaque 條進階規則。';
   }
 
@@ -18593,7 +18985,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_blacklistCloudEmptyConfirm => '確認清空雲端黑名單';
 
   @override
-  String get onlineGallery_blacklistMigrationConfirm => '此清單包含舊版本中無法確認帳號歸屬的雲端標籤；確認將它們同步到目前帳號';
+  String get onlineGallery_blacklistMigrationConfirm =>
+      '此清單包含舊版本中無法確認帳號歸屬的雲端標籤；確認將它們同步到目前帳號';
 
   @override
   String get onlineGallery_bulkFavorite => '批次收藏';
@@ -18607,7 +19000,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String onlineGallery_queueBatchCompleted(Object added, Object prepareFailed, Object queueSkipped) {
+  String onlineGallery_queueBatchCompleted(
+    Object added,
+    Object prepareFailed,
+    Object queueSkipped,
+  ) {
     return '已加入 $added 個任務；$prepareFailed 個未能準備；$queueSkipped 個因佇列已滿而未加入';
   }
 
@@ -18633,7 +19030,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String onlineGallery_downloadSelectedCompletedWithSkipped(Object success, Object failed, Object skipped) {
+  String onlineGallery_downloadSelectedCompletedWithSkipped(
+    Object success,
+    Object failed,
+    Object skipped,
+  ) {
     return '下載完成：成功 $success，失敗 $failed，略過 $skipped 個純文字詞條';
   }
 
@@ -18662,10 +19063,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_gelbooruApiInvalid => 'Gelbooru 憑據已失效';
 
   @override
-  String get onlineGallery_gelbooruCredentialsRequired => '請先配置 Gelbooru User ID 和 API Key 以檢視網站收藏。';
+  String get onlineGallery_gelbooruCredentialsRequired =>
+      '請先配置 Gelbooru User ID 和 API Key 以檢視網站收藏。';
 
   @override
-  String get onlineGallery_gelbooruCredentialsInvalid => 'Gelbooru 憑據已失效，請重新配置。';
+  String get onlineGallery_gelbooruCredentialsInvalid =>
+      'Gelbooru 憑據已失效，請重新配置。';
 
   @override
   String get onlineGallery_gelbooruRateLimited => 'Gelbooru 請求過於頻繁，請稍後再試。';
@@ -18677,7 +19080,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_gelbooruServerError => 'Gelbooru 伺服器暫時不可用，請稍後再試。';
 
   @override
-  String get onlineGallery_gelbooruNetworkError => '無法連線 Gelbooru，請檢查網路設定或代理配置。';
+  String get onlineGallery_gelbooruNetworkError =>
+      '無法連線 Gelbooru，請檢查網路設定或代理配置。';
 
   @override
   String get onlineGallery_gelbooruMalformedResponse => 'Gelbooru 返回了無法解析的資料。';
@@ -18689,7 +19093,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_aiTagQuery => '搜尋作品、作者、標題、標籤或模型';
 
   @override
-  String get onlineGallery_aiTagPromptQuery => 'AI Prompt 搜尋（可搜尋 artist: 等 Prompt 原文）';
+  String get onlineGallery_aiTagPromptQuery =>
+      'AI Prompt 搜尋（可搜尋 artist: 等 Prompt 原文）';
 
   @override
   String get onlineGallery_sourceQuickTagCloud => '法典圖鑑';
@@ -18817,7 +19222,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_artistHunt => '僅畫師串';
 
   @override
-  String get onlineGallery_artistHuntTooltip => '只顯示正向 Prompt 中明確包含 artist: 標籤的圖片';
+  String get onlineGallery_artistHuntTooltip =>
+      '只顯示正向 Prompt 中明確包含 artist: 標籤的圖片';
 
   @override
   String get onlineGallery_copyArtistChain => '複製畫師串';
@@ -18826,7 +19232,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_copyPrompt => '複製提示詞';
 
   @override
-  String get onlineGallery_promptCopyDescription => '選擇要複製的原始提示詞類別。正向與負向內容會以純文字區塊分隔。';
+  String get onlineGallery_promptCopyDescription =>
+      '選擇要複製的原始提示詞類別。正向與負向內容會以純文字區塊分隔。';
 
   @override
   String get onlineGallery_promptCopyCategoryHint => '按來源提供的標籤類別複製';
@@ -18952,7 +19359,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onlineGallery_gelbooruReadOnly => '只讀收藏';
 
   @override
-  String get onlineGallery_gelbooruFavoritesSortHint => '按帖子 ID 從新到舊排列，不保證與網站收藏時間順序一致。';
+  String get onlineGallery_gelbooruFavoritesSortHint =>
+      '按帖子 ID 從新到舊排列，不保證與網站收藏時間順序一致。';
 
   @override
   String get tooltip_fullscreenEdit => '全屏編輯';
@@ -19015,7 +19423,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get gelbooru_configureTitle => '配置 Gelbooru API';
 
   @override
-  String get gelbooru_configureHint => '輸入 Gelbooru 賬戶設定頁提供的 User ID 和 API Key。應用不會收集密碼或瀏覽器 Cookie。';
+  String get gelbooru_configureHint =>
+      '輸入 Gelbooru 賬戶設定頁提供的 User ID 和 API Key。應用不會收集密碼或瀏覽器 Cookie。';
 
   @override
   String get gelbooru_userId => 'User ID';
@@ -19048,7 +19457,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get gelbooru_invalidInput => '請輸入有效的 User ID 和 API Key。';
 
   @override
-  String get gelbooru_invalidCredentials => 'Gelbooru 拒絕了這些憑據，請檢查 User ID 和 API Key。';
+  String get gelbooru_invalidCredentials =>
+      'Gelbooru 拒絕了這些憑據，請檢查 User ID 和 API Key。';
 
   @override
   String get gelbooru_rateLimited => '請求過於頻繁，請稍後再試。';
@@ -19177,7 +19587,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get ucPreset_addToNegative => '新增到負面提示詞開頭:';
 
   @override
-  String get ucPreset_nsfwHint => '💡 如需生成成人內容，請在正面提示詞中新增 nsfw，負面提示詞中的 nsfw 將自動移除';
+  String get ucPreset_nsfwHint =>
+      '💡 如需生成成人內容，請在正面提示詞中新增 nsfw，負面提示詞中的 nsfw 將自動移除';
 
   @override
   String get ucPreset_addFromLibrary => '從詞庫新增';
@@ -19207,7 +19618,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get prompt_clearAll => '清空提示詞';
 
   @override
-  String get prompt_clearAllPositiveContent => '將清空正面提示詞的全部內容（含所有分區）並移除全部角色，無法復原。固定詞不受影響。';
+  String get prompt_clearAllPositiveContent =>
+      '將清空正面提示詞的全部內容（含所有分區）並移除全部角色，無法復原。固定詞不受影響。';
 
   @override
   String get prompt_clearAllNegativeContent => '將清空負面提示詞的全部內容（含所有分區），無法復原。';
@@ -19435,7 +19847,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get generation_invalidResolution => '解析度無效';
 
   @override
-  String generation_invalidResolutionHint(int width, int height, int suggestedWidth, int suggestedHeight) {
+  String generation_invalidResolutionHint(
+    int width,
+    int height,
+    int suggestedWidth,
+    int suggestedHeight,
+  ) {
     return '$width×$height 無法用於生成。寬度和高度必須是 64 的倍數、單邊不能超過 4096，且總畫素不能超過 3,145,728。最接近的可用尺寸是 $suggestedWidth×$suggestedHeight。';
   }
 
@@ -19620,7 +20037,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get randomPrompt_unsupportedModel => '目前模型不支援官網隨機詞庫';
 
   @override
-  String get randomPrompt_unsupportedModelHint => '目前模型沒有對應的 NovelAI 官網隨機方案。請選擇支援的 NovelAI 模型，或使用自己的自訂預設。';
+  String get randomPrompt_unsupportedModelHint =>
+      '目前模型沒有對應的 NovelAI 官網隨機方案。請選擇支援的 NovelAI 模型，或使用自己的自訂預設。';
 
   @override
   String get naiMode_noTags => '暫無標籤';
@@ -19838,7 +20256,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get characterCountConfig_mainPromptLabel => '主提示詞標籤';
 
   @override
-  String get characterCountConfig_mainPromptHint => '例如：solo, 2girls, 1girl 1boy';
+  String get characterCountConfig_mainPromptHint =>
+      '例如：solo, 2girls, 1girl 1boy';
 
   @override
   String get characterCountConfig_personCount => '人數：';
@@ -20021,7 +20440,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get randomManager_resetDefaultTitle => '重置為預設配置';
 
   @override
-  String get randomManager_resetDefaultContent => '將恢復官方預設配置。\n您新增的自定義片語會被保留但禁用。';
+  String get randomManager_resetDefaultContent =>
+      '將恢復官方預設配置。\n您新增的自定義片語會被保留但禁用。';
 
   @override
   String get randomManager_resetDefaultConfirm => '確認重置';
@@ -20229,7 +20649,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get scope_character => '角色';
 
   @override
-  String get scope_characterTooltip => '提示詞將只出現在角色提示詞內\n每個角色單獨生成\n適合：髮色、眵色、服裝、表情等';
+  String get scope_characterTooltip =>
+      '提示詞將只出現在角色提示詞內\n每個角色單獨生成\n適合：髮色、眵色、服裝、表情等';
 
   @override
   String get scope_all => '通用';
@@ -20284,7 +20705,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get localGallery_categoryPanelTitle => '分類';
 
   @override
-  String get localGallery_searchFilenamePromptPlaceholder => '搜尋檔名/Prompt，逗號分隔交集搜尋...';
+  String get localGallery_searchFilenamePromptPlaceholder =>
+      '搜尋檔名/Prompt，逗號分隔交集搜尋...';
 
   @override
   String get localGallery_selectCurrentPage => '選擇本頁';
@@ -20363,7 +20785,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get localGallery_protectedDeleteCategoryTitle => '保護模式：確認刪除分類';
 
   @override
-  String get localGallery_protectedDeleteCategoryContent => '將刪除此分類記錄，資料夾及內容會保留。請再次確認。';
+  String get localGallery_protectedDeleteCategoryContent =>
+      '將刪除此分類記錄，資料夾及內容會保留。請再次確認。';
 
   @override
   String get localGallery_confirmDelete => '確認刪除';
@@ -20427,7 +20850,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get localGallery_zipMetadataTitle => '匯出 ZIP 壓縮包';
 
   @override
-  String get localGallery_zipMetadataDescription => '選擇壓縮包內的圖片是否保留內嵌後設資料。原始圖片檔案不會被修改。';
+  String get localGallery_zipMetadataDescription =>
+      '選擇壓縮包內的圖片是否保留內嵌後設資料。原始圖片檔案不會被修改。';
 
   @override
   String get localGallery_zipIncludeMetadata => '保留後設資料';
@@ -20439,7 +20863,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get localGallery_zipExcludeMetadata => '移除全部後設資料';
 
   @override
-  String get localGallery_zipExcludeMetadataDescription => '僅為壓縮包產生淨化副本，清除 PNG 文字區塊、EXIF 和 NovelAI 隱寫浮水印資料。';
+  String get localGallery_zipExcludeMetadataDescription =>
+      '僅為壓縮包產生淨化副本，清除 PNG 文字區塊、EXIF 和 NovelAI 隱寫浮水印資料。';
 
   @override
   String bulkMetadataEdit_title(Object count) {
@@ -20819,7 +21244,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get localGallery_permissionRequiredTitle => '需要儲存許可權';
 
   @override
-  String get localGallery_permissionRequiredContent => '本地畫廊需要訪問儲存許可權才能掃描您生成的圖片。\n\n請在設定中授予許可權後重試。';
+  String get localGallery_permissionRequiredContent =>
+      '本地畫廊需要訪問儲存許可權才能掃描您生成的圖片。\n\n請在設定中授予許可權後重試。';
 
   @override
   String get localGallery_openSettings => '開啟設定';
@@ -20828,7 +21254,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get localGallery_firstTimeTipTitle => '使用提示';
 
   @override
-  String get localGallery_firstTimeTipContent => '右鍵點選（桌面端）或長按（移動端）圖片可以：\n\n• 複製 Prompt\n• 複製 Seed\n• 檢視完整後設資料';
+  String get localGallery_firstTimeTipContent =>
+      '右鍵點選（桌面端）或長按（移動端）圖片可以：\n\n• 複製 Prompt\n• 複製 Seed\n• 檢視完整後設資料';
 
   @override
   String get localGallery_gotIt => '知道了';
@@ -21360,7 +21787,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String fixedTags_columnFilteredCount(Object enabled, Object total, Object shown) {
+  String fixedTags_columnFilteredCount(
+    Object enabled,
+    Object total,
+    Object shown,
+  ) {
     return '$enabled/$total · 顯示 $shown';
   }
 
@@ -21490,10 +21921,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get reversePrompt_characterThreshold => '角色標籤閾值';
 
   @override
-  String get reversePrompt_taggerFilterHint => '只輸出 General / Character 分類標籤；Rating、Artist、Copyright、Meta 等分類會被過濾。';
+  String get reversePrompt_taggerFilterHint =>
+      '只輸出 General / Character 分類標籤；Rating、Artist、Copyright、Meta 等分類會被過濾。';
 
   @override
-  String get reversePrompt_replacementEmptyHint => '替換目標角色為空。這裡從詞庫選擇一個角色作為替換目標，不會注入到正向提示詞。';
+  String get reversePrompt_replacementEmptyHint =>
+      '替換目標角色為空。這裡從詞庫選擇一個角色作為替換目標，不會注入到正向提示詞。';
 
   @override
   String get reversePrompt_selectReplacementCharacter => '從詞庫選擇替換目標角色';
@@ -21520,7 +21953,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get reversePrompt_dropUnreadable => '拖入源未提供可讀取的圖片檔案或圖片連結';
 
   @override
-  String get reversePrompt_needImageAndMethod => '請先新增圖片，並至少啟用 ONNX tagger 或 LLM 反推';
+  String get reversePrompt_needImageAndMethod =>
+      '請先新增圖片，並至少啟用 ONNX tagger 或 LLM 反推';
 
   @override
   String get reversePrompt_stagePreparing => '準備反推';
@@ -21616,7 +22050,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get promptAssistant_customRequestLabel => '你的修改需求';
 
   @override
-  String get promptAssistant_customRequestHint => '例如：更陰森、增加雨夜街道背景、讓動作更有張力，只返回最終提示詞';
+  String get promptAssistant_customRequestHint =>
+      '例如：更陰森、增加雨夜街道背景、讓動作更有張力，只返回最終提示詞';
 
   @override
   String get promptAssistant_addReferenceImage => '新增參考圖';
@@ -21689,16 +22124,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get promptAssistant_webAccessBackendExaApi => 'Exa API';
 
   @override
-  String get promptAssistant_webAccessBackendAutoDescription => '優先使用已設定的 SearXNG，失敗後回退到 Exa 匿名 MCP 額度';
+  String get promptAssistant_webAccessBackendAutoDescription =>
+      '優先使用已設定的 SearXNG，失敗後回退到 Exa 匿名 MCP 額度';
 
   @override
-  String get promptAssistant_webAccessBackendSearxngDescription => '僅使用設定的私有 SearXNG 實例';
+  String get promptAssistant_webAccessBackendSearxngDescription =>
+      '僅使用設定的私有 SearXNG 實例';
 
   @override
-  String get promptAssistant_webAccessBackendExaMcpDescription => '無需 API Key，使用 Exa 託管的免費額度並受其限流約束';
+  String get promptAssistant_webAccessBackendExaMcpDescription =>
+      '無需 API Key，使用 Exa 託管的免費額度並受其限流約束';
 
   @override
-  String get promptAssistant_webAccessBackendExaApiDescription => '使用你的 Exa 帳號與 API 額度，此模式可能產生費用';
+  String get promptAssistant_webAccessBackendExaApiDescription =>
+      '使用你的 Exa 帳號與 API 額度，此模式可能產生費用';
 
   @override
   String get promptAssistant_webAccessResultCount => '預設結果數';
@@ -21761,7 +22200,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get promptAssistant_providerManagement => '服務商管理';
 
   @override
-  String get promptAssistant_providerManagementSubtitle => '支援 OpenAI Chat / Responses、Anthropic、Gemini、DeepSeek、LM Studio、Ollama、Pollinations 和自定義相容端點';
+  String get promptAssistant_providerManagementSubtitle =>
+      '支援 OpenAI Chat / Responses、Anthropic、Gemini、DeepSeek、LM Studio、Ollama、Pollinations 和自定義相容端點';
 
   @override
   String get promptAssistant_apiKeyConfigured => 'API Key: 已配置';
@@ -21807,7 +22247,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get promptAssistant_ruleTemplates => '規則模板';
 
   @override
-  String get promptAssistant_ruleTemplatesSubtitle => '系統提示詞按“規則 + 使用者輸入 + 任務引數”組裝';
+  String get promptAssistant_ruleTemplatesSubtitle =>
+      '系統提示詞按“規則 + 使用者輸入 + 任務引數”組裝';
 
   @override
   String get promptAssistant_addRule => '新增規則';
@@ -21845,10 +22286,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get promptAssistant_clearCurrentApiKey => '清空當前 API Key';
 
   @override
-  String get promptAssistant_protocolSupportsImagePayload => '當前協議支援圖片載荷，仍需模型本身支援視覺輸入';
+  String get promptAssistant_protocolSupportsImagePayload =>
+      '當前協議支援圖片載荷，仍需模型本身支援視覺輸入';
 
   @override
-  String get promptAssistant_protocolTextOnlyWarning => '當前協議預設僅文字，開啟後也可能被服務端拒絕';
+  String get promptAssistant_protocolTextOnlyWarning =>
+      '當前協議預設僅文字，開啟後也可能被服務端拒絕';
 
   @override
   String get promptAssistant_addRuleTitle => '新增規則';
@@ -22290,7 +22733,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tagLibrary_contentHint => '輸入提示詞內容，支援智慧補全';
 
   @override
-  String get tagLibrary_characterNegativeSyntaxHelp => '角色詞庫可用 negative(...) 儲存獨立負面提示詞，例如：girl, blue eyes, negative(red hair, glasses)';
+  String get tagLibrary_characterNegativeSyntaxHelp =>
+      '角色詞庫可用 negative(...) 儲存獨立負面提示詞，例如：girl, blue eyes, negative(red hair, glasses)';
 
   @override
   String get settings_network => '網路';
@@ -22305,7 +22749,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_proxyDisabled => '直接連線網路';
 
   @override
-  String get settings_proxyTrafficDisclosure => '代理啟用後，NovelAI API 流量（包括認證請求）會透過系統代理或手動代理傳送。只使用你信任的代理。';
+  String get settings_proxyTrafficDisclosure =>
+      '代理啟用後，NovelAI API 流量（包括認證請求）會透過系統代理或手動代理傳送。只使用你信任的代理。';
 
   @override
   String get settings_proxyMode => '代理模式';
@@ -22608,13 +23053,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_showRandomPromptTools => '顯示隨機提示詞工具';
 
   @override
-  String get settings_showRandomPromptToolsSubtitle => '在生成頁顯示“隨機提示詞”按鈕和“抽卡模式”開關';
+  String get settings_showRandomPromptToolsSubtitle =>
+      '在生成頁顯示“隨機提示詞”按鈕和“抽卡模式”開關';
 
   @override
   String get settings_enablePromptWeightScroll => '滾輪調整提示詞權重';
 
   @override
-  String get settings_enablePromptWeightScrollSubtitle => '選中提示詞時，滾輪僅調整權重，不再觸發頁面滾動等其他滾輪操作';
+  String get settings_enablePromptWeightScrollSubtitle =>
+      '選中提示詞時，滾輪僅調整權重，不再觸發頁面滾動等其他滾輪操作';
 
   @override
   String settings_queueRetryCountMax(Object count) {
@@ -22790,7 +23237,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get metadataImport_fixedSourceUnknown => '來源：圖片未記錄，無法確認';
 
   @override
-  String get metadataImport_unknownFixedTagsHint => '圖片沒有記錄固定詞。請選擇如何處理目前已啟用的固定詞。';
+  String get metadataImport_unknownFixedTagsHint =>
+      '圖片沒有記錄固定詞。請選擇如何處理目前已啟用的固定詞。';
 
   @override
   String get metadataImport_disableCurrentFixedTags => '關閉目前固定詞（推薦）';
@@ -22860,7 +23308,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String metadataImport_preciseReferenceDetail(int index, Object type, Object strength, Object fidelity) {
+  String metadataImport_preciseReferenceDetail(
+    int index,
+    Object type,
+    Object strength,
+    Object fidelity,
+  ) {
     return '參考$index: $type (強度 $strength%, 保真 $fidelity%)';
   }
 
@@ -23475,7 +23928,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get vibeLibrary_deleteCategoryTitle => '確認刪除';
 
   @override
-  String get vibeLibrary_deleteCategoryContent => '確定要刪除此分類嗎？分類下的 Vibe 將被移動到未分類。';
+  String get vibeLibrary_deleteCategoryContent =>
+      '確定要刪除此分類嗎？分類下的 Vibe 將被移動到未分類。';
 
   @override
   String get vibeLibrary_sortTooltip => '排序方式';
@@ -23490,10 +23944,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get vibeLibrary_enterSelectionMode => '進入選擇模式';
 
   @override
-  String get vibeLibrary_importTooltip => '匯入 Vibe 檔案或 PNG/JPG/JPEG/WEBP 圖片（右鍵檢視更多選項）';
+  String get vibeLibrary_importTooltip =>
+      '匯入 Vibe 檔案或 PNG/JPG/JPEG/WEBP 圖片（右鍵檢視更多選項）';
 
   @override
-  String get vibeLibrary_importTooltipTouch => '匯入 Vibe 檔案或 PNG/JPG/JPEG/WEBP 圖片';
+  String get vibeLibrary_importTooltipTouch =>
+      '匯入 Vibe 檔案或 PNG/JPG/JPEG/WEBP 圖片';
 
   @override
   String get vibeLibrary_exportTooltip => '匯出 Vibe 到檔案';
@@ -23557,7 +24013,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get vibeLibrary_dropImportHint => '拖拽 .naiv4vibe/.naiv4vibebundle/.png/.jpg/.jpeg/.webp 檔案或資料夾到此處匯入';
+  String get vibeLibrary_dropImportHint =>
+      '拖拽 .naiv4vibe/.naiv4vibebundle/.png/.jpg/.jpeg/.webp 檔案或資料夾到此處匯入';
 
   @override
   String get vibeLibrary_importing => '正在匯入...';
@@ -23843,7 +24300,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get vibe_export_singleFile => '單檔案 (.naiv4vibe)';
 
   @override
-  String get vibe_export_singleFileDescription => '將每個 Vibe 匯出為單獨檔案，適合分享單個 Vibe';
+  String get vibe_export_singleFileDescription =>
+      '將每個 Vibe 匯出為單獨檔案，適合分享單個 Vibe';
 
   @override
   String get vibe_export_bundleFile => '打包檔案 (.naiv4vibebundle)';
@@ -23880,7 +24338,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get vibe_export_pngCarrierImage => 'PNG 載體圖片';
 
   @override
-  String get vibe_export_noUsablePngCarrier => '這個 Vibe 沒有可直接使用的 PNG 載體圖片。你可以選擇外部 PNG 圖片作為載體。';
+  String get vibe_export_noUsablePngCarrier =>
+      '這個 Vibe 沒有可直接使用的 PNG 載體圖片。你可以選擇外部 PNG 圖片作為載體。';
 
   @override
   String get vibe_export_selectExternalPngImage => '選擇外部 PNG 圖片...';
@@ -23977,13 +24436,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get vibe_export_exportBundleDescription => '匯出為 .naiv4vibebundle 檔案';
 
   @override
-  String get vibe_export_exportAsFilesDescription => '匯出為 .naiv4vibe 或 .naiv4vibebundle 檔案';
+  String get vibe_export_exportAsFilesDescription =>
+      '匯出為 .naiv4vibe 或 .naiv4vibebundle 檔案';
 
   @override
   String get vibe_export_exportAsZip => '匯出為 ZIP';
 
   @override
-  String get vibe_export_exportAsZipDescription => '將選中的 Vibe 庫條目作為獨立檔案打包為 .zip';
+  String get vibe_export_exportAsZipDescription =>
+      '將選中的 Vibe 庫條目作為獨立檔案打包為 .zip';
 
   @override
   String get vibe_export_compressData => '壓縮資料';
@@ -23998,13 +24459,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get vibe_export_exportAsPng => '匯出為 PNG';
 
   @override
-  String get vibe_export_pngInternalBundleUnsupported => '匯出單個 Bundle 內部 Vibe 時不支援嵌入圖片';
+  String get vibe_export_pngInternalBundleUnsupported =>
+      '匯出單個 Bundle 內部 Vibe 時不支援嵌入圖片';
 
   @override
   String get vibe_export_embedVibeDataIntoPng => '將 Vibe 資料寫入 PNG 後設資料';
 
   @override
-  String get vibe_export_batchPngUsesFirstImage => '批次匯出會使用每個 Vibe 的第一張可用圖片，沒有圖片的條目會自動跳過。';
+  String get vibe_export_batchPngUsesFirstImage =>
+      '批次匯出會使用每個 Vibe 的第一張可用圖片，沒有圖片的條目會自動跳過。';
 
   @override
   String get vibe_export_exportCarrierImage => '匯出載體圖片';
@@ -24016,7 +24479,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get vibe_export_exportAsEncodings => '匯出為編碼';
 
   @override
-  String get vibe_export_exportAsEncodingsDescription => '將資料匯出為編碼 (JSON 或 Base64)';
+  String get vibe_export_exportAsEncodingsDescription =>
+      '將資料匯出為編碼 (JSON 或 Base64)';
 
   @override
   String get vibe_export_jsonDescription => '匯出為格式化 JSON 檔案，便於閱讀和編輯';
@@ -24028,7 +24492,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get vibe_export_selectAtLeastOneMethod => '請選擇至少一種匯出方式';
 
   @override
-  String get vibe_export_batchPngUnsupported => '批次 Vibe 匯出不支援嵌入 PNG。請使用單個 Vibe 匯出介面。';
+  String get vibe_export_batchPngUnsupported =>
+      '批次 Vibe 匯出不支援嵌入 PNG。請使用單個 Vibe 匯出介面。';
 
   @override
   String get vibe_export_selectPngCarrier => '請選擇用於匯出的 PNG 載體圖片';
@@ -24414,10 +24879,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_restartRequiredTitle => '需要重啟應用';
 
   @override
-  String get settings_changePathConfirm => '更改資料儲存路徑後，需要重啟應用才能生效。\\n\\n新路徑將在下次啟動時生效。是否繼續？';
+  String get settings_changePathConfirm =>
+      '更改資料儲存路徑後，需要重啟應用才能生效。\\n\\n新路徑將在下次啟動時生效。是否繼續？';
 
   @override
-  String get settings_resetPathConfirm => '重置資料儲存路徑後，需要重啟應用才能生效。\\n\\n預設路徑將在下次啟動時生效。是否繼續？';
+  String get settings_resetPathConfirm =>
+      '重置資料儲存路徑後，需要重啟應用才能生效。\\n\\n預設路徑將在下次啟動時生效。是否繼續？';
 
   @override
   String get settings_kritaBridgeEnable => '啟用 Krita 本地橋接';
@@ -24543,10 +25010,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_mcpServerRegenerateTokenTitle => '重新產生存取權杖';
 
   @override
-  String get settings_mcpServerRegenerateTokenMessage => '目前權杖會立即失效，已連線的用戶端將中斷。請在所有用戶端設定中更新新權杖。';
+  String get settings_mcpServerRegenerateTokenMessage =>
+      '目前權杖會立即失效，已連線的用戶端將中斷。請在所有用戶端設定中更新新權杖。';
 
   @override
-  String get settings_mcpServerAnlasNotice => '任何可能消耗 Anlas 的操作都會在啟動器內單獨確認，與權限模式無關。';
+  String get settings_mcpServerAnlasNotice =>
+      '任何可能消耗 Anlas 的操作都會在啟動器內單獨確認，與權限模式無關。';
 
   @override
   String settings_mcpServerPendingApproval(Object client, Object tool) {
@@ -24596,7 +25065,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_mcpServerAgentPromptTitle => '推薦：讓智慧代理自行設定';
 
   @override
-  String get settings_mcpServerAgentPromptHint => '把以下提示詞發給要接入的智慧代理，它會讀取設定文件並自行完成安裝。提示詞不含權杖，權杖由隨附 CLI 在本機讀取。';
+  String get settings_mcpServerAgentPromptHint =>
+      '把以下提示詞發給要接入的智慧代理，它會讀取設定文件並自行完成安裝。提示詞不含權杖，權杖由隨附 CLI 在本機讀取。';
 
   @override
   String get settings_mcpServerClaudeCodeHint => '在終端機執行以下指令註冊伺服器。';
@@ -24608,13 +25078,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_mcpServerCursorHint => '把以下內容合併進 Cursor 的 mcp.json 設定檔。';
 
   @override
-  String get settings_mcpServerCherryStudioHint => '在 Cherry Studio 的 MCP 伺服器設定中用「從 JSON 匯入」貼上以下內容；timeout 單位為秒，已留足應用內審批時間。';
+  String get settings_mcpServerCherryStudioHint =>
+      '在 Cherry Studio 的 MCP 伺服器設定中用「從 JSON 匯入」貼上以下內容；timeout 單位為秒，已留足應用內審批時間。';
 
   @override
-  String get settings_mcpServerPiHint => 'Pi 本體不帶 MCP，需先安裝 pi-mcp-adapter 套件，再把以下內容合併進 ~/.pi/agent/mcp.json。';
+  String get settings_mcpServerPiHint =>
+      'Pi 本體不帶 MCP，需先安裝 pi-mcp-adapter 套件，再把以下內容合併進 ~/.pi/agent/mcp.json。';
 
   @override
-  String get settings_mcpServerClaudeDesktopHint => '把以下內容合併進 Claude Desktop 設定；它透過隨附 CLI 以 stdio 方式連線。';
+  String get settings_mcpServerClaudeDesktopHint =>
+      '把以下內容合併進 Claude Desktop 設定；它透過隨附 CLI 以 stdio 方式連線。';
 
   @override
   String get settings_fontScale => '字型大小';
@@ -24650,7 +25123,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_generationLayout_webStyle => '官網式佈局';
 
   @override
-  String get settings_generationLayout_webStyleDescription => '提示詞與設定固定在最左欄，類似 NovelAI 官網';
+  String get settings_generationLayout_webStyleDescription =>
+      '提示詞與設定固定在最左欄，類似 NovelAI 官網';
 
   @override
   String get settings_historyClickBehavior => '歷史記錄點選行為';
@@ -24665,10 +25139,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_historyClickBehavior_linked => '官網式聯動';
 
   @override
-  String get settings_historyClickBehavior_linkedDescription => '單擊切換中央預覽，雙擊或長按開啟詳情，並支援左右方向鍵瀏覽';
+  String get settings_historyClickBehavior_linkedDescription =>
+      '單擊切換中央預覽，雙擊或長按開啟詳情，並支援左右方向鍵瀏覽';
 
   @override
-  String get settings_historyClickBehavior_linkedDescriptionTouch => '單擊切換中央預覽，雙擊或長按開啟詳情';
+  String get settings_historyClickBehavior_linkedDescriptionTouch =>
+      '單擊切換中央預覽，雙擊或長按開啟詳情';
 
   @override
   String get image_viewDetail => '檢視詳情';
@@ -24683,7 +25159,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get discordShare_verifyTitle => '驗證 Discord 成員身份';
 
   @override
-  String get discordShare_verifyDescription => '分享前需要在瀏覽器中登入 Discord。應用只會取得你的公開身份和伺服器成員狀態。';
+  String get discordShare_verifyDescription =>
+      '分享前需要在瀏覽器中登入 Discord。應用只會取得你的公開身份和伺服器成員狀態。';
 
   @override
   String get discordShare_verifyButton => '前往 Discord 驗證';
@@ -24698,7 +25175,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get discordShare_joinRequired => '請先加入 Aaalice Discord 伺服器';
 
   @override
-  String get discordShare_joinDescription => '只有伺服器成員可以向社群頻道分享圖片。加入後返回這裡重新驗證即可。';
+  String get discordShare_joinDescription =>
+      '只有伺服器成員可以向社群頻道分享圖片。加入後返回這裡重新驗證即可。';
 
   @override
   String get discordShare_joinServer => '加入 Discord 伺服器';
@@ -24754,7 +25232,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get discordShare_keepMetadata => '保留圖像後設資料';
 
   @override
-  String get discordShare_keepMetadataHint => '預設關閉。關閉時會清除 PNG 文字、EXIF 和 NAI 隱寫後設資料後再上傳。';
+  String get discordShare_keepMetadataHint =>
+      '預設關閉。關閉時會清除 PNG 文字、EXIF 和 NAI 隱寫後設資料後再上傳。';
 
   @override
   String get discordShare_privacyHint => '傳送內容會上傳到 Discord；請檢查提示詞和附言中是否包含隱私資訊。';
@@ -24809,7 +25288,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get discordShare_errorDelivery => 'Discord 頻道傳送失敗，請稍後重試';
 
   @override
-  String get settings_defaultImagesPath => '預設 (Documents/NAI_Launcher/images/)';
+  String get settings_defaultImagesPath =>
+      '預設 (Documents/NAI_Launcher/images/)';
 
   @override
   String settings_defaultVibePath(Object path) {
@@ -24823,7 +25303,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_protectionMode => '保護模式';
 
   @override
-  String get settings_protectionModeSubtitle => '開啟後按下方子項保護本地資產、分享副本、高消耗和高頻生圖操作；關閉時保留子項配置但不生效。';
+  String get settings_protectionModeSubtitle =>
+      '開啟後按下方子項保護本地資產、分享副本、高消耗和高頻生圖操作；關閉時保留子項配置但不生效。';
 
   @override
   String get settings_protectionFeatures => '保護功能';
@@ -24832,25 +25313,29 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_copyDragWatermarkTitle => '複製/拖拽時添加浮水印';
 
   @override
-  String get settings_copyDragWatermarkSubtitle => '使用已儲存的預設浮水印方案。添加浮水印不會清除後設資料；如需清除，請開啟上方「複製/拖拽時移除全部後設資料」。';
+  String get settings_copyDragWatermarkSubtitle =>
+      '使用已儲存的預設浮水印方案。添加浮水印不會清除後設資料；如需清除，請開啟上方「複製/拖拽時移除全部後設資料」。';
 
   @override
   String get settings_stripMetadataTitle => '複製/拖拽時移除全部後設資料';
 
   @override
-  String get settings_stripMetadataSubtitle => '複製、拖拽及 MCP 圖片回傳時清除 PNG 文字塊、EXIF 與 NAI 隱寫水印，不修改本機原圖；MCP 保留原解析度，其 saved_path 指向的圖庫原圖不受影響。';
+  String get settings_stripMetadataSubtitle =>
+      '複製、拖拽及 MCP 圖片回傳時清除 PNG 文字塊、EXIF 與 NAI 隱寫水印，不修改本機原圖；MCP 保留原解析度，其 saved_path 指向的圖庫原圖不受影響。';
 
   @override
   String get settings_confirmDangerousActionsTitle => '危險資產操作二次確認';
 
   @override
-  String get settings_confirmDangerousActionsSubtitle => '刪除、移動、批次移動等本地資產操作會額外彈出保護確認。';
+  String get settings_confirmDangerousActionsSubtitle =>
+      '刪除、移動、批次移動等本地資產操作會額外彈出保護確認。';
 
   @override
   String get settings_warnExternalImageSendTitle => '傳送到外部服務前提示';
 
   @override
-  String get settings_warnExternalImageSendSubtitle => '把本地圖片傳送到 LLM、NovelAI、ComfyUI 等外部邊界前進行確認。';
+  String get settings_warnExternalImageSendSubtitle =>
+      '把本地圖片傳送到 LLM、NovelAI、ComfyUI 等外部邊界前進行確認。';
 
   @override
   String get settings_preventOverwriteTitle => '匯出時避免覆蓋已有檔案';
@@ -24882,7 +25367,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_limitGenerationIntervalTitle => '限制生圖頻率';
 
   @override
-  String get settings_limitGenerationIntervalSubtitle => '開啟後，兩次生圖開始時間必須至少間隔設定秒數；冷卻期間生圖按鈕不可點選。';
+  String get settings_limitGenerationIntervalSubtitle =>
+      '開啟後，兩次生圖開始時間必須至少間隔設定秒數；冷卻期間生圖按鈕不可點選。';
 
   @override
   String get settings_generationIntervalTitle => '生圖間隔';
@@ -24968,7 +25454,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_comfyUiCustomWorkflows => '自定義工作流';
 
   @override
-  String get settings_comfyUiNoCustomWorkflows => '暫無自定義工作流，點選“匯入”新增 ComfyUI 工作流';
+  String get settings_comfyUiNoCustomWorkflows =>
+      '暫無自定義工作流，點選“匯入”新增 ComfyUI 工作流';
 
   @override
   String settings_comfyUiSlotCount(Object count) {
@@ -25025,31 +25512,36 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get comfyWorkflow_seedvr2UpscaleName => 'SeedVR2 超分';
 
   @override
-  String get comfyWorkflow_seedvr2UpscaleDescription => '使用 SeedVR2 AI 模型進行超解析度放大，效果優秀';
+  String get comfyWorkflow_seedvr2UpscaleDescription =>
+      '使用 SeedVR2 AI 模型進行超解析度放大，效果優秀';
 
   @override
   String get comfyWorkflow_seedvr2LegacyUpscaleName => 'SeedVR2 相容節點超分';
 
   @override
-  String get comfyWorkflow_seedvr2LegacyUpscaleDescription => '使用已安裝的 SeedVR2VideoUpscaler 自定義節點進行超分';
+  String get comfyWorkflow_seedvr2LegacyUpscaleDescription =>
+      '使用已安裝的 SeedVR2VideoUpscaler 自定義節點進行超分';
 
   @override
   String get comfyWorkflow_seedvr2TiledUpscaleName => 'SeedVR2 分塊超分';
 
   @override
-  String get comfyWorkflow_seedvr2TiledUpscaleDescription => '使用 SeedVR2TilingUpscaler 分塊放大，降低大圖視訊記憶體壓力';
+  String get comfyWorkflow_seedvr2TiledUpscaleDescription =>
+      '使用 SeedVR2TilingUpscaler 分塊放大，降低大圖視訊記憶體壓力';
 
   @override
   String get comfyWorkflow_modelUpscaleName => 'ComfyUI 普通超分模型';
 
   @override
-  String get comfyWorkflow_modelUpscaleDescription => '使用 ComfyUI UpscaleModelLoader 載入普通超分模型，並用 Lanczos 修正最終倍率';
+  String get comfyWorkflow_modelUpscaleDescription =>
+      '使用 ComfyUI UpscaleModelLoader 載入普通超分模型，並用 Lanczos 修正最終倍率';
 
   @override
   String get comfyWorkflow_rtxUpscaleName => 'RTX 超分';
 
   @override
-  String get comfyWorkflow_rtxUpscaleDescription => '使用 Nvidia RTX Video Super Resolution 節點進行本地放大';
+  String get comfyWorkflow_rtxUpscaleDescription =>
+      '使用 Nvidia RTX Video Super Resolution 節點進行本地放大';
 
   @override
   String get comfyWorkflowSlot_inputImage => '輸入影象';
@@ -25130,31 +25622,36 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get promptAssistant_defaultOptimizeRuleName => '預設最佳化規則';
 
   @override
-  String get promptAssistant_defaultOptimizeRuleContent => '你是提示詞最佳化助手。保留使用者意圖，補充可執行的視覺細節，並只輸出一行可直接使用的逗號分隔提示詞。';
+  String get promptAssistant_defaultOptimizeRuleContent =>
+      '你是提示詞最佳化助手。保留使用者意圖，補充可執行的視覺細節，並只輸出一行可直接使用的逗號分隔提示詞。';
 
   @override
   String get promptAssistant_defaultTranslateRuleName => '預設翻譯規則';
 
   @override
-  String get promptAssistant_defaultTranslateRuleContent => '你是翻譯助手。自動識別源語言，在中文和英文之間翻譯，並只返回譯文，不要解釋。';
+  String get promptAssistant_defaultTranslateRuleContent =>
+      '你是翻譯助手。自動識別源語言，在中文和英文之間翻譯，並只返回譯文，不要解釋。';
 
   @override
   String get promptAssistant_defaultReverseRuleName => '預設反推規則';
 
   @override
-  String get promptAssistant_defaultReverseRuleContent => '你是影象反推提示詞助手。根據影象和可選 tagger 結果，輸出適用於 NovelAI 的英文逗號分隔提示詞。保留主體、角色、風格、服裝、動作、構圖、光照和背景。不要解釋。';
+  String get promptAssistant_defaultReverseRuleContent =>
+      '你是影象反推提示詞助手。根據影象和可選 tagger 結果，輸出適用於 NovelAI 的英文逗號分隔提示詞。保留主體、角色、風格、服裝、動作、構圖、光照和背景。不要解釋。';
 
   @override
   String get promptAssistant_defaultCharacterReplaceRuleName => '預設角色替換規則';
 
   @override
-  String get promptAssistant_defaultCharacterReplaceRuleContent => '你是角色替換助手。將輸入提示詞中的原角色身份、髮型、服裝和外觀替換為目標角色，同時保留動作、構圖、背景、風格、鏡頭和質量標籤。只輸出替換後的一行提示詞。';
+  String get promptAssistant_defaultCharacterReplaceRuleContent =>
+      '你是角色替換助手。將輸入提示詞中的原角色身份、髮型、服裝和外觀替換為目標角色，同時保留動作、構圖、背景、風格、鏡頭和質量標籤。只輸出替換後的一行提示詞。';
 
   @override
   String get promptAssistant_defaultCustomRuleName => '預設自定義規則';
 
   @override
-  String get promptAssistant_defaultCustomRuleContent => '你是提示詞改寫助手。根據當前提示詞、使用者需求和可選參考圖修改提示詞。只輸出最終可直接使用的一行提示詞，不要解釋。';
+  String get promptAssistant_defaultCustomRuleContent =>
+      '你是提示詞改寫助手。根據當前提示詞、使用者需求和可選參考圖修改提示詞。只輸出最終可直接使用的一行提示詞，不要解釋。';
 
   @override
   String get cacheStats_title => '快取統計';
@@ -25204,7 +25701,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get galleryCache_rescanTitle => '重新掃描畫廊';
 
   @override
-  String get galleryCache_rescanContent => '這將執行以下操作：\n\n1. 檢查資料一致性（標記不存在的檔案）\n2. 掃描新檔案和變更的檔案\n3. 重新嘗試歷史上未提取成功的後設資料（含失敗記錄）\n\n此操作不會清空已有資料，也不會刪除圖片檔案。';
+  String get galleryCache_rescanContent =>
+      '這將執行以下操作：\n\n1. 檢查資料一致性（標記不存在的檔案）\n2. 掃描新檔案和變更的檔案\n3. 重新嘗試歷史上未提取成功的後設資料（含失敗記錄）\n\n此操作不會清空已有資料，也不會刪除圖片檔案。';
 
   @override
   String get galleryCache_startScan => '開始掃描';
@@ -25279,7 +25777,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get workflowImport_defaultName => '自定義工作流';
 
   @override
-  String get workflowImport_fileInstructions => '請選擇 ComfyUI 匯出的 workflow_api.json 檔案。\n\n在 ComfyUI 中，點選選單 → 匯出 (API格式) 即可獲得此檔案。';
+  String get workflowImport_fileInstructions =>
+      '請選擇 ComfyUI 匯出的 workflow_api.json 檔案。\n\n在 ComfyUI 中，點選選單 → 匯出 (API格式) 即可獲得此檔案。';
 
   @override
   String workflowImport_nodeCount(Object count) {
@@ -25333,7 +25832,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get workflowImport_category => '分類';
 
   @override
-  String get workflowImport_slotsHint => '勾選需要暴露給 UI 的槽位。輸入/輸出槽位建議保留；不需要使用者調整的引數可以取消勾選。';
+  String get workflowImport_slotsHint =>
+      '勾選需要暴露給 UI 的槽位。輸入/輸出槽位建議保留；不需要使用者調整的引數可以取消勾選。';
 
   @override
   String get workflowImport_inputSection => '輸入';
@@ -25345,7 +25845,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get workflowImport_parameterSection => '引數';
 
   @override
-  String get workflowImport_noSlotsWarning => '未檢測到任何可用槽位。該工作流可能無法正常整合。\n請確認工作流中包含 LoadImage 和 SaveImage/SaveImageWebsocket 節點。';
+  String get workflowImport_noSlotsWarning =>
+      '未檢測到任何可用槽位。該工作流可能無法正常整合。\n請確認工作流中包含 LoadImage 和 SaveImage/SaveImageWebsocket 節點。';
 
   @override
   String workflowImport_nodeRef(Object node) {
@@ -25396,7 +25897,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get shortcut_settings_reset_all_title => '重置所有快捷鍵';
 
   @override
-  String get shortcut_settings_reset_all_confirm => '確定要將所有快捷鍵重置為預設設定嗎？此操作不可撤銷。';
+  String get shortcut_settings_reset_all_confirm =>
+      '確定要將所有快捷鍵重置為預設設定嗎？此操作不可撤銷。';
 
   @override
   String get shortcut_settings_reset_to_default => '重置為預設';
@@ -25805,7 +26307,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get detail_copyPromptTitle => '複製正面提示詞';
 
   @override
-  String get detail_copyPromptDescription => '勾選需要複製的提示詞類別。固定詞可能包含私密字串或個人標記，請確認後再分享。';
+  String get detail_copyPromptDescription =>
+      '勾選需要複製的提示詞類別。固定詞可能包含私密字串或個人標記，請確認後再分享。';
 
   @override
   String get detail_promptCategoryMain => '主體提示詞';
@@ -25889,7 +26392,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get diyGuide_hierarchyDescription => 'DIY 系統採用三級分類結構來組織提示詞，便於管理和檢索。';
 
   @override
-  String get diyGuide_hierarchyExample => 'Category (分類): 角色特徵\n  -> Group (分組): 髮型\n      -> Tag (標籤): 長髮, 短髮, 雙馬尾';
+  String get diyGuide_hierarchyExample =>
+      'Category (分類): 角色特徵\n  -> Group (分組): 髮型\n      -> Tag (標籤): 長髮, 短髮, 雙馬尾';
 
   @override
   String get diyGuide_selectionModeTitle => '選擇模式 (Selection Mode)';
@@ -25898,7 +26402,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get diyGuide_selectionModeDescription => '決定從一個分組(Group)中選取多少個標籤。';
 
   @override
-  String get diyGuide_selectionModeExample => '• Random (隨機): 每次隨機選取一個 (如：隨機發色)\n• All (全選): 選取組內所有標籤 (如：固定特徵組合)';
+  String get diyGuide_selectionModeExample =>
+      '• Random (隨機): 每次隨機選取一個 (如：隨機發色)\n• All (全選): 選取組內所有標籤 (如：固定特徵組合)';
 
   @override
   String get diyGuide_weightTitle => '權重控制 (Weight)';
@@ -25907,7 +26412,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get diyGuide_weightDescription => '調整特定提示詞在生成過程中的影響力。';
 
   @override
-  String get diyGuide_weightExample => '• 增強: 用花括號包裹 masterpiece = 1.05 倍權重\n• 強力增強: 三層花括號包裹 masterpiece = 1.16 倍權重\n• 減弱: [bad hands] = 0.95 倍權重';
+  String get diyGuide_weightExample =>
+      '• 增強: 用花括號包裹 masterpiece = 1.05 倍權重\n• 強力增強: 三層花括號包裹 masterpiece = 1.16 倍權重\n• 減弱: [bad hands] = 0.95 倍權重';
 
   @override
   String get diyGuide_genderTitle => '性別限制 (Gender)';
@@ -25916,7 +26422,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get diyGuide_genderDescription => '限制標籤僅對特定性別的角色生效，避免生成錯誤的特徵。';
 
   @override
-  String get diyGuide_genderExample => '• Female: 僅女性角色可用 (如：裙子)\n• Male: 僅男性角色可用 (如：鬍鬚)\n• Any: 通用 (如：T恤)';
+  String get diyGuide_genderExample =>
+      '• Female: 僅女性角色可用 (如：裙子)\n• Male: 僅男性角色可用 (如：鬍鬚)\n• Any: 通用 (如：T恤)';
 
   @override
   String get diyGuide_scopeTitle => '作用域 (Scope)';
@@ -25925,7 +26432,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get diyGuide_scopeDescription => '定義標籤是作用於角色本身、背景環境還是全域性畫面。';
 
   @override
-  String get diyGuide_scopeExample => '• Character: 角色特徵 (眼睛, 頭髮)\n• Background: 環境描述 (藍天, 室內)\n• Global: 畫風, 質量詞 (best quality)';
+  String get diyGuide_scopeExample =>
+      '• Character: 角色特徵 (眼睛, 頭髮)\n• Background: 環境描述 (藍天, 室內)\n• Global: 畫風, 質量詞 (best quality)';
 
   @override
   String get diyGuide_conditionalTitle => '條件分支 (Conditional)';
@@ -25934,16 +26442,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get diyGuide_conditionalDescription => '基於已選標籤或其他條件來動態決定後續標籤。';
 
   @override
-  String get diyGuide_conditionalExample => 'IF (已選 \"下雨\")\n  THEN 新增 \"雨傘\", \"溼衣服\"\n  ELSE 新增 \"晴朗\"';
+  String get diyGuide_conditionalExample =>
+      'IF (已選 \"下雨\")\n  THEN 新增 \"雨傘\", \"溼衣服\"\n  ELSE 新增 \"晴朗\"';
 
   @override
   String get diyGuide_dependenciesTitle => '依賴引用 (Dependencies)';
 
   @override
-  String get diyGuide_dependenciesDescription => '建立標籤間的關聯，選中一個標籤時自動引入相關聯的其他標籤。';
+  String get diyGuide_dependenciesDescription =>
+      '建立標籤間的關聯，選中一個標籤時自動引入相關聯的其他標籤。';
 
   @override
-  String get diyGuide_dependenciesExample => '選中 \"JK制服\" -> 自動引入 \"學校背景\", \"書包\"';
+  String get diyGuide_dependenciesExample =>
+      '選中 \"JK制服\" -> 自動引入 \"學校背景\", \"書包\"';
 
   @override
   String get diyGuide_visibilityTitle => '可見性規則 (Visibility)';
@@ -25961,7 +26472,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get diyGuide_timeDescription => '根據現實時間或設定的模擬時間觸發特定標籤。';
 
   @override
-  String get diyGuide_timeExample => '• 06:00-18:00 -> 新增 \"daylight\"\n• 18:00-06:00 -> 新增 \"night\"';
+  String get diyGuide_timeExample =>
+      '• 06:00-18:00 -> 新增 \"daylight\"\n• 18:00-06:00 -> 新增 \"night\"';
 
   @override
   String get diyGuide_postProcessingTitle => '後處理規則 (Post-processing)';
@@ -25970,7 +26482,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get diyGuide_postProcessingDescription => '在提示詞生成最後階段進行文字替換或清理。';
 
   @override
-  String get diyGuide_postProcessingExample => '將所有 \"blue eyes\" 替換為 \"azure eyes\" 以獲得更獨特的描述';
+  String get diyGuide_postProcessingExample =>
+      '將所有 \"blue eyes\" 替換為 \"azure eyes\" 以獲得更獨特的描述';
 
   @override
   String get diyGuide_emphasisTitle => '強調機率 (Emphasis)';
@@ -25979,7 +26492,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get diyGuide_emphasisDescription => '為標籤隨機新增權重符號的機率，增加結果的多樣性。';
 
   @override
-  String get diyGuide_emphasisExample => '設定 30% 機率: 約有 1/3 的機會輸出加權 tag，2/3 的機會輸出普通 tag';
+  String get diyGuide_emphasisExample =>
+      '設定 30% 機率: 約有 1/3 的機會輸出加權 tag，2/3 的機會輸出普通 tag';
 
   @override
   String get naiRules_title => 'NAI 隨機規則說明';
@@ -26018,7 +26532,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get naiRules_dynamicTagWeightTitle => '標籤權重動態調整';
 
   @override
-  String get naiRules_dynamicTagWeightSubtitle => '包含動作、服飾、表情、背景等多個維度的隨機組合，根據畫面主題動態調整各類別的抽取權重';
+  String get naiRules_dynamicTagWeightSubtitle =>
+      '包含動作、服飾、表情、背景等多個維度的隨機組合，根據畫面主題動態調整各類別的抽取權重';
 
   @override
   String get naiRules_specialMechanisms => '特殊機制';
@@ -26030,7 +26545,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get naiRules_seasonalLibraryTitle => '季節詞庫';
 
   @override
-  String get naiRules_seasonalLibrarySubtitle => '自動匹配季節特徵，包含季節性服飾、天氣、光照效果和環境氛圍';
+  String get naiRules_seasonalLibrarySubtitle =>
+      '自動匹配季節特徵，包含季節性服飾、天氣、光照效果和環境氛圍';
 
   @override
   String get naiRules_v4CharacterPositioning => 'V4 多角色位置';
@@ -26039,7 +26555,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get naiRules_smartPositionTitle => '智慧位置分配';
 
   @override
-  String get naiRules_smartPositionSubtitle => '在 V4 模型下，使用 character positioning 語法精確控制多角色站位';
+  String get naiRules_smartPositionSubtitle =>
+      '在 V4 模型下，使用 character positioning 語法精確控制多角色站位';
 
   @override
   String get comfyImport_detectedTitle => '檢測到 ComfyUI 多角色提示詞';
@@ -26167,7 +26684,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get model3d_addLayerTooltip => '新增 3D 模型圖層';
 
   @override
-  String get model3d_webview2Missing => '3D 編輯器需要 Microsoft Edge WebView2 執行時。Windows 10/11 通常已自帶;若缺失請從微軟官網安裝 Evergreen 版本後重試。';
+  String get model3d_webview2Missing =>
+      '3D 編輯器需要 Microsoft Edge WebView2 執行時。Windows 10/11 通常已自帶;若缺失請從微軟官網安裝 Evergreen 版本後重試。';
 
   @override
   String get nav_preciseRefLibrary => '精準參考庫';
@@ -26197,7 +26715,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get preciseRefLib_exportTitle => '匯出精準參考設定包';
 
   @override
-  String get preciseRefLib_exportSelectionHint => '選擇要包含的精準參考；所選內容會封裝成一個 .naipreciseref 檔案。';
+  String get preciseRefLib_exportSelectionHint =>
+      '選擇要包含的精準參考；所選內容會封裝成一個 .naipreciseref 檔案。';
 
   @override
   String preciseRefLib_exportConfirm(int count) {
@@ -26881,7 +27400,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String diy_timeRangeSummary(String name, int startMonth, int startDay, int endMonth, int endDay) {
+  String diy_timeRangeSummary(
+    String name,
+    int startMonth,
+    int startDay,
+    int endMonth,
+    int endDay,
+  ) {
     return '$name（$startMonth 月 $startDay 日至 $endMonth 月 $endDay 日）';
   }
 
@@ -27085,7 +27610,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get editor_toolFrame => '取景框';
 
   @override
-  String get editor_frameToolHint => '在框內按住拖曳可整體移動取景框，拖曳邊緣可調整尺寸。框外內容會保留並調暗顯示，只有框內部分會送去生成；移動時至少與原圖重疊 64 像素。';
+  String get editor_frameToolHint =>
+      '在框內按住拖曳可整體移動取景框，拖曳邊緣可調整尺寸。框外內容會保留並調暗顯示，只有框內部分會送去生成；移動時至少與原圖重疊 64 像素。';
 
   @override
   String editor_frameSizeReadout(int width, int height) {
@@ -27123,7 +27649,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get editor_frameToolHintPasteBack => '在框內按住拖曳可按 64 像素一格移動取景框，拖曳邊緣可調整尺寸。只有框內部分會送去生成；框外還有原圖時，結果按遮罩貼回整張圖，框外內容保持不變。框須與原圖重疊至少 64 像素。';
+  String get editor_frameToolHintPasteBack =>
+      '在框內按住拖曳可按 64 像素一格移動取景框，拖曳邊緣可調整尺寸。只有框內部分會送去生成；框外還有原圖時，結果按遮罩貼回整張圖，框外內容保持不變。框須與原圖重疊至少 64 像素。';
 
   @override
   String editor_frameRequestReadout(int width, int height) {
@@ -27147,7 +27674,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get editor_compressionFrameLimited => '取景框在更高解析度下會超過請求面積上限，因此滑條上限已收緊。';
 
   @override
-  String get img2img_focusOutpaintHint => '聚焦外擴：只傳送取景框內的部分，生成結果按遮罩貼回整張圖。可在重繪編輯器裡用取景框工具調整位置。';
+  String get img2img_focusOutpaintHint =>
+      '聚焦外擴：只傳送取景框內的部分，生成結果按遮罩貼回整張圖。可在重繪編輯器裡用取景框工具調整位置。';
 
   @override
   String get savePreset_title => '另存為預設';
@@ -27187,10 +27715,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_highRefreshRate => '高更新率';
 
   @override
-  String get settings_highRefreshRate_description => '以螢幕支援的最高更新率執行，動畫與滑動更流暢，耗電略增；關閉後由系統決定';
+  String get settings_highRefreshRate_description =>
+      '以螢幕支援的最高更新率執行，動畫與滑動更流暢，耗電略增；關閉後由系統決定';
 
   @override
-  String get generation_varietyPlusDescription => '生成初期略過 CFG 引導，構圖、姿勢與配色更多變；想穩定重現同一張圖時關閉。';
+  String get generation_varietyPlusDescription =>
+      '生成初期略過 CFG 引導，構圖、姿勢與配色更多變；想穩定重現同一張圖時關閉。';
 
   @override
   String get autocomplete_searchEnhancementTitle => '搜尋增強';
@@ -27241,7 +27771,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_contextRanking => '按上下文排序';
 
   @override
-  String get autocomplete_contextRankingSubtitle => '優先常與游標附近 tag 一起出現的結果，需要共現資料包';
+  String get autocomplete_contextRankingSubtitle =>
+      '優先常與游標附近 tag 一起出現的結果，需要共現資料包';
 
   @override
   String get autocomplete_personalRanking => '按使用習慣排序';
@@ -27262,7 +27793,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_pairLearning => '學習我的搭配習慣';
 
   @override
-  String get autocomplete_pairLearningSubtitle => '記住你常在哪些詞後面接哪些詞，相關標籤優先推薦它們；關閉後不再記錄和使用，已學到的保留。只保存在本機，不同步';
+  String get autocomplete_pairLearningSubtitle =>
+      '記住你常在哪些詞後面接哪些詞，相關標籤優先推薦它們；關閉後不再記錄和使用，已學到的保留。只保存在本機，不同步';
 
   @override
   String get autocomplete_clearPairHistory => '清空搭配記錄';
@@ -27346,7 +27878,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_openOnTagClick => '點選標籤時顯示補全';
 
   @override
-  String get autocomplete_openOnTagClickSubtitle => '開啟後，點選已有標籤會開啟普通補全選單；Ctrl/Command + 點選仍顯示相關標籤';
+  String get autocomplete_openOnTagClickSubtitle =>
+      '開啟後，點選已有標籤會開啟普通補全選單；Ctrl/Command + 點選仍顯示相關標籤';
 
   @override
   String get autocomplete_openOnTagClickSubtitleTouch => '開啟後，點選已有標籤會開啟普通補全選單';
@@ -27361,10 +27894,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_relatedTagsTitle => '共現與相關標籤推薦';
 
   @override
-  String get autocomplete_relatedTagsSubtitle => '選中補全、點「分詞」或「聯想」後，依前後已寫的詞推薦接下來的標籤；在標籤上按 Ctrl+Shift+Space、Ctrl+單擊或點「相關標籤」只看該詞的相關標籤';
+  String get autocomplete_relatedTagsSubtitle =>
+      '選中補全、點「分詞」或「聯想」後，依前後已寫的詞推薦接下來的標籤；在標籤上按 Ctrl+Shift+Space、Ctrl+單擊或點「相關標籤」只看該詞的相關標籤';
 
   @override
-  String get autocomplete_relatedTagsSubtitleTouch => '選中補全、點「分詞」或「聯想」後，依前後已寫的詞推薦接下來的標籤；選中詞條後點「相關標籤」只看該詞的相關標籤';
+  String get autocomplete_relatedTagsSubtitleTouch =>
+      '選中補全、點「分詞」或「聯想」後，依前後已寫的詞推薦接下來的標籤；選中詞條後點「相關標籤」只看該詞的相關標籤';
 
   @override
   String get autocomplete_relatedTagsAction => '相關標籤';
@@ -27379,7 +27914,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_llmTranslation => '使用 Prompt Assistant 補譯缺失漢化';
 
   @override
-  String get autocomplete_llmRouteMissing => '請先在 Prompt Assistant 中配置 Translate 路由';
+  String get autocomplete_llmRouteMissing =>
+      '請先在 Prompt Assistant 中配置 Translate 路由';
 
   @override
   String autocomplete_llmRoute(String route) {
@@ -27398,7 +27934,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_cooccurrenceAutoDownload => '自動下載本地相關標籤資料';
 
   @override
-  String get autocomplete_cooccurrenceAutoDownloadSubtitle => '相關標籤功能開啟時，在進入主頁後後臺下載安裝；不影響基礎補全';
+  String get autocomplete_cooccurrenceAutoDownloadSubtitle =>
+      '相關標籤功能開啟時，在進入主頁後後臺下載安裝；不影響基礎補全';
 
   @override
   String get autocomplete_downloadNow => '立即下載';
@@ -27412,7 +27949,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_cooccurrenceChecking => '正在檢查本地資料…';
 
   @override
-  String autocomplete_cooccurrenceDownloading(String downloaded, String total, String speed) {
+  String autocomplete_cooccurrenceDownloading(
+    String downloaded,
+    String total,
+    String speed,
+  ) {
     return '正在下載 $downloaded / $total · $speed。當前仍可使用線上結果。';
   }
 
@@ -27423,7 +27964,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_cooccurrenceInstalling => '正在安全安裝並切換資料庫…';
 
   @override
-  String autocomplete_cooccurrenceReady(String version, int count, String size) {
+  String autocomplete_cooccurrenceReady(
+    String version,
+    int count,
+    String size,
+  ) {
     return '版本 $version · $count 組關係 · 佔用 $size';
   }
 
@@ -27459,7 +28004,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_cooccurrenceRemoveTitle => '刪除本地相關標籤資料？';
 
   @override
-  String get autocomplete_cooccurrenceRemoveConfirm => '刪除後將立即釋放磁碟空間，並繼續使用線上相關標籤。';
+  String get autocomplete_cooccurrenceRemoveConfirm =>
+      '刪除後將立即釋放磁碟空間，並繼續使用線上相關標籤。';
 
   @override
   String get autocomplete_cooccurrenceStopAutoDownload => '同時關閉自動下載，避免下次啟動重新安裝';
@@ -27498,16 +28044,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_zhNotInstalled => '未安裝；英文補全仍可正常使用';
 
   @override
-  String get autocomplete_zhInstallPrompt => '可安裝 ffdkj 漢化庫以顯示中文並支援中文反查；詞庫將直接從上游下載。';
+  String get autocomplete_zhInstallPrompt =>
+      '可安裝 ffdkj 漢化庫以顯示中文並支援中文反查；詞庫將直接從上游下載。';
 
   @override
-  String get autocomplete_zhErrorMetadataRateLimited => 'GitHub 請求過於頻繁，暫時無法檢查詞庫更新；請稍後重試。';
+  String get autocomplete_zhErrorMetadataRateLimited =>
+      'GitHub 請求過於頻繁，暫時無法檢查詞庫更新；請稍後重試。';
 
   @override
-  String get autocomplete_zhErrorMetadataAccessDenied => 'GitHub 拒絕了詞庫資訊請求；請稍後重試或切換網路。';
+  String get autocomplete_zhErrorMetadataAccessDenied =>
+      'GitHub 拒絕了詞庫資訊請求；請稍後重試或切換網路。';
 
   @override
-  String get autocomplete_zhErrorDownloadAccessDenied => 'GitHub 拒絕下載 ffdkj 詞庫；請稍後重試或切換網路。';
+  String get autocomplete_zhErrorDownloadAccessDenied =>
+      'GitHub 拒絕下載 ffdkj 詞庫；請稍後重試或切換網路。';
 
   @override
   String get autocomplete_zhErrorNetwork => '無法連線 ffdkj GitHub 上游；請檢查網路後重試。';
@@ -27578,7 +28128,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_statusOnlineOnly => '僅線上';
 
   @override
-  String get autocomplete_statusOnlineOnlyTooltip => '本地相關標籤資料尚未就緒，當前只顯示 Danbooru 線上結果';
+  String get autocomplete_statusOnlineOnlyTooltip =>
+      '本地相關標籤資料尚未就緒，當前只顯示 Danbooru 線上結果';
 
   @override
   String get autocomplete_statusDictionary => '漢化';
@@ -27784,7 +28335,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_clearLocalOnnxModelsTitle => '清除本地 ONNX 模型？';
 
   @override
-  String get settings_clearLocalOnnxModelsContent => '將刪除此裝置上已匯入的 ONNX 模型及標籤檔案。';
+  String get settings_clearLocalOnnxModelsContent =>
+      '將刪除此裝置上已匯入的 ONNX 模型及標籤檔案。';
 
   @override
   String get vibeDetail_setAsCover => '將所選圖片設為封面';
@@ -27804,22 +28356,26 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_title => '備份與還原';
 
   @override
-  String get cloudSync_description => '將設定、提示詞等內容推送到你自己的 WebDAV 或 GitHub，或從雲端備份拉取到目前裝置。';
+  String get cloudSync_description =>
+      '將設定、提示詞等內容推送到你自己的 WebDAV 或 GitHub，或從雲端備份拉取到目前裝置。';
 
   @override
   String get cloudSync_restoringConnection => '正在恢復連線';
 
   @override
-  String get cloudSync_restoringConnectionDescription => '正在檢查此裝置儲存的帳號，請稍候，無需重新登入。';
+  String get cloudSync_restoringConnectionDescription =>
+      '正在檢查此裝置儲存的帳號，請稍候，無需重新登入。';
 
   @override
-  String get cloudSync_googleDriveUnavailable => 'Google Drive 暫不可用：應用程式授權審核尚未通過。';
+  String get cloudSync_googleDriveUnavailable =>
+      'Google Drive 暫不可用：應用程式授權審核尚未通過。';
 
   @override
   String get cloudSync_disconnected => '尚未連線';
 
   @override
-  String get cloudSync_oneClickDescription => '選擇儲存服務並填寫帳號資訊。儲存只會驗證並記住連線，不會推送或拉取資料。';
+  String get cloudSync_oneClickDescription =>
+      '選擇儲存服務並填寫帳號資訊。儲存只會驗證並記住連線，不會推送或拉取資料。';
 
   @override
   String get cloudSync_saveConnection => '儲存連線';
@@ -27840,7 +28396,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_chooseBackend => '備份到哪裡';
 
   @override
-  String get cloudSync_chooseBackendDescription => '先選擇同步目的地，再連線帳號並選擇要同步的內容。憑證只會儲存在裝置的安全儲存區。';
+  String get cloudSync_chooseBackendDescription =>
+      '先選擇同步目的地，再連線帳號並選擇要同步的內容。憑證只會儲存在裝置的安全儲存區。';
 
   @override
   String cloudSync_oauthDescription(String provider) {
@@ -27856,7 +28413,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get cloudSync_errorOAuthAuthorizationFailed => '應用程式尚未獲准存取此雲端服務。請檢查授權頁面中的提示後再試一次。';
+  String get cloudSync_errorOAuthAuthorizationFailed =>
+      '應用程式尚未獲准存取此雲端服務。請檢查授權頁面中的提示後再試一次。';
 
   @override
   String cloudSync_accountConnected(String provider) {
@@ -27879,7 +28437,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_allowInsecureHttp => '允許不安全的 HTTP';
 
   @override
-  String get cloudSync_allowInsecureHttpWarning => 'HTTP 會以明文傳輸 WebDAV 憑證和備份資料。僅在可信內網且明確了解風險時啟用。';
+  String get cloudSync_allowInsecureHttpWarning =>
+      'HTTP 會以明文傳輸 WebDAV 憑證和備份資料。僅在可信內網且明確了解風險時啟用。';
 
   @override
   String get cloudSync_username => '使用者名稱';
@@ -27909,7 +28468,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_manualBackupOnly => '只支援手動推送與拉取';
 
   @override
-  String get cloudSync_manualBackupOnlyDescription => '此服務無法可靠處理多台裝置同時修改。這裡不會自動合併或覆蓋，只按你的選擇推送或拉取。';
+  String get cloudSync_manualBackupOnlyDescription =>
+      '此服務無法可靠處理多台裝置同時修改。這裡不會自動合併或覆蓋，只按你的選擇推送或拉取。';
 
   @override
   String get cloudSync_chooseBackupContents => '選擇備份內容';
@@ -27945,7 +28505,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_onlineGalleryFavorites => '線上畫廊收藏';
 
   @override
-  String get cloudSync_onlineGalleryFavoritesDescription => '僅儲存來源 ID 與恢復所需資訊，不儲存原圖';
+  String get cloudSync_onlineGalleryFavoritesDescription =>
+      '僅儲存來源 ID 與恢復所需資訊，不儲存原圖';
 
   @override
   String get cloudSync_galleryAlbums => '本機畫廊相簿';
@@ -27989,10 +28550,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_rebuildCompactBackup => '清理舊備份並重新建立';
 
   @override
-  String get cloudSync_rebuildCompactBackupDescription => '刪除目前雲端備份空間並按現有選擇上傳新的精簡備份。服務商保留的歷史版本不會被重寫。';
+  String get cloudSync_rebuildCompactBackupDescription =>
+      '刪除目前雲端備份空間並按現有選擇上傳新的精簡備份。服務商保留的歷史版本不會被重寫。';
 
   @override
-  String get cloudSync_rebuildCompactBackupConfirm => '刪除目前雲端備份並立即上傳新的精簡備份嗎？此操作無法復原。';
+  String get cloudSync_rebuildCompactBackupConfirm =>
+      '刪除目前雲端備份並立即上傳新的精簡備份嗎？此操作無法復原。';
 
   @override
   String get cloudSync_kindSettings => '設定';
@@ -28013,7 +28576,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_agentSystemPrompt => '自訂系統提示詞';
 
   @override
-  String get cloudSync_agentSystemPromptDescription => '儲存你修改的提示詞和使用方式；模型與帳號資訊仍只保留在此裝置。';
+  String get cloudSync_agentSystemPromptDescription =>
+      '儲存你修改的提示詞和使用方式；模型與帳號資訊仍只保留在此裝置。';
 
   @override
   String get cloudSync_skillsBackup => '備份已選 Skill';
@@ -28109,22 +28673,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_providerWarning => '儲存服務提示';
 
   @override
-  String get cloudSync_warningGoogleDriveWeakCas => 'Google Drive 無法保證檔案內容的原子條件更新，因此此連線僅支援明確的手動推送與拉取。';
+  String get cloudSync_warningGoogleDriveWeakCas =>
+      'Google Drive 無法保證檔案內容的原子條件更新，因此此連線僅支援明確的手動推送與拉取。';
 
   @override
-  String get cloudSync_warningGithubPublicRepository => '目前的 GitHub 儲存庫是公開儲存庫，備份內容也會公開。私密資料請改用私人儲存庫。';
+  String get cloudSync_warningGithubPublicRepository =>
+      '目前的 GitHub 儲存庫是公開儲存庫，備份內容也會公開。私密資料請改用私人儲存庫。';
 
   @override
-  String get cloudSync_warningWebDavWeakCas => '此伺服器無法保證安全的條件更新。目前僅支援手動備份，後續寫入可能取代同一個 HEAD。';
+  String get cloudSync_warningWebDavWeakCas =>
+      '此伺服器無法保證安全的條件更新。目前僅支援手動備份，後續寫入可能取代同一個 HEAD。';
 
   @override
-  String get cloudSync_warningWebDavUnverifiedCas => 'WebDAV 連線已通過唯讀驗證，但尚未驗證安全的條件寫入。目前僅支援手動推送與拉取。';
+  String get cloudSync_warningWebDavUnverifiedCas =>
+      'WebDAV 連線已通過唯讀驗證，但尚未驗證安全的條件寫入。目前僅支援手動推送與拉取。';
 
   @override
   String get cloudSync_githubHistoryRetention => 'GitHub 空間說明';
 
   @override
-  String get cloudSync_githubHistoryRetentionDescription => '刪除雲端備份後，GitHub 的舊提交仍會佔用儲存庫空間。需要徹底清理時，請在 GitHub 中建立新儲存庫。';
+  String get cloudSync_githubHistoryRetentionDescription =>
+      '刪除雲端備份後，GitHub 的舊提交仍會佔用儲存庫空間。需要徹底清理時，請在 GitHub 中建立新儲存庫。';
 
   @override
   String get cloudSync_upToDate => '已連線';
@@ -28148,13 +28717,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_pushConfirmTitle => '推送本機資料？';
 
   @override
-  String get cloudSync_pushConfirmDescription => '將以目前本機資料建立新的雲端備份，並把雲端目前版本切換到該備份。';
+  String get cloudSync_pushConfirmDescription =>
+      '將以目前本機資料建立新的雲端備份，並把雲端目前版本切換到該備份。';
 
   @override
   String get cloudSync_pullConfirmTitle => '拉取雲端資料？';
 
   @override
-  String get cloudSync_pullConfirmDescription => '將使用雲端最新備份更新本機已選取的資料。尚未推送的本機變更可能被取代。';
+  String get cloudSync_pullConfirmDescription =>
+      '將使用雲端最新備份更新本機已選取的資料。尚未推送的本機變更可能被取代。';
 
   @override
   String get cloudSync_pause => '暫停';
@@ -28259,7 +28830,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_snapshotHistory => '以前的備份';
 
   @override
-  String get cloudSync_snapshotHistoryDescription => '可以先查看某次備份會帶來哪些變化，再決定是否恢復。目前資料不會直接被覆蓋。';
+  String get cloudSync_snapshotHistoryDescription =>
+      '可以先查看某次備份會帶來哪些變化，再決定是否恢復。目前資料不會直接被覆蓋。';
 
   @override
   String get cloudSync_noSnapshots => '還沒有可恢復的備份。';
@@ -28276,13 +28848,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_restorePreviewTitle => '恢復前確認';
 
   @override
-  String get cloudSync_restorePreviewDescription => '檢查恢復後會新增、更新或刪除哪些內容。確認前不會修改目前資料。';
+  String get cloudSync_restorePreviewDescription =>
+      '檢查恢復後會新增、更新或刪除哪些內容。確認前不會修改目前資料。';
 
   @override
   String get cloudSync_mergePreviewTitle => '合併內容確認';
 
   @override
-  String get cloudSync_mergePreviewDescription => '本機和雲端的資料不同。請檢查變化並選擇要保留的內容。確認前不會修改資料。';
+  String get cloudSync_mergePreviewDescription =>
+      '本機和雲端的資料不同。請檢查變化並選擇要保留的內容。確認前不會修改資料。';
 
   @override
   String get cloudSync_previewAwaitingConfirmation => '請先確認下方變化。';
@@ -28296,7 +28870,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String cloudSync_previewCounts(Object added, Object modified, Object deleted) {
+  String cloudSync_previewCounts(
+    Object added,
+    Object modified,
+    Object deleted,
+  ) {
     return '新增 $added · 修改 $modified · 刪除 $deleted';
   }
 
@@ -28313,7 +28891,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_ffdkjIntentTitle => '偵測到詞庫設定';
 
   @override
-  String get cloudSync_ffdkjIntentDescription => '另一台裝置安裝了 ffdkj 中文詞庫。詞庫檔案不會透過雲端傳輸。';
+  String get cloudSync_ffdkjIntentDescription =>
+      '另一台裝置安裝了 ffdkj 中文詞庫。詞庫檔案不會透過雲端傳輸。';
 
   @override
   String get cloudSync_ffdkjInstallWarning => '是否從 ffdkj 官方來源下載並安裝中文詞庫？';
@@ -28325,7 +28904,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cloudSync_deleteRemoteNamespace => '刪除雲端備份';
 
   @override
-  String get cloudSync_deleteRemoteNamespaceDescription => '刪除 Aaalice 在此服務中儲存的全部備份，不會刪除目前裝置的資料。';
+  String get cloudSync_deleteRemoteNamespaceDescription =>
+      '刪除 Aaalice 在此服務中儲存的全部備份，不會刪除目前裝置的資料。';
 
   @override
   String get cloudSync_deleteRemoteConfirm => '確定刪除全部雲端備份嗎？目前裝置的資料會保留。';
@@ -28415,7 +28995,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentSettings_dockLayout => '右欄佈局';
 
   @override
-  String get agentSettings_dockLayoutDescription => '獨佔切換時右欄一次只顯示聊天或歷史；分欄則同時顯示兩者。';
+  String get agentSettings_dockLayoutDescription =>
+      '獨佔切換時右欄一次只顯示聊天或歷史；分欄則同時顯示兩者。';
 
   @override
   String get agentSettings_dockExclusive => '獨佔切換';
@@ -28430,7 +29011,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentSettings_floatingWindow => '以浮窗顯示聊天';
 
   @override
-  String get agentSettings_floatingWindowDescription => '浮窗常駐所有頁面，可拖曳並調整大小；開啟後右欄只顯示歷史。';
+  String get agentSettings_floatingWindowDescription =>
+      '浮窗常駐所有頁面，可拖曳並調整大小；開啟後右欄只顯示歷史。';
 
   @override
   String get agentSettings_chatModel => '聊天模型';
@@ -28439,7 +29021,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentSettings_providerModel => '供應商 / 模型';
 
   @override
-  String get agentSettings_modelManagedInIntegrations => '供應商、API Key 與模型探索仍在「整合」中統一管理。';
+  String get agentSettings_modelManagedInIntegrations =>
+      '供應商、API Key 與模型探索仍在「整合」中統一管理。';
 
   @override
   String get agentSettings_manageProviders => '管理供應商';
@@ -28459,7 +29042,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get agentSettings_contextWindowUnknown => '內建目錄未收錄此模型，無法自動判斷視窗。未填寫則無法顯示上下文用量，也無法壓縮上下文。';
+  String get agentSettings_contextWindowUnknown =>
+      '內建目錄未收錄此模型，無法自動判斷視窗。未填寫則無法顯示上下文用量，也無法壓縮上下文。';
 
   @override
   String get agentSettings_contextWindowUnknownHint => '例如 128000';
@@ -28477,19 +29061,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentSettings_permissionSafe => '安全';
 
   @override
-  String get agentSettings_permissionSafeDescription => '僅執行唯讀和低風險操作，不彈出敏感操作授權。';
+  String get agentSettings_permissionSafeDescription =>
+      '僅執行唯讀和低風險操作，不彈出敏感操作授權。';
 
   @override
   String get agentSettings_permissionAsk => '敏感操作前詢問';
 
   @override
-  String get agentSettings_permissionAskDescription => '預設模式。寫入檔案、執行生成等敏感操作前先要求確認。';
+  String get agentSettings_permissionAskDescription =>
+      '預設模式。寫入檔案、執行生成等敏感操作前先要求確認。';
 
   @override
   String get agentSettings_permissionFull => '完全存取';
 
   @override
-  String get agentSettings_permissionFullDescription => '允許存取工作區外檔案並直接執行工具。僅在信任目前任務時使用。';
+  String get agentSettings_permissionFullDescription =>
+      '允許存取工作區外檔案並直接執行工具。僅在信任目前任務時使用。';
 
   @override
   String get agentSettings_webPreference => '連網偏好';
@@ -28498,7 +29085,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentSettings_webEnabled => '允許智慧體使用 Web 工具';
 
   @override
-  String get agentSettings_webDescription => '開啟後模型可搜尋並讀取公開網頁；關閉後相關工具會從執行階段工具表移除。';
+  String get agentSettings_webDescription =>
+      '開啟後模型可搜尋並讀取公開網頁；關閉後相關工具會從執行階段工具表移除。';
 
   @override
   String get agentSettings_systemPrompt => '系統提示詞';
@@ -28510,19 +29098,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentSettings_previewFinalPrompt => '預覽最終提示詞';
 
   @override
-  String get agentSettings_systemPromptDescription => '直接用自然語言描述你的要求，無需填寫佔位符。工作目錄、連網狀態、Skills 與應用程式執行規則由程式自動補充，可預覽最終傳送的內容。';
+  String get agentSettings_systemPromptDescription =>
+      '直接用自然語言描述你的要求，無需填寫佔位符。工作目錄、連網狀態、Skills 與應用程式執行規則由程式自動補充，可預覽最終傳送的內容。';
 
   @override
   String get agentSettings_promptModeAppend => '補充要求';
 
   @override
-  String get agentSettings_promptModeAppendDescription => '推薦：保留內建正文，再加入你的偏好。留空即使用內建正文。';
+  String get agentSettings_promptModeAppendDescription =>
+      '推薦：保留內建正文，再加入你的偏好。留空即使用內建正文。';
 
   @override
   String get agentSettings_promptModeOverride => '替換正文';
 
   @override
-  String get agentSettings_promptModeOverrideDescription => '以下方內容替換內建正文，適合自訂角色、工作方式與回覆風格。工作目錄、Skills 和應用程式執行規則仍自動加入；結構化工具定義照常傳送。';
+  String get agentSettings_promptModeOverrideDescription =>
+      '以下方內容替換內建正文，適合自訂角色、工作方式與回覆風格。工作目錄、Skills 和應用程式執行規則仍自動加入；結構化工具定義照常傳送。';
 
   @override
   String get agentSettings_systemPromptHint => '例如：優先給出簡潔結論；修改提示詞前先說明影響。';
@@ -28555,7 +29146,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentSettings_profilePrivacy => '此檔案不包含 API Key、Token、聊天記錄或本機路徑。';
 
   @override
-  String get agentSettings_profilePending => '未安裝的模型或 Skill 不會偽裝為可用；偏好會保留，待日後安裝後生效。';
+  String get agentSettings_profilePending =>
+      '未安裝的模型或 Skill 不會偽裝為可用；偏好會保留，待日後安裝後生效。';
 
   @override
   String get agentSettings_reloadSkills => '重新掃描';
@@ -28593,10 +29185,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentSettings_noDiagnostics => '未發現診斷問題';
 
   @override
-  String get agentSettings_skillExplicitOnly => '此 Skill 只能由使用者明確呼叫，不會出現在模型可見清單中';
+  String get agentSettings_skillExplicitOnly =>
+      '此 Skill 只能由使用者明確呼叫，不會出現在模型可見清單中';
 
   @override
-  String get agentSettings_exportPrivacy => '只會匯出明確勾選的 Skill；.env、金鑰、Token、Git 與依賴目錄不會打包。';
+  String get agentSettings_exportPrivacy =>
+      '只會匯出明確勾選的 Skill；.env、金鑰、Token、Git 與依賴目錄不會打包。';
 
   @override
   String get agentSettings_continueExport => '繼續匯出';
@@ -28616,7 +29210,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentSettings_skillsTitle => 'Skills';
 
   @override
-  String get agentSettings_skillsSourceHint => '目前圖片專案中的 Skill 會自動啟用；Pi 使用者與使用者全域 Skill 僅在手動啟用後使用。';
+  String get agentSettings_skillsSourceHint =>
+      '目前圖片專案中的 Skill 會自動啟用；Pi 使用者與使用者全域 Skill 僅在手動啟用後使用。';
 
   @override
   String get agentSettings_skillTransfer => '匯入或匯出';
@@ -28726,7 +29321,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_watermarkPreserveMetadata => '浮水印副本保留中繼資料';
 
   @override
-  String get settings_watermarkPreserveMetadataHint => '關閉時清除 PNG 文字、EXIF、NovelAI 隱寫資料、提示詞和種子；開啟時把原圖中支援的中繼資料安全寫入新 PNG。';
+  String get settings_watermarkPreserveMetadataHint =>
+      '關閉時清除 PNG 文字、EXIF、NovelAI 隱寫資料、提示詞和種子；開啟時把原圖中支援的中繼資料安全寫入新 PNG。';
 
   @override
   String get settings_watermarkEditDefault => '編輯預設浮水印';
@@ -28738,13 +29334,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_watermarkLayoutByOrientation => '依圖片方向分別記憶版面';
 
   @override
-  String get settings_watermarkLayoutByOrientationHint => '文字和樣式共用，直向、方形與橫向圖片分別儲存位置。';
+  String get settings_watermarkLayoutByOrientationHint =>
+      '文字和樣式共用，直向、方形與橫向圖片分別儲存位置。';
 
   @override
   String get settings_watermarkConfigMigrated => '舊版浮水印設定已遷移供檢查，請儲存以確認目前預設方案。';
 
   @override
-  String get settings_watermarkConfigCorrupted => '浮水印設定無法讀取，目前顯示安全預設值；儲存後才會取代損壞資料。';
+  String get settings_watermarkConfigCorrupted =>
+      '浮水印設定無法讀取，目前顯示安全預設值；儲存後才會取代損壞資料。';
 
   @override
   String get watermark_actionCreate => '建立浮水印副本…';
@@ -28804,7 +29402,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get watermark_logoMissing => '已儲存的 Logo 遺失，請重新選擇後再儲存。';
 
   @override
-  String get watermark_logoImportFailed => '無法匯入 Logo。請選擇尺寸受支援且有效的靜態 PNG、JPEG 或 WebP 圖片。';
+  String get watermark_logoImportFailed =>
+      '無法匯入 Logo。請選擇尺寸受支援且有效的靜態 PNG、JPEG 或 WebP 圖片。';
 
   @override
   String get watermark_opacity => '透明度';
@@ -28941,7 +29540,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get watermark_failedGeneric => '無法建立浮水印副本，請檢查圖片後再試一次。';
 
   @override
-  String get watermark_systemGalleryExportFailed => '副本已儲存在 Aaalice 中，但無法加入系統圖庫。';
+  String get watermark_systemGalleryExportFailed =>
+      '副本已儲存在 Aaalice 中，但無法加入系統圖庫。';
 
   @override
   String get watermark_galleryRefreshFailed => '副本已儲存，但圖庫無法重新整理；重新開啟圖庫即可重試。';
@@ -28971,13 +29571,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get watermark_moveDown => '向下移動圖層';
 
   @override
-  String get watermark_sourceLoadFailed => '無法開啟此圖片。請確認檔案是有效的靜態 PNG、JPEG、WebP 或 BMP 圖片後再試一次。';
+  String get watermark_sourceLoadFailed =>
+      '無法開啟此圖片。請確認檔案是有效的靜態 PNG、JPEG、WebP 或 BMP 圖片後再試一次。';
 
   @override
   String get promptAssistant_responseTimeoutTitle => '回應等待逾時';
 
   @override
-  String get promptAssistant_responseTimeoutDescription => '反推、最佳化、翻譯、角色替換和自訂改寫共用。預設 5 分鐘；模型思考較慢時可延長，仍可隨時取消。不影響連線逾時和智慧體聊天。';
+  String get promptAssistant_responseTimeoutDescription =>
+      '反推、最佳化、翻譯、角色替換和自訂改寫共用。預設 5 分鐘；模型思考較慢時可延長，仍可隨時取消。不影響連線逾時和智慧體聊天。';
 
   @override
   String get tagMode_label => '標籤模式';
@@ -29061,7 +29663,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_mosaicPreserveMetadata => '保留支援的生成中繼資料';
 
   @override
-  String get settings_mosaicPreserveMetadataHint => '用於隱私分享時建議關閉，避免提示詞、種子等資訊隨圖片保留。';
+  String get settings_mosaicPreserveMetadataHint =>
+      '用於隱私分享時建議關閉，避免提示詞、種子等資訊隨圖片保留。';
 
   @override
   String get settings_mosaicRememberStyle => '記住上次打碼樣式';
@@ -29097,7 +29700,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get mosaic_sourceMissing => '找不到原圖';
 
   @override
-  String get mosaic_sourceMissingHint => '目前圖片看起來是打碼副本，但關聯原圖已不存在。請手動選擇原圖，避免重複疊加打碼。';
+  String get mosaic_sourceMissingHint =>
+      '目前圖片看起來是打碼副本，但關聯原圖已不存在。請手動選擇原圖，避免重複疊加打碼。';
 
   @override
   String get mosaic_chooseOriginal => '選擇原圖';
@@ -29199,7 +29803,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get mosaic_delete => '刪除區域';
 
   @override
-  String get mosaic_keyboardHint => '快捷鍵：方向鍵移動，Shift+方向鍵快速移動，Delete 刪除，Ctrl+D 複製，Ctrl+Z/Y 復原或重做。';
+  String get mosaic_keyboardHint =>
+      '快捷鍵：方向鍵移動，Shift+方向鍵快速移動，Delete 刪除，Ctrl+D 複製，Ctrl+Z/Y 復原或重做。';
 
   @override
   String get mosaic_canvasHint => '在空白處拖曳繪製；區域可選擇、移動、縮放、鎖定、複製或暫時停用。';
@@ -29265,7 +29870,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get promptAssistant_concurrencyInvalid => '請輸入大於 0 的整數';
 
   @override
-  String get promptAssistant_concurrencyAutoDescription => '從 5 個並行請求開始，根據請求結果自動調整；此提供商的所有提示詞助手任務共用額度。';
+  String get promptAssistant_concurrencyAutoDescription =>
+      '從 5 個並行請求開始，根據請求結果自動調整；此提供商的所有提示詞助手任務共用額度。';
 
   @override
   String get promptAssistant_thinkingLevel => '思考等級';
@@ -29327,30 +29933,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String agentTool_resultCount(String kind, int count) {
-    String _temp0 = intl.Intl.selectLogic(
-      kind,
-      {
-        'results': '找到 $count 筆結果',
-        'sites': '來自 $count 個站點',
-        'read': '已讀取 $count 字',
-        'displayed': '已展示 $count 張圖片',
-        'inspected': '已查看 $count 張圖片',
-        'pendingPreview': '本次傳回 $count 個待處理任務',
-        'failedPreview': '本次傳回 $count 個失敗任務',
-        'prepared': '已準備 $count 個任務，等待確認',
-        'retried': '已重新排入 $count 個任務',
-        'updatedText': '已更新文字，共 $count 字',
-        'tags': '找到 $count 個標籤',
-        'entries': '本次傳回 $count 個項目',
-        'categories': '本次傳回 $count 個分類',
-        'sources': '本次傳回 $count 個來源',
-        'images': '本次傳回 $count 張圖片',
-        'characters': '本次傳回 $count 個角色',
-        'skills': '已載入 $count 個技能',
-        'diagnostics': '本次傳回 $count 筆診斷',
-        'other': '本次傳回 $count 項',
-      },
-    );
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'results': '找到 $count 筆結果',
+      'sites': '來自 $count 個站點',
+      'read': '已讀取 $count 字',
+      'displayed': '已展示 $count 張圖片',
+      'inspected': '已查看 $count 張圖片',
+      'pendingPreview': '本次傳回 $count 個待處理任務',
+      'failedPreview': '本次傳回 $count 個失敗任務',
+      'prepared': '已準備 $count 個任務，等待確認',
+      'retried': '已重新排入 $count 個任務',
+      'updatedText': '已更新文字，共 $count 字',
+      'tags': '找到 $count 個標籤',
+      'entries': '本次傳回 $count 個項目',
+      'categories': '本次傳回 $count 個分類',
+      'sources': '本次傳回 $count 個來源',
+      'images': '本次傳回 $count 張圖片',
+      'characters': '本次傳回 $count 個角色',
+      'skills': '已載入 $count 個技能',
+      'diagnostics': '本次傳回 $count 筆診斷',
+      'other': '本次傳回 $count 項',
+    });
     return '$_temp0';
   }
 
@@ -29430,7 +30033,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get dlss_saveCopy => '另存增強影像';
 
   @override
-  String get dlss_source => '元件來自 video2dlssnr 的公開 Release。安裝會下載完整套件，僅擷取所需元件，並進行實際增強測試。';
+  String get dlss_source =>
+      '元件來自 video2dlssnr 的公開 Release。安裝會下載完整套件，僅擷取所需元件，並進行實際增強測試。';
 
   @override
   String get dlss_structure => '結構強度';
@@ -29547,7 +30151,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get dlss_saveFailed => '儲存失敗，請檢查圖像儲存目錄及磁碟空間';
 
   @override
-  String get dlss_compareHint => '完整解析度比較，預設符合視窗。點擊 100% 查看原尺寸像素；拖曳圖像查看局部，拖曳分隔線比較。';
+  String get dlss_compareHint =>
+      '完整解析度比較，預設符合視窗。點擊 100% 查看原尺寸像素；拖曳圖像查看局部，拖曳分隔線比較。';
 
   @override
   String get dlss_skin => '皮膚結構強度';
@@ -29559,28 +30164,35 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get dlss_autoMask => '自動遮罩';
 
   @override
-  String get dlss_styleHint => '選擇執行庫的風格模式 0 / 1 / 2，不改變尺寸。「預設、自然、電影感」沿用上游名稱，尚未驗證與官方 Model A/B/C 的對應關係。';
+  String get dlss_styleHint =>
+      '選擇執行庫的風格模式 0 / 1 / 2，不改變尺寸。「預設、自然、電影感」沿用上游名稱，尚未驗證與官方 Model A/B/C 的對應關係。';
 
   @override
-  String get dlss_intensityHint => '控制 NR 整體效果，範圍 0～1。0 關閉 NR 效果，1 為完整強度；目前執行庫中更高數值與 1 的輸出一致。SR 放大與輸出混合分別控制。';
+  String get dlss_intensityHint =>
+      '控制 NR 整體效果，範圍 0～1。0 關閉 NR 效果，1 為完整強度；目前執行庫中更高數值與 1 的輸出一致。SR 放大與輸出混合分別控制。';
 
   @override
-  String get dlss_detailHint => '控制 NR 對整體畫面的影響，不單獨控制材質細節。0 保留 NR 輸入（開啟 SR 時為放大後的圖像）；1 按「NR 色彩貢獻」設定套用增強結果；大於 1 放大兩者差異，可能使效果誇張或失真。';
+  String get dlss_detailHint =>
+      '控制 NR 對整體畫面的影響，不單獨控制材質細節。0 保留 NR 輸入（開啟 SR 時為放大後的圖像）；1 按「NR 色彩貢獻」設定套用增強結果；大於 1 放大兩者差異，可能使效果誇張或失真。';
 
   @override
   String get dlss_colorHint => '0 保留原圖色相，但仍採用增強後的明暗；1 採用增強後的顏色。越低越接近原圖的配色。';
 
   @override
-  String get dlss_structureHint => '控制材質紋理、局部明暗與結構變化，並非一般銳化。1 為基準，常用 0～2；大於 1 仍有效，高值可能產生顆粒、色偏和細節失真。';
+  String get dlss_structureHint =>
+      '控制材質紋理、局部明暗與結構變化，並非一般銳化。1 為基準，常用 0～2；大於 1 仍有效，高值可能產生顆粒、色偏和細節失真。';
 
   @override
-  String get dlss_toneHint => '控制較大範圍的光照、明暗和色彩變化。1 為基準，常用 0～2；不是固定的亮度或對比調整。0 不會關閉結構效果，也不保證輸出與原圖色彩完全一致。';
+  String get dlss_toneHint =>
+      '控制較大範圍的光照、明暗和色彩變化。1 為基準，常用 0～2；不是固定的亮度或對比調整。0 不會關閉結構效果，也不保證輸出與原圖色彩完全一致。';
 
   @override
-  String get dlss_skinHint => '調整自動遮罩辨識區域的皮膚結構；需開啟自動遮罩。-1 使用模型預設，0 及以上明確指定強度；負值皆使用預設。目前執行庫關閉自動遮罩後此項不改變輸出。';
+  String get dlss_skinHint =>
+      '調整自動遮罩辨識區域的皮膚結構；需開啟自動遮罩。-1 使用模型預設，0 及以上明確指定強度；負值皆使用預設。目前執行庫關閉自動遮罩後此項不改變輸出。';
 
   @override
-  String get dlss_autoMaskHint => '啟用模型內部的區域遮罩，並使皮膚結構強度生效。目前無法預覽其辨識區域；關閉可能改變局部效果，但不會關閉整體 NR。';
+  String get dlss_autoMaskHint =>
+      '啟用模型內部的區域遮罩，並使皮膚結構強度生效。目前無法預覽其辨識區域；關閉可能改變局部效果，但不會關閉整體 NR。';
 
   @override
   String get dlss_invalidNumber => '請輸入此參數支援的有效數值。';
@@ -29589,7 +30201,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get dlss_scale => 'SR 放大倍率';
 
   @override
-  String get dlss_scaleHint => '先用 DLSS SR 放大，再進行 NR。預設 2 倍；1 倍略過 SR，僅按原尺寸進行 NR。可手動輸入小數，輸出每邊不能超過 16384 像素，實際可用大小取決於顯示記憶體。';
+  String get dlss_scaleHint =>
+      '先用 DLSS SR 放大，再進行 NR。預設 2 倍；1 倍略過 SR，僅按原尺寸進行 NR。可手動輸入小數，輸出每邊不能超過 16384 像素，實際可用大小取決於顯示記憶體。';
 
   @override
   String get dlss_finalizing => 'NR 已完成，正在準備比較圖…';
@@ -29790,10 +30403,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get stamina_rulesTitle => '規則';
 
   @override
-  String get stamina_ruleConsumes => '消耗體力：V5，標準尺寸（面積不超過 1024×1024），不超過 28 步，每個請求的第一張。';
+  String get stamina_ruleConsumes =>
+      '消耗體力：V5，標準尺寸（面積不超過 1024×1024），不超過 28 步，每個請求的第一張。';
 
   @override
-  String get stamina_ruleAnlas => '按 Anlas 計費：大尺寸、超過 28 步、一次請求多張時的其餘張數，以及體力耗盡後的生成。';
+  String get stamina_ruleAnlas =>
+      '按 Anlas 計費：大尺寸、超過 28 步、一次請求多張時的其餘張數，以及體力耗盡後的生成。';
 
   @override
   String get stamina_ruleOtherModels => 'V4.5 及更早模型不受體力限制。';
