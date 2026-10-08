@@ -1712,7 +1712,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get prompt_insertComma => 'カンマを挿入';
 
   @override
-  String get prompt_splitTag => '区切る';
+  String get prompt_suggestNext => '続きを連想';
 
   @override
   String get prompt_positivePrompt => 'プロンプト';
@@ -12891,11 +12891,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get autocomplete_relatedTagsSubtitle =>
-      'タグ確定後、カンマ入力時、カンマの後にカーソルを置いたときに、前後のタグに合うタグを表示。タグ上で Ctrl+Shift+Space または Ctrl+クリックでも表示できます';
+      'タグ確定後、区切りや「連想」を押したときに前後のタグに合うタグを表示。タグ上の Ctrl+Shift+Space、Ctrl+クリック、「関連タグ」はそのタグ自体の関連タグを表示します';
 
   @override
   String get autocomplete_relatedTagsSubtitleTouch =>
-      'タグ確定後、カンマ入力時、カンマの後にカーソルを置いたときに、前後のタグに合うタグを表示。選択したタグからも「関連タグ」を開けます';
+      'タグ確定後、区切りや「連想」を押したときに前後のタグに合うタグを表示。選択したタグの「関連タグ」はそのタグ自体の関連タグを表示します';
 
   @override
   String get autocomplete_relatedTagsAction => '関連タグ';

@@ -1456,9 +1456,9 @@ class _StatusIndicator extends StatelessWidget {
   }
 }
 
-/// A tonal 分词 pill that ends the tag being written with a comma, standing in
-/// for the editor's own key while the popup covers it. Like the other popup
-/// controls it never takes focus from the field.
+/// A tonal 分词 pill (scissors) that ends the tag being written with a
+/// comma, standing in for the editor's own key while the popup covers it.
+/// Like the other popup controls it never takes focus from the field.
 class _SplitButton extends StatelessWidget {
   const _SplitButton({required this.onPressed});
 
@@ -1466,8 +1466,7 @@ class _SplitButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final colors = Theme.of(context).colorScheme;
     return Focus(
       canRequestFocus: false,
       descendantsAreFocusable: false,
@@ -1483,12 +1482,8 @@ class _SplitButton extends StatelessWidget {
             backgroundColor: colors.secondaryContainer,
             foregroundColor: colors.onSecondaryContainer,
             shape: const StadiumBorder(),
-            textStyle: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1,
-            ),
           ),
-          child: Text(context.l10n.prompt_splitTag, maxLines: 1),
+          child: const Icon(Icons.content_cut_rounded, size: 20),
         ),
       ),
     );

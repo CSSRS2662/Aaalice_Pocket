@@ -109,6 +109,10 @@ class UnifiedPromptInput extends ConsumerStatefulWidget {
   final bool showTagModeSwitch;
   final Object? assistantTapRegionGroupId;
 
+  /// Lets the host ask for suggestions (its 联想 and 分词 keys); one is made
+  /// when not given.
+  final AutocompleteOverlayHandle? autocompleteHandle;
+
   /// 打开助手设置回调
   final VoidCallback? onOpenAssistantSettings;
 
@@ -138,6 +142,7 @@ class UnifiedPromptInput extends ConsumerStatefulWidget {
     this.enableAssistant = true,
     this.showTagModeSwitch = true,
     this.assistantTapRegionGroupId,
+    this.autocompleteHandle,
     this.onOpenAssistantSettings,
     this.onComfyuiImport,
   });
@@ -160,8 +165,10 @@ class _UnifiedPromptInputState extends ConsumerState<UnifiedPromptInput> {
   /// 焦点节点
   FocusNode? _internalFocusNode;
   final FocusNode _tagFocusNode = FocusNode();
-  final AutocompleteOverlayHandle _autocompleteHandle =
+  final AutocompleteOverlayHandle _ownAutocompleteHandle =
       AutocompleteOverlayHandle();
+  AutocompleteOverlayHandle get _autocompleteHandle =>
+      widget.autocompleteHandle ?? _ownAutocompleteHandle;
   // Opening search reparents the input under a Column. Keep its editing session
   // and viewport instead of recreating the text/tag mode container.
   final GlobalKey _inputStackKey = GlobalKey();
@@ -372,7 +379,7 @@ class _UnifiedPromptInputState extends ConsumerState<UnifiedPromptInput> {
     _syntaxController?.dispose();
     _internalFocusNode?.dispose();
     _tagFocusNode.dispose();
-    _autocompleteHandle.dispose();
+    _ownAutocompleteHandle.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     _replaceController.dispose();

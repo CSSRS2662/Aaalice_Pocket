@@ -3254,11 +3254,11 @@ abstract class AppLocalizations {
   /// **'Insert a comma'**
   String get prompt_insertComma;
 
-  /// No description provided for @prompt_splitTag.
+  /// No description provided for @prompt_suggestNext.
   ///
   /// In en, this message translates to:
-  /// **'Split'**
-  String get prompt_splitTag;
+  /// **'Suggest next tags'**
+  String get prompt_suggestNext;
 
   /// No description provided for @prompt_positivePrompt.
   ///
@@ -23019,13 +23019,13 @@ abstract class AppLocalizations {
   /// No description provided for @autocomplete_relatedTagsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'After accepting a tag, typing a comma or placing the caret after one, suggest what fits the tags around it; also use Ctrl+Shift+Space or Ctrl+click on a tag'**
+  /// **'After accepting a tag, splitting or tapping Suggest, offer what fits the tags around the caret; Ctrl+Shift+Space, Ctrl+click or Related tags on a tag shows that tag\'s own related tags'**
   String get autocomplete_relatedTagsSubtitle;
 
   /// No description provided for @autocomplete_relatedTagsSubtitleTouch.
   ///
   /// In en, this message translates to:
-  /// **'After accepting a tag, typing a comma or placing the caret after one, suggest what fits the tags around it; a selected tag also offers Related tags'**
+  /// **'After accepting a tag, splitting or tapping Suggest, offer what fits the tags around the caret; Related tags on a selected tag shows that tag\'s own related tags'**
   String get autocomplete_relatedTagsSubtitleTouch;
 
   /// No description provided for @autocomplete_relatedTagsAction.

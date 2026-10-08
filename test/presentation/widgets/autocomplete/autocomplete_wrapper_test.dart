@@ -568,18 +568,14 @@ void main() {
     },
   );
 
-  testWidgets('a comma after a tag suggests what comes next, quietly', (
-    tester,
+  Future<AutocompleteOverlayHandle> pumpRelatedHarness(
+    WidgetTester tester,
+    TextEditingController controller,
+    FocusNode focusNode,
+    CompletionSource source,
   ) async {
-    final controller = TextEditingController(text: 'beach');
-    controller.selection = const TextSelection.collapsed(offset: 5);
-    final focusNode = FocusNode();
-    final source = _RecordingBaseSource();
-    addTearDown(() {
-      controller.dispose();
-      focusNode.dispose();
-    });
-
+    final handle = AutocompleteOverlayHandle();
+    addTearDown(handle.dispose);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -603,6 +599,7 @@ void main() {
             body: AutocompleteWrapper(
               controller: controller,
               focusNode: focusNode,
+              overlayHandle: handle,
               child: TextField(controller: controller, focusNode: focusNode),
             ),
           ),
@@ -611,6 +608,26 @@ void main() {
     );
     focusNode.requestFocus();
     await tester.pump();
+    return handle;
+  }
+
+  testWidgets('a typed comma stays quiet; the split key suggests what fits', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: 'beach');
+    controller.selection = const TextSelection.collapsed(offset: 5);
+    final focusNode = FocusNode();
+    final source = _RecordingBaseSource();
+    addTearDown(() {
+      controller.dispose();
+      focusNode.dispose();
+    });
+    final handle = await pumpRelatedHarness(
+      tester,
+      controller,
+      focusNode,
+      source,
+    );
 
     controller.value = const TextEditingValue(
       text: 'beach, ',
@@ -618,9 +635,13 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 30));
+    expect(source.relatedTags, isEmpty);
+    expect(find.text('Related tags'), findsNothing);
 
+    handle.continueAfterSeparator();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 30));
     expect(source.relatedTags.last, 'beach');
-    expect(find.text('Related tags'), findsOneWidget);
     expect(find.text('smile'), findsOneWidget);
 
     // Nothing is picked until the user moves to a row, so Enter keeps
@@ -633,6 +654,42 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
     expect(controller.text, startsWith('beach, smile'));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('related tags of a tag stay on it; suggest brings in context', (
+    tester,
+  ) async {
+    const text = 'night, outdoors';
+    final controller = TextEditingController(text: text);
+    controller.selection = TextSelection.collapsed(
+      offset: text.indexOf('outdoors') + 3,
+    );
+    final focusNode = FocusNode();
+    final source = _RecordingBaseSource();
+    addTearDown(() {
+      controller.dispose();
+      focusNode.dispose();
+    });
+    final handle = await pumpRelatedHarness(
+      tester,
+      controller,
+      focusNode,
+      source,
+    );
+
+    handle.showRelated();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 30));
+    expect(source.relatedTags.last, 'outdoors');
+    expect(source.contexts.last, isEmpty);
+
+    handle.suggestNext();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 30));
+    expect(source.relatedTags.last, 'outdoors');
+    expect(source.contexts.last, ['night']);
+    expect(find.text('Related tags'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -1818,12 +1875,14 @@ class _DelayedEmptyRelatedSource implements CompletionSource {
 class _RecordingBaseSource implements CompletionSource {
   final List<String> tokens = [];
   final List<String> relatedTags = [];
+  final List<List<String>> contexts = [];
 
   @override
   Future<List<CompletionCandidate>> search(CompletionQuery query) async {
     tokens.add(query.token);
     if (query.relatedTag case final relatedTag?) {
       relatedTags.add(relatedTag);
+      contexts.add(query.contextTags);
       return [
         CompletionCandidate(
           canonicalTag: relatedTag == 'blue_eyes' ? 'halo' : 'smile',

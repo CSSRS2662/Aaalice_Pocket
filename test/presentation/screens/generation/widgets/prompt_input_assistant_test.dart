@@ -105,43 +105,26 @@ void main() {
         await tester.pumpAndSettle();
         final modeSwitch = find.byKey(const ValueKey('tag-mode-button'));
         expect(modeSwitch.hitTestable(), findsOneWidget);
-        expect(find.byIcon(Icons.sell_outlined), findsOneWidget);
-        final thumb = find.byKey(const ValueKey('tag-mode-thumb'));
-        final initialLeft = tester.getTopLeft(thumb).dx;
-        final initialColor =
-            (tester.widget<AnimatedContainer>(thumb).decoration!
-                    as BoxDecoration)
-                .color;
+        Color? background() => tester
+            .widget<TextButton>(modeSwitch)
+            .style!
+            .backgroundColor!
+            .resolve(const {});
+        // One button, like the positive/negative switch: the current mode's
+        // icon with a swap mark.
+        expect(find.byIcon(Icons.text_fields), findsOneWidget);
+        expect(find.byIcon(Icons.sell_outlined), findsNothing);
+        expect(find.byIcon(Icons.swap_horiz_rounded), findsOneWidget);
         expect(
           tester.getCenter(find.byIcon(Icons.text_fields)).dy,
           closeTo(tester.getCenter(modeSwitch).dy, 0.01),
         );
+        final initialColor = background();
         await tester.tap(modeSwitch);
-        await tester.pump();
-        if (scale != 3) {
-          await tester.pump(const Duration(milliseconds: 90));
-          expect(tester.getTopLeft(thumb).dx, greaterThan(initialLeft));
-          expect(
-            tester.getTopLeft(thumb).dx,
-            lessThan(initialLeft + tester.getSize(thumb).width),
-          );
-        } else {
-          expect(
-            tester.widget<AnimatedContainer>(thumb).duration,
-            Duration.zero,
-          );
-        }
         await tester.pumpAndSettle();
-        expect(
-          tester.getTopLeft(thumb).dx,
-          closeTo(initialLeft + tester.getSize(thumb).width, .01),
-        );
-        expect(
-          (tester.widget<AnimatedContainer>(thumb).decoration! as BoxDecoration)
-              .color,
-          isNot(initialColor),
-        );
-        expect(find.byIcon(Icons.text_fields), findsOneWidget);
+        expect(find.byIcon(Icons.sell_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.text_fields), findsNothing);
+        expect(background(), isNot(initialColor));
         expect(find.text('Tag mode'), findsNothing);
         final button = find.byKey(
           const ValueKey('prompt_assistant_toolbar_test'),

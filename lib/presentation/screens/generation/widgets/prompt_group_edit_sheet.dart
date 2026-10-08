@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/autocomplete/autocomplete_settings.dart' as completion;
 import '../../../../core/autocomplete/prompt_token_parser.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../adaptive/adaptive_presenter.dart';
@@ -11,6 +12,7 @@ import '../../../prompt_assistant/widgets/prompt_assistant_overlay.dart';
 import '../../../providers/image_generation_provider.dart';
 import '../../../themes/core/input_surface_style.dart';
 import '../../../widgets/autocomplete/autocomplete.dart';
+import '../../../widgets/autocomplete/autocomplete_overlay_handle.dart';
 import '../../../widgets/prompt/prompt_footer_style.dart';
 import '../../../widgets/prompt/prompt_tag_mode_toggle.dart';
 import '../../../widgets/prompt/unified/unified_prompt_config.dart';
@@ -104,11 +106,20 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
   int _direction = 0;
   bool _closing = false;
 
+  /// Reaches the field's suggestions for the 联想 and 分词 keys.
+  final AutocompleteOverlayHandle _suggestions = AutocompleteOverlayHandle();
+
   @override
   void initState() {
     super.initState();
     // Opening a section is for typing: caret at the end, keyboard up.
     _focusAtEndAfterBuild();
+  }
+
+  @override
+  void dispose() {
+    _suggestions.dispose();
+    super.dispose();
   }
 
   void _focusAtEndAfterBuild() {
@@ -128,6 +139,13 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
   String get _modeSessionId => widget.negative
       ? PromptHistorySessionIds.generationNegative
       : PromptHistorySessionIds.generationPrompt;
+
+  /// The 联想 key shows only when related suggestions can come.
+  bool get _suggestsRelated => ref.watch(
+    completion.autocompleteSettingsProvider.select(
+      (settings) => settings.enabled && settings.relatedTagsEnabled,
+    ),
+  );
 
   void _step(int by) {
     final groups = widget.groups;
@@ -267,7 +285,8 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
         ],
       );
 
-  /// Ends the tag at the caret with ", " without leaving Chinese input.
+  /// Ends the tag at the caret with ", " without leaving Chinese input, then
+  /// suggests what fits next.
   void _insertComma(PromptGroupSection section) {
     final controller = section.controller;
     final text = controller.text;
@@ -282,6 +301,13 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
     );
     if (!section.focusNode.hasFocus) section.focusNode.requestFocus();
     if (next.text != text) widget.callbacks.onChanged();
+    _suggestions.continueAfterSeparator();
+  }
+
+  /// Suggests what fits with the tags around the caret.
+  void _suggestNext(PromptGroupSection section) {
+    if (!section.focusNode.hasFocus) section.focusNode.requestFocus();
+    _suggestions.suggestNext();
   }
 
   Widget _buildInput(BuildContext context, PromptGroupSection section) {
@@ -323,6 +349,7 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
       expands: true,
       enableAssistant: false,
       showTagModeSwitch: false,
+      autocompleteHandle: _suggestions,
       onOpenAssistantSettings: callbacks.onOpenAssistantSettings,
       onComfyuiImport: callbacks.onComfyuiImport,
       onChanged: (_) => callbacks.onChanged(),
@@ -362,8 +389,18 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
               onOpenSettings: callbacks.onOpenAssistantSettings,
             ),
             for (final tool in tools) ...[const SizedBox(width: 4), tool],
-            const SizedBox(width: 8),
-            _CommaKey(onPressed: () => _insertComma(section)),
+            if (_suggestsRelated)
+              TextFieldTapRegion(
+                child: IconButton(
+                  key: const ValueKey('prompt_group_edit_suggest'),
+                  tooltip: context.l10n.prompt_suggestNext,
+                  onPressed: () => _suggestNext(section),
+                  icon: const Icon(Icons.hub_outlined, size: 22),
+                ),
+              )
+            else
+              const SizedBox(width: 8),
+            _SplitKey(onPressed: () => _insertComma(section)),
           ],
         ),
       ],
@@ -457,7 +494,7 @@ class _EditorHeader extends StatelessWidget {
   static const double _arrowExtent = 48;
   static const EdgeInsets _donePadding = EdgeInsets.symmetric(horizontal: 18);
 
-  static const double _toggleWidth = 88;
+  static const double _toggleWidth = PromptTagModeToggle.width;
   static const double _menuWidth = 48;
 
   final int index;
@@ -675,26 +712,25 @@ class _IncludeToggle extends StatelessWidget {
   }
 }
 
-/// A key-like button labelled 分词 that ends the tag at the caret with an
-/// English comma, so tags can be split without switching the keyboard out of
-/// Chinese input. It shares the neutral fill of the text/tag toggle and keeps
-/// the field focused.
-class _CommaKey extends StatelessWidget {
-  const _CommaKey({required this.onPressed});
+/// The 分词 key (scissors): ends the tag at the caret with an English
+/// comma, so tags can be split without switching the keyboard out of Chinese
+/// input. It shares the neutral fill of the editor's other control pills and
+/// keeps the field focused.
+class _SplitKey extends StatelessWidget {
+  const _SplitKey({required this.onPressed});
 
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final colors = Theme.of(context).colorScheme;
     return TextFieldTapRegion(
       child: Tooltip(
         message: context.l10n.prompt_insertComma,
         child: TextButton(
           key: const ValueKey('prompt_group_edit_comma'),
           onPressed: onPressed,
-          style: PromptFooterStyle.button(context, width: 64).copyWith(
+          style: PromptFooterStyle.button(context, width: 56).copyWith(
             backgroundColor: WidgetStatePropertyAll(
               colors.surfaceContainerHigh,
             ),
@@ -702,14 +738,8 @@ class _CommaKey extends StatelessWidget {
             padding: const WidgetStatePropertyAll(
               EdgeInsets.symmetric(horizontal: 16),
             ),
-            textStyle: WidgetStatePropertyAll(
-              theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1,
-              ),
-            ),
           ),
-          child: Text(context.l10n.prompt_splitTag, maxLines: 1),
+          child: const Icon(Icons.content_cut_rounded, size: 20),
         ),
       ),
     );

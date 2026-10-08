@@ -324,24 +324,23 @@ void main() {
     });
   }
 
-  testWidgets('tag mode shares the dual-icon animated switch', (tester) async {
+  testWidgets('one tap on the mode button switches to tag mode', (
+    tester,
+  ) async {
     final source = TextEditingController(text: 'cat');
     addTearDown(source.dispose);
     await pumpEditor(tester, source);
     final toggle = find.byKey(const ValueKey('tag-mode-button'));
-    final thumb = find.byKey(const ValueKey('tag-mode-thumb'));
-    final before = tester.getTopLeft(thumb);
-    expect(
-      find.descendant(of: toggle, matching: find.byIcon(Icons.text_fields)),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: toggle, matching: find.byIcon(Icons.sell_outlined)),
-      findsOneWidget,
-    );
+    Finder inToggle(IconData icon) =>
+        find.descendant(of: toggle, matching: find.byIcon(icon));
+    // Like the positive/negative switch: the current mode and a swap mark.
+    expect(inToggle(Icons.text_fields), findsOneWidget);
+    expect(inToggle(Icons.sell_outlined), findsNothing);
+    expect(inToggle(Icons.swap_horiz_rounded), findsOneWidget);
     await tester.tap(toggle);
     await tester.pumpAndSettle();
-    expect(tester.getTopLeft(thumb).dx, greaterThan(before.dx));
+    expect(inToggle(Icons.sell_outlined), findsOneWidget);
+    expect(inToggle(Icons.text_fields), findsNothing);
     expect(find.byType(TagEditorView), findsOneWidget);
     expect(source.text, 'cat');
   });

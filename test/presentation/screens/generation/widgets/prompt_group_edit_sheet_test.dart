@@ -245,4 +245,36 @@ void main() {
     expect(menu, findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('the suggest key sits left of the split key, both as icons', (
+    tester,
+  ) async {
+    await _openSheet(tester);
+    final suggest = find.byKey(const ValueKey('prompt_group_edit_suggest'));
+    final split = find.byKey(const ValueKey('prompt_group_edit_comma'));
+    expect(suggest, findsOneWidget);
+    expect(
+      tester.getRect(suggest).right,
+      lessThanOrEqualTo(tester.getRect(split).left),
+    );
+    expect(
+      find.descendant(of: suggest, matching: find.byIcon(Icons.hub_outlined)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: split,
+        matching: find.byIcon(Icons.content_cut_rounded),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.pumpWidget(const SizedBox());
+    // Without related suggestions there is nothing to ask for.
+    await _openSheet(tester, autocomplete: false);
+    expect(
+      find.byKey(const ValueKey('prompt_group_edit_suggest')),
+      findsNothing,
+    );
+  });
 }
