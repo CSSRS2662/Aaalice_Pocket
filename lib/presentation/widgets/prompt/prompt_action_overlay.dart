@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import '../../themes/core/layered_surface_style.dart';
 
 /// A thin boundary keeps the floating editor identifiable over similar neutral
-/// surfaces without adding outlines to its individual controls.
+/// surfaces without adding outlines to its individual controls. Given less
+/// height than its content needs, the content scrolls inside the boundary.
 class PromptActionSurface extends StatelessWidget {
   const PromptActionSurface({super.key, required this.child});
   final Widget child;
@@ -21,7 +22,8 @@ class PromptActionSurface extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: colors.outline),
       ),
-      child: child,
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(child: child),
     );
   }
 }
@@ -30,8 +32,8 @@ class PromptActionSurface extends StatelessWidget {
 /// text scaling and the keyboard therefore cannot invalidate a fixed height.
 ///
 /// The actions sit above [anchor] when they fit there, otherwise below it, so
-/// they never cover the text they act on; only when neither side has room do
-/// they take the roomier one.
+/// they never cover the text they act on; when neither side has room they
+/// shrink to the roomier one and scroll.
 class PromptActionOverlay extends StatelessWidget {
   const PromptActionOverlay({
     super.key,
@@ -94,7 +96,8 @@ class PromptActionOverlay extends StatelessWidget {
           gap: gap,
           gapBelow: gapBelow ?? gap,
         ),
-        child: SingleChildScrollView(
+        // The surface inside scrolls when the height is capped.
+        child: KeyedSubtree(
           key: const ValueKey('prompt-action-viewport'),
           child: child,
         ),
@@ -114,25 +117,38 @@ class _PromptActionLayout extends SingleChildLayoutDelegate {
   final Rect bounds;
   final double gap;
   final double gapBelow;
+
+  /// The least height worth scrolling in. With less room on both sides the
+  /// actions keep their size and cover part of the anchor instead.
+  static const double minScrollableHeight = 96;
+
+  double get _roomAbove => anchor.top - gap - bounds.top;
+  double get _roomBelow => bounds.bottom - anchor.bottom - gapBelow;
+
   @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
-      BoxConstraints(
-        maxWidth: math.min(420, bounds.width),
-        maxHeight: bounds.height,
-      );
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
+    // Too tall for either side (large text): shrink to the roomier side and
+    // scroll, rather than cover what the actions act on.
+    final room = math.max(_roomAbove, _roomBelow);
+    return BoxConstraints(
+      maxWidth: math.min(420, bounds.width),
+      maxHeight: room >= minScrollableHeight
+          ? math.min(room, bounds.height)
+          : bounds.height,
+    );
+  }
+
   @override
   Offset getPositionForChild(Size size, Size childSize) {
     final above = anchor.top - gap - childSize.height;
     final below = anchor.bottom + gapBelow;
     final double y;
-    if (above >= bounds.top) {
+    if (childSize.height <= _roomAbove) {
       y = above;
-    } else if (below + childSize.height <= bounds.bottom) {
+    } else if (childSize.height <= _roomBelow) {
       y = below;
     } else {
-      final roomAbove = anchor.top - bounds.top;
-      final roomBelow = bounds.bottom - anchor.bottom;
-      y = roomAbove >= roomBelow ? above : below;
+      y = _roomAbove >= _roomBelow ? above : below;
     }
     return Offset(
       anchor.left.clamp(

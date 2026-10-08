@@ -116,6 +116,16 @@ void main() {
         await undo();
         expect(source.text, disabled);
         expect(changes.last, disabled);
+        // On a narrow screen with large text the floating weight toolbar can
+        // cover the mode toggle; close it first, as a user would.
+        final closeToolbar = find.descendant(
+          of: find.byKey(const ValueKey('weight_adjust_toolbar_surface')),
+          matching: find.byIcon(Icons.close),
+        );
+        if (closeToolbar.evaluate().isNotEmpty) {
+          await tester.tap(closeToolbar);
+          await tester.pumpAndSettle();
+        }
         await tester.tap(find.byKey(const ValueKey('tag-mode-button')));
         await tester.pumpAndSettle();
         expect(
