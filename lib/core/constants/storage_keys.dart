@@ -198,12 +198,17 @@ class StorageKeys {
       'autocomplete_context_ranking';
   static const String autocompletePersonalRanking =
       'autocomplete_personal_ranking';
+  static const String autocompletePairLearning = 'autocomplete_pair_learning';
   static const String autocompleteShowMatchNotes =
       'autocomplete_show_match_notes';
 
   /// Device-local record of accepted completions; never synced.
   static const String autocompleteTagUsageHistory =
       'autocomplete_tag_usage_history';
+
+  /// Device-local record of tags written next to each other; never synced.
+  static const String autocompleteTagPairHistory =
+      'autocomplete_tag_pair_history';
   static const String autocompleteMigrationVersion =
       'autocomplete_migration_version';
   static const String autoFormatPrompt = 'auto_format_prompt';

@@ -661,6 +661,7 @@
   },
   "prompt_groupDuplicate": "複製分區",
   "prompt_groupMoveToFront": "移到最前",
+  "prompt_insertComma": "插入逗號分隔",
   "prompt_positivePrompt": "正向提示詞",
   "prompt_negativePrompt": "負向提示詞",
   "prompt_mainPositive": "主提示詞（正面）",
@@ -6622,6 +6623,12 @@
   "autocomplete_clearUsageHistory": "清除記錄",
   "autocomplete_clearUsageHistoryConfirm": "清除本機的補全使用記錄？排序會恢復預設。",
   "autocomplete_usageHistoryCleared": "使用記錄已清除",
+  "autocomplete_pairLearning": "學習我的搭配習慣",
+  "autocomplete_pairLearningSubtitle": "記住你常在哪些詞後面接哪些詞，相關標籤優先推薦它們；關閉後不再記錄和使用，已學到的保留。只保存在本機，不同步",
+  "autocomplete_clearPairHistory": "清空搭配記錄",
+  "autocomplete_clearPairHistoryConfirm": "將刪除已學到的 {count} 組搭配，無法復原。",
+  "@autocomplete_clearPairHistoryConfirm": {"placeholders": {"count": {"type": "int"}}},
+  "autocomplete_pairHistoryCleared": "搭配記錄已清空",
   "autocomplete_showMatchNotes": "顯示匹配說明",
   "autocomplete_showMatchNotesSubtitle": "在候選上標出拼音、糾錯等非字面匹配",
   "autocomplete_matchHomophone": "同音",
@@ -6666,8 +6673,8 @@
   "autocomplete_replaceUnderscores": "插入時將下劃線替換為空格",
   "autocomplete_dataSourcesTitle": "資料來源與快取",
   "autocomplete_relatedTagsTitle": "共現與相關標籤推薦",
-  "autocomplete_relatedTagsSubtitle": "選中補全後自動推薦；也可在標籤上按 Ctrl+Shift+Space 或 Ctrl+單擊",
-  "autocomplete_relatedTagsSubtitleTouch": "選中補全後自動推薦相關標籤",
+  "autocomplete_relatedTagsSubtitle": "選中補全、輸入逗號或游標停在逗號後時，依前後已寫的詞推薦接下來的標籤；也可在標籤上按 Ctrl+Shift+Space 或 Ctrl+單擊",
+  "autocomplete_relatedTagsSubtitleTouch": "選中補全、輸入逗號或游標停在逗號後時，依前後已寫的詞推薦接下來的標籤；選中詞條後也可點「相關標籤」",
   "autocomplete_relatedTagsAction": "相關標籤",
   "autocomplete_danbooruApi": "Danbooru 線上補充",
   "autocomplete_danbooruPrivacy": "僅傳送當前英文標籤，不會上傳完整提示詞",
@@ -6813,8 +6820,10 @@
   "autocomplete_empty": "沒有找到匹配的標籤",
   "autocomplete_relatedLoading": "正在查詢本地共現庫與線上相關標籤…",
   "autocomplete_relatedEmpty": "沒有找到可用的相關標籤",
-  "autocomplete_relatedMetric": "共現 {count} 次 · Jaccard {score}",
+  "autocomplete_relatedMetric": "共現 {count} 次 · 相關度 {score}",
   "@autocomplete_relatedMetric": {
+  "autocomplete_relatedWithContext": "{tag} 等 {count} 個詞",
+  "@autocomplete_relatedWithContext": {"placeholders": {"tag": {"type": "String"}, "count": {"type": "int"}}},
     "placeholders": {
       "count": {
         "type": "int"

@@ -347,4 +347,66 @@ void main() {
       );
     });
   });
+
+  group('PromptTokenParser context', () {
+    test('lists written tags nearest first, without weights or disabled', () {
+      const text =
+          'school_uniform, 1.2::classroom::, {smile}, /*disabled:night*/, '
+          'desk, , window';
+      final cursor = text.indexOf('desk, ') + 'desk, '.length;
+      expect(
+        PromptTokenParser.contextTags(text: text, cursorPosition: cursor),
+        ['desk', 'smile', 'classroom', 'school_uniform', 'window'],
+      );
+      expect(
+        PromptTokenParser.contextTags(
+          text: text,
+          cursorPosition: cursor,
+          max: 2,
+        ),
+        ['desk', 'smile'],
+      );
+    });
+
+    test('an empty slot after tags continues from them', () {
+      const text = 'beach, bikini, ';
+      expect(
+        PromptTokenParser.isContinuationSlot(
+          text: text,
+          cursorPosition: text.length,
+        ),
+        isTrue,
+      );
+      expect(
+        PromptTokenParser.isContinuationSlot(text: 'beach', cursorPosition: 5),
+        isFalse,
+      );
+      expect(
+        PromptTokenParser.isContinuationSlot(text: '', cursorPosition: 0),
+        isFalse,
+      );
+
+      final query = PromptTokenParser.parseRelated(
+        text: text,
+        cursorPosition: text.length,
+        limit: 20,
+        locale: 'en',
+      )!;
+      expect(query.relatedTag, 'bikini');
+      expect(query.contextTags, ['beach']);
+      expect(query.token, isEmpty);
+    });
+
+    test('a related tag under the caret carries the tags around it', () {
+      const text = 'night, outdoors, smile, sky';
+      final query = PromptTokenParser.parseRelated(
+        text: text,
+        cursorPosition: text.indexOf('smile') + 2,
+        limit: 20,
+        locale: 'en',
+      )!;
+      expect(query.relatedTag, 'smile');
+      expect(query.contextTags, ['outdoors', 'night', 'sky']);
+    });
+  });
 }

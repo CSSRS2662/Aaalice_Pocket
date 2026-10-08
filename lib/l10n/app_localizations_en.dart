@@ -1748,6 +1748,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prompt_groupMoveToFront => 'Move to front';
 
   @override
+  String get prompt_insertComma => 'Insert a comma';
+
+  @override
   String get prompt_positivePrompt => 'Prompt';
 
   @override
@@ -13116,6 +13119,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autocomplete_usageHistoryCleared => 'Usage record cleared';
 
   @override
+  String get autocomplete_pairLearning => 'Learn my tag pairings';
+
+  @override
+  String get autocomplete_pairLearningSubtitle =>
+      'Remember which tags you write after which and suggest them first; turning it off stops recording and using them but keeps what was learned. Stays on this device and is not synced';
+
+  @override
+  String get autocomplete_clearPairHistory => 'Clear pairing history';
+
+  @override
+  String autocomplete_clearPairHistoryConfirm(int count) {
+    return 'This deletes $count learned pairings and cannot be undone.';
+  }
+
+  @override
+  String get autocomplete_pairHistoryCleared => 'Pairing history cleared';
+
+  @override
   String get autocomplete_showMatchNotes => 'Show match notes';
 
   @override
@@ -13207,11 +13228,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autocomplete_relatedTagsSubtitle =>
-      'Suggest after accepting a tag; also use Ctrl+Shift+Space or Ctrl+click on a tag';
+      'After accepting a tag, typing a comma or placing the caret after one, suggest what fits the tags around it; also use Ctrl+Shift+Space or Ctrl+click on a tag';
 
   @override
   String get autocomplete_relatedTagsSubtitleTouch =>
-      'Suggest related tags after accepting a tag';
+      'After accepting a tag, typing a comma or placing the caret after one, suggest what fits the tags around it; a selected tag also offers Related tags';
 
   @override
   String get autocomplete_relatedTagsAction => 'Related tags';
@@ -13440,7 +13461,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String autocomplete_relatedMetric(int count, String score) {
-    return '$count co-occurrences · Jaccard $score';
+    return '$count co-occurrences · relevance $score';
+  }
+
+  @override
+  String autocomplete_relatedWithContext(String tag, int count) {
+    return '$tag and context ($count tags)';
   }
 
   @override

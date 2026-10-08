@@ -51,7 +51,13 @@ void main() {
       await tester.ensureVisible(chip);
       expect(tester.getSize(chip).height, greaterThanOrEqualTo(44));
     }
-    expect(find.byType(Switch, skipOffstage: false), findsNWidgets(9));
+    expect(find.byType(Switch, skipOffstage: false), findsNWidgets(10));
+    final clearPairs = find.byKey(
+      const ValueKey('search-enhancement-clear-pairs'),
+    );
+    await tester.ensureVisible(clearPairs);
+    expect(tester.getSize(clearPairs).height, greaterThanOrEqualTo(44));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('关闭拼音后子项禁用，模糊音选择会保存', (tester) async {
@@ -102,6 +108,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       storage.values.containsKey(StorageKeys.autocompleteTagUsageHistory),
+      isFalse,
+    );
+  });
+
+  testWidgets('关闭搭配学习保留记录，确认后才清空', (tester) async {
+    final storage = MemoryLocalStorage()
+      ..values[StorageKeys.autocompleteTagPairHistory] = {
+        'beach\tsunset': [2, 20000],
+      };
+    await _pump(tester, storage);
+    final toggle = find.byKey(
+      const ValueKey('search-enhancement-pair-learning'),
+    );
+    await tester.ensureVisible(toggle);
+    await tester.tap(toggle);
+    await tester.pump();
+    expect(storage.values[StorageKeys.autocompletePairLearning], false);
+    // Turning learning off keeps what was learned.
+    expect(
+      storage.values.containsKey(StorageKeys.autocompleteTagPairHistory),
+      isTrue,
+    );
+
+    final clear = find.byKey(const ValueKey('search-enhancement-clear-pairs'));
+    await tester.ensureVisible(clear);
+    await tester.tap(clear);
+    await tester.pumpAndSettle();
+    final l10n = AppLocalizations.of(tester.element(clear))!;
+    expect(find.text(l10n.autocomplete_clearPairHistoryConfirm(1)), findsOneWidget);
+    await tester.tap(find.text(l10n.common_confirm).last);
+    await tester.pumpAndSettle();
+    expect(
+      storage.values.containsKey(StorageKeys.autocompleteTagPairHistory),
       isFalse,
     );
   });

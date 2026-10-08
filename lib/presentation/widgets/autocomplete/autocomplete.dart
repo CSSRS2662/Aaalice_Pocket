@@ -3,3 +3,4 @@ library autocomplete;
 
 export 'autocomplete_config.dart';
 export 'autocomplete_wrapper.dart';
+export 'completion_exclusion_scope.dart';

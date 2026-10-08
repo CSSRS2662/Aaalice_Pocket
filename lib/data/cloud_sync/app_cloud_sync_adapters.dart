@@ -250,6 +250,7 @@ const portableSettingKeys = <String>{
   StorageKeys.autocompleteSpellCorrection,
   StorageKeys.autocompleteContextRanking,
   StorageKeys.autocompletePersonalRanking,
+  StorageKeys.autocompletePairLearning,
   StorageKeys.autocompleteShowMatchNotes,
   StorageKeys.autoFormatPrompt,
   StorageKeys.highlightEmphasis,

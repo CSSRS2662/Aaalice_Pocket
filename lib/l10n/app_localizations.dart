@@ -3248,6 +3248,12 @@ abstract class AppLocalizations {
   /// **'Move to front'**
   String get prompt_groupMoveToFront;
 
+  /// No description provided for @prompt_insertComma.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert a comma'**
+  String get prompt_insertComma;
+
   /// No description provided for @prompt_positivePrompt.
   ///
   /// In en, this message translates to:
@@ -22812,6 +22818,36 @@ abstract class AppLocalizations {
   /// **'Usage record cleared'**
   String get autocomplete_usageHistoryCleared;
 
+  /// No description provided for @autocomplete_pairLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn my tag pairings'**
+  String get autocomplete_pairLearning;
+
+  /// No description provided for @autocomplete_pairLearningSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remember which tags you write after which and suggest them first; turning it off stops recording and using them but keeps what was learned. Stays on this device and is not synced'**
+  String get autocomplete_pairLearningSubtitle;
+
+  /// No description provided for @autocomplete_clearPairHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear pairing history'**
+  String get autocomplete_clearPairHistory;
+
+  /// No description provided for @autocomplete_clearPairHistoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes {count} learned pairings and cannot be undone.'**
+  String autocomplete_clearPairHistoryConfirm(int count);
+
+  /// No description provided for @autocomplete_pairHistoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairing history cleared'**
+  String get autocomplete_pairHistoryCleared;
+
   /// No description provided for @autocomplete_showMatchNotes.
   ///
   /// In en, this message translates to:
@@ -22977,13 +23013,13 @@ abstract class AppLocalizations {
   /// No description provided for @autocomplete_relatedTagsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Suggest after accepting a tag; also use Ctrl+Shift+Space or Ctrl+click on a tag'**
+  /// **'After accepting a tag, typing a comma or placing the caret after one, suggest what fits the tags around it; also use Ctrl+Shift+Space or Ctrl+click on a tag'**
   String get autocomplete_relatedTagsSubtitle;
 
   /// No description provided for @autocomplete_relatedTagsSubtitleTouch.
   ///
   /// In en, this message translates to:
-  /// **'Suggest related tags after accepting a tag'**
+  /// **'After accepting a tag, typing a comma or placing the caret after one, suggest what fits the tags around it; a selected tag also offers Related tags'**
   String get autocomplete_relatedTagsSubtitleTouch;
 
   /// No description provided for @autocomplete_relatedTagsAction.
@@ -23335,8 +23371,14 @@ abstract class AppLocalizations {
   /// No description provided for @autocomplete_relatedMetric.
   ///
   /// In en, this message translates to:
-  /// **'{count} co-occurrences · Jaccard {score}'**
+  /// **'{count} co-occurrences · relevance {score}'**
   String autocomplete_relatedMetric(int count, String score);
+
+  /// No description provided for @autocomplete_relatedWithContext.
+  ///
+  /// In en, this message translates to:
+  /// **'{tag} and context ({count} tags)'**
+  String autocomplete_relatedWithContext(String tag, int count);
 
   /// No description provided for @autocomplete_relatedPin.
   ///

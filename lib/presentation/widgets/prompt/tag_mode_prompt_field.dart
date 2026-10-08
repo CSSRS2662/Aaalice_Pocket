@@ -36,6 +36,7 @@ class TagModePromptField extends ConsumerStatefulWidget {
     this.showModeSwitch = true,
     this.enableWheelAdjustment = true,
     this.onCopySelection,
+    this.onShowRelated,
   });
   final TextEditingController controller;
   final Object? sessionId;
@@ -54,6 +55,7 @@ class TagModePromptField extends ConsumerStatefulWidget {
   final bool showModeSwitch;
   final bool enableWheelAdjustment;
   final VoidCallback? onCopySelection;
+  final VoidCallback? onShowRelated;
   final Color? surfaceColor;
   final bool enabled;
   final bool enableAutocomplete;
@@ -187,6 +189,7 @@ class _TagModePromptFieldState extends ConsumerState<TagModePromptField> {
                   enabled: widget.enabled && !_session.tagMode,
                   enableWheelAdjustment: widget.enableWheelAdjustment,
                   onCopySelection: widget.onCopySelection,
+                  onShowRelated: widget.onShowRelated,
                   child: widget.child,
                 ),
               ),

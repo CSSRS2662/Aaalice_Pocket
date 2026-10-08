@@ -1709,6 +1709,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get prompt_groupMoveToFront => '先頭に移動';
 
   @override
+  String get prompt_insertComma => 'カンマを挿入';
+
+  @override
   String get prompt_positivePrompt => 'プロンプト';
 
   @override
@@ -12779,6 +12782,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get autocomplete_usageHistoryCleared => '使用記録を消去しました';
 
   @override
+  String get autocomplete_pairLearning => 'タグの組み合わせを学習';
+
+  @override
+  String get autocomplete_pairLearningSubtitle =>
+      'どのタグの後にどのタグを書くかを覚えて優先表示します。オフにすると記録と利用を止めますが、学習済みの内容は残ります。この端末にのみ保存され、同期されません';
+
+  @override
+  String get autocomplete_clearPairHistory => '組み合わせ履歴を消去';
+
+  @override
+  String autocomplete_clearPairHistoryConfirm(int count) {
+    return '学習済みの組み合わせ $count 件を削除します。元に戻せません。';
+  }
+
+  @override
+  String get autocomplete_pairHistoryCleared => '組み合わせ履歴を消去しました';
+
+  @override
   String get autocomplete_showMatchNotes => '照合の説明を表示';
 
   @override
@@ -12867,10 +12888,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get autocomplete_relatedTagsSubtitle =>
-      'タグ確定後に自動表示。タグ上で Ctrl+Shift+Space または Ctrl+クリックでも表示できます';
+      'タグ確定後、カンマ入力時、カンマの後にカーソルを置いたときに、前後のタグに合うタグを表示。タグ上で Ctrl+Shift+Space または Ctrl+クリックでも表示できます';
 
   @override
-  String get autocomplete_relatedTagsSubtitleTouch => 'タグ確定後に関連タグを自動表示します';
+  String get autocomplete_relatedTagsSubtitleTouch =>
+      'タグ確定後、カンマ入力時、カンマの後にカーソルを置いたときに、前後のタグに合うタグを表示。選択したタグからも「関連タグ」を開けます';
 
   @override
   String get autocomplete_relatedTagsAction => '関連タグ';
@@ -13087,7 +13109,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String autocomplete_relatedMetric(int count, String score) {
-    return '共起 $count 回 · Jaccard $score';
+    return '共起 $count 回 · 関連度 $score';
+  }
+
+  @override
+  String autocomplete_relatedWithContext(String tag, int count) {
+    return '$tag など $count 語';
   }
 
   @override

@@ -18,7 +18,14 @@ class PromptTokenParser {
   static final RegExp _syntaxSuffix = RegExp(
     r'^(?::\s*-?\d+(?:\.\d+)?)?[\}\]\)]*',
   );
+
+  /// Written tags sent along with a related tag; with it they make the six
+  /// the co-occurrence source reads.
+  static const int relatedContextTags = 5;
+
   static final RegExp _leadingComma = RegExp(r'^\s*,\s*');
+  static final RegExp _disabledSpan = RegExp(r'/\*[\s\S]*?\*/');
+  static final RegExp _numericWeightStart = RegExp(r'^-?\d+(?:\.\d+)?::');
 
   static CompletionQuery parse({
     required String text,
@@ -156,12 +163,26 @@ class PromptTokenParser {
       final before = text
           .substring(0, parsed.replacementRange.start)
           .trimRight();
-      if (!before.endsWith(',')) return null;
-      final withoutComma = before.substring(0, before.length - 1);
-      final previous = withoutComma.split(_tagSeparator).last;
-      final normalized = _normalizeExistingTag(previous);
-      if (normalized.length < 2) return null;
-      return parsed.copyWith(relatedTag: normalized);
+      if (!before.endsWith(',') && !before.endsWith('\n')) return null;
+      final context = contextTags(
+        text: text,
+        cursorPosition: parsed.replacementRange.start,
+        splitOnSpaces: splitOnSpaces,
+      );
+      final previous = contextTags(
+        text: before,
+        cursorPosition: before.length,
+        max: 1,
+        splitOnSpaces: splitOnSpaces,
+      ).firstOrNull;
+      if (previous == null) return null;
+      return parsed.copyWith(
+        relatedTag: previous,
+        contextTags: context
+            .where((tag) => tag != previous)
+            .take(relatedContextTags)
+            .toList(),
+      );
     }
     if (parsed.token.length < 2) return null;
 
@@ -198,7 +219,68 @@ class PromptTokenParser {
       limit: parsed.limit,
       locale: parsed.locale,
       relatedTag: parsed.token,
+      contextTags: contextTags(
+        text: text,
+        cursorPosition: parsed.replacementRange.start,
+        splitOnSpaces: splitOnSpaces,
+      ).where((tag) => tag != parsed.token).take(relatedContextTags).toList(),
     );
+  }
+
+  /// Whether the caret sits where a new tag would go after earlier ones:
+  /// an empty slot following a comma or line break.
+  static bool isContinuationSlot({
+    required String text,
+    required int cursorPosition,
+    bool splitOnSpaces = false,
+  }) {
+    final parsed = parse(
+      text: text,
+      cursorPosition: cursorPosition,
+      limit: 1,
+      locale: '',
+      splitOnSpaces: splitOnSpaces,
+    );
+    if (parsed.kind != CompletionQueryKind.tag ||
+        parsed.token.isNotEmpty ||
+        parsed.categoryFilter != null) {
+      return false;
+    }
+    final before = text.substring(0, parsed.replacementRange.start).trimRight();
+    return before.endsWith(',') || (before.isNotEmpty && before.endsWith('\n'));
+  }
+
+  /// Tags written around [cursorPosition], nearest first: those before it,
+  /// then those after it. Disabled tags and weight syntax are left out.
+  static List<String> contextTags({
+    required String text,
+    required int cursorPosition,
+    int max = 6,
+    bool splitOnSpaces = false,
+  }) {
+    final cursor = cursorPosition.clamp(0, text.length);
+    final separator = splitOnSpaces ? _tagSeparatorWithSpaces : _tagSeparator;
+    List<String> tags(String part) => part
+        .replaceAll(_disabledSpan, ',')
+        .split(separator)
+        .map(_normalizeContextTag)
+        .where((tag) => tag.length >= 2)
+        .toList(growable: false);
+    final result = <String>[];
+    for (final tag in [
+      ...tags(text.substring(0, cursor)).reversed,
+      ...tags(text.substring(cursor)),
+    ]) {
+      if (result.length >= max) break;
+      if (!result.contains(tag)) result.add(tag);
+    }
+    return result;
+  }
+
+  static String _normalizeContextTag(String raw) {
+    var value = raw.trim().replaceFirst(_numericWeightStart, '');
+    if (value.endsWith('::')) value = value.substring(0, value.length - 2);
+    return _normalizeExistingTag(value);
   }
 
   /// Returns whether an edit changed the tag fragment at the caret.

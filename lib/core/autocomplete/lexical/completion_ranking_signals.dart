@@ -23,7 +23,7 @@ class DefaultCompletionRankingSignals implements CompletionRankingSignals {
 
   static const double maxBoost = 3000;
   static const int contextTags = 6;
-  static const int relatedPerTag = 300;
+  static const int relatedLimit = 300;
 
   String? _contextKey;
   Map<String, double> _contextBoosts = const {};
@@ -58,25 +58,23 @@ class DefaultCompletionRankingSignals implements CompletionRankingSignals {
     final key = nearby.join(',');
     if (key == _contextKey) return _contextBoosts;
     final boosts = <String, double>{};
-    for (final tag in nearby) {
-      final List<CompletionCandidate> related;
-      try {
-        related = await _cooccurrence!.search(
-          query.copyWith(token: '', relatedTag: tag, limit: relatedPerTag),
-        );
-      } catch (_) {
-        continue;
-      }
-      final best = related.fold<double>(
-        0,
-        (max, row) => math.max(max, row.relatedScore ?? 0),
+    // One query for the nearby tags together: tags that fit all of them
+    // rank above ones that fit only the nearest.
+    try {
+      final related = await _cooccurrence!.search(
+        query.copyWith(
+          token: '',
+          relatedTag: nearby.first,
+          contextTags: nearby.skip(1).toList(growable: false),
+          limit: relatedLimit,
+        ),
       );
-      if (best <= 0) continue;
       for (final row in related) {
-        final value = (row.relatedScore ?? 0) / best * maxBoost;
-        final id = row.stableId;
-        if (value > (boosts[id] ?? 0)) boosts[id] = value;
+        final value = (row.relatedScore ?? 0) * maxBoost;
+        if (value > 0) boosts[row.stableId] = value;
       }
+    } catch (_) {
+      return const {};
     }
     _contextKey = key;
     _contextBoosts = boosts;

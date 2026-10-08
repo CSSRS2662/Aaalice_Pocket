@@ -85,7 +85,7 @@ class CompletionOverlay extends StatelessWidget {
         maxHeight >= headerExtent + candidateExtent + footerExtent;
     final scrollHeader = maxHeight < headerExtent + candidateExtent;
     final header = _CompletionHeader(
-      query: _displayQuery(state.query),
+      query: _displayQuery(context, state.query),
       resultCount: state.candidates.length,
       related: state.query?.relatedTag != null,
       isRelatedPinned: isRelatedPinned,
@@ -240,10 +240,16 @@ class CompletionOverlay extends StatelessWidget {
     );
   }
 
-  static String _displayQuery(CompletionQuery? query) {
+  static String _displayQuery(BuildContext context, CompletionQuery? query) {
     if (query == null) return '';
     if (query.token.isNotEmpty) return query.token;
-    return query.relatedTag ?? '';
+    final relatedTag = query.relatedTag ?? '';
+    // Suggestions that fit several written tags say so.
+    if (relatedTag.isEmpty || query.contextTags.isEmpty) return relatedTag;
+    return context.l10n.autocomplete_relatedWithContext(
+      relatedTag,
+      query.contextTags.length + 1,
+    );
   }
 }
 

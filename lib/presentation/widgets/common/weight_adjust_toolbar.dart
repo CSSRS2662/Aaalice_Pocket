@@ -50,6 +50,10 @@ class WeightAdjustToolbarWrapper extends StatefulWidget {
   /// Copies the semantic prompt selection when the host projects or expands it.
   final VoidCallback? onCopySelection;
 
+  /// Shows tags related to the one at the caret. The toolbar offers it for
+  /// the selected tag, the touch counterpart of Ctrl+click.
+  final VoidCallback? onShowRelated;
+
   const WeightAdjustToolbarWrapper({
     super.key,
     required this.child,
@@ -58,6 +62,7 @@ class WeightAdjustToolbarWrapper extends StatefulWidget {
     this.enabled = true,
     this.enableWheelAdjustment = true,
     this.onCopySelection,
+    this.onShowRelated,
   });
 
   /// Weight-enabled prompt fields use the unified toolbar for touch selection.
@@ -239,6 +244,23 @@ class _WeightAdjustToolbarWrapperState
     _overlayController.hide();
   }
 
+  /// Closes the toolbar with the caret at the end of the selected tag's own
+  /// text (inside any weight syntax), then asks for its related tags.
+  void _showRelated() {
+    final controller = widget.controller;
+    final selection = controller.selection;
+    _hideToolbar();
+    if (selection.isValid && !selection.isCollapsed) {
+      final selected = selection.textInside(controller.text);
+      final base = PromptWeightEditing.parseWeightSyntax(selected).baseText;
+      final at = base.isEmpty ? -1 : selected.indexOf(base);
+      controller.selection = TextSelection.collapsed(
+        offset: at < 0 ? selection.end : selection.start + at + base.length,
+      );
+    }
+    widget.onShowRelated?.call();
+  }
+
   void _adjustWeightByStep(double step) {
     if (!PromptWeightEditing.protectNegativeBlockSyntax(widget.controller)) {
       return;
@@ -354,6 +376,7 @@ class _WeightAdjustToolbarWrapperState
       overlaySize: layoutInfo.overlaySize,
       onClose: _hideToolbar,
       onCopySelection: widget.onCopySelection,
+      onShowRelated: widget.onShowRelated == null ? null : _showRelated,
       enableWheelAdjustment: widget.enableWheelAdjustment,
       onInteractingChanged: (interacting) {
         _isInteractingWithToolbar = interacting;
@@ -411,6 +434,7 @@ class _WeightAdjustToolbar extends StatelessWidget {
     required this.overlaySize,
     required this.onClose,
     required this.onCopySelection,
+    required this.onShowRelated,
     required this.enableWheelAdjustment,
     required this.onInteractingChanged,
   });
@@ -419,6 +443,7 @@ class _WeightAdjustToolbar extends StatelessWidget {
   final Size overlaySize;
   final VoidCallback onClose;
   final VoidCallback? onCopySelection;
+  final VoidCallback? onShowRelated;
   final bool enableWheelAdjustment;
   final ValueChanged<bool> onInteractingChanged;
 
@@ -520,6 +545,13 @@ class _WeightAdjustToolbar extends StatelessWidget {
                     onPressed: _copySelection,
                     icon: const Icon(Icons.copy_rounded, size: 18),
                   ),
+                  if (onShowRelated case final showRelated?)
+                    IconButton(
+                      key: const ValueKey('prompt-selection-related-button'),
+                      tooltip: context.l10n.autocomplete_relatedTagsAction,
+                      onPressed: showRelated,
+                      icon: const Icon(Icons.hub_outlined, size: 18),
+                    ),
                   if (tags.isNotEmpty)
                     IconButton(
                       key: const ValueKey('text-selection-enabled-button'),

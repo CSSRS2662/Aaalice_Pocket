@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nai_launcher/core/constants/storage_keys.dart';
 import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/screens/generation/widgets/prompt_group_controller.dart';
@@ -19,6 +20,7 @@ Future<(PromptGroupCollection, _Calls)> _openSheet(
   Size size = const Size(360, 800),
   double textScale = 1,
   String sectionId = 's1',
+  bool autocomplete = true,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -34,7 +36,11 @@ Future<(PromptGroupCollection, _Calls)> _openSheet(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        localStorageServiceProvider.overrideWith((ref) => MemoryLocalStorage()),
+        localStorageServiceProvider.overrideWith(
+          (ref) =>
+              MemoryLocalStorage()
+                ..values[StorageKeys.enableAutocomplete] = autocomplete,
+        ),
       ],
       child: MaterialApp(
         locale: const Locale('zh'),
@@ -176,5 +182,67 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('prompt_group_edit_title')), findsNothing);
     expect(calls.deleted, ['s1']);
+  });
+
+  testWidgets('the comma key separates tags without doubling commas', (
+    tester,
+  ) async {
+    final (groups, _) = await _openSheet(tester, autocomplete: false);
+    final controller = groups.sectionById('s1')!.controller;
+    final comma = find.byKey(const ValueKey('prompt_group_edit_comma'));
+    final original = controller.text;
+
+    await tester.tap(comma);
+    await tester.pump();
+    expect(controller.text, '$original, ');
+    expect(controller.selection.baseOffset, controller.text.length);
+
+    // Right after a comma it only settles the caret.
+    await tester.tap(comma);
+    await tester.pump();
+    expect(controller.text, '$original, ');
+
+    // Just before a comma it steps over it.
+    controller.selection = const TextSelection.collapsed(offset: 7);
+    await tester.tap(comma);
+    await tester.pump();
+    expect(controller.text, '$original, ');
+    expect(controller.selection.baseOffset, 'uniform, '.length);
+    expect(groups.sectionById('s1')!.focusNode.hasFocus, isTrue);
+  });
+
+  testWidgets('header tools go to the bottom row as the header gets tight', (
+    tester,
+  ) async {
+    Finder inHeader(Finder finder) => find.descendant(
+      of: find.byKey(const ValueKey('prompt_group_edit_header_tools')),
+      matching: finder,
+    );
+    final toggle = find.byKey(const ValueKey('tag-mode-button'));
+    final menu = find.byKey(const ValueKey('prompt_group_edit_menu'));
+
+    await _openSheet(tester, size: const Size(600, 800), autocomplete: false);
+    expect(inHeader(toggle), findsOneWidget);
+    expect(inHeader(menu), findsOneWidget);
+    final comma = tester.getRect(
+      find.byKey(const ValueKey('prompt_group_edit_comma')),
+    );
+    // The comma key ends the bottom row, right above the keyboard.
+    expect(comma.right, closeTo(600 - 12, 1));
+
+    await tester.pumpWidget(const SizedBox());
+    await _openSheet(
+      tester,
+      size: const Size(320, 640),
+      textScale: 2,
+      autocomplete: false,
+    );
+    expect(
+      find.byKey(const ValueKey('prompt_group_edit_header_tools')),
+      findsNothing,
+    );
+    expect(toggle, findsOneWidget);
+    expect(menu, findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

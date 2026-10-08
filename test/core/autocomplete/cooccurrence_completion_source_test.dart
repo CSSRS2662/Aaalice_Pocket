@@ -9,55 +9,121 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   test(
-    'enriches CSV intersections and ranks them by Jaccard similarity',
+    'ranks by fit with the related tag, leaving out what is written',
     () async {
-      final dataSource = _FakeCooccurrenceDataSource([
-        const RelatedTag(tag: 'long_hair', count: 193346),
-        const RelatedTag(tag: 'halo', count: 221957),
-        const RelatedTag(tag: 'solo', count: 170374),
-      ]);
+      final dataSource = _FakeCooccurrenceDataSource({
+        'classroom': const [
+          RelatedTag(tag: 'school_uniform', count: 12000),
+          RelatedTag(tag: 'solo', count: 3000),
+          RelatedTag(tag: 'desk', count: 2000),
+          RelatedTag(tag: 'smile', count: 1500),
+          RelatedTag(tag: 'highres', count: 2500),
+        ],
+      });
       final source = CooccurrenceCompletionSource(
         dataSource,
         catalog: _FakeCatalog({
-          'blue_archive': const TagCatalogRecord(
-            canonicalTag: 'blue_archive',
-            category: TagCategory.copyright,
-            postCount: 244929,
-          ),
-          'halo': const TagCatalogRecord(
-            canonicalTag: 'halo',
-            category: TagCategory.general,
-            postCount: 265497,
-          ),
-          'long_hair': const TagCatalogRecord(
-            canonicalTag: 'long_hair',
-            category: TagCategory.general,
-            postCount: 4350743,
-          ),
-          'solo': const TagCatalogRecord(
-            canonicalTag: 'solo',
-            category: TagCategory.meta,
-            postCount: 5000954,
-          ),
+          'classroom': _record('classroom', 60000),
+          'school_uniform': _record('school_uniform', 900000),
+          'solo': _record('solo', 5000000),
+          'desk': _record('desk', 80000),
+          'smile': _record('smile', 2000000),
+          'highres': _record('highres', 5000000, TagCategory.meta),
         }),
       );
 
       final results = await source.search(
-        _query(existingTags: const {'blue_archive', 'solo'}),
+        _query(relatedTag: 'classroom', existingTags: const {'smile'}),
       );
 
+      // solo shows up less often than chance; meta tags are never offered.
       expect(results.map((candidate) => candidate.canonicalTag), [
-        'halo',
-        'long_hair',
+        'school_uniform',
+        'desk',
       ]);
-      expect(results.first.category, TagCategory.general);
-      expect(results.first.postCount, 265497);
-      expect(results.first.cooccurrenceCount, 221957);
-      expect(results.first.relatedScore, closeTo(0.769, 0.001));
+      expect(results.first.relatedScore, 1.0);
+      expect(results.first.cooccurrenceCount, 12000);
       expect(results.first.sources, {CompletionSourceKind.cooccurrence});
-      expect(dataSource.requestedLimit, CompletionResultLimits.maxRelatedTags);
+      expect(
+        dataSource.requestedLimits['classroom'],
+        CooccurrenceCompletionSource.rowsPerContextTag,
+      );
     },
   );
+
+  test('written context lifts what fits it and drops what conflicts', () async {
+    final dataSource = _FakeCooccurrenceDataSource({
+      'outdoors': const [
+        RelatedTag(tag: 'day', count: 400000),
+        RelatedTag(tag: 'tree', count: 200000),
+        RelatedTag(tag: 'night_sky', count: 60000),
+      ],
+      'night': const [
+        RelatedTag(tag: 'night_sky', count: 150000),
+        RelatedTag(tag: 'tree', count: 40000),
+        RelatedTag(tag: 'day', count: 2000),
+      ],
+    });
+    final catalog = _FakeCatalog({
+      'outdoors': _record('outdoors', 1000000),
+      'night': _record('night', 500000),
+      'day': _record('day', 1500000),
+      'tree': _record('tree', 800000),
+      'night_sky': _record('night_sky', 200000),
+    });
+    final source = CooccurrenceCompletionSource(dataSource, catalog: catalog);
+
+    final alone = await source.search(_query(relatedTag: 'outdoors'));
+    expect(alone.first.canonicalTag, 'day');
+
+    final withNight = await source.search(
+      _query(relatedTag: 'outdoors', contextTags: const ['night']),
+    );
+    final order = withNight.map((candidate) => candidate.canonicalTag).toList();
+    expect(order.first, 'night_sky');
+    expect(order.indexOf('day'), greaterThan(order.indexOf('tree')));
+  });
+
+  test('habits lift a tag and add ones the pack does not know', () async {
+    final dataSource = _FakeCooccurrenceDataSource({
+      'outdoors': const [
+        RelatedTag(tag: 'day', count: 400000),
+        RelatedTag(tag: 'tree', count: 200000),
+      ],
+    });
+    final catalog = _FakeCatalog({
+      'outdoors': _record('outdoors', 1000000),
+      'day': _record('day', 1500000),
+      'tree': _record('tree', 800000),
+    });
+    List<String>? askedContext;
+    final withHabits = CooccurrenceCompletionSource(
+      dataSource,
+      catalog: catalog,
+      personalPairs: (context) {
+        askedContext = context;
+        return const {'tree': 1.0, '淡绿色t恤': 1.0};
+      },
+    );
+    final plain = CooccurrenceCompletionSource(dataSource, catalog: catalog);
+    double? scoreOf(List<CompletionCandidate> results, String tag) => results
+        .where((candidate) => candidate.canonicalTag == tag)
+        .firstOrNull
+        ?.relatedScore;
+
+    final query = _query(relatedTag: 'outdoors', contextTags: const ['beach']);
+    final before = await plain.search(query);
+    final after = await withHabits.search(query);
+
+    expect(askedContext, ['outdoors', 'beach']);
+    expect(scoreOf(after, 'tree'), greaterThan(scoreOf(before, 'tree')!));
+    final custom = after.singleWhere(
+      (candidate) => candidate.canonicalTag == '淡绿色t恤',
+    );
+    expect(custom.category, TagCategory.general);
+    expect(custom.postCount, 0);
+    expect(scoreOf(before, '淡绿色t恤'), isNull);
+  });
 
   test('compact database returns stable bidirectional relations', () async {
     sqfliteFfiInit();
@@ -112,9 +178,9 @@ void main() {
     () async {
       final completer = Future<CooccurrenceDataSource>.delayed(
         const Duration(milliseconds: 1),
-        () => _FakeCooccurrenceDataSource([
-          const RelatedTag(tag: 'smile', count: 50),
-        ]),
+        () => _FakeCooccurrenceDataSource({
+          '1girl': const [RelatedTag(tag: 'smile', count: 400)],
+        }),
       );
       final source = CooccurrenceCompletionSource.withLoader(
         () => completer,
@@ -137,15 +203,26 @@ void main() {
       );
 
       expect(results.single.canonicalTag, 'smile');
-      expect(results.single.relatedScore, closeTo(50 / 1450, 0.0001));
+      expect(results.single.relatedScore, 1.0);
     },
   );
 }
 
+TagCatalogRecord _record(
+  String tag,
+  int postCount, [
+  TagCategory category = TagCategory.general,
+]) => TagCatalogRecord(
+  canonicalTag: tag,
+  category: category,
+  postCount: postCount,
+);
+
 CompletionQuery _query({
   String relatedTag = 'blue_archive',
+  List<String> contextTags = const [],
   int limit = CompletionResultLimits.all,
-  Set<String> existingTags = const {'blue_archive'},
+  Set<String> existingTags = const {},
 }) => CompletionQuery(
   fullText: '$relatedTag, ',
   cursorPosition: relatedTag.length + 2,
@@ -158,13 +235,14 @@ CompletionQuery _query({
   limit: limit,
   locale: 'en',
   relatedTag: relatedTag,
+  contextTags: contextTags,
 );
 
 class _FakeCooccurrenceDataSource extends CooccurrenceDataSource {
   _FakeCooccurrenceDataSource(this.rows);
 
-  final List<RelatedTag> rows;
-  int? requestedLimit;
+  final Map<String, List<RelatedTag>> rows;
+  final Map<String, int> requestedLimits = {};
 
   @override
   Future<List<RelatedTag>> getRelatedTags(
@@ -172,8 +250,8 @@ class _FakeCooccurrenceDataSource extends CooccurrenceDataSource {
     int limit = 20,
     int minCount = 1,
   }) async {
-    requestedLimit = limit;
-    return rows.take(limit).toList(growable: false);
+    requestedLimits[tag] = limit;
+    return (rows[tag] ?? const []).take(limit).toList(growable: false);
   }
 }
 

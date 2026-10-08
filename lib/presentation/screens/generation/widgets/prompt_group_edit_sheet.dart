@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,6 +14,7 @@ import '../../../widgets/prompt/prompt_footer_style.dart';
 import '../../../widgets/prompt/prompt_tag_mode_toggle.dart';
 import '../../../widgets/prompt/unified/unified_prompt_config.dart';
 import '../../../widgets/prompt/unified/unified_prompt_input.dart';
+import 'prompt_completion_exclusions.dart';
 import 'prompt_group_controller.dart';
 import 'prompt_input_models.dart';
 
@@ -158,38 +161,67 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
           return const SizedBox.shrink();
         }
         final inputKey = ValueKey('prompt_group_input_${section.id}');
-        final content = Column(
-          children: [
-            _EditorHeader(
-              index: widget.groups.indexOf(section.id),
-              total: widget.groups.sections.length,
-              onStep: _step,
-              onDone: _close,
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _slideBetweenSections(
-                  context,
-                  inputKey,
-                  KeyedSubtree(
-                    key: inputKey,
-                    child: _buildInput(context, section),
+        final index = widget.groups.indexOf(section.id);
+        final total = widget.groups.sections.length;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // The mode toggle and menu go next to the title as far as the
+            // row has room, leaving the bottom row to typing tools.
+            final onTop = _EditorHeader.toolsThatFit(
+              context,
+              maxWidth: constraints.maxWidth,
+              index: index,
+              total: total,
+            );
+            final toggle = PromptTagModeToggle(sessionId: _modeSessionId);
+            final menu = _buildMenu(context, section);
+            final content = Column(
+              children: [
+                _EditorHeader(
+                  index: index,
+                  total: total,
+                  onStep: _step,
+                  onDone: _close,
+                  tools: switch (onTop) {
+                    _HeaderTools.toggleAndMenu => [toggle, menu],
+                    _HeaderTools.menu => [menu],
+                    _HeaderTools.none => const [],
+                  },
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _slideBetweenSections(
+                      context,
+                      inputKey,
+                      KeyedSubtree(
+                        key: inputKey,
+                        child: _buildInput(context, section),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 12, 12),
-              child: _buildToolbar(context, section),
-            ),
-          ],
-        );
-        // Centered dialogs on wide windows give a loose height.
-        return LayoutBuilder(
-          builder: (context, constraints) => constraints.hasBoundedHeight
-              ? content
-              : SizedBox(height: 560, child: content),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 12, 12),
+                  child: _buildToolbar(
+                    context,
+                    section,
+                    tools: switch (onTop) {
+                      _HeaderTools.toggleAndMenu => const [],
+                      _HeaderTools.menu => [toggle],
+                      _HeaderTools.none => [toggle, menu],
+                    },
+                    // Everything below: a narrower comma key keeps the row.
+                    commaWidth: onTop == _HeaderTools.none ? 48 : 64,
+                  ),
+                ),
+              ],
+            );
+            // Centered dialogs on wide windows give a loose height.
+            return constraints.hasBoundedHeight
+                ? content
+                : SizedBox(height: 560, child: content);
+          },
         );
       },
     );
@@ -225,7 +257,65 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
     );
   }
 
+  /// Tags the other included sections and the fixed tags already add.
+  Set<String> _writtenElsewhere(PromptGroupSection section) =>
+      promptCompletionExclusions(
+        ref,
+        negative: widget.negative,
+        otherTexts: [
+          for (final other in widget.groups.sections)
+            if (other.id != section.id && other.enabled) other.controller.text,
+        ],
+      );
+
+  /// Types ", " at the caret so tags can be split without leaving Chinese
+  /// input. Next to a comma it only moves past it, never doubling it.
+  void _insertComma(PromptGroupSection section) {
+    final controller = section.controller;
+    final text = controller.text;
+    final selection = controller.selection;
+    final caret = selection.isValid
+        ? selection.end.clamp(0, text.length)
+        : text.length;
+    final before = text.substring(0, caret).trimRight();
+    final after = text.substring(caret);
+    final String next;
+    final int offset;
+    if (before.isEmpty) {
+      // Nothing to separate from yet.
+      next = text;
+      offset = caret;
+    } else if (before.endsWith(',')) {
+      next = '$before ${after.trimLeft()}';
+      offset = before.length + 1;
+    } else if (after.trimLeft().startsWith(',')) {
+      final comma = caret + after.indexOf(',');
+      var end = comma + 1;
+      while (end < text.length && text.codeUnitAt(end) == 0x20) {
+        end++;
+      }
+      next = text;
+      offset = end;
+    } else {
+      next = '$before, ${after.trimLeft()}';
+      offset = before.length + 2;
+    }
+    controller.value = TextEditingValue(
+      text: next,
+      selection: TextSelection.collapsed(offset: offset),
+    );
+    if (!section.focusNode.hasFocus) section.focusNode.requestFocus();
+    if (next != text) widget.callbacks.onChanged();
+  }
+
   Widget _buildInput(BuildContext context, PromptGroupSection section) {
+    return CompletionExclusionScope(
+      tags: () => _writtenElsewhere(section),
+      child: _buildField(context, section),
+    );
+  }
+
+  Widget _buildField(BuildContext context, PromptGroupSection section) {
     final colors = Theme.of(context).colorScheme;
     final callbacks = widget.callbacks;
     return UnifiedPromptInput(
@@ -263,37 +353,61 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
     );
   }
 
-  Widget _buildToolbar(BuildContext context, PromptGroupSection section) {
+  /// Include toggle at the start; the assistant, any [tools] that did not
+  /// fit the header, and the comma key at the end, right above the keyboard.
+  Widget _buildToolbar(
+    BuildContext context,
+    PromptGroupSection section, {
+    required List<Widget> tools,
+    required double commaWidth,
+  }) {
     final callbacks = widget.callbacks;
-    return Row(
+    final row = Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Flexible(
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: _IncludeToggle(
-              enabled: section.enabled,
-              onTap: () => callbacks.onToggleEnabled(section.id),
+        _IncludeToggle(
+          enabled: section.enabled,
+          onTap: () => callbacks.onToggleEnabled(section.id),
+        ),
+        const SizedBox(width: 4),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PromptAssistantOverlay(
+              key: ValueKey('prompt_group_assistant_${section.id}'),
+              placement: PromptAssistantPlacement.inline,
+              expandInPlace: false,
+              iconOnly: true,
+              compactDesktopToolbar: true,
+              supportsTagMode: true,
+              tagModeSessionId: _modeSessionId,
+              sessionId: '${_modeSessionId}_group_${section.id}',
+              controller: section.controller,
+              onChanged: (_) => callbacks.onChanged(),
+              onOpenSettings: callbacks.onOpenAssistantSettings,
             ),
-          ),
+            for (final tool in tools) ...[const SizedBox(width: 4), tool],
+            const SizedBox(width: 8),
+            _CommaKey(
+              width: commaWidth,
+              onPressed: () => _insertComma(section),
+            ),
+          ],
         ),
-        const SizedBox(width: 4),
-        PromptAssistantOverlay(
-          key: ValueKey('prompt_group_assistant_${section.id}'),
-          placement: PromptAssistantPlacement.inline,
-          expandInPlace: false,
-          iconOnly: true,
-          compactDesktopToolbar: true,
-          supportsTagMode: true,
-          tagModeSessionId: _modeSessionId,
-          sessionId: '${_modeSessionId}_group_${section.id}',
-          controller: section.controller,
-          onChanged: (_) => callbacks.onChanged(),
-          onOpenSettings: callbacks.onOpenAssistantSettings,
-        ),
-        const SizedBox(width: 4),
-        PromptTagModeToggle(sessionId: _modeSessionId),
-        _buildMenu(context, section),
       ],
+    );
+    // Too wide (very large text): the whole row scrolls instead of cutting
+    // labels short, starting from the end where the typing tools are.
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        key: const ValueKey('prompt_group_edit_toolbar'),
+        scrollDirection: Axis.horizontal,
+        reverse: true,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minWidth: constraints.maxWidth),
+          child: IntrinsicWidth(child: row),
+        ),
+      ),
     );
   }
 
@@ -345,23 +459,82 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
   }
 }
 
+/// Which of the text/tag toggle and the menu the header holds.
+enum _HeaderTools { toggleAndMenu, menu, none }
+
 /// Section position with neighbours: arrows around a swipeable title with
-/// page dots, and Done on the right.
+/// page dots, then [tools] and Done on the right.
 class _EditorHeader extends StatelessWidget {
   const _EditorHeader({
     required this.index,
     required this.total,
     required this.onStep,
     required this.onDone,
+    this.tools = const [],
   });
 
   /// More dots than this stop telling anything at a glance.
   static const int maxDots = 9;
 
+  static const EdgeInsetsDirectional _padding = EdgeInsetsDirectional.fromSTEB(
+    4,
+    2,
+    12,
+    6,
+  );
+  static const double _arrowExtent = 48;
+  static const EdgeInsets _donePadding = EdgeInsets.symmetric(horizontal: 18);
+
+  static const double _toggleWidth = 88;
+  static const double _menuWidth = 48;
+
   final int index;
   final int total;
   final ValueChanged<int> onStep;
   final VoidCallback onDone;
+  final List<Widget> tools;
+
+  static TextStyle? _titleStyle(ThemeData theme) =>
+      theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700);
+
+  /// Which tools share one [maxWidth] row with the title and Done without
+  /// cutting the title short (large text, narrow windows).
+  static _HeaderTools toolsThatFit(
+    BuildContext context, {
+    required double maxWidth,
+    required int index,
+    required int total,
+  }) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    double widthOf(String text, TextStyle? style) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+        maxLines: 1,
+      )..layout();
+      final width = painter.width;
+      painter.dispose();
+      return width;
+    }
+
+    final title = widthOf(
+      '${l10n.prompt_groupLabel(index + 1)} / $total',
+      _titleStyle(theme),
+    );
+    final done = math.max(
+      64.0,
+      widthOf(l10n.common_done, theme.textTheme.labelLarge) +
+          _donePadding.horizontal,
+    );
+    final base = _padding.horizontal + 2 * _arrowExtent + title + 8 + done;
+    if (base + _toggleWidth + 4 + _menuWidth + 8 <= maxWidth) {
+      return _HeaderTools.toggleAndMenu;
+    }
+    if (base + _menuWidth + 8 <= maxWidth) return _HeaderTools.menu;
+    return _HeaderTools.none;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -369,7 +542,7 @@ class _EditorHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(4, 2, 12, 6),
+      padding: _padding,
       child: Row(
         children: [
           // The title keeps all spare width; actions stay at their size.
@@ -406,9 +579,7 @@ class _EditorHeader extends StatelessWidget {
                             ],
                           ),
                           key: const ValueKey('prompt_group_edit_title'),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: _titleStyle(theme),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -430,9 +601,22 @@ class _EditorHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          if (tools.isNotEmpty) ...[
+            Row(
+              key: const ValueKey('prompt_group_edit_header_tools'),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                tools.first,
+                const SizedBox(width: 4),
+                ...tools.skip(1),
+              ],
+            ),
+            const SizedBox(width: 8),
+          ],
           FilledButton.tonal(
             key: const ValueKey('prompt_group_edit_done'),
             onPressed: onDone,
+            style: FilledButton.styleFrom(padding: _donePadding),
             child: Text(l10n.common_done),
           ),
         ],
@@ -512,6 +696,56 @@ class _IncludeToggle extends StatelessWidget {
             enabled ? l10n.prompt_groupIncluded : l10n.prompt_groupOff,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A key-like button that types an English comma, so tags can be split
+/// without switching the keyboard out of Chinese input. It shares the
+/// neutral fill of the text/tag toggle and keeps the field focused.
+class _CommaKey extends StatelessWidget {
+  const _CommaKey({required this.width, required this.onPressed});
+
+  final double width;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final height = PromptFooterStyle.height(context);
+    return TextFieldTapRegion(
+      child: Tooltip(
+        message: context.l10n.prompt_insertComma,
+        child: TextButton(
+          key: const ValueKey('prompt_group_edit_comma'),
+          onPressed: onPressed,
+          style: PromptFooterStyle.button(context, width: width).copyWith(
+            backgroundColor: WidgetStatePropertyAll(
+              colors.surfaceContainerHigh,
+            ),
+            foregroundColor: WidgetStatePropertyAll(colors.onSurface),
+            padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+          ),
+          child: ExcludeSemantics(
+            child: SizedBox(
+              width: width,
+              height: height,
+              // A comma hangs below the baseline; lift it to the middle.
+              child: Align(
+                alignment: const Alignment(0, -0.35),
+                child: Text(
+                  ',',
+                  style: TextStyle(
+                    fontSize: height * 0.75,
+                    height: 1,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),

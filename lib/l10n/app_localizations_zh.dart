@@ -1686,6 +1686,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get prompt_groupMoveToFront => '移到最前';
 
   @override
+  String get prompt_insertComma => '插入逗号分隔';
+
+  @override
   String get prompt_positivePrompt => '正向提示词';
 
   @override
@@ -12566,6 +12569,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_usageHistoryCleared => '使用记录已清除';
 
   @override
+  String get autocomplete_pairLearning => '学习我的搭配习惯';
+
+  @override
+  String get autocomplete_pairLearningSubtitle =>
+      '记住你常在哪些词后面接哪些词，相关标签优先推荐它们；关闭后不再记录和使用，已学到的保留。只保存在本机，不同步';
+
+  @override
+  String get autocomplete_clearPairHistory => '清空搭配记录';
+
+  @override
+  String autocomplete_clearPairHistoryConfirm(int count) {
+    return '将删除已学到的 $count 组搭配，无法撤销。';
+  }
+
+  @override
+  String get autocomplete_pairHistoryCleared => '搭配记录已清空';
+
+  @override
   String get autocomplete_showMatchNotes => '显示匹配说明';
 
   @override
@@ -12653,10 +12674,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get autocomplete_relatedTagsSubtitle =>
-      '选中补全后自动推荐；也可在标签上按 Ctrl+Shift+Space 或 Ctrl+单击';
+      '选中补全、输入逗号或光标停在逗号后时，按前后已写的词推荐接下来的标签；也可在标签上按 Ctrl+Shift+Space 或 Ctrl+单击';
 
   @override
-  String get autocomplete_relatedTagsSubtitleTouch => '选中补全后自动推荐相关标签';
+  String get autocomplete_relatedTagsSubtitleTouch =>
+      '选中补全、输入逗号或光标停在逗号后时，按前后已写的词推荐接下来的标签；选中词条后也可点“相关标签”';
 
   @override
   String get autocomplete_relatedTagsAction => '相关标签';
@@ -12866,7 +12888,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String autocomplete_relatedMetric(int count, String score) {
-    return '共现 $count 次 · Jaccard $score';
+    return '共现 $count 次 · 相关度 $score';
+  }
+
+  @override
+  String autocomplete_relatedWithContext(String tag, int count) {
+    return '$tag 等 $count 个词';
   }
 
   @override
@@ -16872,6 +16899,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get prompt_groupMoveToFront => '移到最前';
+
+  @override
+  String get prompt_insertComma => '插入逗號分隔';
 
   @override
   String get prompt_positivePrompt => '正向提示詞';
@@ -27754,6 +27784,24 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_usageHistoryCleared => '使用記錄已清除';
 
   @override
+  String get autocomplete_pairLearning => '學習我的搭配習慣';
+
+  @override
+  String get autocomplete_pairLearningSubtitle =>
+      '記住你常在哪些詞後面接哪些詞，相關標籤優先推薦它們；關閉後不再記錄和使用，已學到的保留。只保存在本機，不同步';
+
+  @override
+  String get autocomplete_clearPairHistory => '清空搭配記錄';
+
+  @override
+  String autocomplete_clearPairHistoryConfirm(int count) {
+    return '將刪除已學到的 $count 組搭配，無法復原。';
+  }
+
+  @override
+  String get autocomplete_pairHistoryCleared => '搭配記錄已清空';
+
+  @override
   String get autocomplete_showMatchNotes => '顯示匹配說明';
 
   @override
@@ -27841,10 +27889,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get autocomplete_relatedTagsSubtitle =>
-      '選中補全後自動推薦；也可在標籤上按 Ctrl+Shift+Space 或 Ctrl+單擊';
+      '選中補全、輸入逗號或游標停在逗號後時，依前後已寫的詞推薦接下來的標籤；也可在標籤上按 Ctrl+Shift+Space 或 Ctrl+單擊';
 
   @override
-  String get autocomplete_relatedTagsSubtitleTouch => '選中補全後自動推薦相關標籤';
+  String get autocomplete_relatedTagsSubtitleTouch =>
+      '選中補全、輸入逗號或游標停在逗號後時，依前後已寫的詞推薦接下來的標籤；選中詞條後也可點「相關標籤」';
 
   @override
   String get autocomplete_relatedTagsAction => '相關標籤';
@@ -28054,7 +28103,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String autocomplete_relatedMetric(int count, String score) {
-    return '共現 $count 次 · Jaccard $score';
+    return '共現 $count 次 · 相關度 $score';
   }
 
   @override

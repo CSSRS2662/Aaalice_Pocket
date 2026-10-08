@@ -4,14 +4,17 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../database/services/service_providers.dart';
+import '../storage/local_storage_service.dart';
 import '../network/network_failure_diagnostics.dart';
 import '../network/network_client_provider.dart';
 import 'autocomplete_cache_database.dart';
+import 'autocomplete_settings.dart';
 import 'cooccurrence_completion_source.dart';
 import 'completion_models.dart';
 import 'completion_orchestrator.dart';
 import 'danbooru_completion_source.dart';
 import 'fast_tag_service_provider.dart';
+import 'lexical/tag_pair_history.dart';
 
 export 'fast_tag_service_provider.dart'
     show
@@ -98,12 +101,23 @@ class AutocompleteServices {
   );
 }
 
+/// Device-local record of tags written next to each other; never synced.
+final tagPairHistoryProvider = Provider<TagPairHistory>(
+  (ref) => TagPairHistory(ref.read(localStorageServiceProvider)),
+);
+
 final cooccurrenceCompletionSourceProvider =
     Provider<CooccurrenceCompletionSource>((ref) {
       final dataSource = ref.watch(cooccurrenceDataSourceProvider.future);
+      final pairs = ref.watch(tagPairHistoryProvider);
       return CooccurrenceCompletionSource.withLoader(
         () => dataSource,
         catalog: ref.watch(tagCatalogRepositoryProvider),
+        // Turning learning off stops using the record but keeps it.
+        personalPairs: (context) =>
+            ref.read(autocompleteSettingsProvider).pairLearningEnabled
+            ? pairs.scores(context)
+            : const {},
       );
     });
 

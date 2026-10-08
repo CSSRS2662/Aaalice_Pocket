@@ -19,6 +19,7 @@ import '../../../adaptive/interaction_policy.dart';
 import '../../../providers/generation/generation_settings_notifiers.dart';
 import '../../../providers/tag_library_page_provider.dart';
 import '../../../screens/tag_library_page/widgets/entry_add_dialog.dart';
+import '../../../../core/autocomplete/autocomplete_settings.dart' as completion;
 import '../../autocomplete/autocomplete_overlay_handle.dart';
 import '../../autocomplete/autocomplete_wrapper.dart';
 import '../../common/app_toast.dart';
@@ -1503,6 +1504,17 @@ class _UnifiedPromptInputState extends ConsumerState<UnifiedPromptInput> {
       contextMenuBuilder: _buildContextMenu,
     );
 
+    // 选中词条后的“相关标签”：触屏上 Ctrl+单击的等价入口
+    final VoidCallback? showRelated =
+        widget.config.enableAutocomplete &&
+            ref.watch(
+              completion.autocompleteSettingsProvider.select(
+                (settings) => settings.enabled && settings.relatedTagsEnabled,
+              ),
+            )
+        ? _autocompleteHandle.showRelated
+        : null;
+
     // 接管 Ctrl+C / Ctrl+X：覆盖 EditableText 内置的 CopySelectionTextIntent
     Widget clipboardAwareInput = Actions(
       actions: _clipboardActions,
@@ -1525,6 +1537,7 @@ class _UnifiedPromptInputState extends ConsumerState<UnifiedPromptInput> {
         enableAutocomplete: widget.config.enableAutocomplete,
         enableWheelAdjustment: enableWheelAdjustment,
         onCopySelection: _copyWeightSelection,
+        onShowRelated: showRelated,
         onChanged: _handleTextChanged,
         onSearch: (replace) => _openSearch(showReplace: replace),
         child: clipboardAwareInput,
@@ -1540,6 +1553,7 @@ class _UnifiedPromptInputState extends ConsumerState<UnifiedPromptInput> {
             enableWheelAdjustment: enableWheelAdjustment,
             enabled: !_tagMode && !widget.config.readOnly,
             onCopySelection: _copyWeightSelection,
+            onShowRelated: showRelated,
             child: clipboardAwareInput,
           );
 

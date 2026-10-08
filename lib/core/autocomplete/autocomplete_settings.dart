@@ -28,6 +28,7 @@ class AutocompleteSettings {
     this.spellCorrectionEnabled = true,
     this.contextRankingEnabled = true,
     this.personalRankingEnabled = true,
+    this.pairLearningEnabled = true,
     this.showMatchNotes = true,
   });
 
@@ -66,6 +67,10 @@ class AutocompleteSettings {
   /// Prefer tags this device accepted before.
   final bool personalRankingEnabled;
 
+  /// Learn which tags this person writes after which, and favour them in
+  /// related suggestions. Turning it off keeps what was learned.
+  final bool pairLearningEnabled;
+
   /// Show how a non-literal row matched (pinyin, typo fix, …).
   final bool showMatchNotes;
 
@@ -91,6 +96,7 @@ class AutocompleteSettings {
     bool? spellCorrectionEnabled,
     bool? contextRankingEnabled,
     bool? personalRankingEnabled,
+    bool? pairLearningEnabled,
     bool? showMatchNotes,
   }) {
     return AutocompleteSettings(
@@ -122,6 +128,7 @@ class AutocompleteSettings {
           contextRankingEnabled ?? this.contextRankingEnabled,
       personalRankingEnabled:
           personalRankingEnabled ?? this.personalRankingEnabled,
+      pairLearningEnabled: pairLearningEnabled ?? this.pairLearningEnabled,
       showMatchNotes: showMatchNotes ?? this.showMatchNotes,
     );
   }
@@ -247,6 +254,10 @@ class AutocompleteSettingsNotifier extends StateNotifier<AutocompleteSettings> {
           storage,
           StorageKeys.autocompletePersonalRanking,
         ),
+        pairLearningEnabled: _flag(
+          storage,
+          StorageKeys.autocompletePairLearning,
+        ),
         showMatchNotes: _flag(storage, StorageKeys.autocompleteShowMatchNotes),
       );
     } catch (_) {
@@ -258,7 +269,9 @@ class AutocompleteSettingsNotifier extends StateNotifier<AutocompleteSettings> {
       storage.getSetting<bool>(key, defaultValue: true) ?? true;
 
   static Set<FuzzyPinyinRule> _fuzzyRules(LocalStorageService storage) {
-    final stored = storage.getSetting<dynamic>(StorageKeys.autocompleteFuzzyPinyin);
+    final stored = storage.getSetting<dynamic>(
+      StorageKeys.autocompleteFuzzyPinyin,
+    );
     if (stored is! List) return FuzzyPinyinRule.defaults;
     return {
       for (final id in stored.whereType<String>())
@@ -325,6 +338,12 @@ class AutocompleteSettingsNotifier extends StateNotifier<AutocompleteSettings> {
   Future<void> setPersonalRankingEnabled(bool value) => _set(
     state.copyWith(personalRankingEnabled: value),
     StorageKeys.autocompletePersonalRanking,
+    value,
+  );
+
+  Future<void> setPairLearningEnabled(bool value) => _set(
+    state.copyWith(pairLearningEnabled: value),
+    StorageKeys.autocompletePairLearning,
     value,
   );
 

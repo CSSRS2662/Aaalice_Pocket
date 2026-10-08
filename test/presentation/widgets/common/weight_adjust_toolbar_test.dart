@@ -894,6 +894,77 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  testWidgets('the toolbar asks for tags related to the selected one', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    const body = 'cat, 1.40::smile::, dog';
+    final prompt = TextEditingController(text: body);
+    final focus = FocusNode();
+    addTearDown(prompt.dispose);
+    addTearDown(focus.dispose);
+    int? caretWhenAsked;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: InteractionPolicyScope(
+          initialPolicy: InteractionPolicy.touchFirst,
+          child: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomCenter,
+              child: SizedBox(
+                height: 160,
+                child: WeightAdjustToolbarWrapper(
+                  controller: prompt,
+                  focusNode: focus,
+                  onShowRelated: () =>
+                      caretWhenAsked = prompt.selection.baseOffset,
+                  child: ThemedInput(
+                    controller: prompt,
+                    focusNode: focus,
+                    maxLines: null,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    focus.requestFocus();
+    final start = body.indexOf('1.40');
+    prompt.selection = TextSelection(
+      baseOffset: start,
+      extentOffset: start + '1.40::smile::'.length,
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(
+      find.byKey(const ValueKey('prompt-selection-related-button')),
+    );
+    await tester.pump();
+
+    // The caret ends up after the tag itself, inside the weight syntax.
+    expect(caretWhenAsked, body.indexOf('smile') + 'smile'.length);
+    expect(
+      find.byKey(const ValueKey('weight_adjust_toolbar_surface')),
+      findsNothing,
+    );
+
+    prompt.selection = TextSelection.collapsed(offset: prompt.text.length);
+    focus.unfocus();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 250));
+    debugDefaultTargetPlatformOverride = null;
+  });
+
   testWidgets('double tap inside a weight block selects the whole block', (
     tester,
   ) async {

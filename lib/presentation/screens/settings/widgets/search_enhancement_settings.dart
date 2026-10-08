@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/autocomplete/autocomplete_providers.dart';
 import '../../../../core/autocomplete/autocomplete_settings.dart';
 import '../../../../core/autocomplete/lexical/lexical_search_providers.dart';
 import '../../../../core/autocomplete/lexical/pinyin_syllables.dart';
@@ -101,6 +102,25 @@ class SearchEnhancementSettings extends ConsumerWidget {
             ),
           ),
           SwitchListTile.adaptive(
+            key: const ValueKey('search-enhancement-pair-learning'),
+            title: Text(l10n.autocomplete_pairLearning),
+            subtitle: Text(l10n.autocomplete_pairLearningSubtitle),
+            value: settings.pairLearningEnabled,
+            onChanged: notifier.setPairLearningEnabled,
+          ),
+          Padding(
+            padding: _nestedPadding,
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: const ValueKey('search-enhancement-clear-pairs'),
+                icon: const Icon(Icons.delete_sweep_outlined, size: 18),
+                label: Text(l10n.autocomplete_clearPairHistory),
+                onPressed: () => _clearPairHistory(context, ref),
+              ),
+            ),
+          ),
+          SwitchListTile.adaptive(
             title: Text(l10n.autocomplete_showMatchNotes),
             subtitle: Text(l10n.autocomplete_showMatchNotesSubtitle),
             value: settings.showMatchNotes,
@@ -130,6 +150,26 @@ class SearchEnhancementSettings extends ConsumerWidget {
     if (context.mounted) {
       AppToast.success(context, context.l10n.autocomplete_usageHistoryCleared);
     }
+  }
+}
+
+/// Clearing works whether or not learning is on: turning it off only stops
+/// recording and using the pairs.
+Future<void> _clearPairHistory(BuildContext context, WidgetRef ref) async {
+  final history = ref.read(tagPairHistoryProvider);
+  final confirmed = await ThemedConfirmDialog.show(
+    context: context,
+    title: context.l10n.autocomplete_clearPairHistory,
+    content: context.l10n.autocomplete_clearPairHistoryConfirm(history.length),
+    confirmText: context.l10n.common_confirm,
+    cancelText: context.l10n.common_cancel,
+    type: ThemedConfirmDialogType.danger,
+    icon: Icons.delete_sweep_outlined,
+  );
+  if (!confirmed) return;
+  await history.clear();
+  if (context.mounted) {
+    AppToast.success(context, context.l10n.autocomplete_pairHistoryCleared);
   }
 }
 

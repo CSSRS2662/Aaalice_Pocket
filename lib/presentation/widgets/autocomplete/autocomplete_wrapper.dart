@@ -22,6 +22,7 @@ import '../../router/app_routes.dart';
 import 'autocomplete_config.dart';
 import 'autocomplete_overlay_handle.dart';
 import 'autocomplete_utils.dart';
+import 'completion_exclusion_scope.dart';
 import 'completion_overlay.dart';
 
 /// Unified local-first autocomplete shared by every tag and prompt field.
@@ -145,6 +146,10 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
   Offset? _cursorOffset;
   double _caretLineHeight = 0;
   String? _pinnedRelatedTag;
+
+  /// Suggestions opened by themselves at an empty slot: shown only when
+  /// there are some, and nothing is picked until the user moves to one.
+  bool _continuation = false;
 
   FocusNode get _focusNode => widget.focusNode ?? _ownedFocusNode!;
 
@@ -340,6 +345,8 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
       return;
     }
     if (textChanged && !activeTokenChanged) {
+      // A comma or line break after a tag: suggest what comes next.
+      if (_hasInputFocus && _continueFromContext()) return;
       _closeOverlay();
       return;
     }
@@ -381,6 +388,65 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
       return;
     }
     _scheduleCursorMetricsUpdate();
+    // Coming back to a prompt that ends in an empty slot picks up from it.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _hasInputFocus && _overlayEntry == null) {
+        _continueFromContext();
+      }
+    });
+  }
+
+  bool _atContinuationSlot() {
+    final selection = widget.controller.selection;
+    if (!selection.isValid || !selection.isCollapsed) return false;
+    return PromptTokenParser.isContinuationSlot(
+      text: widget.controller.text,
+      cursorPosition: selection.extentOffset,
+      splitOnSpaces: widget.config?.treatSpacesAsSeparators ?? false,
+    );
+  }
+
+  /// Suggests what to write next from the tags already there when the caret
+  /// rests in an empty slot after them, without a suggestion having been
+  /// picked first. Returns whether it started.
+  bool _continueFromContext() {
+    if (!mounted || !widget.enabled) return false;
+    if (!ref.read(autocompleteSettingsProvider).relatedTagsEnabled ||
+        !_atContinuationSlot()) {
+      return false;
+    }
+    _initializeUnified();
+    final pinned = _pinnedRelatedTag;
+    final current = _orchestrator?.state.query;
+    final next = PromptTokenParser.parseRelated(
+      text: widget.controller.text,
+      cursorPosition: widget.controller.selection.extentOffset,
+      limit: 1,
+      locale: '',
+      splitOnSpaces: widget.config?.treatSpacesAsSeparators ?? false,
+    );
+    if (next == null) return false;
+    // Already showing these suggestions; a space after the comma keeps them.
+    if (_overlayEntry != null &&
+        current?.relatedTag == (pinned ?? next.relatedTag) &&
+        current?.cursorPosition == next.cursorPosition &&
+        _sameTags(current!.contextTags, next.contextTags)) {
+      return true;
+    }
+    _startQuery(
+      related: true,
+      relatedTagOverride: pinned ?? next.relatedTag,
+      continuation: true,
+    );
+    return true;
+  }
+
+  static bool _sameTags(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var index = 0; index < a.length; index++) {
+      if (a[index] != b[index]) return false;
+    }
+    return true;
   }
 
   void _startQuery({
@@ -388,8 +454,10 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     String? relatedTagOverride,
     bool resetPinnedRelatedTag = false,
     bool keepEmptyVisible = false,
+    bool continuation = false,
   }) {
     if (!mounted || !widget.enabled) return;
+    _continuation = continuation;
     final settings = ref.read(autocompleteSettingsProvider);
     _maybePromptZhDictionary(settings);
     final config = widget.config;
@@ -420,6 +488,15 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     if (query == null) {
       _dismissOverlay();
       return;
+    }
+    if (query.relatedTag != null) {
+      // Tags in other sections or the fixed tags are not suggested again.
+      final elsewhere = CompletionExclusionScope.tagsOf(context);
+      if (elsewhere.isNotEmpty) {
+        query = query.copyWith(
+          existingTags: {...query.existingTags, ...elsewhere},
+        );
+      }
     }
     _keepEmptyQueryVisible =
         keepEmptyVisible ||
@@ -464,13 +541,14 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     final candidates = state.candidates;
     final hasVisibleState =
         candidates.isNotEmpty ||
-        state.isLocalLoading ||
-        state.isRemoteLoading ||
-        state.localError?.isNotEmpty == true ||
-        state.remoteError?.isNotEmpty == true ||
-        state.translationError?.isNotEmpty == true ||
-        state.query?.relatedTag != null ||
-        ((_keepEmptyQueryVisible ?? false) && state.query != null);
+        !_continuation &&
+            (state.isLocalLoading ||
+                state.isRemoteLoading ||
+                state.localError?.isNotEmpty == true ||
+                state.remoteError?.isNotEmpty == true ||
+                state.translationError?.isNotEmpty == true ||
+                state.query?.relatedTag != null ||
+                ((_keepEmptyQueryVisible ?? false) && state.query != null));
     if (!hasVisibleState || (!_hasInputFocus && _pinnedRelatedTag == null)) {
       if (_overlayEntry != null) {
         AppLogger.d(
@@ -496,6 +574,9 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
         : candidates.indexWhere((value) => value.stableId == _selectedId);
     if (stableIndex >= 0) {
       _selectedIndex = stableIndex;
+    } else if (_continuation) {
+      _selectedIndex = -1;
+      _selectedId = null;
     } else {
       _selectedIndex = candidates.indexWhere((value) => !value.isExisting);
       if (_selectedIndex < 0) _selectedIndex = 0;
@@ -679,6 +760,8 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     }
     if (event.logicalKey == LogicalKeyboardKey.enter ||
         event.logicalKey == LogicalKeyboardKey.tab) {
+      // Nothing picked yet: the key keeps its usual meaning.
+      if (_selectedIndex < 0) return KeyEventResult.ignored;
       if (event is KeyDownEvent) {
         _selectIndex(_selectedIndex);
         return KeyEventResult.handled;
@@ -762,6 +845,18 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     if (completedTag != null && settings.personalRankingEnabled) {
       unawaited(ref.read(tagUsageHistoryProvider).record(completedTag));
     }
+    if (completedTag != null && settings.pairLearningEnabled) {
+      final insertAt = query.replacementRange.start;
+      final previous = PromptTokenParser.contextTags(
+        text: query.fullText.substring(0, insertAt),
+        cursorPosition: insertAt,
+        max: 3,
+        splitOnSpaces: widget.config?.treatSpacesAsSeparators ?? false,
+      );
+      unawaited(
+        ref.read(tagPairHistoryProvider).record(previous, completedTag),
+      );
+    }
     _selectedId = null;
     _dismissOverlay();
     final nextRelatedTag = _pinnedRelatedTag ?? completedTag;
@@ -815,6 +910,26 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     }
 
     final settings = ref.read(autocompleteSettingsProvider);
+    if (startedAsRegular && settings.relatedTagsEnabled) {
+      // The caret lands after the tap; an empty slot after tags continues
+      // from them even when tapping a tag does not open completion.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_hasInputFocus) return;
+        if (_continueFromContext()) return;
+        _openOnTagClick(afterCaretSync: true);
+      });
+      return;
+    }
+    _openOnTagClick(startedAsRegular: startedAsRegular);
+  }
+
+  /// Opens completion for the tapped tag when that setting is on. The caret
+  /// moves after the tap, so the query waits a frame unless [afterCaretSync].
+  void _openOnTagClick({
+    bool startedAsRegular = true,
+    bool afterCaretSync = false,
+  }) {
+    final settings = ref.read(autocompleteSettingsProvider);
     final selection = widget.controller.selection;
     if (!startedAsRegular ||
         !settings.openOnTagClick ||
@@ -825,11 +940,17 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
       }
       return;
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    void open() {
       if (mounted && _hasInputFocus) {
         _startQuery(resetPinnedRelatedTag: true, keepEmptyVisible: true);
       }
-    });
+    }
+
+    if (afterCaretSync) {
+      open();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => open());
+    }
   }
 
   void _onPointerCancel(PointerCancelEvent event) {
@@ -851,6 +972,7 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
 
   void _dismissOverlay([String reason = 'query replaced']) {
     _keepEmptyQueryVisible = false;
+    _continuation = false;
     final state = _orchestrator?.state;
     if (_overlayEntry != null || state?.query != null) {
       AppLogger.d(

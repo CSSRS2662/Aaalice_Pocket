@@ -120,6 +120,7 @@ class CompletionQuery {
     required this.limit,
     required this.locale,
     this.relatedTag,
+    this.contextTags = const [],
     this.categoryFilter,
     this.kind = CompletionQueryKind.tag,
   });
@@ -132,6 +133,10 @@ class CompletionQuery {
   final int limit;
   final String locale;
   final String? relatedTag;
+
+  /// Tags already written around the caret, nearest first, that related
+  /// suggestions should fit together with [relatedTag].
+  final List<String> contextTags;
   final TagCategory? categoryFilter;
   final CompletionQueryKind kind;
 
@@ -150,6 +155,7 @@ class CompletionQuery {
     String? locale,
     String? relatedTag,
     bool clearRelatedTag = false,
+    List<String>? contextTags,
     TagCategory? categoryFilter,
     bool clearCategoryFilter = false,
     CompletionQueryKind? kind,
@@ -163,6 +169,7 @@ class CompletionQuery {
       limit: limit ?? this.limit,
       locale: locale ?? this.locale,
       relatedTag: clearRelatedTag ? null : relatedTag ?? this.relatedTag,
+      contextTags: contextTags ?? this.contextTags,
       categoryFilter: clearCategoryFilter
           ? null
           : categoryFilter ?? this.categoryFilter,

@@ -568,6 +568,74 @@ void main() {
     },
   );
 
+  testWidgets('a comma after a tag suggests what comes next, quietly', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: 'beach');
+    controller.selection = const TextSelection.collapsed(offset: 5);
+    final focusNode = FocusNode();
+    final source = _RecordingBaseSource();
+    addTearDown(() {
+      controller.dispose();
+      focusNode.dispose();
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          autocompleteSettingsProvider.overrideWith(
+            (ref) => _OpenOnTagClickSettingsNotifier(),
+          ),
+          autocompleteServicesProvider.overrideWithValue(
+            AutocompleteServices(
+              localSources: [source],
+              dictionaryTranslations: const _NoTranslations(),
+              llmTranslations: const _NoTranslations(),
+              danbooru: _NoDanbooru(),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: AutocompleteWrapper(
+              controller: controller,
+              focusNode: focusNode,
+              child: TextField(controller: controller, focusNode: focusNode),
+            ),
+          ),
+        ),
+      ),
+    );
+    focusNode.requestFocus();
+    await tester.pump();
+
+    controller.value = const TextEditingValue(
+      text: 'beach, ',
+      selection: TextSelection.collapsed(offset: 7),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 30));
+
+    expect(source.relatedTags.last, 'beach');
+    expect(find.text('Related tags'), findsOneWidget);
+    expect(find.text('smile'), findsOneWidget);
+
+    // Nothing is picked until the user moves to a row, so Enter keeps
+    // its usual meaning.
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(controller.text, 'beach, ');
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(controller.text, startsWith('beach, smile'));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('structural edits stay quiet but tag text deletion queries', (
     tester,
   ) async {
