@@ -45,6 +45,7 @@ class CompletionOverlay extends StatelessWidget {
     required this.onSelected,
     required this.onClose,
     required this.onOpenSettings,
+    this.tagSections = const {},
     this.onInsertSeparator,
     this.isRelatedPinned = false,
     this.onToggleRelatedPin,
@@ -64,6 +65,9 @@ class CompletionOverlay extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final VoidCallback onClose;
   final VoidCallback onOpenSettings;
+
+  /// Sections (1-based) of a grouped prompt that already hold each tag.
+  final Map<String, List<int>> tagSections;
 
   /// Ends the tag being written with a comma; shown when given.
   final VoidCallback? onInsertSeparator;
@@ -210,6 +214,10 @@ class CompletionOverlay extends StatelessWidget {
                                             showCount: showCount,
                                             showMatchNote:
                                                 settings.showMatchNotes,
+                                            sections: candidate.isExisting
+                                                ? tagSections[candidate
+                                                      .canonicalTag]
+                                                : null,
                                             onTap: () => onSelected(index),
                                           );
                                         },
@@ -578,6 +586,7 @@ class _CompletionTile extends StatelessWidget {
     required this.showCategory,
     required this.showCount,
     this.showMatchNote = true,
+    this.sections,
     required this.onTap,
   });
 
@@ -588,6 +597,9 @@ class _CompletionTile extends StatelessWidget {
   final bool showCategory;
   final bool showCount;
   final bool showMatchNote;
+
+  /// Sections of a grouped prompt that already hold this tag.
+  final List<int>? sections;
   final VoidCallback onTap;
 
   Widget? _matchNote(BuildContext context) {
@@ -632,26 +644,37 @@ class _CompletionTile extends StatelessWidget {
             ),
           ),
           padding: const EdgeInsets.only(left: 7, right: 8),
-          child: Opacity(
-            opacity: candidate.isExisting ? 0.46 : 1,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 480) {
-                  return _buildCompactContent(
-                    context,
-                    theme,
-                    categoryColor,
-                    secondary,
-                  );
-                }
-                return _buildWideContent(
-                  context,
-                  theme,
-                  categoryColor,
-                  secondary,
-                );
-              },
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Opacity(
+                  opacity: candidate.isExisting ? 0.46 : 1,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (constraints.maxWidth < 480) {
+                        return _buildCompactContent(
+                          context,
+                          theme,
+                          categoryColor,
+                          secondary,
+                        );
+                      }
+                      return _buildWideContent(
+                        context,
+                        theme,
+                        categoryColor,
+                        secondary,
+                      );
+                    },
+                  ),
+                ),
+              ),
+              // Stays clear on the faded row: where the tag already is.
+              if (sections case final numbers? when numbers.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                _SectionBadge(sections: numbers),
+              ],
+            ],
           ),
         ),
       ),
@@ -1450,6 +1473,65 @@ class _StatusIndicator extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Where an already written tag sits in a grouped prompt: the section icon
+/// and the section numbers, counted like the cards (left to right, top to
+/// bottom). Three numbers at most; the tooltip lists them all.
+class _SectionBadge extends StatelessWidget {
+  const _SectionBadge({required this.sections});
+
+  static const int _shown = 3;
+
+  final List<int> sections;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final description = context.l10n.autocomplete_duplicateInSections(
+      sections.join('、'),
+    );
+    final label = [
+      sections.take(_shown).join(' · '),
+      if (sections.length > _shown) '+${sections.length - _shown}',
+    ].join(' ');
+    return Tooltip(
+      message: description,
+      child: Semantics(
+        label: description,
+        excludeSemantics: true,
+        child: Container(
+          key: const ValueKey('autocomplete-candidate-sections'),
+          constraints: const BoxConstraints(minHeight: 22),
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+          decoration: BoxDecoration(
+            color: colors.secondaryContainer,
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.view_agenda_outlined,
+                size: 13,
+                color: colors.onSecondaryContainer,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.onSecondaryContainer,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -72,30 +72,49 @@ class CooccurrenceCompletionSource implements CompletionSource {
 
     final dataSource = await _loadDataSource();
     final contextRecords = await _recordsFor(contextNames);
-    final context = <RelatedContextTag>[];
-    for (final (distance, name) in contextNames.indexed) {
+    // The related tag decides whether names take part: after a general (or
+    // unknown) tag, character, series and other names stay out entirely.
+    final namesTakePart = switch (contextRecords[relatedTag]) {
+      final record? => !RelatedTagScorer.isGeneral(record.category),
+      null => false,
+    };
+    bool takesPart(TagCatalogRecord? record) =>
+        namesTakePart ||
+        record == null ||
+        RelatedTagScorer.isGeneral(record.category);
+
+    final usable = <(TagCatalogRecord, List<RelatedTag>)>[];
+    for (final name in contextNames) {
       final record = contextRecords[name];
-      if (record == null || record.postCount <= 0) continue;
+      if (record == null || record.postCount <= 0 || !takesPart(record)) {
+        continue;
+      }
       final rows = await dataSource.getRelatedTags(
         name,
         limit: rowsPerContextTag,
       );
-      if (rows.isEmpty) continue;
-      context.add(
+      if (rows.isNotEmpty) usable.add((record, rows));
+    }
+    // The nearest tag with data leads when the related tag itself has none.
+    final shares = RelatedTagScorer.shares([
+      for (final (record, _) in usable.skip(1)) record.postCount,
+    ]);
+    final context = [
+      for (final (index, (record, rows)) in usable.indexed)
         RelatedContextTag(
           record: record,
-          weight: RelatedTagScorer.contextWeight(
-            record.postCount,
-            distance: distance,
-            anchor: distance == 0,
-          ),
+          weight: shares[index],
           related: {for (final row in rows) _normalize(row.tag): row.count},
           complete: rows.length < rowsPerContextTag,
         ),
-      );
-    }
+    ];
 
-    final personal = _personalPairs?.call(contextNames) ?? const {};
+    final personal =
+        _personalPairs?.call([
+          for (final name in contextNames)
+            if (takesPart(contextRecords[name])) name,
+        ]) ??
+        const {};
     final excluded = {...query.existingTags, ...contextNames};
     final pool = <String>{
       for (final tag in context) ...tag.related.keys,
@@ -113,6 +132,8 @@ class CooccurrenceCompletionSource implements CompletionSource {
     );
     final combined = <String, double>{};
     for (final name in pool) {
+      // Habits follow the same rule: no names after a general tag.
+      if (!takesPart(records[name])) continue;
       final score =
           (related[name] ?? 0) + personalWeight * (personal[name] ?? 0);
       if (score > 0) combined[name] = score;

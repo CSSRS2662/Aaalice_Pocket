@@ -16,17 +16,49 @@ TagCatalogRecord _record(
 RelatedContextTag _context(
   TagCatalogRecord record,
   Map<String, int> related, {
+  double weight = 1,
   bool complete = true,
-  int distance = 0,
 }) => RelatedContextTag(
   record: record,
-  weight: RelatedTagScorer.contextWeight(record.postCount, distance: distance),
+  weight: weight,
   related: related,
   complete: complete,
 );
 
 void main() {
-  test('names only lead when the context already names one', () {
+  test('the last tag holds 60% and the rest split by specificity', () {
+    expect(RelatedTagScorer.shares(const []), [1]);
+    final shares = RelatedTagScorer.shares(const [60000, 6000000]);
+    expect(shares.first, RelatedTagScorer.anchorShare);
+    expect(shares.reduce((a, b) => a + b), closeTo(1, 1e-9));
+    // A specific tag speaks louder than a `1girl`-like one.
+    expect(shares[1], greaterThan(shares[2]));
+  });
+
+  test('the last tag leads even when a specific tag has bigger numbers', () {
+    // classroom's companions score far higher than smile's in raw votes;
+    // scaling each tag's votes lets smile's own pick reach the top.
+    final scores = RelatedTagScorer.score(
+      context: [
+        _context(_record('smile', 2000000), {
+          'grin': 150000,
+          'desk': 20000,
+        }, weight: 0.6),
+        _context(_record('classroom', 60000), {
+          'desk': 20000,
+          'grin': 4000,
+        }, weight: 0.4),
+      ],
+      candidates: {
+        'grin': _record('grin', 400000),
+        'desk': _record('desk', 80000),
+      },
+    );
+    expect(scores['grin'], 1.0);
+    expect(scores['desk']!, lessThan(1.0));
+  });
+
+  test('after a general tag only general tags are suggested', () {
     final scores = RelatedTagScorer.score(
       context: [
         _context(_record('kimono', 200000), {
@@ -43,12 +75,27 @@ void main() {
         'obi': _record('obi', 60000),
       },
     );
-    expect(scores['obi'], 1.0);
-    expect(scores['some_character']!, lessThan(1.0));
+    expect(scores.keys, ['obi']);
+  });
+
+  test('a character leads to its traits before its castmates', () {
+    final scores = RelatedTagScorer.score(
+      context: [
+        _context(_record('some_character', 3000, TagCategory.character), {
+          'green_eyes': 2400,
+          'castmate': 1500,
+        }),
+      ],
+      candidates: {
+        'castmate': _record('castmate', 5000, TagCategory.character),
+        'green_eyes': _record('green_eyes', 400000),
+      },
+    );
+    expect(scores['green_eyes'], 1.0);
+    expect(scores['castmate']!, lessThan(1.0));
   });
 
   test('a cut-off list still shows a popular tag conflicts', () {
-    final night = _record('night', 500000);
     // Cut off at 5000 shared posts: day, expected about 83000 times by
     // chance, was seen with night fewer than 5000 times.
     final scores = RelatedTagScorer.score(
@@ -56,12 +103,12 @@ void main() {
         _context(_record('outdoors', 1000000), {
           'day': 400000,
           'night_sky': 60000,
-        }),
+        }, weight: 0.6),
         _context(
-          night,
+          _record('night', 500000),
           {'night_sky': 150000, 'moon': 5000},
+          weight: 0.4,
           complete: false,
-          distance: 1,
         ),
       ],
       candidates: {
@@ -71,16 +118,5 @@ void main() {
     );
     expect(scores['night_sky'], 1.0);
     expect(scores['day']!, lessThan(0.1));
-  });
-
-  test('specific context tags weigh more than generic ones', () {
-    expect(
-      RelatedTagScorer.contextWeight(60000, distance: 0),
-      greaterThan(RelatedTagScorer.contextWeight(6000000, distance: 0)),
-    );
-    expect(
-      RelatedTagScorer.contextWeight(60000, distance: 0),
-      greaterThan(RelatedTagScorer.contextWeight(60000, distance: 2)),
-    );
   });
 }

@@ -23386,6 +23386,12 @@ abstract class AppLocalizations {
   /// **'{tag} and context ({count} tags)'**
   String autocomplete_relatedWithContext(String tag, int count);
 
+  /// No description provided for @autocomplete_duplicateInSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in section {sections}'**
+  String autocomplete_duplicateInSections(String sections);
+
   /// No description provided for @autocomplete_relatedPin.
   ///
   /// In en, this message translates to:

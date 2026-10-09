@@ -151,6 +151,9 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
   /// there are some, and nothing is picked until the user moves to one.
   bool _continuation = false;
 
+  /// Sections (1-based) already holding each tag of a grouped prompt.
+  Map<String, List<int>> _tagSections = const {};
+
   FocusNode get _focusNode => widget.focusNode ?? _ownedFocusNode!;
 
   bool get _hasInputFocus => _focusNode.hasFocus || _descendantHasFocus;
@@ -504,12 +507,36 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     if (tagOnly && query.contextTags.isNotEmpty) {
       query = query.copyWith(contextTags: const []);
     }
+    final scope = CompletionExclusionScope.maybeOf(context);
+    _tagSections = const {};
     if (query.relatedTag != null) {
       // Tags in other sections or the fixed tags are not suggested again.
-      final elsewhere = CompletionExclusionScope.tagsOf(context);
+      final elsewhere = scope?.tags() ?? const <String>{};
       if (elsewhere.isNotEmpty) {
         query = query.copyWith(
           existingTags: {...query.existingTags, ...elsewhere},
+        );
+      }
+    } else if (query.kind == CompletionQueryKind.tag && scope != null) {
+      // A grouped prompt counts a tag written in any section as written,
+      // and says which sections hold it.
+      final sections = <String, List<int>>{
+        for (final MapEntry(:key, :value)
+            in (scope.otherSections?.call() ?? const {}).entries)
+          key: [...value],
+      };
+      if (scope.sectionNumber case final here?) {
+        for (final tag in query.existingTags) {
+          (sections[tag] ??= []).add(here);
+        }
+      }
+      for (final numbers in sections.values) {
+        numbers.sort();
+      }
+      _tagSections = sections;
+      if (sections.isNotEmpty) {
+        query = query.copyWith(
+          existingTags: {...query.existingTags, ...sections.keys},
         );
       }
     }
@@ -722,6 +749,7 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
           onClose: _closeOverlay,
           onOpenSettings: _openAutocompleteSettings,
           // On touch the popup may cover the editor's own 分词 key.
+          tagSections: _tagSections,
           onInsertSeparator:
               context.interactionPolicy.prefersTouchPresentation &&
                   !(widget.config?.treatSpacesAsSeparators ?? false)

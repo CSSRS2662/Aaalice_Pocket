@@ -6560,6 +6560,8 @@
   "@autocomplete_relatedMetric": {"placeholders": {"count": {"type": "int"}, "score": {"type": "String"}}},
   "autocomplete_relatedWithContext": "{tag} 等 {count} 个词",
   "@autocomplete_relatedWithContext": {"placeholders": {"tag": {"type": "String"}, "count": {"type": "int"}}},
+  "autocomplete_duplicateInSections": "已在分区 {sections} 中",
+  "@autocomplete_duplicateInSections": {"placeholders": {"sections": {"type": "String"}}},
   "autocomplete_relatedPin": "固定当前标签，可连续插入相关标签",
   "autocomplete_relatedUnpin": "取消固定并继续链式推荐",
   "autocomplete_statusBase": "本地",

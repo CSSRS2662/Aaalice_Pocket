@@ -21,6 +21,7 @@ import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
 import 'package:nai_launcher/presentation/widgets/autocomplete/autocomplete_config.dart';
 import 'package:nai_launcher/presentation/widgets/autocomplete/autocomplete_overlay_handle.dart';
 import 'package:nai_launcher/presentation/widgets/autocomplete/autocomplete_wrapper.dart';
+import 'package:nai_launcher/presentation/widgets/autocomplete/completion_exclusion_scope.dart';
 import 'package:nai_launcher/presentation/providers/generation/generation_settings_notifiers.dart'
     as generation_settings;
 import 'package:nai_launcher/presentation/widgets/prompt/nai_syntax_controller.dart';
@@ -108,6 +109,69 @@ void main() {
 
     expect(controller.text, 'blue_eyes, ');
     expect(controller.selection.extentOffset, controller.text.length);
+  });
+
+  testWidgets('a tag already in another section shows which one', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: 'blu');
+    controller.selection = const TextSelection.collapsed(offset: 3);
+    final focusNode = FocusNode();
+    addTearDown(() {
+      controller.dispose();
+      focusNode.dispose();
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          autocompleteServicesProvider.overrideWithValue(
+            AutocompleteServices(
+              localSources: [_BaseSource()],
+              dictionaryTranslations: const _NoTranslations(),
+              llmTranslations: const _NoTranslations(),
+              danbooru: _NoDanbooru(),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: CompletionExclusionScope(
+              tags: () => const {},
+              otherSections: () => const {
+                'blue_eyes': [2, 4],
+              },
+              sectionNumber: 3,
+              child: AutocompleteWrapper(
+                controller: controller,
+                focusNode: focusNode,
+                child: TextField(controller: controller, focusNode: focusNode),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    focusNode.requestFocus();
+    await tester.pump();
+    await _typeCurrentText(tester, controller);
+
+    expect(find.text('blue_eyes'), findsOneWidget);
+    final badge = find.byKey(const ValueKey('autocomplete-candidate-sections'));
+    expect(badge, findsOneWidget);
+    expect(
+      find.descendant(of: badge, matching: find.text('2 · 4')),
+      findsOneWidget,
+    );
+
+    // Written elsewhere already: not inserted again.
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(controller.text, 'blu');
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('artist colon opens artist-only results and preserves prefix', (

@@ -6825,6 +6825,8 @@
   "@autocomplete_relatedMetric": {
   "autocomplete_relatedWithContext": "{tag} 等 {count} 個詞",
   "@autocomplete_relatedWithContext": {"placeholders": {"tag": {"type": "String"}, "count": {"type": "int"}}},
+  "autocomplete_duplicateInSections": "已在分區 {sections} 中",
+  "@autocomplete_duplicateInSections": {"placeholders": {"sections": {"type": "String"}}},
     "placeholders": {
       "count": {
         "type": "int"

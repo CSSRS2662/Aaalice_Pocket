@@ -125,6 +125,88 @@ void main() {
     expect(scoreOf(before, '淡绿色t恤'), isNull);
   });
 
+  group('names only take part after a name', () {
+    final rows = {
+      'thighs': const [
+        RelatedTag(tag: 'thighhighs', count: 300000),
+        RelatedTag(tag: 'some_character', count: 3000),
+        RelatedTag(tag: 'school_uniform_x', count: 1200),
+      ],
+      'some_character': const [
+        RelatedTag(tag: 'school_uniform_x', count: 2400),
+        RelatedTag(tag: 'castmate', count: 1500),
+        RelatedTag(tag: 'thighhighs', count: 300),
+      ],
+      'small_breasts': const [
+        RelatedTag(tag: 'flat_chest', count: 120000),
+        RelatedTag(tag: 'thighhighs', count: 150000),
+      ],
+    };
+    final catalog = _FakeCatalog({
+      'thighs': _record('thighs', 800000),
+      'thighhighs': _record('thighhighs', 1200000),
+      'flat_chest': _record('flat_chest', 300000),
+      'small_breasts': _record('small_breasts', 700000),
+      'school_uniform_x': _record('school_uniform_x', 9000),
+      'some_character': _record('some_character', 3000, TagCategory.character),
+      'castmate': _record('castmate', 5000, TagCategory.character),
+    });
+
+    test('a general last tag leaves a written name out', () async {
+      final dataSource = _FakeCooccurrenceDataSource(rows);
+      final source = CooccurrenceCompletionSource(dataSource, catalog: catalog);
+      final results = await source.search(
+        _query(
+          relatedTag: 'thighs',
+          contextTags: const ['some_character', 'small_breasts'],
+        ),
+      );
+      final tags = results.map((candidate) => candidate.canonicalTag);
+      // The name's own companions get no lift from it.
+      expect(tags.take(2), unorderedEquals(['thighhighs', 'flat_chest']));
+      expect(tags, isNot(contains('castmate')));
+      // The name was never even read.
+      expect(
+        dataSource.requestedLimits.keys,
+        isNot(contains('some_character')),
+      );
+    });
+
+    test('a name as the last tag brings its own companions', () async {
+      final source = CooccurrenceCompletionSource(
+        _FakeCooccurrenceDataSource(rows),
+        catalog: catalog,
+      );
+      final results = await source.search(
+        _query(relatedTag: 'some_character', contextTags: const ['thighs']),
+      );
+      final tags = results.map((candidate) => candidate.canonicalTag);
+      expect(tags.first, 'school_uniform_x');
+      expect(tags, contains('castmate'));
+    });
+
+    test('a last tag without data hands the lead to the nearest one', () async {
+      final source = CooccurrenceCompletionSource(
+        _FakeCooccurrenceDataSource(rows),
+        catalog: _FakeCatalog({
+          ...catalog.records,
+          'thin_thighs': _record('thin_thighs', 11000),
+        }),
+      );
+      final results = await source.search(
+        _query(
+          relatedTag: 'thin_thighs',
+          contextTags: const ['some_character', 'small_breasts'],
+        ),
+      );
+      expect(results.first.canonicalTag, 'flat_chest');
+      expect(
+        results.map((candidate) => candidate.category),
+        everyElement(TagCategory.general),
+      );
+    });
+  });
+
   test('compact database returns stable bidirectional relations', () async {
     sqfliteFfiInit();
     final directory = await Directory.systemTemp.createTemp(

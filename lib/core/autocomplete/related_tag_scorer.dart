@@ -3,8 +3,7 @@ import 'dart:math' as math;
 import 'completion_models.dart';
 import 'tag_catalog_repository.dart';
 
-/// A tag already written, its co-occurrence rows and how much it steers the
-/// suggestions.
+/// A tag already written, its co-occurrence rows and its share of the vote.
 class RelatedContextTag {
   const RelatedContextTag({
     required this.record,
@@ -14,6 +13,8 @@ class RelatedContextTag {
   });
 
   final TagCatalogRecord record;
+
+  /// Share of the vote; the shares of one query add up to 1.
   final double weight;
 
   /// Posts shared with other tags, most frequent first.
@@ -29,15 +30,19 @@ class RelatedContextTag {
       : math.max(RelatedTagScorer.minimumPairCount, related.values.last);
 }
 
-/// Ranks tags that fit everything already written, not just the last tag.
+/// Ranks tags that fit what is already written, led by the last tag.
 ///
-/// Each context tag votes for a candidate with how often the two appear
-/// together times the log of how much more often than chance (lift), so both
-/// frequent and distinctive companions rise. Rare, specific tags vote louder
-/// than `1girl`-like ones, and tags near the caret louder than far ones. A
-/// candidate seen with a context tag less often than chance conflicts with it
-/// (night and day) and is pushed down. Character and series names only lead
-/// when the context already names one.
+/// The last tag (the anchor) holds [anchorShare] of the vote; the others
+/// split the rest by how specific they are and how near the caret. Each
+/// tag first ranks candidates on its own — how often they appear together
+/// times the log of how much more often than chance (lift) — scaled so its
+/// best candidate counts 1, so a rare tag cannot outvote the anchor by the
+/// size of its numbers. A candidate seen with a context tag less often than
+/// chance conflicts with it (night and day) and is pushed down.
+///
+/// Character, series and other non-general tags only take part when the
+/// anchor is one: after a general tag the context and the suggestions are
+/// general tags alone.
 abstract final class RelatedTagScorer {
   /// Roughly the number of Danbooru posts the counts come from; lift only
   /// needs its order of magnitude.
@@ -46,64 +51,94 @@ abstract final class RelatedTagScorer {
   /// The data pack keeps only pairs seen together at least this often.
   static const int minimumPairCount = 100;
 
-  /// Weight of a context tag [distance] tags away from the caret.
-  static double contextWeight(
-    int postCount, {
-    required int distance,
-    bool anchor = false,
-  }) {
-    final specificity = math
-        .log(corpusPosts / math.max(1, postCount))
-        .clamp(0.05, 20.0);
-    return specificity * math.pow(0.85, distance) * (anchor ? 1.5 : 1);
+  /// The last tag's share of the vote when other tags take part.
+  static const double anchorShare = 0.6;
+
+  /// How specific a tag is: rare tags say more than `1girl`-like ones.
+  static double specificity(int postCount) =>
+      math.log(corpusPosts / math.max(1, postCount)).clamp(0.05, 20.0);
+
+  /// Vote shares for the anchor and the [others] (nearest first), given as
+  /// post counts. Shares add up to 1.
+  static List<double> shares(List<int> others) {
+    if (others.isEmpty) return const [1];
+    final raw = [
+      for (final (distance, postCount) in others.indexed)
+        specificity(postCount) * math.pow(0.85, distance),
+    ];
+    final total = raw.fold<double>(0, (sum, value) => sum + value);
+    return [
+      anchorShare,
+      for (final value in raw) (1 - anchorShare) * value / total,
+    ];
   }
 
-  /// Scores between 0 and 1, the best candidate scoring 1. Candidates
-  /// without support from any context tag are left out.
+  /// Whether [category] is a general tag. The anchor's decides whether
+  /// character, series and other names take part at all.
+  static bool isGeneral(TagCategory category) =>
+      category == TagCategory.general;
+
+  /// Scores between 0 and 1, the best candidate scoring 1. [context] starts
+  /// with the anchor. Candidates no context tag supports are left out.
   static Map<String, double> score({
     required List<RelatedContextTag> context,
     required Map<String, TagCatalogRecord> candidates,
   }) {
-    final totalWeight = context.fold<double>(0, (sum, tag) => sum + tag.weight);
-    if (totalWeight <= 0) return const {};
-    final namesSomething = context.any((tag) => _isNamed(tag.record.category));
-    final namesCharacter = context.any(
-      (tag) => tag.record.category == TagCategory.character,
-    );
+    if (context.isEmpty) return const {};
+    final anchor = context.first.record.category;
+    final generalOnly = isGeneral(anchor);
+    final characterAnchor = anchor == TagCategory.character;
 
-    final raw = <String, double>{};
+    final votes = [for (final _ in context) <String, double>{}];
+    final damping = <String, double>{};
     for (final MapEntry(key: name, value: record) in candidates.entries) {
-      if (record.postCount <= 0 || !_isSuggestible(record.category)) continue;
-      var support = 0.0;
-      var damping = 1.0;
-      for (final tag in context) {
+      if (record.postCount <= 0) continue;
+      if (generalOnly ? !isGeneral(record.category) : !_suggestible(record)) {
+        continue;
+      }
+      var damp = 1.0;
+      for (final (index, tag) in context.indexed) {
         final shared = tag.related[name];
         final expected = tag.record.postCount * record.postCount / corpusPosts;
         if (expected <= 0) continue;
         if (shared != null) {
           final lift = shared / expected;
           if (lift > 1) {
-            support +=
-                tag.weight * (shared / tag.record.postCount) * math.log(lift);
+            votes[index][name] = shared / tag.record.postCount * math.log(lift);
           } else {
-            damping *= _conflict(lift);
+            damp *= _conflict(lift);
           }
         } else {
           final bound = tag.missingPairBound / expected;
-          if (bound < 1) damping *= _conflict(bound);
+          if (bound < 1) damp *= _conflict(bound);
         }
       }
-      if (support <= 0) continue;
-      if (_isNamed(record.category) && !namesSomething) support *= 0.3;
-      if (record.category == TagCategory.character && namesCharacter) {
-        // A character's own traits help more than their castmates.
-        support *= 0.4;
+      // A character's own traits help more than their castmates.
+      if (characterAnchor && record.category == TagCategory.character) {
+        damp *= 0.4;
       }
-      raw[name] = support / totalWeight * damping;
+      damping[name] = damp;
     }
-    final best = raw.values.fold<double>(0, math.max);
+
+    final raw = <String, double>{};
+    for (final (index, tag) in context.indexed) {
+      final tagVotes = votes[index];
+      if (tagVotes.isEmpty) continue;
+      final best = tagVotes.values.reduce(math.max);
+      for (final MapEntry(key: name, value: vote) in tagVotes.entries) {
+        raw[name] = (raw[name] ?? 0) + tag.weight * vote / best;
+      }
+    }
+    final scored = {
+      for (final MapEntry(key: name, value: value) in raw.entries)
+        name: value * damping[name]!,
+    };
+    final best = scored.values.fold<double>(0, math.max);
     if (best <= 0) return const {};
-    return {for (final entry in raw.entries) entry.key: entry.value / best};
+    return {
+      for (final entry in scored.entries)
+        if (entry.value > 0) entry.key: entry.value / best,
+    };
   }
 
   static double _conflict(double lift) {
@@ -111,9 +146,7 @@ abstract final class RelatedTagScorer {
     return bounded * bounded;
   }
 
-  static bool _isNamed(TagCategory category) =>
-      category == TagCategory.character || category == TagCategory.copyright;
-
-  static bool _isSuggestible(TagCategory category) =>
-      category != TagCategory.artist && category != TagCategory.meta;
+  static bool _suggestible(TagCatalogRecord record) =>
+      record.category != TagCategory.artist &&
+      record.category != TagCategory.meta;
 }

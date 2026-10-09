@@ -13473,6 +13473,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String autocomplete_duplicateInSections(String sections) {
+    return 'Already in section $sections';
+  }
+
+  @override
   String get autocomplete_relatedPin =>
       'Pin this tag to insert multiple related tags';
 

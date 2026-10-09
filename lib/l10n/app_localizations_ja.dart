@@ -13121,6 +13121,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String autocomplete_duplicateInSections(String sections) {
+    return 'セクション $sections に記入済み';
+  }
+
+  @override
   String get autocomplete_relatedPin => 'このタグを固定して関連タグを連続挿入';
 
   @override

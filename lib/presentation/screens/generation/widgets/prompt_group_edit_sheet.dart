@@ -310,9 +310,29 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
     _suggestions.suggestNext();
   }
 
+  /// Tags of the other included sections, with the 1-based numbers of the
+  /// sections (the cards' order) holding each.
+  Map<String, List<int>> _otherSections(PromptGroupSection section) {
+    final result = <String, List<int>>{};
+    for (final (index, other) in widget.groups.sections.indexed) {
+      if (other.id == section.id || !other.enabled) continue;
+      final text = other.controller.text;
+      for (final tag in PromptTokenParser.contextTags(
+        text: text,
+        cursorPosition: text.length,
+        max: 1 << 16,
+      )) {
+        (result[tag] ??= []).add(index + 1);
+      }
+    }
+    return result;
+  }
+
   Widget _buildInput(BuildContext context, PromptGroupSection section) {
     return CompletionExclusionScope(
       tags: () => _writtenElsewhere(section),
+      otherSections: () => _otherSections(section),
+      sectionNumber: widget.groups.indexOf(section.id) + 1,
       child: _buildField(context, section),
     );
   }

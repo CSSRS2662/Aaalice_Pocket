@@ -6491,6 +6491,8 @@
   "@autocomplete_relatedMetric": {"placeholders": {"count": {"type": "int"}, "score": {"type": "String"}}},
   "autocomplete_relatedWithContext": "{tag} and context ({count} tags)",
   "@autocomplete_relatedWithContext": {"placeholders": {"tag": {"type": "String"}, "count": {"type": "int"}}},
+  "autocomplete_duplicateInSections": "Already in section {sections}",
+  "@autocomplete_duplicateInSections": {"placeholders": {"sections": {"type": "String"}}},
   "autocomplete_relatedPin": "Pin this tag to insert multiple related tags",
   "autocomplete_relatedUnpin": "Unpin and resume chained recommendations",
   "autocomplete_statusBase": "Local",

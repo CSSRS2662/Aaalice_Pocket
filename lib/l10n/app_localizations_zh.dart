@@ -12900,6 +12900,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String autocomplete_duplicateInSections(String sections) {
+    return '已在分区 $sections 中';
+  }
+
+  @override
   String get autocomplete_relatedPin => '固定当前标签，可连续插入相关标签';
 
   @override
