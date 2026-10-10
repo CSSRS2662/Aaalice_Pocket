@@ -6,7 +6,8 @@ import '../../../../data/models/image/image_params.dart';
 import '../../../providers/image_generation_provider.dart';
 import 'generation_param_sections.dart';
 
-/// Variety+ 单独成节：标题与开关一行，下方简述作用。模型不支持时不显示。
+/// Variety+ 单独成节：标题与开关一行，下方简述作用。模型不支持时不显示；
+/// 节约档接管时显示为停用，并说明原因。
 class VarietyPlusSection extends ConsumerWidget {
   const VarietyPlusSection({super.key});
 
@@ -17,10 +18,12 @@ class VarietyPlusSection extends ConsumerWidget {
         (params) => (
           supported: params.capabilities.supportsVarietyPlus,
           enabled: params.varietyPlus,
+          locked: params.usesFixedSettings,
         ),
       ),
     );
-    if (!data.supported) return const SizedBox.shrink();
+    if (!data.supported && !data.locked) return const SizedBox.shrink();
+    final available = data.supported && !data.locked;
     final theme = Theme.of(context);
     void toggle(bool value) => ref
         .read(generationParamsNotifierProvider.notifier)
@@ -30,7 +33,7 @@ class VarietyPlusSection extends ConsumerWidget {
       child: MergeSemantics(
         child: InkWell(
           key: const ValueKey('generation-variety-plus'),
-          onTap: () => toggle(!data.enabled),
+          onTap: available ? () => toggle(!data.enabled) : null,
           borderRadius: BorderRadius.circular(8),
           child: Row(
             children: [
@@ -41,7 +44,9 @@ class VarietyPlusSection extends ConsumerWidget {
                     const ParamSectionTitle('Variety+'),
                     const SizedBox(height: 4),
                     Text(
-                      context.l10n.generation_varietyPlusDescription,
+                      available
+                          ? context.l10n.generation_varietyPlusDescription
+                          : context.l10n.generation_effortUnavailableHint,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -52,8 +57,8 @@ class VarietyPlusSection extends ConsumerWidget {
               const SizedBox(width: 12),
               Switch.adaptive(
                 key: const ValueKey('generation-variety-plus-switch'),
-                value: data.enabled,
-                onChanged: toggle,
+                value: available && data.enabled,
+                onChanged: available ? toggle : null,
               ),
             ],
           ),

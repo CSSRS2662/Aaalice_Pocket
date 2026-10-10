@@ -10,7 +10,7 @@ import 'themed_slider.dart';
 /// [ThemedSlider] for numeric parameters: −/+ move exactly one [step] (hold to
 /// repeat) and the trailing field takes a typed value. Dragging the thumb
 /// stays for coarse moves; landing it on one value of a long track is hard on
-/// a phone.
+/// a phone. A null [onChanged] disables the whole row.
 class SteppedSlider extends StatelessWidget {
   const SteppedSlider({
     super.key,
@@ -28,7 +28,7 @@ class SteppedSlider extends StatelessWidget {
   final double min;
   final double max;
   final double step;
-  final ValueChanged<double> onChanged;
+  final ValueChanged<double>? onChanged;
   final int? divisions;
 
   /// Digits shown in the field and kept after stepping.
@@ -49,13 +49,16 @@ class SteppedSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     final current = value.clamp(min, max).toDouble();
     final l10n = context.l10n;
+    final onChanged = this.onChanged;
     return Row(
       children: [
         _StepButton(
           key: _key('decrease'),
           icon: Icons.remove_rounded,
           label: l10n.common_decrease,
-          onStep: current > min ? () => onChanged(_snap(value - step)) : null,
+          onStep: onChanged != null && current > min
+              ? () => onChanged(_snap(value - step))
+              : null,
         ),
         Expanded(
           child: ThemedSlider(
@@ -70,7 +73,9 @@ class SteppedSlider extends StatelessWidget {
           key: _key('increase'),
           icon: Icons.add_rounded,
           label: l10n.common_increase,
-          onStep: current < max ? () => onChanged(_snap(value + step)) : null,
+          onStep: onChanged != null && current < max
+              ? () => onChanged(_snap(value + step))
+              : null,
         ),
         const SizedBox(width: 4),
         EditableDoubleField(
@@ -80,7 +85,8 @@ class SteppedSlider extends StatelessWidget {
           max: max,
           decimals: decimals,
           width: 56,
-          onChanged: (typed) => onChanged(_snap(typed)),
+          enabled: onChanged != null,
+          onChanged: (typed) => onChanged?.call(_snap(typed)),
         ),
       ],
     );

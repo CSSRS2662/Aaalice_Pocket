@@ -208,6 +208,7 @@ void main() {
     expect(portableSettingKeys, contains(StorageKeys.defaultModel));
     expect(portableSettingKeys, contains(StorageKeys.themeMode));
     expect(portableSettingKeys, contains(StorageKeys.customResolutionPresets));
+    expect(portableSettingKeys, contains(StorageKeys.imageModelMode));
     expect(portableSettingKeys, contains(StorageKeys.shareWatermark));
     expect(portableSettingKeys, contains(StorageKeys.watermarkConfigV1));
     // Redaction remains local-only, including its original-file associations.

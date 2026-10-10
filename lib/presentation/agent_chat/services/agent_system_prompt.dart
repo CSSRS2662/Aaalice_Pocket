@@ -162,7 +162,11 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'curated"), pass that friendly name to update_generation_settings '
         '— it resolves aliases. For transparent-background requests '
         'toggle the transparent_background switch there (V5 renders '
-        'native alpha), optionally reinforced with the prompt tags.',
+        'native alpha), optionally reinforced with the prompt tags. '
+        'V5 Full has an effort setting: medium is cheaper but fixes steps, '
+        'sampler and UC preset and ignores negative prompts; switch to it '
+        'only when the user asks to save Anlas or quota. Set model_mode to '
+        'furry only when the user asks for furry style.',
     '- search_tags looks up danbooru tags as a reference: an English tag, '
         'a Chinese word, pinyin or a short description finds the canonical '
         'tag; suggest mode lists tags that go with given tags and can keep '

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/storage/local_storage_service.dart';
+import '../../../../data/models/image/image_params.dart';
 import '../../../prompt_assistant/providers/prompt_assistant_history_provider.dart';
 import '../../../providers/image_generation_provider.dart';
 import '../../../themes/core/input_surface_style.dart';
@@ -41,6 +42,14 @@ class PromptInputEditor extends ConsumerWidget {
     );
     final storage = ref.watch(localStorageServiceProvider);
     final negative = controller.isNegativeMode;
+    // 模型固定 UC 预设时负向提示词不会发送，只读保留给切回后的模型使用。
+    final negativeLocked =
+        negative &&
+        ref.watch(
+          generationParamsNotifierProvider.select(
+            (params) => params.usesFixedSettings,
+          ),
+        );
     final promptController = negative
         ? controller.negativeController
         : controller.promptController;
@@ -65,10 +74,17 @@ class PromptInputEditor extends ConsumerWidget {
           },
           enabled: viewData.autoGrow && !compact && !viewData.isMaximized,
           builder: (manualHeight) => controller.isGroupedMode
-              ? PromptGroupEditor(
-                  controller: controller,
-                  commands: commands,
-                  viewData: viewData,
+              // 分区同样只读：卡片的启用、编辑与拖动都不可用。
+              ? AbsorbPointer(
+                  absorbing: negativeLocked,
+                  child: Opacity(
+                    opacity: negativeLocked ? 0.5 : 1,
+                    child: PromptGroupEditor(
+                      controller: controller,
+                      commands: commands,
+                      viewData: viewData,
+                    ),
+                  ),
                 )
               : Stack(
                   fit: StackFit.passthrough,
@@ -96,6 +112,7 @@ class PromptInputEditor extends ConsumerWidget {
                             : PromptHistorySessionIds.generationPrompt,
                         onOpenAssistantSettings: commands.openAssistantSettings,
                         config: UnifiedPromptConfig(
+                          readOnly: negativeLocked,
                           enableSyntaxHighlight: enableHighlight,
                           numericEmphasisEnabled:
                               viewData.numericEmphasisEnabled,
@@ -142,21 +159,22 @@ class PromptInputEditor extends ConsumerWidget {
                             : commands.updatePrompt,
                       ),
                     ),
-                    Positioned.fill(
-                      child: PromptAssistantOverlay(
-                        placement: PromptAssistantPlacement.viewport,
-                        iconOnly: true,
-                        supportsTagMode: true,
-                        sessionId: negative
-                            ? PromptHistorySessionIds.generationNegative
-                            : PromptHistorySessionIds.generationPrompt,
-                        controller: promptController,
-                        onChanged: negative
-                            ? commands.updateNegativePrompt
-                            : commands.updatePrompt,
-                        onOpenSettings: commands.openAssistantSettings,
+                    if (!negativeLocked)
+                      Positioned.fill(
+                        child: PromptAssistantOverlay(
+                          placement: PromptAssistantPlacement.viewport,
+                          iconOnly: true,
+                          supportsTagMode: true,
+                          sessionId: negative
+                              ? PromptHistorySessionIds.generationNegative
+                              : PromptHistorySessionIds.generationPrompt,
+                          controller: promptController,
+                          onChanged: negative
+                              ? commands.updateNegativePrompt
+                              : commands.updatePrompt,
+                          onOpenSettings: commands.openAssistantSettings,
+                        ),
                       ),
-                    ),
                   ],
                 ),
         ),
