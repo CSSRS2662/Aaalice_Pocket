@@ -23392,6 +23392,48 @@ abstract class AppLocalizations {
   /// **'Already in section {sections}'**
   String autocomplete_duplicateInSections(String sections);
 
+  /// No description provided for @autocomplete_relatedFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by category; long-press to clear'**
+  String get autocomplete_relatedFilter;
+
+  /// No description provided for @autocomplete_relatedFilterCharacter.
+  ///
+  /// In en, this message translates to:
+  /// **'Character'**
+  String get autocomplete_relatedFilterCharacter;
+
+  /// No description provided for @autocomplete_relatedFilterSeries.
+  ///
+  /// In en, this message translates to:
+  /// **'Series'**
+  String get autocomplete_relatedFilterSeries;
+
+  /// No description provided for @autocomplete_relatedFilterGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get autocomplete_relatedFilterGeneral;
+
+  /// No description provided for @autocomplete_relatedFilterCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{category}, {count} tags'**
+  String autocomplete_relatedFilterCount(String category, int count);
+
+  /// No description provided for @autocomplete_relatedFilterEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No related tags match the filter'**
+  String get autocomplete_relatedFilterEmpty;
+
+  /// No description provided for @autocomplete_relatedFilterClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filter'**
+  String get autocomplete_relatedFilterClear;
+
   /// No description provided for @autocomplete_relatedPin.
   ///
   /// In en, this message translates to:

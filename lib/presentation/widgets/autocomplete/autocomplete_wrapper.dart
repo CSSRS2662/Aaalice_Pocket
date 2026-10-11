@@ -24,6 +24,7 @@ import 'autocomplete_overlay_handle.dart';
 import 'autocomplete_utils.dart';
 import 'completion_exclusion_scope.dart';
 import 'completion_overlay.dart';
+import 'related_category_filter.dart';
 
 /// Unified local-first autocomplete shared by every tag and prompt field.
 class AutocompleteWrapper extends ConsumerStatefulWidget {
@@ -153,6 +154,17 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
 
   /// Sections (1-based) already holding each tag of a grouped prompt.
   Map<String, List<int>> _tagSections = const {};
+
+  /// Categories the related suggestions of [_relatedFilterTag] are narrowed
+  /// to. They last for that tag's popup: closing it or moving on to another
+  /// tag clears them, a pinned tag keeps them.
+  Set<TagCategory> _relatedFilter = const {};
+  String? _relatedFilterTag;
+  bool _relatedFilterOpen = false;
+
+  /// Related tags per category for the open cards; null until counted.
+  Map<TagCategory, int>? _relatedCounts;
+  Object? _relatedCountsRequest;
 
   FocusNode get _focusNode => widget.focusNode ?? _ownedFocusNode!;
 
@@ -507,6 +519,11 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     if (tagOnly && query.contextTags.isNotEmpty) {
       query = query.copyWith(contextTags: const []);
     }
+    if (!_sameRelatedTag(query.relatedTag, _relatedFilterTag)) {
+      _resetRelatedFilter();
+    } else if (_relatedFilter.isNotEmpty) {
+      query = query.copyWith(relatedCategories: _relatedFilter);
+    }
     final scope = CompletionExclusionScope.maybeOf(context);
     _tagSections = const {};
     if (query.relatedTag != null) {
@@ -551,6 +568,71 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
           ? fallbackQuery
           : null,
     );
+  }
+
+  static bool _sameRelatedTag(String? a, String? b) {
+    if (a == null || b == null) return false;
+    String normalized(String tag) =>
+        tag.trim().toLowerCase().replaceAll(' ', '_');
+    return normalized(a) == normalized(b);
+  }
+
+  void _resetRelatedFilter() {
+    _relatedFilter = const {};
+    _relatedFilterTag = null;
+    _relatedFilterOpen = false;
+    _relatedCounts = null;
+    _relatedCountsRequest = null;
+  }
+
+  void _toggleRelatedFilterPanel() {
+    // Working the cards makes a quiet popup an ordinary one: it stays up
+    // while the list reloads or comes back empty.
+    _continuation = false;
+    _relatedFilterOpen = !_relatedFilterOpen;
+    if (_relatedFilterOpen) unawaited(_countRelatedCategories());
+    _overlayEntry?.markNeedsBuild();
+  }
+
+  void _toggleRelatedCategory(TagCategory category) {
+    final next = {..._relatedFilter};
+    if (!next.remove(category)) next.add(category);
+    _narrowRelatedTo(next);
+  }
+
+  /// Lists the related tags of the open popup again, narrowed to
+  /// [categories]; none lifts the filter.
+  void _narrowRelatedTo(Set<TagCategory> categories) {
+    final orchestrator = _orchestrator;
+    final current = orchestrator?.state.query;
+    final tag = current?.relatedTag;
+    if (orchestrator == null || current == null || tag == null) return;
+    _continuation = false;
+    _relatedFilter = categories;
+    _relatedFilterTag = categories.isEmpty ? null : tag;
+    _selectedId = null;
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    orchestrator.query(
+      current.copyWith(relatedCategories: categories),
+      ref.read(autocompleteSettingsProvider),
+    );
+  }
+
+  Future<void> _countRelatedCategories() async {
+    final query = _orchestrator?.state.query;
+    final count = ref.read(autocompleteServicesProvider).relatedCategoryCounts;
+    if (query?.relatedTag == null || count == null) return;
+    final request = _relatedCountsRequest = Object();
+    _relatedCounts = null;
+    Map<TagCategory, int>? counts;
+    try {
+      counts = await count(query!);
+    } catch (_) {
+      // Cards without counts still narrow the list.
+    }
+    if (!mounted || !identical(request, _relatedCountsRequest)) return;
+    _relatedCounts = counts;
+    _overlayEntry?.markNeedsBuild();
   }
 
   void _maybePromptZhDictionary(AutocompleteSettings settings) {
@@ -759,6 +841,15 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
           onToggleRelatedPin: _orchestrator!.state.query?.relatedTag == null
               ? null
               : _toggleRelatedPin,
+          relatedFilter: RelatedCategoryFilter(
+            chosen: _relatedFilter,
+            open: _relatedFilterOpen,
+            counts: _relatedCounts,
+            listsOnlineRows: settings.danbooruEnabled,
+            onTogglePanel: _toggleRelatedFilterPanel,
+            onToggleCategory: _toggleRelatedCategory,
+            onClear: () => _narrowRelatedTo(const {}),
+          ),
         ),
       ),
     );
@@ -1017,6 +1108,10 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
   void _dismissOverlay([String reason = 'query replaced']) {
     _keepEmptyQueryVisible = false;
     _continuation = false;
+    // The cards go with the popup; what they narrowed stays only for a
+    // pinned tag, whose popup comes straight back.
+    _relatedFilterOpen = false;
+    if (_pinnedRelatedTag == null) _resetRelatedFilter();
     final state = _orchestrator?.state;
     if (_overlayEntry != null || state?.query != null) {
       AppLogger.d(

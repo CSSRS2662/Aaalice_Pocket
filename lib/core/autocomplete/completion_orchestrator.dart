@@ -7,6 +7,7 @@ import 'autocomplete_settings.dart';
 import 'completion_models.dart';
 import 'completion_ranker.dart';
 import 'danbooru_completion_source.dart';
+import 'related_tag_scorer.dart';
 
 class CompletionOrchestrator extends ChangeNotifier {
   CompletionOrchestrator({
@@ -19,6 +20,7 @@ class CompletionOrchestrator extends ChangeNotifier {
     CompletionSource? semanticSource,
     List<SupplementalCompletionSource> supplementalSources = const [],
     CompletionRankingSignals? rankingSignals,
+    Future<TagCategory?> Function(String tag)? tagCategory,
     Duration llmDebounceDuration = const Duration(milliseconds: 400),
   }) : _localSources = localSources,
        _tagLookupSources = tagLookupSources,
@@ -31,6 +33,7 @@ class CompletionOrchestrator extends ChangeNotifier {
        _semanticSource = semanticSource,
        _supplementalSources = supplementalSources,
        _rankingSignals = rankingSignals,
+       _tagCategory = tagCategory,
        _llmDebounceDuration = llmDebounceDuration;
 
   final List<CompletionSource> _localSources;
@@ -42,6 +45,10 @@ class CompletionOrchestrator extends ChangeNotifier {
   final CompletionSource? _semanticSource;
   final List<SupplementalCompletionSource> _supplementalSources;
   final CompletionRankingSignals? _rankingSignals;
+
+  /// The catalog category of a tag, to hold online related rows to the rule
+  /// the local ones follow.
+  final Future<TagCategory?> Function(String tag)? _tagCategory;
   Timer? _semanticDebounce;
 
   /// Context and habit boosts of the current query, used by every merge.
@@ -405,7 +412,9 @@ class CompletionOrchestrator extends ChangeNotifier {
         .whereType<String>()
         .toList(growable: false);
     var expanded = CompletionRanker.mergeAndSort(
-      localResults.expand((result) => result.candidates),
+      localResults.expand(
+        (result) => _filterCategory(result.candidates, query),
+      ),
       query: query,
     ).where((candidate) => !candidate.isExisting).toList(growable: false);
     expanded = await _applyDictionaryTranslations(
@@ -542,6 +551,10 @@ class CompletionOrchestrator extends ChangeNotifier {
     }
     if (!_isCurrent(sequence)) return;
     remote = _filterCategory(remote, query);
+    if (query.relatedTag != null && query.token.isEmpty) {
+      remote = await _relatedRowsToSuggest(remote, query);
+      if (!_isCurrent(sequence)) return;
+    }
     var merged = _mergeRemoteWithoutReordering(
       local: _state.candidates,
       remote: remote,
@@ -645,14 +658,46 @@ class CompletionOrchestrator extends ChangeNotifier {
     return [...stableLocal, ...onlineOnly.take(remoteSlots)];
   }
 
+  /// Online related rows follow the local rule when the user chose no
+  /// categories: no names after a general tag.
+  Future<List<CompletionCandidate>> _relatedRowsToSuggest(
+    List<CompletionCandidate> rows,
+    CompletionQuery query,
+  ) async {
+    final categoryOf = _tagCategory;
+    if (categoryOf == null ||
+        rows.isEmpty ||
+        query.relatedCategories.isNotEmpty) {
+      return rows;
+    }
+    final TagCategory? anchor;
+    try {
+      anchor = await categoryOf(query.relatedTag!);
+    } catch (_) {
+      return rows;
+    }
+    if (anchor != null && !RelatedTagScorer.isGeneral(anchor)) return rows;
+    return rows
+        .where((row) => RelatedTagScorer.isGeneral(row.category))
+        .toList(growable: false);
+  }
+
   static List<CompletionCandidate> _filterCategory(
     List<CompletionCandidate> candidates,
     CompletionQuery query,
   ) {
     final category = query.categoryFilter;
-    if (category == null) return candidates;
+    // Related rows also keep to the categories the user narrowed them to.
+    final chosen = query.relatedTag != null && query.token.isEmpty
+        ? query.relatedCategories
+        : const <TagCategory>{};
+    if (category == null && chosen.isEmpty) return candidates;
     return candidates
-        .where((candidate) => candidate.category == category)
+        .where(
+          (candidate) =>
+              (category == null || candidate.category == category) &&
+              (chosen.isEmpty || chosen.contains(candidate.category)),
+        )
         .toList(growable: false);
   }
 

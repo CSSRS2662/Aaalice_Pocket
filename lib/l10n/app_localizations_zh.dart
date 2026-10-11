@@ -12905,6 +12905,29 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get autocomplete_relatedFilter => '筛选分类，长按清除';
+
+  @override
+  String get autocomplete_relatedFilterCharacter => '角色';
+
+  @override
+  String get autocomplete_relatedFilterSeries => '作品';
+
+  @override
+  String get autocomplete_relatedFilterGeneral => '一般';
+
+  @override
+  String autocomplete_relatedFilterCount(String category, int count) {
+    return '$category，$count 条';
+  }
+
+  @override
+  String get autocomplete_relatedFilterEmpty => '没有符合筛选的相关标签';
+
+  @override
+  String get autocomplete_relatedFilterClear => '清除筛选';
+
+  @override
   String get autocomplete_relatedPin => '固定当前标签，可连续插入相关标签';
 
   @override

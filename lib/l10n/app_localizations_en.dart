@@ -13478,6 +13478,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get autocomplete_relatedFilter =>
+      'Filter by category; long-press to clear';
+
+  @override
+  String get autocomplete_relatedFilterCharacter => 'Character';
+
+  @override
+  String get autocomplete_relatedFilterSeries => 'Series';
+
+  @override
+  String get autocomplete_relatedFilterGeneral => 'General';
+
+  @override
+  String autocomplete_relatedFilterCount(String category, int count) {
+    return '$category, $count tags';
+  }
+
+  @override
+  String get autocomplete_relatedFilterEmpty =>
+      'No related tags match the filter';
+
+  @override
+  String get autocomplete_relatedFilterClear => 'Clear filter';
+
+  @override
   String get autocomplete_relatedPin =>
       'Pin this tag to insert multiple related tags';
 

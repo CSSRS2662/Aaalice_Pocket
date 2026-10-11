@@ -49,5 +49,10 @@ final autocompleteServicesProvider = Provider<AutocompleteServices>((ref) {
     semanticSource: ref.watch(e5CompletionSourceProvider),
     supplementalSources: [ref.watch(lexicalEnhancementSourceProvider)],
     rankingSignals: ref.watch(completionRankingSignalsProvider),
+    // Read on use: the local sources can be replaced without the pack.
+    tagCategory: (tag) =>
+        ref.read(cooccurrenceCompletionSourceProvider).categoryOf(tag),
+    relatedCategoryCounts: (query) =>
+        ref.read(cooccurrenceCompletionSourceProvider).categoryCounts(query),
   );
 });

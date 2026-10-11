@@ -8,6 +8,7 @@ import '../../../core/autocomplete/zh_dictionary_service.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../adaptive/interaction_policy.dart';
 import 'completion_match_note.dart';
+import 'related_category_filter.dart';
 
 const double autocompleteCandidateExtent = 35;
 
@@ -49,7 +50,11 @@ class CompletionOverlay extends StatelessWidget {
     this.onInsertSeparator,
     this.isRelatedPinned = false,
     this.onToggleRelatedPin,
+    this.relatedFilter,
   });
+
+  /// Space kept around the category cards floating over the list.
+  static const double _filterPanelMargin = 4;
 
   final CompletionState state;
   final int selectedIndex;
@@ -74,6 +79,9 @@ class CompletionOverlay extends StatelessWidget {
   final bool isRelatedPinned;
   final VoidCallback? onToggleRelatedPin;
 
+  /// Narrows related suggestions to categories; the funnel shows when given.
+  final RelatedCategoryFilter? relatedFilter;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -92,12 +100,36 @@ class CompletionOverlay extends StatelessWidget {
     final showFooter =
         maxHeight >= headerExtent + candidateExtent + footerExtent;
     final scrollHeader = maxHeight < headerExtent + candidateExtent;
+    final filter = state.query?.relatedTag == null ? null : relatedFilter;
+    // The category cards float over the list, under the header: tall where
+    // the list leaves room for them, one line otherwise. A popup too short
+    // to float anything shows them as a row after its header instead.
+    final bodyRoom = maxHeight - headerExtent - (showFooter ? footerExtent : 0);
+    final compactCards =
+        bodyRoom <
+        RelatedCategoryFilterPanel.extentOf(context, compact: false) +
+            _filterPanelMargin * 2;
+    final floatingCards = filter != null && filter.open && !scrollHeader
+        ? filter
+        : null;
+    final cardsRoom = floatingCards != null
+        ? RelatedCategoryFilterPanel.extentOf(context, compact: compactCards) +
+              _filterPanelMargin * 2
+        : 0.0;
+    final inlineCards = filter != null && filter.open && scrollHeader
+        ? RelatedCategoryFilterPanel(
+            filter: filter,
+            compact: true,
+            floating: false,
+          )
+        : null;
     final header = _CompletionHeader(
       query: _displayQuery(context, state.query),
       resultCount: state.candidates.length,
       related: state.query?.relatedTag != null,
       isRelatedPinned: isRelatedPinned,
       onToggleRelatedPin: onToggleRelatedPin,
+      filter: filter,
       onOpenSettings: showFooter ? null : onOpenSettings,
       onInsertSeparator: showFooter ? null : onInsertSeparator,
       onClose: onClose,
@@ -159,90 +191,101 @@ class CompletionOverlay extends StatelessWidget {
               color: popupSurface,
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxHeight),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                child: Stack(
+                  fit: StackFit.passthrough,
                   children: [
-                    if (!scrollHeader) header,
-                    Flexible(
-                      child: state.candidates.isEmpty
-                          ? SingleChildScrollView(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _EmptyCompletionBody(state: state),
-                                  if (scrollHeader) header,
-                                ],
-                              ),
-                            )
-                          : Scrollbar(
-                              key: const ValueKey(
-                                'autocomplete-popup-scrollbar',
-                              ),
-                              controller: scrollController,
-                              thumbVisibility: state.candidates.length > 9,
-                              trackVisibility: state.candidates.length > 9,
-                              interactive: !touchCompact,
-                              thickness: touchCompact ? 4 : 8,
-                              radius: const Radius.circular(8),
-                              child: CustomScrollView(
-                                key: const ValueKey('autocomplete-popup-list'),
-                                controller: scrollController,
-                                shrinkWrap: true,
-                                scrollCacheExtent: ScrollCacheExtent.pixels(
-                                  candidateExtent * 10,
-                                ),
-                                slivers: [
-                                  SliverPadding(
-                                    padding: EdgeInsets.only(
-                                      right: touchCompact ? 6 : 14,
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!scrollHeader) header,
+                        Flexible(
+                          child: ConstrainedBox(
+                            // Room for the cards over a short or empty list.
+                            constraints: BoxConstraints(minHeight: cardsRoom),
+                            child: state.candidates.isEmpty
+                                ? SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (floatingCards != null)
+                                          SizedBox(height: cardsRoom),
+                                        _EmptyCompletionBody(
+                                          state: state,
+                                          onClearFilter:
+                                              filter != null && filter.active
+                                              ? filter.onClear
+                                              : null,
+                                        ),
+                                        if (scrollHeader) header,
+                                        if (inlineCards != null) inlineCards,
+                                      ],
                                     ),
-                                    sliver: SliverFixedExtentList(
-                                      itemExtent: candidateExtent,
-                                      delegate: SliverChildBuilderDelegate(
-                                        (context, index) {
-                                          final candidate =
-                                              state.candidates[index];
-                                          return _CompletionTile(
-                                            key: ValueKey(
-                                              'autocomplete-candidate-${candidate.stableId}',
-                                            ),
-                                            candidate: candidate,
-                                            selected: index == selectedIndex,
-                                            showAliases: showAliases,
-                                            showTranslations: showTranslations,
-                                            showCategory: showCategory,
-                                            showCount: showCount,
-                                            showMatchNote:
-                                                settings.showMatchNotes,
-                                            sections: candidate.isExisting
-                                                ? tagSections[candidate
-                                                      .canonicalTag]
-                                                : null,
-                                            onTap: () => onSelected(index),
-                                          );
-                                        },
-                                        childCount: state.candidates.length,
-                                        addAutomaticKeepAlives: false,
-                                      ),
+                                  )
+                                : NotificationListener<ScrollStartNotification>(
+                                    // Browsing the list puts the cards away.
+                                    onNotification: (notification) {
+                                      if (notification.dragDetails != null) {
+                                        floatingCards?.onTogglePanel();
+                                      }
+                                      return false;
+                                    },
+                                    child: _CandidateList(
+                                      state: state,
+                                      selectedIndex: selectedIndex,
+                                      scrollController: scrollController,
+                                      touchCompact: touchCompact,
+                                      showAliases: showAliases,
+                                      showTranslations: showTranslations,
+                                      showCategory: showCategory,
+                                      showCount: showCount,
+                                      showMatchNote: settings.showMatchNotes,
+                                      tagSections: tagSections,
+                                      onSelected: onSelected,
+                                      // When the keyboard leaves very little
+                                      // room, candidates stay first; header
+                                      // actions remain reachable in the same
+                                      // scrollable surface.
+                                      trailing: [
+                                        if (scrollHeader) header,
+                                        if (inlineCards != null) inlineCards,
+                                      ],
                                     ),
                                   ),
-                                  // When the keyboard leaves very little room,
-                                  // candidates stay first; header actions remain
-                                  // reachable in the same scrollable surface.
-                                  if (scrollHeader)
-                                    SliverToBoxAdapter(child: header),
-                                ],
-                              ),
-                            ),
+                          ),
+                        ),
+                        if (showFooter)
+                          _CompletionFooter(
+                            state: state,
+                            settings: settings,
+                            dictionaryState: dictionaryState,
+                            cooccurrenceDataPackState:
+                                cooccurrenceDataPackState,
+                            onOpenSettings: onOpenSettings,
+                            onInsertSeparator: onInsertSeparator,
+                          ),
+                      ],
                     ),
-                    if (showFooter)
-                      _CompletionFooter(
-                        state: state,
-                        settings: settings,
-                        dictionaryState: dictionaryState,
-                        cooccurrenceDataPackState: cooccurrenceDataPackState,
-                        onOpenSettings: onOpenSettings,
-                        onInsertSeparator: onInsertSeparator,
+                    if (floatingCards != null)
+                      Positioned(
+                        top: headerExtent + _filterPanelMargin,
+                        left: 8,
+                        right: 8,
+                        bottom:
+                            (showFooter ? footerExtent : 0) +
+                            _filterPanelMargin,
+                        child: Align(
+                          alignment: AlignmentDirectional.topEnd,
+                          // Shrinks rather than clips when even the one-line
+                          // cards do not fit.
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.topEnd,
+                            child: RelatedCategoryFilterPanel(
+                              filter: floatingCards,
+                              compact: compactCards,
+                            ),
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -267,10 +310,99 @@ class CompletionOverlay extends StatelessWidget {
   }
 }
 
-class _EmptyCompletionBody extends StatelessWidget {
-  const _EmptyCompletionBody({required this.state});
+/// The scrolling candidate rows, followed by [trailing] in the same
+/// scrollable surface.
+class _CandidateList extends StatelessWidget {
+  const _CandidateList({
+    required this.state,
+    required this.selectedIndex,
+    required this.scrollController,
+    required this.touchCompact,
+    required this.showAliases,
+    required this.showTranslations,
+    required this.showCategory,
+    required this.showCount,
+    required this.showMatchNote,
+    required this.tagSections,
+    required this.onSelected,
+    this.trailing = const [],
+  });
 
   final CompletionState state;
+  final int selectedIndex;
+  final ScrollController scrollController;
+  final bool touchCompact;
+  final bool showAliases;
+  final bool showTranslations;
+  final bool showCategory;
+  final bool showCount;
+  final bool showMatchNote;
+  final Map<String, List<int>> tagSections;
+  final ValueChanged<int> onSelected;
+  final List<Widget> trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final candidateExtent = effectiveAutocompleteCandidateExtent(context);
+    final long = state.candidates.length > 9;
+    return Scrollbar(
+      key: const ValueKey('autocomplete-popup-scrollbar'),
+      controller: scrollController,
+      thumbVisibility: long,
+      trackVisibility: long,
+      interactive: !touchCompact,
+      thickness: touchCompact ? 4 : 8,
+      radius: const Radius.circular(8),
+      child: CustomScrollView(
+        key: const ValueKey('autocomplete-popup-list'),
+        controller: scrollController,
+        shrinkWrap: true,
+        scrollCacheExtent: ScrollCacheExtent.pixels(candidateExtent * 10),
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.only(right: touchCompact ? 6 : 14),
+            sliver: SliverFixedExtentList(
+              itemExtent: candidateExtent,
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final candidate = state.candidates[index];
+                  return _CompletionTile(
+                    key: ValueKey(
+                      'autocomplete-candidate-${candidate.stableId}',
+                    ),
+                    candidate: candidate,
+                    selected: index == selectedIndex,
+                    showAliases: showAliases,
+                    showTranslations: showTranslations,
+                    showCategory: showCategory,
+                    showCount: showCount,
+                    showMatchNote: showMatchNote,
+                    sections: candidate.isExisting
+                        ? tagSections[candidate.canonicalTag]
+                        : null,
+                    onTap: () => onSelected(index),
+                  );
+                },
+                childCount: state.candidates.length,
+                addAutomaticKeepAlives: false,
+              ),
+            ),
+          ),
+          for (final row in trailing) SliverToBoxAdapter(child: row),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyCompletionBody extends StatelessWidget {
+  const _EmptyCompletionBody({required this.state, this.onClearFilter});
+
+  final CompletionState state;
+
+  /// Clears the categories related suggestions are narrowed to; given while
+  /// some are chosen, so an empty list says why and offers the way out.
+  final VoidCallback? onClearFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -278,64 +410,98 @@ class _EmptyCompletionBody extends StatelessWidget {
     final loading = state.isLocalLoading || state.isRemoteLoading;
     final related = state.query?.relatedTag != null;
     final error = state.localError ?? state.remoteError;
-    return SizedBox(
+    final clearFilter = loading || error != null ? null : onClearFilter;
+    final message = _message(context, theme, loading, related, error);
+    if (clearFilter == null) {
+      return SizedBox(
+        key: const ValueKey('autocomplete-popup-empty'),
+        height: 78,
+        child: Center(child: message),
+      );
+    }
+    return Padding(
       key: const ValueKey('autocomplete-popup-empty'),
-      height: 78,
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (loading)
-                SizedBox(
-                  width: 15,
-                  height: 15,
-                  child: CircularProgressIndicator(
-                    value: MediaQuery.disableAnimationsOf(context)
-                        ? 0.75
-                        : null,
-                    strokeWidth: 1.8,
-                    color: theme.colorScheme.primary,
-                  ),
-                )
-              else
-                Icon(
-                  error == null
-                      ? Icons.manage_search_rounded
-                      : Icons.error_outline_rounded,
-                  size: 18,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          message,
+          const SizedBox(height: 8),
+          Focus(
+            canRequestFocus: false,
+            descendantsAreFocusable: false,
+            child: FilledButton.tonal(
+              key: const ValueKey('autocomplete-related-filter-clear'),
+              onPressed: clearFilter,
+              child: Text(context.l10n.autocomplete_relatedFilterClear),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _message(
+    BuildContext context,
+    ThemeData theme,
+    bool loading,
+    bool related,
+    String? error,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (loading)
+            SizedBox(
+              width: 15,
+              height: 15,
+              child: CircularProgressIndicator(
+                value: MediaQuery.disableAnimationsOf(context) ? 0.75 : null,
+                strokeWidth: 1.8,
+                color: theme.colorScheme.primary,
+              ),
+            )
+          else
+            Icon(
+              error != null
+                  ? Icons.error_outline_rounded
+                  : related && onClearFilter != null
+                  ? Icons.filter_alt_off_outlined
+                  : Icons.manage_search_rounded,
+              size: 18,
+              color: error == null
+                  ? theme.colorScheme.onSurfaceVariant
+                  : theme.colorScheme.error,
+            ),
+          const SizedBox(width: 9),
+          Flexible(
+            child: Tooltip(
+              message: error ?? '',
+              child: Text(
+                loading
+                    ? related
+                          ? context.l10n.autocomplete_relatedLoading
+                          : context.l10n.autocomplete_loading
+                    : error == null
+                    ? related
+                          ? onClearFilter == null
+                                ? context.l10n.autocomplete_relatedEmpty
+                                : context.l10n.autocomplete_relatedFilterEmpty
+                          : context.l10n.autocomplete_empty
+                    : context.l10n.autocomplete_statusError,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: error == null
                       ? theme.colorScheme.onSurfaceVariant
                       : theme.colorScheme.error,
                 ),
-              const SizedBox(width: 9),
-              Flexible(
-                child: Tooltip(
-                  message: error ?? '',
-                  child: Text(
-                    loading
-                        ? related
-                              ? context.l10n.autocomplete_relatedLoading
-                              : context.l10n.autocomplete_loading
-                        : error == null
-                        ? related
-                              ? context.l10n.autocomplete_relatedEmpty
-                              : context.l10n.autocomplete_empty
-                        : context.l10n.autocomplete_statusError,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: error == null
-                          ? theme.colorScheme.onSurfaceVariant
-                          : theme.colorScheme.error,
-                    ),
-                  ),
-                ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -351,6 +517,7 @@ class _CompletionHeader extends StatelessWidget {
     required this.onOpenSettings,
     required this.onClose,
     this.onInsertSeparator,
+    this.filter,
   });
 
   final String query;
@@ -358,6 +525,9 @@ class _CompletionHeader extends StatelessWidget {
   final bool related;
   final bool isRelatedPinned;
   final VoidCallback? onToggleRelatedPin;
+
+  /// The funnel that narrows related suggestions to categories.
+  final RelatedCategoryFilter? filter;
   final VoidCallback? onOpenSettings;
   final VoidCallback? onInsertSeparator;
   final VoidCallback onClose;
@@ -394,6 +564,22 @@ class _CompletionHeader extends StatelessWidget {
           final showTitle = constraints.maxWidth >= 440;
           final showFullShortcuts = constraints.maxWidth >= 650;
           final showCompactShortcuts = constraints.maxWidth >= 540;
+          final buttonExtent = touchInput
+              ? context.interactionPolicy.minimumControlExtent
+              : 28.0;
+          final buttons = [
+            onOpenSettings != null,
+            filter != null,
+            related && onToggleRelatedPin != null,
+            true,
+          ].where((shown) => shown).length;
+          // Where the buttons leave little room, the count gives way to the
+          // tag being read.
+          final showCount =
+              constraints.maxWidth -
+                  buttons * buttonExtent -
+                  (onInsertSeparator == null ? 0 : 60) >=
+              120;
           return Row(
             children: [
               if (showTitle) ...[
@@ -447,21 +633,23 @@ class _CompletionHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 9),
-              Semantics(
-                label: context.l10n.autocomplete_resultsCount(resultCount),
-                child: Text(
-                  touchCompact
-                      ? '$resultCount'
-                      : context.l10n.autocomplete_resultsCount(resultCount),
-                  key: const ValueKey('autocomplete-popup-result-count'),
-                  maxLines: 1,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+              if (showCount) ...[
+                const SizedBox(width: 9),
+                Semantics(
+                  label: context.l10n.autocomplete_resultsCount(resultCount),
+                  child: Text(
+                    touchCompact
+                        ? '$resultCount'
+                        : context.l10n.autocomplete_resultsCount(resultCount),
+                    key: const ValueKey('autocomplete-popup-result-count'),
+                    maxLines: 1,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
                 ),
-              ),
+              ],
               SizedBox(width: touchCompact ? 4 : 9),
               if (!touchCompact) ...[
                 if (showFullShortcuts)
@@ -490,6 +678,8 @@ class _CompletionHeader extends StatelessWidget {
                   icon: Icons.settings_rounded,
                   onPressed: onOpenSettings!,
                 ),
+              if (filter case final filter?)
+                RelatedCategoryFilterButton(filter: filter),
               if (related && onToggleRelatedPin != null)
                 _NonFocusableIconButton(
                   key: const ValueKey('autocomplete-popup-related-pin'),

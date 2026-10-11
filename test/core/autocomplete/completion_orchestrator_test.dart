@@ -306,6 +306,79 @@ void main() {
     );
   });
 
+  test('related tags keep to the categories the user chose', () async {
+    final remote = _FakeDanbooru();
+    final orchestrator = CompletionOrchestrator(
+      localSources: [
+        _Source([
+          _candidate('smile', CompletionSourceKind.cooccurrence),
+          _named('heroine', TagCategory.character),
+        ]),
+      ],
+      dictionaryTranslations: _Translations(const {}),
+      llmTranslations: _Translations(const {}),
+      danbooru: remote,
+    );
+    addTearDown(orchestrator.dispose);
+
+    await orchestrator.query(
+      _query(
+        '',
+        fullText: 'some_series, ',
+        relatedTag: 'some_series',
+      ).copyWith(relatedCategories: const {TagCategory.character}),
+      const AutocompleteSettings(),
+    );
+    expect(orchestrator.state.candidates.single.canonicalTag, 'heroine');
+
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    remote.completeRelated([
+      _candidate('grin', CompletionSourceKind.danbooruApi),
+      _named('rival', TagCategory.character, CompletionSourceKind.danbooruApi),
+    ]);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(orchestrator.state.candidates.map((value) => value.canonicalTag), [
+      'heroine',
+      'rival',
+    ]);
+  });
+
+  test('online related tags leave names out after a general tag', () async {
+    final remote = _FakeDanbooru();
+    final orchestrator = CompletionOrchestrator(
+      localSources: [
+        _Source([_candidate('smile', CompletionSourceKind.cooccurrence)]),
+      ],
+      dictionaryTranslations: _Translations(const {}),
+      llmTranslations: _Translations(const {}),
+      danbooru: remote,
+      tagCategory: (tag) async =>
+          tag == 'some_series' ? TagCategory.copyright : TagCategory.general,
+    );
+    addTearDown(orchestrator.dispose);
+    Future<Iterable<String>> relatedTo(String tag) async {
+      await orchestrator.query(
+        _query('', fullText: '$tag, ', relatedTag: tag),
+        const AutocompleteSettings(),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      remote.completeRelated([
+        _candidate('grin', CompletionSourceKind.danbooruApi),
+        _named(
+          'rival',
+          TagCategory.character,
+          CompletionSourceKind.danbooruApi,
+        ),
+      ]);
+      await Future<void>.delayed(Duration.zero);
+      return orchestrator.state.candidates.map((value) => value.canonicalTag);
+    }
+
+    expect(await relatedTo('blue_eyes'), ['smile', 'grin']);
+    expect(await relatedTo('some_series'), ['smile', 'grin', 'rival']);
+  });
+
   test(
     'falls back to normal completion for a partial translated related tag',
     () async {
@@ -748,6 +821,12 @@ CompletionCandidate _candidate(String tag, CompletionSourceKind source) =>
       matchKind: CompletionMatchKind.englishPrefix,
       sources: {source},
     );
+
+CompletionCandidate _named(
+  String tag,
+  TagCategory category, [
+  CompletionSourceKind source = CompletionSourceKind.cooccurrence,
+]) => _candidate(tag, source).copyWith(category: category);
 
 class _Source implements CompletionSource {
   _Source(this.values);

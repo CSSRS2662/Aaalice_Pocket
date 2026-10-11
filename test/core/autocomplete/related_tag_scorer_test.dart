@@ -78,6 +78,29 @@ void main() {
     expect(scores.keys, ['obi']);
   });
 
+  test('categories the user chose replace that rule', () {
+    final scores = RelatedTagScorer.score(
+      context: [
+        _context(_record('kimono', 200000), {
+          'some_character': 30000,
+          'some_series': 25000,
+          'obi': 20000,
+        }),
+      ],
+      candidates: {
+        'some_character': _record(
+          'some_character',
+          40000,
+          TagCategory.character,
+        ),
+        'some_series': _record('some_series', 90000, TagCategory.copyright),
+        'obi': _record('obi', 60000),
+      },
+      categories: {TagCategory.character},
+    );
+    expect(scores.keys, ['some_character']);
+  });
+
   test('a character leads to its traits before its castmates', () {
     final scores = RelatedTagScorer.score(
       context: [

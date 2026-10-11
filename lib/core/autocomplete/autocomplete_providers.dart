@@ -72,6 +72,8 @@ class AutocompleteServices {
     this.semanticSource,
     this.supplementalSources = const [],
     this.rankingSignals,
+    this.tagCategory,
+    this.relatedCategoryCounts,
   });
 
   final List<CompletionSource> localSources;
@@ -88,6 +90,14 @@ class AutocompleteServices {
   /// Context and habit boosts.
   final CompletionRankingSignals? rankingSignals;
 
+  /// The catalog category of a tag, null when unknown.
+  final Future<TagCategory?> Function(String tag)? tagCategory;
+
+  /// How many related tags each category holds for a related query, shown
+  /// on the cards that narrow the suggestions to a category.
+  final Future<Map<TagCategory, int>> Function(CompletionQuery query)?
+  relatedCategoryCounts;
+
   CompletionOrchestrator createOrchestrator() => CompletionOrchestrator(
     localSources: localSources,
     tagLookupSources: tagLookupSources,
@@ -98,6 +108,7 @@ class AutocompleteServices {
     semanticSource: semanticSource,
     supplementalSources: supplementalSources,
     rankingSignals: rankingSignals,
+    tagCategory: tagCategory,
   );
 }
 

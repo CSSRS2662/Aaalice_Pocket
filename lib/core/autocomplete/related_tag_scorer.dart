@@ -80,9 +80,14 @@ abstract final class RelatedTagScorer {
 
   /// Scores between 0 and 1, the best candidate scoring 1. [context] starts
   /// with the anchor. Candidates no context tag supports are left out.
+  ///
+  /// [categories], when not empty, is the user's own choice of what to list
+  /// and replaces the rule above: only those categories are scored, names
+  /// after a general tag included.
   static Map<String, double> score({
     required List<RelatedContextTag> context,
     required Map<String, TagCatalogRecord> candidates,
+    Set<TagCategory> categories = const {},
   }) {
     if (context.isEmpty) return const {};
     final anchor = context.first.record.category;
@@ -93,7 +98,11 @@ abstract final class RelatedTagScorer {
     final damping = <String, double>{};
     for (final MapEntry(key: name, value: record) in candidates.entries) {
       if (record.postCount <= 0) continue;
-      if (generalOnly ? !isGeneral(record.category) : !_suggestible(record)) {
+      if (categories.isNotEmpty
+          ? !categories.contains(record.category)
+          : generalOnly
+          ? !isGeneral(record.category)
+          : !_suggestible(record)) {
         continue;
       }
       var damp = 1.0;

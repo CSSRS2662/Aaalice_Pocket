@@ -636,8 +636,9 @@ void main() {
     WidgetTester tester,
     TextEditingController controller,
     FocusNode focusNode,
-    CompletionSource source,
-  ) async {
+    CompletionSource source, {
+    Future<Map<TagCategory, int>> Function(CompletionQuery query)? counts,
+  }) async {
     final handle = AutocompleteOverlayHandle();
     addTearDown(handle.dispose);
     await tester.pumpWidget(
@@ -652,6 +653,7 @@ void main() {
               dictionaryTranslations: const _NoTranslations(),
               llmTranslations: const _NoTranslations(),
               danbooru: _NoDanbooru(),
+              relatedCategoryCounts: counts,
             ),
           ),
         ],
@@ -754,6 +756,152 @@ void main() {
     expect(source.relatedTags.last, 'outdoors');
     expect(source.contexts.last, ['night']);
     expect(find.text('Related tags'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  const filterFunnel = ValueKey('autocomplete-popup-related-filter');
+  const filterPanel = ValueKey('autocomplete-related-filter-panel');
+  const characterCard = ValueKey('autocomplete-related-filter-character');
+  const generalCard = ValueKey('autocomplete-related-filter-general');
+
+  testWidgets('the funnel narrows related tags to the chosen categories', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: 'some_series, ');
+    controller.selection = const TextSelection.collapsed(offset: 13);
+    final focusNode = FocusNode();
+    final source = _CategorisedRelatedSource();
+    final counted = <String?>[];
+    addTearDown(() {
+      controller.dispose();
+      focusNode.dispose();
+    });
+    final handle = await pumpRelatedHarness(
+      tester,
+      controller,
+      focusNode,
+      source,
+      counts: (query) async {
+        counted.add(query.relatedTag);
+        return const {
+          TagCategory.character: 2,
+          TagCategory.copyright: 1,
+          TagCategory.general: 41,
+        };
+      },
+    );
+    Future<void> settle() async {
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 30));
+    }
+
+    handle.suggestNext();
+    await settle();
+    expect(find.text('halo'), findsOneWidget);
+    expect(find.text('heroine'), findsOneWidget);
+    expect(find.byKey(filterPanel), findsNothing);
+    expect(counted, isEmpty);
+
+    await tester.tap(find.byKey(filterFunnel));
+    await settle();
+    expect(counted, ['some_series']);
+    expect(
+      find.descendant(of: find.byKey(filterPanel), matching: find.text('41')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(characterCard));
+    await settle();
+    expect(source.categories.last, {TagCategory.character});
+    expect(find.text('heroine'), findsOneWidget);
+    expect(find.text('rival'), findsOneWidget);
+    expect(find.text('halo'), findsNothing);
+    expect(find.text('spin_off'), findsNothing);
+    // The cards stay up for a second choice: either category lists.
+    await tester.tap(find.byKey(generalCard));
+    await settle();
+    expect(source.categories.last, {
+      TagCategory.character,
+      TagCategory.general,
+    });
+    expect(find.text('halo'), findsOneWidget);
+    expect(find.text('spin_off'), findsNothing);
+
+    await tester.longPress(find.byKey(filterFunnel));
+    await settle();
+    expect(source.categories.last, isEmpty);
+    expect(find.text('spin_off'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a narrowed list lasts for its tag; a pinned tag keeps it', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: 'some_series, ');
+    controller.selection = const TextSelection.collapsed(offset: 13);
+    final focusNode = FocusNode();
+    final source = _CategorisedRelatedSource();
+    addTearDown(() {
+      controller.dispose();
+      focusNode.dispose();
+    });
+    final handle = await pumpRelatedHarness(
+      tester,
+      controller,
+      focusNode,
+      source,
+    );
+    Future<void> settle() async {
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 30));
+    }
+
+    Future<void> onlyCharacters() async {
+      await tester.tap(find.byKey(filterFunnel));
+      await settle();
+      await tester.tap(find.byKey(characterCard));
+      await settle();
+      expect(source.categories.last, {TagCategory.character});
+      // The cards float over the first rows; put them away to pick one.
+      await tester.tap(find.byKey(filterFunnel));
+      await settle();
+      expect(find.byKey(filterPanel), findsNothing);
+    }
+
+    handle.suggestNext();
+    await settle();
+    await onlyCharacters();
+
+    // Picking a tag moves the popup on to it, with every category again.
+    await tester.tap(find.text('heroine'));
+    await settle();
+    expect(controller.text, startsWith('some_series, heroine'));
+    expect(source.relatedTags.last, 'heroine');
+    expect(source.categories.last, isEmpty);
+    expect(find.byKey(filterPanel), findsNothing);
+    expect(find.text('halo'), findsOneWidget);
+
+    // A pinned tag keeps its popup, and what it was narrowed to.
+    await onlyCharacters();
+    await tester.tap(
+      find.byKey(const ValueKey('autocomplete-popup-related-pin')),
+    );
+    await settle();
+    await tester.tap(find.text('rival'));
+    await settle();
+    expect(controller.text, contains('rival'));
+    expect(source.relatedTags.last, 'heroine');
+    expect(source.categories.last, {TagCategory.character});
+    expect(find.byKey(filterPanel), findsNothing);
+
+    // Every character is written now: the empty list offers the way out.
+    expect(find.text('halo'), findsNothing);
+    await tester.tap(
+      find.byKey(const ValueKey('autocomplete-related-filter-clear')),
+    );
+    await settle();
+    expect(source.categories.last, isEmpty);
+    expect(find.text('halo'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -1967,6 +2115,36 @@ class _RecordingBaseSource implements CompletionSource {
         matchKind: CompletionMatchKind.englishPrefix,
         sources: const {CompletionSourceKind.base},
       ),
+    ];
+  }
+}
+
+/// Related rows of every category; records what each query was narrowed to.
+class _CategorisedRelatedSource implements CompletionSource {
+  final List<String> relatedTags = [];
+  final List<Set<TagCategory>> categories = [];
+
+  @override
+  Future<List<CompletionCandidate>> search(CompletionQuery query) async {
+    final relatedTag = query.relatedTag;
+    if (relatedTag == null || query.token.isNotEmpty) return const [];
+    relatedTags.add(relatedTag);
+    categories.add(query.relatedCategories);
+    CompletionCandidate row(String tag, TagCategory category, double score) =>
+        CompletionCandidate(
+          canonicalTag: tag,
+          category: category,
+          postCount: 1000,
+          matchKind: CompletionMatchKind.related,
+          sources: const {CompletionSourceKind.cooccurrence},
+          relatedScore: score,
+          cooccurrenceCount: 500,
+        );
+    return [
+      row('halo', TagCategory.general, 0.9),
+      row('heroine', TagCategory.character, 0.8),
+      row('rival', TagCategory.character, 0.7),
+      row('spin_off', TagCategory.copyright, 0.6),
     ];
   }
 }

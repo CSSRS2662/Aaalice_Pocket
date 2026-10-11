@@ -20,6 +20,10 @@ typedef PersonalPairScores =
 /// next when [personalPairs] is given. The pack stores shared post counts;
 /// catalog post counts are joined at query time instead of duplicating the
 /// complete tag catalog in another database.
+///
+/// A query narrowed to categories lists everything of those categories seen
+/// with the leading tag, however far down its rows: a big series keeps its
+/// characters below a thousand general tags.
 class CooccurrenceCompletionSource implements CompletionSource {
   CooccurrenceCompletionSource(
     CooccurrenceDataSource dataSource, {
@@ -52,16 +56,63 @@ class CooccurrenceCompletionSource implements CompletionSource {
   /// Most suggestions returned.
   static const int maxResults = 300;
 
+  /// Most suggestions returned once narrowed to categories: enough for the
+  /// whole cast of the largest series.
+  static const int maxFilteredResults = 1000;
+
+  /// The categories suggestions can be narrowed to: all the pack holds.
+  static const Set<TagCategory> filterCategories = {
+    TagCategory.character,
+    TagCategory.copyright,
+    TagCategory.general,
+  };
+
   /// How far a remembered habit lifts a suggestion on the 0 to 1 scale.
   static const double personalWeight = 0.35;
 
-  static const int _maxRememberedRecords = 20000;
+  // Above the number of tags in the pack, so a long narrowed list is looked
+  // up once.
+  static const int _maxRememberedRecords = 40000;
   final Map<String, TagCatalogRecord?> _records = {};
 
   @override
   Future<List<CompletionCandidate>> search(CompletionQuery query) async {
+    final candidates = await _rank(query, query.relatedCategories);
+    final most = query.relatedCategories.isEmpty
+        ? maxResults
+        : maxFilteredResults;
+    final limit = CompletionResultLimits.isAll(query.limit)
+        ? most
+        : query.limit.clamp(1, most);
+    return candidates.take(limit).toList(growable: false);
+  }
+
+  /// How many suggestions each of [filterCategories] would list for [query]
+  /// when narrowed to it.
+  Future<Map<TagCategory, int>> categoryCounts(CompletionQuery query) async {
+    final counts = {for (final category in filterCategories) category: 0};
+    for (final candidate in await _rank(query, filterCategories)) {
+      counts[candidate.category] = (counts[candidate.category] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  /// The catalog category of [tag], or null when the catalog lacks it.
+  Future<TagCategory?> categoryOf(String tag) async {
+    final name = _normalize(tag);
+    if (name.isEmpty) return null;
+    return (await _recordsFor([name]))[name]?.category;
+  }
+
+  /// Every suggestion for [query], best first. [categories], when not empty,
+  /// narrows them to what was seen with the leading tag in those categories.
+  Future<List<CompletionCandidate>> _rank(
+    CompletionQuery query,
+    Set<TagCategory> categories,
+  ) async {
     final relatedTag = _normalize(query.relatedTag ?? '');
     if (relatedTag.isEmpty || query.token.isNotEmpty) return const [];
+    final narrowed = categories.isNotEmpty;
 
     final contextNames = <String>[relatedTag];
     for (final raw in query.contextTags) {
@@ -83,29 +134,30 @@ class CooccurrenceCompletionSource implements CompletionSource {
         record == null ||
         RelatedTagScorer.isGeneral(record.category);
 
-    final usable = <(TagCatalogRecord, List<RelatedTag>)>[];
+    final usable = <(TagCatalogRecord, List<RelatedTag>, bool)>[];
     for (final name in contextNames) {
       final record = contextRecords[name];
       if (record == null || record.postCount <= 0 || !takesPart(record)) {
         continue;
       }
-      final rows = await dataSource.getRelatedTags(
-        name,
-        limit: rowsPerContextTag,
-      );
-      if (rows.isNotEmpty) usable.add((record, rows));
+      // A narrowed list reads every row of the tag that leads it.
+      final rowLimit = narrowed && usable.isEmpty
+          ? CompletionResultLimits.maxRelatedTags
+          : rowsPerContextTag;
+      final rows = await dataSource.getRelatedTags(name, limit: rowLimit);
+      if (rows.isNotEmpty) usable.add((record, rows, rows.length < rowLimit));
     }
     // The nearest tag with data leads when the related tag itself has none.
     final shares = RelatedTagScorer.shares([
-      for (final (record, _) in usable.skip(1)) record.postCount,
+      for (final (record, _, _) in usable.skip(1)) record.postCount,
     ]);
     final context = [
-      for (final (index, (record, rows)) in usable.indexed)
+      for (final (index, (record, rows, complete)) in usable.indexed)
         RelatedContextTag(
           record: record,
           weight: shares[index],
           related: {for (final row in rows) _normalize(row.tag): row.count},
-          complete: rows.length < rowsPerContextTag,
+          complete: complete,
         ),
     ];
 
@@ -116,9 +168,15 @@ class CooccurrenceCompletionSource implements CompletionSource {
         ]) ??
         const {};
     final excluded = {...query.existingTags, ...contextNames};
+    // Narrowed, the other tags only reorder what the leading tag was seen
+    // with; they bring in nothing of their own.
     final pool = <String>{
-      for (final tag in context) ...tag.related.keys,
-      ...personal.keys,
+      if (narrowed)
+        ...?context.firstOrNull?.related.keys
+      else ...[
+        for (final tag in context) ...tag.related.keys,
+        ...personal.keys,
+      ],
     }..removeWhere((tag) => tag.isEmpty || excluded.contains(tag));
     if (pool.isEmpty) return const [];
 
@@ -129,11 +187,18 @@ class CooccurrenceCompletionSource implements CompletionSource {
         for (final name in pool)
           if (records[name] case final record?) name: record,
       },
+      categories: categories,
     );
     final combined = <String, double>{};
     for (final name in pool) {
-      // Habits follow the same rule: no names after a general tag.
-      if (!takesPart(records[name])) continue;
+      // Habits follow the same rule: no names after a general tag, and only
+      // the chosen categories once narrowed.
+      final record = records[name];
+      if (narrowed
+          ? record == null || !categories.contains(record.category)
+          : !takesPart(record)) {
+        continue;
+      }
       final score =
           (related[name] ?? 0) + personalWeight * (personal[name] ?? 0);
       if (score > 0) combined[name] = score;
@@ -162,10 +227,7 @@ class CooccurrenceCompletionSource implements CompletionSource {
       if (popularity != 0) return popularity;
       return left.canonicalTag.compareTo(right.canonicalTag);
     });
-    final limit = CompletionResultLimits.isAll(query.limit)
-        ? maxResults
-        : query.limit.clamp(1, maxResults);
-    return candidates.take(limit).toList(growable: false);
+    return candidates;
   }
 
   /// Posts shared with the related tag, or with the closest context tag

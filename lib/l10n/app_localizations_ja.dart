@@ -13126,6 +13126,29 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get autocomplete_relatedFilter => 'カテゴリで絞り込み（長押しで解除）';
+
+  @override
+  String get autocomplete_relatedFilterCharacter => 'キャラクター';
+
+  @override
+  String get autocomplete_relatedFilterSeries => '作品';
+
+  @override
+  String get autocomplete_relatedFilterGeneral => '一般';
+
+  @override
+  String autocomplete_relatedFilterCount(String category, int count) {
+    return '$category、$count 件';
+  }
+
+  @override
+  String get autocomplete_relatedFilterEmpty => '絞り込みに一致する関連タグがありません';
+
+  @override
+  String get autocomplete_relatedFilterClear => '絞り込みを解除';
+
+  @override
   String get autocomplete_relatedPin => 'このタグを固定して関連タグを連続挿入';
 
   @override

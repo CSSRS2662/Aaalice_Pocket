@@ -207,6 +207,141 @@ void main() {
     });
   });
 
+  group('narrowed to categories', () {
+    // A big series: a thousand general tags sit above its cast.
+    final rows = {
+      'big_series': [
+        for (var index = 0; index < 1000; index++)
+          RelatedTag(tag: 'general_$index', count: 5000 - index),
+        const RelatedTag(tag: 'heroine', count: 900),
+        const RelatedTag(tag: 'spin_off', count: 400),
+      ],
+      'blue_hair': const [
+        RelatedTag(tag: 'rival', count: 20000),
+        RelatedTag(tag: 'heroine', count: 800),
+      ],
+      'halo': const [
+        RelatedTag(tag: 'wings', count: 50000),
+        RelatedTag(tag: 'heroine', count: 1200),
+        RelatedTag(tag: 'big_series', count: 30000),
+      ],
+    };
+    final catalog = _FakeCatalog({
+      'big_series': _record('big_series', 200000, TagCategory.copyright),
+      'blue_hair': _record('blue_hair', 900000),
+      'halo': _record('halo', 300000),
+      'wings': _record('wings', 400000),
+      for (var index = 0; index < 1000; index++)
+        'general_$index': _record('general_$index', 100000),
+      'heroine': _record('heroine', 2000, TagCategory.character),
+      'spin_off': _record('spin_off', 1000, TagCategory.copyright),
+      'rival': _record('rival', 30000, TagCategory.character),
+    });
+    Iterable<String> tagsOf(List<CompletionCandidate> results) =>
+        results.map((candidate) => candidate.canonicalTag);
+
+    test('a category reaches below the rows usually read', () async {
+      final dataSource = _FakeCooccurrenceDataSource(rows);
+      final source = CooccurrenceCompletionSource(dataSource, catalog: catalog);
+
+      final usual = await source.search(_query(relatedTag: 'big_series'));
+      expect(tagsOf(usual), isNot(contains('heroine')));
+      expect(usual, hasLength(CooccurrenceCompletionSource.maxResults));
+
+      final cast = await source.search(
+        _query(
+          relatedTag: 'big_series',
+          relatedCategories: const {TagCategory.character},
+        ),
+      );
+      expect(tagsOf(cast), ['heroine']);
+      expect(
+        dataSource.requestedLimits['big_series'],
+        CompletionResultLimits.maxRelatedTags,
+      );
+    });
+
+    test('several categories list any of them, past the usual cap', () async {
+      final source = CooccurrenceCompletionSource(
+        _FakeCooccurrenceDataSource(rows),
+        catalog: catalog,
+      );
+      final names = await source.search(
+        _query(
+          relatedTag: 'big_series',
+          relatedCategories: const {
+            TagCategory.character,
+            TagCategory.copyright,
+          },
+        ),
+      );
+      expect(tagsOf(names), unorderedEquals(['heroine', 'spin_off']));
+
+      final general = await source.search(
+        _query(
+          relatedTag: 'big_series',
+          relatedCategories: const {TagCategory.general},
+        ),
+      );
+      expect(general, hasLength(1000));
+    });
+
+    test('other tags and habits reorder but bring nothing in', () async {
+      final source = CooccurrenceCompletionSource(
+        _FakeCooccurrenceDataSource(rows),
+        catalog: catalog,
+        // rival follows blue_hair, never the series itself.
+        personalPairs: (_) => const {'rival': 1.0, 'general_3': 1.0},
+      );
+      final cast = await source.search(
+        _query(
+          relatedTag: 'big_series',
+          contextTags: const ['blue_hair'],
+          relatedCategories: const {TagCategory.character},
+        ),
+      );
+      expect(tagsOf(cast), ['heroine']);
+    });
+
+    test('a chosen category lists names after a general tag', () async {
+      final source = CooccurrenceCompletionSource(
+        _FakeCooccurrenceDataSource(rows),
+        catalog: catalog,
+      );
+      final usual = await source.search(_query(relatedTag: 'halo'));
+      expect(tagsOf(usual), ['wings']);
+
+      final names = await source.search(
+        _query(
+          relatedTag: 'halo',
+          relatedCategories: const {
+            TagCategory.character,
+            TagCategory.copyright,
+          },
+        ),
+      );
+      expect(tagsOf(names), unorderedEquals(['heroine', 'big_series']));
+    });
+
+    test('counts what each category would list', () async {
+      final source = CooccurrenceCompletionSource(
+        _FakeCooccurrenceDataSource(rows),
+        catalog: catalog,
+      );
+      expect(await source.categoryCounts(_query(relatedTag: 'big_series')), {
+        TagCategory.character: 1,
+        TagCategory.copyright: 1,
+        TagCategory.general: 1000,
+      });
+      expect(
+        await source.categoryCounts(
+          _query(relatedTag: 'big_series', existingTags: const {'heroine'}),
+        ),
+        containsPair(TagCategory.character, 0),
+      );
+    });
+  });
+
   test('compact database returns stable bidirectional relations', () async {
     sqfliteFfiInit();
     final directory = await Directory.systemTemp.createTemp(
@@ -305,6 +440,7 @@ CompletionQuery _query({
   List<String> contextTags = const [],
   int limit = CompletionResultLimits.all,
   Set<String> existingTags = const {},
+  Set<TagCategory> relatedCategories = const {},
 }) => CompletionQuery(
   fullText: '$relatedTag, ',
   cursorPosition: relatedTag.length + 2,
@@ -318,6 +454,7 @@ CompletionQuery _query({
   locale: 'en',
   relatedTag: relatedTag,
   contextTags: contextTags,
+  relatedCategories: relatedCategories,
 );
 
 class _FakeCooccurrenceDataSource extends CooccurrenceDataSource {
