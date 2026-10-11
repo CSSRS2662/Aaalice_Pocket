@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../widgets/common/decoded_memory_image.dart';
 import '../../../widgets/common/image_viewport_surface.dart';
 import '../../../../core/comfyui/comfyui_models.dart';
 import '../../../../core/comfyui/workflow_template.dart';
@@ -262,11 +263,15 @@ class _ComfyUIWorkflowDialogState extends ConsumerState<ComfyUIWorkflowDialog> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: ImageViewportSurface(
-                    child: Image.memory(
-                      _inputImages[slot.id]!,
+                    child: SizedBox(
                       height: 120,
                       width: double.infinity,
-                      fit: BoxFit.contain,
+                      child: DecodedMemoryImage(
+                        bytes: _inputImages[slot.id]!,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium,
+                        maxLogicalHeight: 120,
+                      ),
                     ),
                   ),
                 ),
@@ -655,11 +660,15 @@ class _ComfyUIWorkflowDialogState extends ConsumerState<ComfyUIWorkflowDialog> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: ImageViewportSurface(
-                child: Image.memory(
-                  img,
+                child: SizedBox(
                   height: 180,
                   width: double.infinity,
-                  fit: BoxFit.contain,
+                  child: DecodedMemoryImage(
+                    bytes: img,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.medium,
+                    maxLogicalHeight: 180,
+                  ),
                 ),
               ),
             ),
