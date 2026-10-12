@@ -3176,12 +3176,6 @@ abstract class AppLocalizations {
   /// **'Section {index}'**
   String prompt_groupLabel(Object index);
 
-  /// No description provided for @prompt_groupPosition.
-  ///
-  /// In en, this message translates to:
-  /// **'Section {index} of {total}'**
-  String prompt_groupPosition(Object index, Object total);
-
   /// No description provided for @prompt_previousGroup.
   ///
   /// In en, this message translates to:

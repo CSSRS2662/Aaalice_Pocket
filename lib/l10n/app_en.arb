@@ -688,13 +688,6 @@
       "index": {}
     }
   },
-  "prompt_groupPosition": "Section {index} of {total}",
-  "@prompt_groupPosition": {
-    "placeholders": {
-      "index": {},
-      "total": {}
-    }
-  },
   "prompt_previousGroup": "Previous section",
   "prompt_nextGroup": "Next section",
   "prompt_groupEmptyHint": "Empty section · tap to add tags",

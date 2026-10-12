@@ -680,13 +680,6 @@
       "index": {}
     }
   },
-  "prompt_groupPosition": "セクション {index} / {total}",
-  "@prompt_groupPosition": {
-    "placeholders": {
-      "index": {},
-      "total": {}
-    }
-  },
   "prompt_previousGroup": "前のセクション",
   "prompt_nextGroup": "次のセクション",
   "prompt_groupEmptyHint": "空のセクション・タップしてタグを追加",

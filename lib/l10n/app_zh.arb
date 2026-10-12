@@ -643,13 +643,6 @@
       "index": {}
     }
   },
-  "prompt_groupPosition": "分区 {index} / {total}",
-  "@prompt_groupPosition": {
-    "placeholders": {
-      "index": {},
-      "total": {}
-    }
-  },
   "prompt_previousGroup": "上一个分区",
   "prompt_nextGroup": "下一个分区",
   "prompt_groupEmptyHint": "空分区 · 轻击添加标签",

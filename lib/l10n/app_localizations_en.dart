@@ -1708,11 +1708,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String prompt_groupPosition(Object index, Object total) {
-    return 'Section $index of $total';
-  }
-
-  @override
   String get prompt_previousGroup => 'Previous section';
 
   @override

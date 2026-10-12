@@ -1646,11 +1646,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String prompt_groupPosition(Object index, Object total) {
-    return '分区 $index / $total';
-  }
-
-  @override
   String get prompt_previousGroup => '上一个分区';
 
   @override
@@ -16892,11 +16887,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String prompt_groupPosition(Object index, Object total) {
-    return '分區 $index / $total';
-  }
-
-  @override
   String get prompt_previousGroup => '上一個分區';
 
   @override
@@ -28139,6 +28129,39 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String autocomplete_relatedMetric(int count, String score) {
     return '共現 $count 次 · 相關度 $score';
   }
+
+  @override
+  String autocomplete_relatedWithContext(String tag, int count) {
+    return '$tag 等 $count 個詞';
+  }
+
+  @override
+  String autocomplete_duplicateInSections(String sections) {
+    return '已在分區 $sections 中';
+  }
+
+  @override
+  String get autocomplete_relatedFilter => '篩選分類，長按清除';
+
+  @override
+  String get autocomplete_relatedFilterCharacter => '角色';
+
+  @override
+  String get autocomplete_relatedFilterSeries => '作品';
+
+  @override
+  String get autocomplete_relatedFilterGeneral => '一般';
+
+  @override
+  String autocomplete_relatedFilterCount(String category, int count) {
+    return '$category，$count 條';
+  }
+
+  @override
+  String get autocomplete_relatedFilterEmpty => '沒有符合篩選的相關標籤';
+
+  @override
+  String get autocomplete_relatedFilterClear => '清除篩選';
 
   @override
   String get autocomplete_relatedPin => '固定當前標籤，可連續插入相關標籤';

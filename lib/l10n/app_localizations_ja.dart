@@ -1669,11 +1669,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String prompt_groupPosition(Object index, Object total) {
-    return 'セクション $index / $total';
-  }
-
-  @override
   String get prompt_previousGroup => '前のセクション';
 
   @override

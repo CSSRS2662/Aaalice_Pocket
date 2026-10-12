@@ -638,13 +638,6 @@
       "index": {}
     }
   },
-  "prompt_groupPosition": "分區 {index} / {total}",
-  "@prompt_groupPosition": {
-    "placeholders": {
-      "index": {},
-      "total": {}
-    }
-  },
   "prompt_previousGroup": "上一個分區",
   "prompt_nextGroup": "下一個分區",
   "prompt_groupEmptyHint": "空白分區 · 輕觸新增標籤",
@@ -6823,6 +6816,15 @@
   "autocomplete_relatedEmpty": "沒有找到可用的相關標籤",
   "autocomplete_relatedMetric": "共現 {count} 次 · 相關度 {score}",
   "@autocomplete_relatedMetric": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "score": {
+        "type": "String"
+      }
+    }
+  },
   "autocomplete_relatedWithContext": "{tag} 等 {count} 個詞",
   "@autocomplete_relatedWithContext": {"placeholders": {"tag": {"type": "String"}, "count": {"type": "int"}}},
   "autocomplete_duplicateInSections": "已在分區 {sections} 中",
@@ -6835,15 +6837,6 @@
   "@autocomplete_relatedFilterCount": {"placeholders": {"category": {"type": "String"}, "count": {"type": "int"}}},
   "autocomplete_relatedFilterEmpty": "沒有符合篩選的相關標籤",
   "autocomplete_relatedFilterClear": "清除篩選",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "score": {
-        "type": "String"
-      }
-    }
-  },
   "autocomplete_relatedPin": "固定當前標籤，可連續插入相關標籤",
   "autocomplete_relatedUnpin": "取消固定並繼續鏈式推薦",
   "autocomplete_statusBase": "本地",
