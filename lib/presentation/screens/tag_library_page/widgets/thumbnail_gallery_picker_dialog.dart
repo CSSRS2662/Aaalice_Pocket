@@ -360,7 +360,12 @@ class _GalleryImageTile extends StatelessWidget {
                         aspectRatio: width > 0 && height > 0
                             ? width / height
                             : 1,
-                        child: const Center(child: Icon(Icons.image_outlined)),
+                        child: const Center(
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: Colors.white54,
+                          ),
+                        ),
                       );
                     },
                     errorBuilder: (_, __, ___) => const Center(

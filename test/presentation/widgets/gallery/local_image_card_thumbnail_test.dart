@@ -354,8 +354,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump();
 
+    // The sheet opens partly raised, so an item can be built and still lie
+    // below the screen; keep dragging until it can be tapped.
     await tester.scrollUntilVisible(
-      find.text('Create watermarked copy…'),
+      find.text('Create watermarked copy…').hitTestable(),
       160,
       scrollable: find.byType(Scrollable).last,
     );
