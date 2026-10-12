@@ -17,6 +17,8 @@ import 'package:nai_launcher/core/comfyui/seedvr2_support.dart';
 import 'package:nai_launcher/core/comfyui/workflow_node_validator.dart';
 import 'package:nai_launcher/core/autocomplete/autocomplete_providers.dart';
 import 'package:nai_launcher/core/autocomplete/completion_models.dart';
+import 'package:nai_launcher/core/autocomplete/cooccurrence_completion_source.dart';
+import 'package:nai_launcher/core/autocomplete/tag_catalog_repository.dart';
 import 'package:nai_launcher/core/comfyui/workflow_template_manager.dart';
 import 'package:nai_launcher/core/constants/api_constants.dart';
 import 'package:nai_launcher/core/constants/storage_keys.dart';
@@ -557,6 +559,21 @@ void main() {
   });
 
   group('AutocompleteWrapper', () {
+    // Picking a suggestion records it for ranking; give that a store.
+    setUp(() async {
+      Hive.init(
+        '${Directory.systemTemp.path}/app_test_autocomplete_'
+        '${DateTime.now().microsecondsSinceEpoch}',
+      );
+      // Memory backend: writes under FakeAsync never finish and lock the box
+      await Hive.openBox(StorageKeys.settingsBox, bytes: Uint8List(0));
+      await Hive.openBox(StorageKeys.historyBox, bytes: Uint8List(0));
+    });
+
+    tearDown(() async {
+      await Hive.close().timeout(const Duration(seconds: 10));
+    });
+
     test('preserves prompt syntax wrappers when applying a tag suggestion', () {
       const suggestion = LocalTag(tag: 'raiden_shogun');
       const config = AutocompleteConfig(autoInsertComma: true);
@@ -2587,6 +2604,14 @@ Future<void> _pumpOnlineGalleryScreen(WidgetTester tester) async {
         autocompleteLocalSourcesProvider.overrideWithValue(const [
           _FakeCompletionSource(),
         ]),
+        // Ranking by the tags already written reads the co-occurrence pack;
+        // its files never open under the test clock.
+        cooccurrenceCompletionSourceProvider.overrideWithValue(
+          CooccurrenceCompletionSource.withLoader(
+            () async => throw StateError('no co-occurrence pack in tests'),
+            catalog: TagCatalogRepository(),
+          ),
+        ),
       ],
       child: const MaterialApp(
         locale: Locale('en'),

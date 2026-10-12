@@ -6,7 +6,7 @@ import 'package:image/image.dart' as img;
 import 'package:nai_launcher/presentation/widgets/common/thumbnail_display.dart';
 
 void main() {
-  testWidgets('adds decode size hints while image dimensions are loading', (
+  testWidgets('hints the decode width while image dimensions are loading', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -25,8 +25,10 @@ void main() {
     final image = tester.widget<Image>(find.byType(Image));
     final resized = image.image as ResizeImage;
 
+    // The whole image is shown until its size is known, so only one side
+    // is limited: limiting both would stretch it to the box.
     expect(resized.width, 300);
-    expect(resized.height, 120);
+    expect(resized.height, isNull);
   });
 
   testWidgets('fits the complete square focus into a wide thumbnail', (
