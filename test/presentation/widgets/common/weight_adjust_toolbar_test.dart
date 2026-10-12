@@ -989,6 +989,38 @@ void main() {
     expect(prompt.selection.textInside(prompt.text), '1.50::smile::');
   });
 
+  testWidgets('double tap selects the whole tag, not one word of it', (
+    tester,
+  ) async {
+    const body = 'cat, 微笑的女孩, long hair, {{blue eyes}}';
+    final prompt = TextEditingController(text: body);
+    final focus = FocusNode();
+    final page = ScrollController();
+    _registerCleanup(tester, prompt, focus, page);
+    await _pumpHarness(
+      tester,
+      prompt: prompt,
+      focus: focus,
+      page: page,
+      enableWheelAdjustment: true,
+    );
+
+    await _doubleTapInside(tester, prompt, body.indexOf('笑'));
+    expect(prompt.selection.textInside(body), '微笑的女孩');
+
+    await tester.pump(const Duration(seconds: 1));
+    await _doubleTapInside(tester, prompt, body.indexOf('hair') + 1);
+    expect(prompt.selection.textInside(body), 'long hair');
+
+    // The tag's own weight brackets come along, so a new weight replaces
+    // the old one instead of nesting inside it.
+    await tester.pump(const Duration(seconds: 1));
+    await _doubleTapInside(tester, prompt, body.indexOf('eyes') + 1);
+    expect(prompt.selection.textInside(body), '{{blue eyes}}');
+    expect(PromptWeightEditing.applyWeight(prompt, 1.5), isTrue);
+    expect(prompt.text, 'cat, 微笑的女孩, long hair, 1.50::blue eyes::');
+  });
+
   testWidgets('only a double tap widens a selection inside a block', (
     tester,
   ) async {

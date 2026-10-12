@@ -104,4 +104,68 @@ void main() {
       );
     });
   });
+
+  group('doubleTapSelection', () {
+    // The platform's double tap selects [word]; what it becomes.
+    String? widened(String text, String word) {
+      final start = text.indexOf(word);
+      final selection = PromptWeightEditing.doubleTapSelection(
+        text,
+        TextSelection(baseOffset: start, extentOffset: start + word.length),
+      );
+      return selection?.textInside(text);
+    }
+
+    test('one Chinese character becomes its whole tag', () {
+      const text = 'thin_thighs, 微笑的女孩, 淡绿色t恤';
+      expect(widened(text, '笑'), '微笑的女孩');
+      expect(widened(text, '恤'), '淡绿色t恤');
+    });
+
+    test('one word of a spaced tag becomes the whole tag', () {
+      const text = 'masterpiece, long hair, looking at viewer';
+      expect(widened(text, 'hair'), 'long hair');
+      expect(widened(text, 'at'), 'looking at viewer');
+    });
+
+    test('a tag already selected whole is left alone', () {
+      const text = 'masterpiece, long_hair, 微笑';
+      expect(widened(text, 'long_hair'), isNull);
+      expect(widened(text, '微笑'), isNull);
+    });
+
+    test('takes the weight brackets of the tag along', () {
+      const text = 'cat, {{long hair}}, [微笑], /*disabled:blue eyes*/';
+      expect(widened(text, 'hair'), '{{long hair}}');
+      expect(widened(text, '笑'), '[微笑]');
+      expect(widened(text, 'eyes'), '/*disabled:blue eyes*/');
+    });
+
+    test('inside a group it is the one tag, in a weight block the block', () {
+      const group = '{shiny skin, shiny, 白色 连衣裙}, cat';
+      expect(widened(group, 'skin'), 'shiny skin');
+      expect(widened(group, '连衣裙'), '白色 连衣裙');
+      const block = 'cat, 1.2::long hair, 微笑::';
+      expect(widened(block, '微'), '1.2::long hair, 微笑::');
+      expect(widened('cat, 1.40::long hair::', 'hair'), '1.40::long hair::');
+    });
+
+    test('emoticons with angle brackets are tags of their own', () {
+      const text = '>_<, 微笑 的, :>';
+      expect(widened(text, '的'), '微笑 的');
+      expect(widened(text, '_'), '>_<');
+    });
+
+    test('unfinished syntax and the gaps between tags keep the word', () {
+      expect(widened('cat, {long hair', 'hair'), isNull);
+      expect(widened('cat ,  dog', ' '), isNull);
+      expect(
+        PromptWeightEditing.doubleTapSelection(
+          'long hair',
+          const TextSelection.collapsed(offset: 2),
+        ),
+        isNull,
+      );
+    });
+  });
 }

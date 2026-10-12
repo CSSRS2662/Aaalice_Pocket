@@ -61,11 +61,28 @@ class AliasReference {
 /// 支持嵌套的NAI语法，不会误识别括号内的 < > 符号
 class AliasParser {
   /// 正则表达式: 匹配别名语法 <xxx>
-  /// 不匹配空内容或只有空格的情况
+  /// 不匹配空内容或只有空格的情况；`<` 之后紧跟分隔符的是颜文字的结尾
+  /// （如 `>_<, 1girl, :>`），不是别名的开头
   static final RegExp _aliasPattern = RegExp(
-    r'<([^<>]+?)>',
+    r'<(?!\s*,)([^<>]+?)>',
     multiLine: true,
   );
+
+  static final RegExp _wordCharacter = RegExp(r'[A-Za-z0-9_]');
+  static final RegExp _listPrefix = RegExp(r'^\s*(?:random|weighted):');
+
+  /// `<` 是否只是颜文字标签的结尾（`>_<`、`>o<`、`:<`、`;<`）：
+  /// 它紧跟在标签字符之后。`1.2::<名称>` 的双冒号是权重语法，不算。
+  static bool _closesEmoticon(String text, int index) {
+    // `deluxe<<<` 这样连着的几个 < 看第一个
+    while (index > 0 && text[index - 1] == '<') {
+      index--;
+    }
+    if (index == 0) return false;
+    final previous = text[index - 1];
+    if (previous == ':') return index < 2 || text[index - 2] != ':';
+    return previous == ';' || _wordCharacter.hasMatch(previous);
+  }
 
   /// 解析文本中的所有别名引用
   ///
@@ -84,6 +101,11 @@ class AliasParser {
 
       // 跳过空内容
       if (innerText.isEmpty) continue;
+      // 与下划线相连的尖括号属于标签本身（`<o>_<o>`、`<|>_<|>`）
+      if ((start > 0 && text[start - 1] == '_') ||
+          (end < text.length && text[end] == '_')) {
+        continue;
+      }
 
       // 检查是否为特殊语法 (预留扩展点)
       if (innerText.startsWith('random:')) {
@@ -157,6 +179,8 @@ class AliasParser {
     }
 
     if (openBracketPos == -1) return (false, '', -1);
+    // 颜文字结尾的 < 不开启别名，否则它之后的整行都会被当作在输入词库名
+    if (_closesEmoticon(text, openBracketPos)) return (false, '', -1);
 
     // 检查 < 和光标之间是否有 >
     final textBetween = text.substring(openBracketPos, effectiveCursor);
@@ -166,6 +190,10 @@ class AliasParser {
 
     // 提取部分文本 (去掉 <)
     final partialText = textBetween.substring(1);
+    // 正在输入的名称不会跨过词条分隔符（预留的列表语法除外）
+    if (partialText.contains(',') && !_listPrefix.hasMatch(partialText)) {
+      return (false, '', -1);
+    }
     return (true, partialText, openBracketPos);
   }
 

@@ -23,7 +23,9 @@ class SdToNaiConverter {
   static bool _hasExplicitWeightSyntax(String text) {
     for (var index = 0; index < text.length; index++) {
       final openChar = text[index];
-      if ((openChar != '(' && openChar != '[') || _isEscaped(text, index)) {
+      if ((openChar != '(' && openChar != '[') ||
+          _isEscaped(text, index) ||
+          _isTagQualifier(text, index)) {
         continue;
       }
 
@@ -43,6 +45,15 @@ class SdToNaiConverter {
     }
     return false;
   }
+
+  /// 紧跟在下划线后的括号是 Danbooru 标签自带的限定词
+  /// （如 `vertin_(reverse:1999)`），不是 SD 权重括号。
+  static bool _isTagQualifier(String text, int openIndex) =>
+      openIndex > 0 && text[openIndex - 1] == '_';
+
+  /// SD 权重的合理上限；`(reverse:1999)`、`(yarofes:2023)` 这类
+  /// 冒号后的数字是名称的一部分。
+  static const double _maxPlausibleWeight = 100;
 
   /// 检查字符是否被转义
   static bool _isEscaped(String text, int index) {
@@ -152,7 +163,7 @@ class SdToNaiConverter {
       }
 
       // 处理开括号
-      if (char == '(' || char == '[') {
+      if ((char == '(' || char == '[') && !_isTagQualifier(text, i)) {
         final closeChar = char == '(' ? ')' : ']';
 
         // 找到对应的闭括号
@@ -261,7 +272,7 @@ class SdToNaiConverter {
 
     // 检查冒号后面是否是有效的数字
     final weight = double.tryParse(afterColon);
-    if (weight == null) {
+    if (weight == null || weight.abs() > _maxPlausibleWeight) {
       return null;
     }
 

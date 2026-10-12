@@ -409,4 +409,160 @@ void main() {
       expect(query.contextTags, ['outdoors', 'night', 'sky']);
     });
   });
+
+  group('tags with symbols of their own', () {
+    CompletionQuery at(String text, [int? cursor]) => PromptTokenParser.parse(
+      text: text,
+      cursorPosition: cursor ?? text.length,
+      limit: 20,
+      locale: 'en',
+    );
+    String covered(CompletionQuery query) => query.fullText.substring(
+      query.replacementRange.start,
+      query.replacementRange.end,
+    );
+    String? relatedAfter(String text) => PromptTokenParser.parseRelated(
+      text: text,
+      cursorPosition: text.length,
+      limit: 20,
+      locale: 'en',
+    )?.relatedTag;
+
+    test('a qualifier in round brackets is part of the tag', () {
+      final query = at('1girl, tippy_(gochiusa)');
+      expect(query.token, 'tippy_(gochiusa)');
+      expect(covered(query), 'tippy_(gochiusa)');
+      expect(
+        at('tippy_(gochiusa), sensei_(blue_archive), blu').existingTags,
+        containsAll(['tippy_(gochiusa)', 'sensei_(blue_archive)']),
+      );
+      expect(
+        relatedAfter('1girl, sensei_(blue_archive), '),
+        'sensei_(blue_archive)',
+      );
+      const written = 'tippy_(gochiusa), smile, ';
+      expect(
+        PromptTokenParser.contextTags(
+          text: written,
+          cursorPosition: written.length,
+        ),
+        ['smile', 'tippy_(gochiusa)'],
+      );
+    });
+
+    test('brackets around a tag are still weight syntax', () {
+      for (final (text, tag, range) in [
+        ('{{tippy_(gochiusa)}}', 'tippy_(gochiusa)', 'tippy_(gochiusa)'),
+        ('[tippy_(gochiusa)]', 'tippy_(gochiusa)', 'tippy_(gochiusa)'),
+        ('1.20::tippy_(gochiusa)::', 'tippy_(gochiusa)', 'tippy_(gochiusa)'),
+        ('(tippy_(gochiusa):1.2)', 'tippy_(gochiusa)', 'tippy_(gochiusa)'),
+        ('((long hair))', 'long_hair', 'long hair'),
+        ('.5::long hair::', 'long_hair', 'long hair'),
+        ('(o)_(o)', '(o)_(o)', '(o)_(o)'),
+        ('00_qan[t]', '00_qan[t]', '00_qan[t]'),
+      ]) {
+        final query = at('1girl, $text, smile', 7 + text.length ~/ 2);
+        expect(query.token, tag, reason: text);
+        expect(covered(query), range, reason: text);
+        expect(at('$text, blu').existingTags, contains(tag), reason: text);
+      }
+    });
+
+    test('an SD group keeps its brackets out of its tags', () {
+      const text = '(long hair, tippy_(gochiusa):1.2), smile';
+      expect(at(text, 5).token, 'long_hair');
+      expect(at(text, 20).token, 'tippy_(gochiusa)');
+      expect(
+        at('$text, blu').existingTags,
+        containsAll(['long_hair', 'tippy_(gochiusa)', 'smile']),
+      );
+    });
+
+    test('emoticons keep their colons and brackets', () {
+      for (final tag in [
+        ':3',
+        '>_<',
+        ':<',
+        ';)',
+        '>:)',
+        '>:(',
+        '^_^',
+        '|_|',
+        r'\m/',
+        '!?',
+        '?',
+      ]) {
+        final text = '1girl, $tag';
+        expect(at(text).kind, CompletionQueryKind.tag, reason: tag);
+        expect(at(text).token, tag, reason: tag);
+        expect(relatedAfter('$text, '), tag, reason: tag);
+        expect(
+          PromptTokenParser.isContinuationSlot(
+            text: '$text, ',
+            cursorPosition: text.length + 2,
+          ),
+          isTrue,
+          reason: tag,
+        );
+        expect(at('$tag, blu').existingTags, contains(tag), reason: tag);
+      }
+    });
+
+    test('a name ending in a colon and a number is not a weight', () {
+      expect(at('vertin_(reverse:1999)').token, 'vertin_(reverse:1999)');
+      expect(at('reverse:1999').token, 'reverse:1999');
+      expect(at('(reverse:1999)', 4).token, 'reverse:1999');
+      expect(at('(long hair:1.25)', 6).token, 'long_hair');
+    });
+
+    test('completing inside a numeric weight keeps the weight', () {
+      const text = '1.20::long ha::, smile';
+      final query = at(text, text.indexOf('::,'));
+      expect(query.token, 'long_ha');
+      final applied = PromptTokenParser.apply(
+        text: text,
+        query: query,
+        canonicalTag: 'long_hair',
+        autoInsertComma: true,
+        replaceUnderscores: false,
+      );
+      expect(applied.text, '1.20::long_hair::, smile');
+    });
+
+    test('completing a bracketed tag again does not double its bracket', () {
+      const text = 'tippy_(gochiusa), smile';
+      final applied = PromptTokenParser.apply(
+        text: text,
+        query: at(text, 9),
+        canonicalTag: 'tippy_(gochiusa)',
+        autoInsertComma: true,
+        replaceUnderscores: false,
+      );
+      expect(applied.text, text);
+    });
+
+    test('an emoticon keeps its underscore where tags take spaces', () {
+      String inserted(String tag) => PromptTokenParser.apply(
+        text: 'x',
+        query: at('x'),
+        canonicalTag: tag,
+        autoInsertComma: false,
+        replaceUnderscores: true,
+      ).text;
+      for (final face in ['>_<', '^_^', 'o_o', '<o>_<o>', '(o)_(o)', '+_-']) {
+        expect(inserted(face), face);
+      }
+      expect(inserted('long_hair'), 'long hair');
+      expect(inserted('tippy_(gochiusa)'), 'tippy (gochiusa)');
+    });
+
+    test('a library name is still completed after <', () {
+      expect(at('1girl, <my').kind, CompletionQueryKind.libraryAlias);
+      expect(at('1.2::<my').kind, CompletionQueryKind.libraryAlias);
+      expect(at('<random:cats,do').kind, CompletionQueryKind.libraryAlias);
+      // A separator ends whatever the bracket began.
+      expect(at('<3, smile').kind, CompletionQueryKind.tag);
+      expect(at('<3, smile').token, 'smile');
+    });
+  });
 }

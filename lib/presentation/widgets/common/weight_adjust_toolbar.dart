@@ -92,8 +92,9 @@ class _WeightAdjustToolbarWrapperState
   bool _toolbarVisible = false;
   Timer? _blurTimer;
 
-  /// A double tap selects one word; inside `1.4::smile::` it is widened to the
-  /// whole weight block for a short window after the second press.
+  /// A double tap selects one word; it is widened to the whole tag, or to the
+  /// weight block around it such as `1.4::smile::`, for a short window after
+  /// the second press.
   static const Duration _doubleTapSelectionWindow = Duration(milliseconds: 600);
   PointerDownEvent? _lastPointerDown;
 
@@ -195,11 +196,11 @@ class _WeightAdjustToolbarWrapperState
   void _widenDoubleTapSelection() {
     if (!mounted || !widget.enabled || _doubleTapWindow == null) return;
     final controller = widget.controller;
-    final block = PromptWeightEditing.enclosingWeightBlock(
+    final tag = PromptWeightEditing.doubleTapSelection(
       controller.text,
       controller.selection,
     );
-    if (block != null) controller.selection = block;
+    if (tag != null) controller.selection = tag;
   }
 
   void _syncToolbarWithControllerSelection() {

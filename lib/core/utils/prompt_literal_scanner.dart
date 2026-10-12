@@ -51,6 +51,15 @@ abstract final class PromptLiteralScanner {
       final end = source.indexOf('-->', start + 4);
       return end >= 0 && end + 3 <= upper ? end + 3 : null;
     }
+    // A bracket that meets a separator first ends an emoticon (`>_<, `); it
+    // opens no markup, however far away the next `>` is. Nor does one joined
+    // to a tag by an underscore.
+    if (start > 0 && source[start - 1] == '_') return null;
+    var next = start + 1;
+    while (next < upper && (source[next] == ' ' || source[next] == '\t')) {
+      next++;
+    }
+    if (next >= upper || source[next] == ',') return null;
     final openingEnd = _openingEnd(source, start, upper);
     if (openingEnd == null) return null;
     final opening = source.substring(start, openingEnd);

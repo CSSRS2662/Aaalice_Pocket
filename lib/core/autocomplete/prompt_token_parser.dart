@@ -5,9 +5,11 @@ import 'completion_models.dart';
 class PromptTokenParser {
   const PromptTokenParser._();
 
-  static final RegExp _weightPrefix = RegExp(r'^[\s\{\[\(]+');
-  static final RegExp _weightSuffix = RegExp(r'[\s\}\]\)]+$');
   static final RegExp _weightNumberSuffix = RegExp(r'(?::\s*-?\d+(?:\.\d+)?)$');
+  static final RegExp _numericWeightOpening = RegExp(
+    r'-?(?:\d+(?:\.\d*)?|\.\d+)::',
+  );
+  static final RegExp _letterOrDigit = RegExp(r'[a-z0-9]');
   static final RegExp _artistCategoryPrefix = RegExp(
     r'^artist:',
     caseSensitive: false,
@@ -16,7 +18,7 @@ class PromptTokenParser {
   static final RegExp _tagSeparator = RegExp(r'[,\n]');
   static final RegExp _tagSeparatorWithSpaces = RegExp(r'[,\n\s]+');
   static final RegExp _syntaxSuffix = RegExp(
-    r'^(?::\s*-?\d+(?:\.\d+)?)?[\}\]\)]*',
+    r'^(?::\s*-?\d+(?:\.\d+)?)?(?:[\}\]\)]|::)*',
   );
 
   /// Written tags sent along with a related tag; with it they make the six
@@ -25,7 +27,6 @@ class PromptTokenParser {
 
   static final RegExp _leadingComma = RegExp(r'^\s*,\s*');
   static final RegExp _disabledSpan = RegExp(r'/\*[\s\S]*?\*/');
-  static final RegExp _numericWeightStart = RegExp(r'^-?\d+(?:\.\d+)?::');
 
   static CompletionQuery parse({
     required String text,
@@ -93,20 +94,9 @@ class PromptTokenParser {
       end++;
     }
 
-    final raw = text.substring(start, end);
-    final prefix = _weightPrefix.firstMatch(raw)?.group(0) ?? '';
-    final afterPrefix = raw.substring(prefix.length);
-    final suffixMatch = _weightSuffix.firstMatch(afterPrefix);
-    final suffixLength = suffixMatch?.group(0)?.length ?? 0;
-    final withoutSuffixEnd = raw.length - suffixLength;
-    final beforeSuffix = raw.substring(prefix.length, withoutSuffixEnd);
-    final weightNumber = _weightNumberSuffix.firstMatch(beforeSuffix);
-    final contentEnd = weightNumber == null
-        ? withoutSuffixEnd
-        : prefix.length + weightNumber.start;
-
-    var replacementStart = start + prefix.length;
-    final replacementEnd = start + contentEnd;
+    final bounds = _tagBounds(text.substring(start, end));
+    var replacementStart = start + bounds.start;
+    final replacementEnd = start + bounds.end;
     final categoryPrefix = _artistCategoryPrefix.firstMatch(
       text.substring(replacementStart, replacementEnd),
     );
@@ -184,7 +174,7 @@ class PromptTokenParser {
             .toList(),
       );
     }
-    if (parsed.token.length < 2) return null;
+    if (!_isTag(parsed.token)) return null;
 
     var insertionPosition = parsed.replacementRange.end;
     final syntax = CharacterPromptBlockParser.parse(text);
@@ -293,8 +283,8 @@ class PromptTokenParser {
     List<String> tags(String part) => part
         .replaceAll(_disabledSpan, ',')
         .split(separator)
-        .map(_normalizeContextTag)
-        .where((tag) => tag.length >= 2)
+        .map(_normalizeExistingTag)
+        .where(_isTag)
         .toList(growable: false);
     final result = <String>[];
     for (final tag in [
@@ -305,12 +295,6 @@ class PromptTokenParser {
       if (!result.contains(tag)) result.add(tag);
     }
     return result;
-  }
-
-  static String _normalizeContextTag(String raw) {
-    var value = raw.trim().replaceFirst(_numericWeightStart, '');
-    if (value.endsWith('::')) value = value.substring(0, value.length - 2);
-    return _normalizeExistingTag(value);
   }
 
   /// Returns whether an edit changed the tag fragment at the caret.
@@ -410,7 +394,7 @@ class PromptTokenParser {
   }) {
     final tag = query.kind == CompletionQueryKind.libraryAlias
         ? '<$canonicalTag>'
-        : replaceUnderscores
+        : replaceUnderscores && !_isEmoticon(canonicalTag)
         ? canonicalTag.replaceAll('_', ' ')
         : canonicalTag;
     final range = query.replacementRange;
@@ -491,13 +475,114 @@ class PromptTokenParser {
       codeUnit == 0x0d ||
       (splitOnSpaces && (codeUnit == 0x20 || codeUnit == 0x09));
 
+  /// Whether the underscores of [tag] draw a face (`>_<`, `^_^`, `o_o`,
+  /// `<o>_<o>`) rather than join words: no part of it has two letters.
+  static bool _isEmoticon(String tag) => tag
+      .split('_')
+      .every((part) => _letterOrDigit.allMatches(part).length <= 1);
+
+  /// Whether [tag] can be looked up as a written tag: a fragment of one
+  /// letter is not, a one-symbol tag such as `?` is.
+  static bool _isTag(String tag) =>
+      tag.length >= 2 || (tag.length == 1 && !_letterOrDigit.hasMatch(tag));
+
+  /// Where the tag itself sits inside one separator-delimited [raw] segment:
+  /// within the spaces, weight brackets, numeric weight (`1.2::tag::`) and
+  /// bracketed weight number (`(tag:1.2)`) around it.
+  ///
+  /// Tags hold brackets of their own (`tippy_(gochiusa)`, `(o)_(o)`). A
+  /// bracket is syntax only when its partner is not inside the tag: the pair
+  /// wraps the whole segment, or the partner sits in another segment of a
+  /// group. A `)` after `:` or `;` is an emoticon's mouth (`;)`, `>:)`).
+  static ({int start, int end}) _tagBounds(String raw) {
+    final partner = List<int>.filled(raw.length, -1);
+    final open = <int>[];
+    for (var index = 0; index < raw.length; index++) {
+      final unit = raw.codeUnitAt(index);
+      if (_closerOf(unit) != null) {
+        open.add(index);
+      } else if (open.isNotEmpty &&
+          _closerOf(raw.codeUnitAt(open.last)) == unit) {
+        partner[index] = open.last;
+        partner[open.removeLast()] = index;
+      }
+    }
+
+    var start = 0;
+    var end = raw.length;
+    var wrapped = false;
+    while (true) {
+      final startBefore = start;
+      final endBefore = end;
+      // As far as the closing brackets at the end could reach.
+      var closers = end;
+      while (closers > start && _isSpaceOrCloser(raw.codeUnitAt(closers - 1))) {
+        closers--;
+      }
+      while (start < end) {
+        final unit = raw.codeUnitAt(start);
+        final wraps =
+            _closerOf(unit) != null &&
+            (partner[start] < 0 || partner[start] >= closers);
+        if (!wraps && !_isSpace(unit)) break;
+        wrapped |= !_isSpace(unit);
+        start++;
+      }
+      final numeric = _numericWeightOpening.matchAsPrefix(raw, start);
+      if (numeric != null && numeric.end <= end) start = numeric.end;
+      while (end > start) {
+        final unit = raw.codeUnitAt(end - 1);
+        final mouth =
+            unit == 0x29 &&
+            partner[end - 1] < 0 &&
+            end - 2 >= start &&
+            (raw.codeUnitAt(end - 2) == 0x3a ||
+                raw.codeUnitAt(end - 2) == 0x3b);
+        final closes = _isCloser(unit) && partner[end - 1] < start && !mouth;
+        if (!closes && !_isSpace(unit)) break;
+        wrapped |= !_isSpace(unit);
+        end--;
+      }
+      if (end - start > 2 && raw.startsWith('::', end - 2)) end -= 2;
+      if (start == startBefore && end == endBefore) break;
+    }
+    if (wrapped) {
+      // A number after a colon is a weight only inside brackets, with a tag
+      // before it and at a size weights have: `(reverse:1999)` is a name.
+      final number = _weightNumberSuffix.firstMatch(raw.substring(start, end));
+      if (number != null &&
+          number.start > 0 &&
+          (double.tryParse(number.group(0)!.substring(1).trim()) ?? 0).abs() <=
+              100) {
+        end = start + number.start;
+      }
+    }
+    return (start: start, end: end);
+  }
+
+  static int? _closerOf(int opener) => switch (opener) {
+    0x28 => 0x29,
+    0x5b => 0x5d,
+    0x7b => 0x7d,
+    _ => null,
+  };
+
+  static bool _isCloser(int unit) =>
+      unit == 0x29 || unit == 0x5d || unit == 0x7d;
+
+  static bool _isSpace(int unit) =>
+      unit == 0x20 || unit == 0x09 || unit == 0x0a || unit == 0x0d;
+
+  static bool _isSpaceOrCloser(int unit) => _isSpace(unit) || _isCloser(unit);
+
   static String _normalizeExistingTag(String raw) {
-    var value = raw.trim();
-    value = value.replaceFirst(_weightPrefix, '');
-    value = value.replaceFirst(_weightSuffix, '');
-    value = value.replaceFirst(_weightNumberSuffix, '');
-    value = value.replaceFirst(_artistCategoryPrefix, '');
-    return value.trim().replaceAll(' ', '_').toLowerCase();
+    final bounds = _tagBounds(raw);
+    return raw
+        .substring(bounds.start, bounds.end)
+        .replaceFirst(_artistCategoryPrefix, '')
+        .trim()
+        .replaceAll(' ', '_')
+        .toLowerCase();
   }
 
   static Set<String> _existingTags(

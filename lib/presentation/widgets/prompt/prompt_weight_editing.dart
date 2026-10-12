@@ -105,6 +105,40 @@ class PromptWeightEditing {
     return TextSelection(baseOffset: found.start, extentOffset: found.end);
   }
 
+  /// What a double tap should select instead of the single word the platform
+  /// picks at [selection]: the numeric weight block around it, otherwise the
+  /// whole tag it sits in together with the tag's own weight brackets.
+  ///
+  /// A word is the entire tag only for names like `long_hair`; in `long hair`
+  /// it is half of one, and in Chinese text a single character. Returns null
+  /// when that is already selected, and between tags or in unfinished syntax,
+  /// where the platform's word stands.
+  static TextSelection? doubleTapSelection(
+    String text,
+    TextSelection selection,
+  ) {
+    final block = enclosingWeightBlock(text, selection);
+    if (block != null) return block;
+    if (!selection.isValid ||
+        selection.isCollapsed ||
+        selection.start < 0 ||
+        selection.end > text.length) {
+      return null;
+    }
+    for (final root in PromptEditDocument.parse(text)) {
+      if (selection.start < root.start || selection.end > root.end) continue;
+      for (final tag in root.leaves) {
+        if (selection.start < tag.start || selection.end > tag.end) continue;
+        if (!tag.complete ||
+            (tag.start == selection.start && tag.end == selection.end)) {
+          return null;
+        }
+        return TextSelection(baseOffset: tag.start, extentOffset: tag.end);
+      }
+    }
+    return null;
+  }
+
   static bool hasSelection(TextEditingController controller) {
     final selection = controller.selection;
     return selection.isValid &&

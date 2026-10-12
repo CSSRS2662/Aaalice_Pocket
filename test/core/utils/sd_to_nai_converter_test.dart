@@ -13,6 +13,17 @@ void main() {
       },
     );
 
+    test('should leave a tag qualifier that looks like a weight alone', () {
+      const tags =
+          'vertin_(reverse:1999), sonetto (reverse:1999), tippy_(gochiusa)';
+      expect(SdToNaiConverter.hasSDWeightSyntax(tags), isFalse);
+      expect(SdToNaiConverter.convert(tags), tags);
+      expect(
+        SdToNaiConverter.convert('vertin_(reverse:1999), (smile:1.2)'),
+        'vertin_(reverse:1999), 1.2::smile::',
+      );
+    });
+
     test('should preserve inline parenthetical qualifiers with spaces', () {
       expect(
         SdToNaiConverter.convert('summer dress (blue archive)'),

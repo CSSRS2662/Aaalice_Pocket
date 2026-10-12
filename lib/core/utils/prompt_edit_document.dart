@@ -165,6 +165,11 @@ class PromptEditDocument {
         i++;
         continue;
       }
+      // Round brackets weigh nothing; they only keep the commas of a group
+      // together. One that opens nothing (`>:(,`) or closes nothing (`;)`)
+      // is an emoticon's mouth and stays plain text.
+      if (char == '(' && _opensNothing(source, i, upper)) continue;
+      if (char == ')' && !stack.contains('(')) continue;
       if ('{[('.contains(char)) stack.add(char);
       if ('}])'.contains(char)) {
         if (stack.isEmpty || '{[('.indexOf(stack.last) != '}])'.indexOf(char)) {
@@ -177,6 +182,19 @@ class PromptEditDocument {
     }
     append(upper);
     return spans;
+  }
+
+  /// Whether the `(` at [index] is followed by a separator, the end or the
+  /// close of a weight (`1.2::>:(::`, `{>:(}`) rather than by anything it
+  /// could group.
+  static bool _opensNothing(String source, int index, int upper) {
+    var next = index + 1;
+    while (next < upper && (source[next] == ' ' || source[next] == '\t')) {
+      next++;
+    }
+    return next >= upper ||
+        ',\n}]'.contains(source[next]) ||
+        source.startsWith('::', next);
   }
 
   static PromptEditSpan _span(

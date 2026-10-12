@@ -96,6 +96,41 @@ void main() {
     expect(spans.every((span) => span.complete), isTrue);
     expect(PromptEditDocument.effectiveText(source), source);
   });
+  test('emoticons with brackets stay tags of their own', () {
+    const source =
+        '>_<, 1girl, :>, >:(, smile, ;), :<, tippy_(gochiusa), >:), gauss_<x, >o<';
+    final spans = PromptEditDocument.parse(source);
+    expect(spans.map((span) => span.raw), [
+      '>_<',
+      '1girl',
+      ':>',
+      '>:(',
+      'smile',
+      ';)',
+      ':<',
+      'tippy_(gochiusa)',
+      '>:)',
+      'gauss_<x',
+      '>o<',
+    ]);
+    expect(spans.every((span) => span.complete), isTrue);
+    expect(PromptEditDocument.effectiveText(source), source);
+  });
+  test('weights wrap emoticons that end in a bracket', () {
+    for (final source in ['1.20::>:(::, cat', '{{>:(}}, cat', '[;(], cat']) {
+      final spans = PromptEditDocument.parse(source);
+      expect(spans, hasLength(2), reason: source);
+      expect(spans.first.complete, isTrue, reason: source);
+      expect(spans.first.label, anyOf('>:(', ';('), reason: source);
+    }
+    // A bracket with something to group still groups it.
+    final group = PromptEditDocument.parse('(red, blue:1.2), negative(a, b)');
+    expect(group.map((span) => span.raw), [
+      '(red, blue:1.2)',
+      'negative(a, b)',
+    ]);
+    expect(PromptEditDocument.parse('cat, (dog').last.complete, isFalse);
+  });
   test('HTML, quoted prose and comma-containing aliases remain opaque', () {
     const source =
         '''<span title="a > b, c"><b>red, blue</b></span>, <random:词库A,词库B>, "blue, red", <!-- x,y -->''';
