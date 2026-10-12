@@ -41,9 +41,10 @@ Upstream NAI Launcher targets Windows, macOS, and Android. Aaalice Pocket target
 | What you'll notice | What Aaalice Pocket does |
 | --- | --- |
 | **Generation workbench** | The top bar holds just two pills, model and size, with V5 stamina and Anlas balance on the right. The Image / Prompt / Parameters / References / History tabs below switch with a horizontal swipe. One bottom row holds the gacha toggle, add to queue, agent, queue, and the Generate button, which shows progress inside itself. |
-| **Prompt sections** | Split a prompt into sections you edit, enable, and reorder separately. Reusing parameters restores the original sections instead of putting every tag into one box. |
+| **Prompt sections** | Split a prompt into sections shown as cards: tap to edit, long-press and drag to reorder, enable or disable each one, or save it to the library. Reusing parameters restores the original sections instead of putting every tag into one box. |
 | **Tag mode** | Switch between text and tag views at any time; each tag shows its Chinese translation underneath, and a long press adjusts weight, copies, or temporarily disables it. |
 | **Tag search without AI** | Chinese, full pinyin, Ziranma double pinyin, and initials all find English tags, with homophone and spelling correction and splitting of Chinese phrases. A bundled semantic completion model also runs fully on the device. |
+| **Tag suggestions** | After you write a tag, the app suggests what to write next from the tags around it, and can list only characters, series, or general tags. A “split” key in the toolbar types the comma, so a Chinese keyboard never has to be switched away. |
 | **V5 stamina and balance** | The top bar shows Opus stamina and Anlas balance; tap it for the remaining amount, estimated images, and refill time. |
 | **Pocket theme** | Neutral white or charcoal backgrounds with 8 preset accent colors or a custom one; light, dark, or follow the system. |
 | **Smoothness** | On high refresh rate screens, scrolling and other touch interaction run at the panel's top rate (for example 120Hz; turn off in Settings → Appearance → High refresh rate). Finishing an image no longer causes a stall. |
