@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,6 +14,7 @@ import '../providers/layout_state_provider.dart';
 import '../widgets/navigation/main_nav_rail.dart';
 import 'app_branch.dart';
 import 'global_status_banners.dart';
+import 'shell_panel_dismiss_scope.dart';
 import 'shell_panels_overlay.dart';
 
 /// 桌面端布局
@@ -162,17 +162,14 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         final targetWorkspaceWidth = (safeUsableWidth - targetRailWidth)
             .clamp(0.0, double.infinity)
             .toDouble();
-        return CallbackShortcuts(
-          bindings: {
-            if (activePanel != null)
-              const SingleActivator(LogicalKeyboardKey.escape): () {
-                if (activePanel == ShellPanel.agent) {
-                  _setPanel(null, restoreFocus: _agentFocusNode);
-                } else {
-                  _setPanel(null, restoreFocus: _queueFocusNode);
-                }
-              },
-          },
+        return ShellPanelDismissScope(
+          activePanel: activePanel,
+          onClose: () => _setPanel(
+            null,
+            restoreFocus: activePanel == ShellPanel.agent
+                ? _agentFocusNode
+                : _queueFocusNode,
+          ),
           child: Scaffold(
             body: SafeArea(
               child: Row(
