@@ -125,6 +125,7 @@ class GenerationExecutionService {
             batchSizeOverride: prepared.batchSize,
             preserveCharacterSnapshot: true,
             focusedOverride: _unfocused,
+            bypassRandomPrompt: true,
           );
       final finished = await _waitForCompletion(
         invocation: invocation,

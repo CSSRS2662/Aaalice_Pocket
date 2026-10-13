@@ -303,11 +303,13 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
   Future<void> waitUntilGenerationInvocationSettled() =>
       _generationInvocationSettled?.future ?? Future<void>.value();
 
+  /// [bypassRandomPrompt]：智能体、MCP 等外部提交方显式给出的提示词不被随机模式替换。
   Future<void> generate(
     ImageParams params, {
     int? batchSizeOverride,
     bool preserveCharacterSnapshot = false,
     GenerationFocusedSnapshot? focusedOverride,
+    bool bypassRandomPrompt = false,
   }) async {
     if (_isDisposed || state.isBusy) {
       return;
@@ -392,6 +394,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         preserveCharacterSnapshot: preserveCharacterSnapshot,
         panelSent: panelSent,
         focusedOverride: focusedOverride,
+        bypassRandomPrompt: bypassRandomPrompt,
       );
       late final GenerationPreparationResult prepared;
       try {
@@ -498,6 +501,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     bool preserveCharacterSnapshot = false,
     bool panelSent = true,
     GenerationFocusedSnapshot? focusedOverride,
+    bool bypassRandomPrompt = false,
   }) {
     var queueExecuting = false;
     try {
@@ -521,7 +525,8 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     return GenerationRequestPreparationService(
       GenerationPreparationDependencies(
         prompt: GenerationPromptPreparation(
-          randomModeEnabled: ref.read(randomPromptModeProvider),
+          randomModeEnabled:
+              !bypassRandomPrompt && ref.read(randomPromptModeProvider),
           queueExecuting: queueExecuting,
           generateAndApplyRandomPrompt: (model) =>
               generateAndApplyRandomPrompt(model: model),
