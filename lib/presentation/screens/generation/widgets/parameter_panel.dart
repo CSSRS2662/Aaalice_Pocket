@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/localization_extension.dart';
 import '../../../adaptive/interaction_policy.dart';
+import '../../../../data/models/image/image_params.dart';
 import '../../../providers/image_generation_provider.dart';
 import '../../../widgets/character/inline_character_section.dart';
 import '../../../widgets/common/draggable_number_input.dart';
@@ -56,6 +57,11 @@ class ParameterPanel extends ConsumerWidget {
         (params) => params.advancedOptionsExpanded,
       ),
     );
+    final hasAdvancedOptions = ref.watch(
+      generationParamsNotifierProvider.select(
+        (params) => params.hasAdvancedSamplingOptions,
+      ),
+    );
 
     final showGeneration = content != ParameterPanelContent.references;
     final showReferences = content != ParameterPanelContent.generation;
@@ -89,8 +95,8 @@ class ParameterPanel extends ConsumerWidget {
           const SizedBox(height: 16),
         ],
 
-        if (showGeneration)
-          // 高级选项
+        if (showGeneration && hasAdvancedOptions)
+          // 高级选项：当前模型与采样器没有可显示的控件时不渲染空分组
           Material(
             type: MaterialType.transparency,
             child: ExpansionTile(
