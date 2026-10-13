@@ -5,6 +5,7 @@ import '../../../core/platform/platform_capabilities.dart';
 import '../../../data/services/auth_provider.dart';
 import '../../providers/generation/image_generation_selectors.dart';
 import '../../providers/generation/image_workflow_controller.dart';
+import '../../providers/generation/workflow_panel_reveal_provider.dart';
 import '../../providers/image_generation_provider.dart';
 import '../../providers/krita/krita_bridge_notifier.dart';
 import '../../widgets/common/owned_scroll_controller.dart';
@@ -40,11 +41,21 @@ class _MobileGenerationLayoutState
   late final PromptInputController _promptInputController;
   late final GlobalKey _promptInputKey;
   late final bool _ownsPromptInputController;
+  late final ProviderSubscription<int> _workflowRevealSubscription;
 
   @override
   void initState() {
     super.initState();
     _controller = MobileGenerationController(ref);
+    // 放大 / 增强的设置在「参考」页签的图生图面板里，进入时切过去
+    _workflowRevealSubscription = ref.listenManual<int>(
+      workflowPanelRevealProvider,
+      (previous, next) {
+        if (next != previous) {
+          _controller.selectTab(MobileWorkbenchTab.references);
+        }
+      },
+    );
     _historyViewport = widget.historyViewport ?? OwnedViewportOffset();
     _ownsPromptInputController = widget.promptInputController == null;
     _promptInputKey =
@@ -61,6 +72,7 @@ class _MobileGenerationLayoutState
 
   @override
   void dispose() {
+    _workflowRevealSubscription.close();
     _controller.dispose();
     if (_ownsPromptInputController) _promptInputController.dispose();
     super.dispose();
