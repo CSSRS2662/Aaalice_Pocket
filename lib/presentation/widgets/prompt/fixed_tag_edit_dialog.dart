@@ -74,6 +74,7 @@ class _FixedTagEditDialogState extends ConsumerState<FixedTagEditDialog> {
   Object get _modeId =>
       widget.entry == null ? _contentController : _assistantSessionId;
   bool _saveToLibrary = false;
+  bool _isSaving = false;
   String? _selectedCategoryId;
 
   final _nameFocusNode = FocusNode();
@@ -648,7 +649,7 @@ class _FixedTagEditDialogState extends ConsumerState<FixedTagEditDialog> {
     final save = ValueListenableBuilder<TextEditingValue>(
       valueListenable: _contentController,
       builder: (context, value, child) => FilledButton(
-        onPressed: value.text.trim().isNotEmpty ? _save : null,
+        onPressed: value.text.trim().isNotEmpty && !_isSaving ? _save : null,
         child: Text(context.l10n.common_save),
       ),
     );
@@ -687,13 +688,13 @@ class _FixedTagEditDialogState extends ConsumerState<FixedTagEditDialog> {
     return FixedTagEntry.applyWeight(content, _weight);
   }
 
-  void _save() {
+  Future<void> _save() async {
     final name = _nameController.text.trim();
     final content = _contentController.text.trim();
 
-    if (content.isEmpty) return;
+    if (content.isEmpty || _isSaving) return;
 
-    final result =
+    var result =
         widget.entry
             ?.update(
               name: name,
@@ -715,19 +716,27 @@ class _FixedTagEditDialogState extends ConsumerState<FixedTagEditDialog> {
         );
 
     if (_saveToLibrary && !_isEditing) {
-      ref
-          .read(tagLibraryPageNotifierProvider.notifier)
-          .addEntry(
-            name: name.isNotEmpty
-                ? name
-                : content.substring(
-                    0,
-                    content.length > 20 ? 20 : content.length,
-                  ),
-            content: content,
-            categoryId: _selectedCategoryId,
-          );
-      ref.invalidate(tagLibraryPageNotifierProvider);
+      // 等词库条目落盘后把它的 id 写进新固定词，两边才会按 sourceEntryId
+      // 双向同步；不关联的话就是两份互不相干的数据。
+      setState(() => _isSaving = true);
+      try {
+        final libraryEntry = await ref
+            .read(tagLibraryPageNotifierProvider.notifier)
+            .addEntry(
+              name: name.isNotEmpty
+                  ? name
+                  : content.substring(
+                      0,
+                      content.length > 20 ? 20 : content.length,
+                    ),
+              content: content,
+              categoryId: _selectedCategoryId,
+            );
+        result = result.copyWith(sourceEntryId: libraryEntry.id);
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
+      }
+      if (!mounted) return;
     }
 
     Navigator.of(context).pop(result);
