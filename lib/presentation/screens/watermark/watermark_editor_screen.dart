@@ -1,16 +1,13 @@
-import 'package:nai_launcher/presentation/widgets/common/horizontal_action_strip.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/platform/platform_capabilities.dart';
 import '../../../core/services/native_share_service.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/image_share_sanitizer.dart';
@@ -18,6 +15,8 @@ import '../../../core/utils/localization_extension.dart';
 import '../../../core/watermark/watermark_logo_service.dart';
 import '../../../core/watermark/watermark_render_service.dart';
 import '../../../core/watermark/watermark_scene.dart';
+import '../../../core/watermark/watermark_source_analysis.dart';
+import '../../../core/watermark/watermark_tone.dart';
 import '../../../data/models/watermark/watermark_settings.dart';
 import '../../../data/services/fixed_tag/fixed_tag_usage_record_store.dart';
 import '../../adaptive/adaptive_layout.dart';
@@ -26,6 +25,7 @@ import '../../providers/system_album_provider.dart';
 import '../../providers/watermark_settings_provider.dart';
 import '../../router/app_routes.dart';
 import 'watermark_editor_controls.dart';
+import 'watermark_editor_preview.dart';
 
 class WatermarkEditorSource {
   const WatermarkEditorSource({
@@ -60,6 +60,14 @@ class WatermarkEditorScreen extends ConsumerStatefulWidget {
       _WatermarkEditorScreenState();
 }
 
+typedef _AutoDecisionKey = (
+  WatermarkSettings,
+  WatermarkSourceAnalysis,
+  ui.Image?,
+  WatermarkLogoLuminance?,
+  Size,
+);
+
 class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
   final _logoService = const WatermarkLogoService();
   final _previewFocusNode = FocusNode(debugLabel: 'watermark preview');
@@ -74,6 +82,10 @@ class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
   late String _sourceFileName;
   ui.Image? _sourceImage;
   ui.Image? _logoImage;
+  WatermarkSourceAnalysis? _analysis;
+  bool _analysisFailed = false;
+  WatermarkLogoLuminance? _logoLuminance;
+  ({_AutoDecisionKey key, WatermarkAutoDecision value})? _autoDecisionCache;
   Uint8List? _logoBytes;
   Uint8List? _initialLogoBytes;
   String? _logoPath;
@@ -128,9 +140,13 @@ class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
         _sourceImage = source;
         _logoImage = logo;
         _logoBytes = logoBytes;
+        _logoLuminance = null;
         _initialLogoBytes = logoBytes;
         _loading = false;
       });
+      // 分析只影响预览的自动调整，不阻塞编辑器打开
+      unawaited(_analyzeSource(_sourceBytes));
+      unawaited(_measureLogo(logoBytes));
     } on Object catch (error, stackTrace) {
       AppLogger.e(
         'Failed to load watermark source image',
@@ -144,6 +160,84 @@ class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
         _loading = false;
       });
     }
+  }
+
+  Future<void> _analyzeSource(Uint8List bytes) async {
+    try {
+      final analysis = await WatermarkSourceAnalysis.fromEncoded(bytes);
+      if (!mounted || !identical(bytes, _sourceBytes)) return;
+      setState(() => _analysis = analysis);
+    } on Object catch (error, stackTrace) {
+      AppLogger.e(
+        'Failed to analyze watermark source image',
+        error,
+        stackTrace,
+        'WatermarkEditor',
+      );
+      if (!mounted || !identical(bytes, _sourceBytes)) return;
+      setState(() => _analysisFailed = true);
+    }
+  }
+
+  Future<void> _measureLogo(Uint8List? bytes) async {
+    if (bytes == null) return;
+    try {
+      final luminance = await WatermarkLogoLuminance.fromEncoded(bytes);
+      if (!mounted || !identical(bytes, _logoBytes)) return;
+      setState(() => _logoLuminance = luminance);
+    } on Object catch (error, stackTrace) {
+      AppLogger.e(
+        'Failed to measure watermark logo luminance',
+        error,
+        stackTrace,
+        'WatermarkEditor',
+      );
+    }
+  }
+
+  /// 在保存时的原尺寸上判定，预览只缩放绘制，选位与灰阶与保存结果一致
+  WatermarkAutoDecision get _autoDecision {
+    final analysis = _analysis;
+    if (analysis == null || _sourceImage == null) {
+      return WatermarkAutoDecision.none;
+    }
+    final canvasSize = _decisionCanvasSize(analysis.sourceSize);
+    final key = (_settings, analysis, _logoImage, _logoLuminance, canvasSize);
+    final cached = _autoDecisionCache;
+    if (cached != null && cached.key == key) return cached.value;
+    final value = WatermarkScene.decide(
+      canvasSize: canvasSize,
+      settings: _settings,
+      analysis: analysis,
+      logo: _logoImage,
+      logoLuminance: _logoLuminance,
+    );
+    _autoDecisionCache = (key: key, value: value);
+    return value;
+  }
+
+  // 默认方案的竖图/方图/横图预览把示例图拉伸到该比例，判定画布保持原图短边、换成预览比例
+  Size _decisionCanvasSize(Size sourceSize) {
+    if (!widget.defaultsOnly || _previewKind == WatermarkLayoutKind.universal) {
+      return sourceSize;
+    }
+    final aspect = _previewAspect;
+    final shortEdge = math.min(sourceSize.width, sourceSize.height);
+    return aspect >= 1
+        ? Size(shortEdge * aspect, shortEdge)
+        : Size(shortEdge, shortEdge / aspect);
+  }
+
+  double get _previewAspect {
+    final source = _sourceImage!;
+    final originalAspect = source.width / source.height;
+    if (!widget.defaultsOnly) return originalAspect;
+    return switch (_previewKind) {
+      WatermarkLayoutKind.portrait => 9 / 16,
+      WatermarkLayoutKind.square => 1.0,
+      WatermarkLayoutKind.landscape => 16 / 9,
+      WatermarkLayoutKind.universal => originalAspect,
+    };
   }
 
   Future<ui.Image> _decodeSingleFrame(
@@ -264,8 +358,10 @@ class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
       _logoPath = _initialLogoPath;
       _logoBytes = initialBytes;
       _logoImage = restoredImage;
+      _logoLuminance = null;
       _draftImportedLogoPath = null;
     });
+    unawaited(_measureLogo(initialBytes));
     if (draftPath != null) await _logoService.deleteManaged(draftPath);
   }
 
@@ -295,7 +391,9 @@ class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
         _draftImportedLogoPath = importedPath;
         _logoBytes = bytes;
         _logoImage = image;
+        _logoLuminance = null;
       });
+      unawaited(_measureLogo(bytes));
       adopted = true;
       if (previousDraft != null && previousDraft != importedPath) {
         await _deleteDraftLogo(previousDraft);
@@ -480,6 +578,8 @@ class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
     _sourceImage = null;
     _logoImage = null;
     setState(() {
+      _analysis = null;
+      _analysisFailed = false;
       _loadError = null;
       _loading = true;
     });
@@ -505,23 +605,9 @@ class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
     );
   }
 
-  KeyEventResult _handlePreviewKey(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-      return KeyEventResult.ignored;
-    }
-    final key = event.logicalKey;
-    var delta = Offset.zero;
-    final step = HardwareKeyboard.instance.isShiftPressed ? 0.01 : 0.002;
-    if (key == LogicalKeyboardKey.arrowLeft) delta = Offset(-step, 0);
-    if (key == LogicalKeyboardKey.arrowRight) delta = Offset(step, 0);
-    if (key == LogicalKeyboardKey.arrowUp) delta = Offset(0, -step);
-    if (key == LogicalKeyboardKey.arrowDown) delta = Offset(0, step);
-    if (delta == Offset.zero) return KeyEventResult.ignored;
-    _moveSelected(delta);
-    return KeyEventResult.handled;
-  }
-
-  void _moveSelected(Offset ratioDelta) {
+  void _moveSelected(Offset displayedDelta) {
+    // 画面上看到的是镜像后的位置，位移换回用户设定的布局坐标再写入
+    final ratioDelta = _autoDecision.mirror.delta(displayedDelta);
     final layout = _activeLayout;
     final grouped =
         _settings.composition.arrangement !=
@@ -539,24 +625,6 @@ class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
           ? layout.copyWith(textPlacement: moved)
           : layout.copyWith(logoPlacement: moved),
     );
-  }
-
-  /// Arrow keys and Shift exist only with a desktop keyboard.
-  String _dragHint(BuildContext context) =>
-      PlatformCapabilities.current.supportsKeyboardShortcutConfiguration
-      ? context.l10n.watermark_dragHint
-      : context.l10n.watermark_dragHintTouch;
-
-  String _layoutStatus() {
-    if (!_settings.rememberLayoutsByOrientation) {
-      return context.l10n.watermark_layoutUniversal;
-    }
-    return switch (_previewKind) {
-      WatermarkLayoutKind.portrait => context.l10n.watermark_layoutPortrait,
-      WatermarkLayoutKind.square => context.l10n.watermark_layoutSquare,
-      WatermarkLayoutKind.landscape => context.l10n.watermark_layoutLandscape,
-      WatermarkLayoutKind.universal => context.l10n.watermark_layoutUniversal,
-    };
   }
 
   @override
@@ -700,147 +768,25 @@ class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
     );
   }
 
-  Widget _buildPreview() {
-    final source = _sourceImage!;
-    final originalAspect = source.width / source.height;
-    final aspect = widget.defaultsOnly
-        ? switch (_previewKind) {
-            WatermarkLayoutKind.portrait => 9 / 16,
-            WatermarkLayoutKind.square => 1.0,
-            WatermarkLayoutKind.landscape => 16 / 9,
-            WatermarkLayoutKind.universal => originalAspect,
-          }
-        : originalAspect;
-    return ColoredBox(
-      color: Theme.of(context).colorScheme.surfaceContainerLowest,
-      child: Column(
-        children: [
-          if (widget.defaultsOnly)
-            HorizontalActionStrip(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: SegmentedButton<WatermarkLayoutKind>(
-                showSelectedIcon: false,
-                segments: [
-                  ButtonSegment(
-                    value: WatermarkLayoutKind.universal,
-                    label: Text(context.l10n.watermark_ratioOriginal),
-                  ),
-                  ButtonSegment(
-                    value: WatermarkLayoutKind.portrait,
-                    label: Text(context.l10n.watermark_ratioPortrait),
-                  ),
-                  ButtonSegment(
-                    value: WatermarkLayoutKind.square,
-                    label: Text(context.l10n.watermark_ratioSquare),
-                  ),
-                  ButtonSegment(
-                    value: WatermarkLayoutKind.landscape,
-                    label: Text(context.l10n.watermark_ratioLandscape),
-                  ),
-                ],
-                selected: {_previewKind},
-                onSelectionChanged: (value) =>
-                    setState(() => _previewKind = value.first),
-              ),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: aspect,
-                  child: Focus(
-                    focusNode: _previewFocusNode,
-                    autofocus: true,
-                    onKeyEvent: _handlePreviewKey,
-                    child: LayoutBuilder(
-                      builder: (context, previewConstraints) {
-                        final size = previewConstraints.biggest;
-                        return Semantics(
-                          label:
-                              '${_selectedLayer == WatermarkEditableLayer.text ? context.l10n.watermark_textLayer : context.l10n.watermark_logoLayer}. ${_dragHint(context)}',
-                          customSemanticsActions: {
-                            CustomSemanticsAction(
-                              label: context.l10n.watermark_moveLeft,
-                            ): () =>
-                                _moveSelected(const Offset(-0.01, 0)),
-                            CustomSemanticsAction(
-                              label: context.l10n.watermark_moveRight,
-                            ): () =>
-                                _moveSelected(const Offset(0.01, 0)),
-                            CustomSemanticsAction(
-                              label: context.l10n.watermark_moveUp,
-                            ): () =>
-                                _moveSelected(const Offset(0, -0.01)),
-                            CustomSemanticsAction(
-                              label: context.l10n.watermark_moveDown,
-                            ): () =>
-                                _moveSelected(const Offset(0, 0.01)),
-                          },
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTapDown: (_) => _previewFocusNode.requestFocus(),
-                            onPanStart: (_) => _previewFocusNode.requestFocus(),
-                            onPanUpdate: (details) {
-                              final shortEdge = math.min(
-                                size.width,
-                                size.height,
-                              );
-                              if (shortEdge > 0) {
-                                _moveSelected(details.delta / shortEdge);
-                              }
-                            },
-                            child: ClipRect(
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  RawImage(
-                                    image: source,
-                                    fit: BoxFit.fill,
-                                    filterQuality: FilterQuality.medium,
-                                  ),
-                                  CustomPaint(
-                                    painter: _WatermarkPreviewPainter(
-                                      settings: _settings,
-                                      logo: _logoImage,
-                                      selectedLayer: _selectedLayer,
-                                      selectionColor: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-            child: Column(
-              children: [
-                Text(
-                  _layoutStatus(),
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                Text(
-                  _dragHint(context),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildPreview() => WatermarkEditorPreview(
+    source: _sourceImage!,
+    aspectRatio: _previewAspect,
+    settings: _settings,
+    decision: _autoDecision,
+    analysis: _analysisFailed
+        ? WatermarkPreviewAnalysis.failed
+        : _analysis == null
+        ? WatermarkPreviewAnalysis.pending
+        : WatermarkPreviewAnalysis.ready,
+    logo: _logoImage,
+    selectedLayer: _selectedLayer,
+    layoutKind: _previewKind,
+    focusNode: _previewFocusNode,
+    onMove: _moveSelected,
+    onLayoutKindChanged: widget.defaultsOnly
+        ? (value) => setState(() => _previewKind = value)
+        : null,
+  );
 
   Widget _buildActions() {
     final ready = _sourceImage != null && !_loading && _loadError == null;
@@ -941,48 +887,4 @@ class _WatermarkEditorScreenState extends ConsumerState<WatermarkEditorScreen> {
       ),
     );
   }
-}
-
-class _WatermarkPreviewPainter extends CustomPainter {
-  const _WatermarkPreviewPainter({
-    required this.settings,
-    required this.logo,
-    required this.selectedLayer,
-    required this.selectionColor,
-  });
-
-  final WatermarkSettings settings;
-  final ui.Image? logo;
-  final WatermarkEditableLayer selectedLayer;
-  final Color selectionColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final result = WatermarkScene.paint(
-      canvas: canvas,
-      canvasSize: size,
-      settings: settings,
-      logo: logo,
-    );
-    final kind = selectedLayer == WatermarkEditableLayer.text
-        ? WatermarkLayerKind.text
-        : WatermarkLayerKind.logo;
-    final bounds = result.boundsFor(kind);
-    if (bounds != null) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(bounds.inflate(4), const Radius.circular(4)),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = selectionColor,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _WatermarkPreviewPainter oldDelegate) =>
-      oldDelegate.settings != settings ||
-      oldDelegate.logo != logo ||
-      oldDelegate.selectedLayer != selectedLayer ||
-      oldDelegate.selectionColor != selectionColor;
 }
