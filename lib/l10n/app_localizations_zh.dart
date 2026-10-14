@@ -1204,6 +1204,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentChat_toolSetNegativePrompt => '设置负向提示词';
 
   @override
+  String get agentChat_toolEditPromptSections => '编辑提示词分区';
+
+  @override
+  String get agentChat_toolRemovePromptSection => '删除提示词分区';
+
+  @override
   String get agentChat_toolAddCharacter => '添加角色';
 
   @override
@@ -16443,6 +16449,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get agentChat_toolSetNegativePrompt => '設定負向提示詞';
+
+  @override
+  String get agentChat_toolEditPromptSections => '編輯提示詞分區';
+
+  @override
+  String get agentChat_toolRemovePromptSection => '刪除提示詞分區';
 
   @override
   String get agentChat_toolAddCharacter => '新增角色';

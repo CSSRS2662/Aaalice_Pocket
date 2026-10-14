@@ -111,6 +111,10 @@ String? _outcome(AppLocalizations l10n, Map decoded, String toolName) {
               ? 'positive_prompt'
               : 'negative_prompt'];
       if (value is String) summary = count('updatedText', value.runes.length);
+    case 'edit_prompt_sections' || 'remove_prompt_section':
+      if (decoded['prompt'] case final String value) {
+        summary = count('updatedText', value.runes.length);
+      }
     default:
       final collection = switch (toolName) {
         'list_tag_library_entries' ||

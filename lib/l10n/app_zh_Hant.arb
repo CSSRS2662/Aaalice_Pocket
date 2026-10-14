@@ -458,6 +458,8 @@
   "agentChat_toolPromptState": "檢視提示詞狀態",
   "agentChat_toolSetPositivePrompt": "設定正向提示詞",
   "agentChat_toolSetNegativePrompt": "設定負向提示詞",
+  "agentChat_toolEditPromptSections": "編輯提示詞分區",
+  "agentChat_toolRemovePromptSection": "刪除提示詞分區",
   "agentChat_toolAddCharacter": "新增角色",
   "agentChat_toolUpdateCharacter": "更新角色",
   "agentChat_toolRemoveCharacter": "刪除角色",

@@ -473,6 +473,8 @@
   "agentChat_toolPromptState": "View prompt state",
   "agentChat_toolSetPositivePrompt": "Set positive prompt",
   "agentChat_toolSetNegativePrompt": "Set negative prompt",
+  "agentChat_toolEditPromptSections": "Edit prompt sections",
+  "agentChat_toolRemovePromptSection": "Remove prompt section",
   "agentChat_toolAddCharacter": "Add character",
   "agentChat_toolUpdateCharacter": "Update character",
   "agentChat_toolRemoveCharacter": "Remove character",

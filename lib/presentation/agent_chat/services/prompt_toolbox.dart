@@ -9,6 +9,8 @@ import '../../../data/models/character/character_prompt.dart';
 import '../../providers/character_prompt_provider.dart';
 import '../../providers/generation/generation_params_notifier.dart';
 import 'defined_agent_tool.dart';
+import 'prompt_section_state.dart';
+import 'prompt_section_toolbox.dart';
 import '../../../core/agent/harness/skills.dart';
 import '../../../core/agent/private_data_guard.dart';
 import '../../../core/constants/model_capabilities.dart';
@@ -43,6 +45,11 @@ class PromptToolbox {
             'positive/negative prompts, enabled state, per-character saved '
             'position mode and continuous x/y centers, global AI/custom '
             'layout mode, current model, and its effective character limit. '
+            'positive_prompt / negative_prompt are what NovelAI receives. '
+            'prompt_editor_mode is single or grouped; in grouped mode the '
+            'user split the prompt into sections, returned as '
+            'positive_sections / negative_sections (id, text, enabled), and '
+            'only enabled sections are sent. '
             'Call this before editing anything.',
         parameters: const {
           'type': 'object',
@@ -53,6 +60,7 @@ class PromptToolbox {
           final params = _ref.read(generationParamsNotifierProvider);
           final config = _ref.read(characterPromptNotifierProvider);
           final capabilities = ModelCapabilityRegistry.of(params.model);
+          final sections = PromptSectionState(_ref).read();
           return agentToolJsonResult({
             'model': params.model,
             'model_character_limit': capabilities.maxCharacters,
@@ -62,6 +70,15 @@ class PromptToolbox {
                 : 'custom',
             'positive_prompt': params.prompt,
             'negative_prompt': params.negativePrompt,
+            'prompt_editor_mode': sections.groupedMode ? 'grouped' : 'single',
+            if (sections.groupedMode) ...{
+              'positive_sections': promptSectionsJson(
+                sections.positiveSections,
+              ),
+              'negative_sections': promptSectionsJson(
+                sections.negativeSections,
+              ),
+            },
             'characters': [
               for (var index = 0; index < config.characters.length; index++)
                 _characterJson(config.characters[index], order: index),
@@ -78,7 +95,8 @@ class PromptToolbox {
             'beginning). Content should be English danbooru-style tags '
             'separated by commas. Use NovelAI emphasis syntax — {tag} / '
             '[tag] on every model, 1.3::tag :: numeric on V4+ — never '
-            '(tag:1.2) which is Stable Diffusion syntax.',
+            '(tag:1.2) which is Stable Diffusion syntax. '
+            '$promptSectionGroupedWriteNote',
         parameters: const {
           'type': 'object',
           'properties': {
@@ -102,7 +120,8 @@ class PromptToolbox {
         label: 'Set Negative Prompt',
         description:
             'Write the negative prompt (Undesired Content). mode: '
-            '"replace" (default), "append", or "prepend".',
+            '"replace" (default), "append", or "prepend". '
+            '$promptSectionGroupedWriteNote',
         parameters: const {
           'type': 'object',
           'properties': {
@@ -384,6 +403,10 @@ class PromptToolbox {
       );
     }
     final mode = (args['mode'] as String?) ?? 'replace';
+    final grouped = await PromptSectionToolbox(
+      _ref,
+    ).setGroupedPrompt(positive: positive, text: text, mode: mode);
+    if (grouped != null) return grouped;
     final params = _ref.read(generationParamsNotifierProvider);
     final current = positive ? params.prompt : params.negativePrompt;
     final combined = combinePromptText(current, text, mode);

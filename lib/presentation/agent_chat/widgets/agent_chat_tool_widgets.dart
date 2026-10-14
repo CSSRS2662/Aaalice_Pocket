@@ -60,6 +60,8 @@ String agentToolLabel(BuildContext context, String toolName) {
     'get_prompt_state' => l10n.agentChat_toolPromptState,
     'set_positive_prompt' => l10n.agentChat_toolSetPositivePrompt,
     'set_negative_prompt' => l10n.agentChat_toolSetNegativePrompt,
+    'edit_prompt_sections' => l10n.agentChat_toolEditPromptSections,
+    'remove_prompt_section' => l10n.agentChat_toolRemovePromptSection,
     'add_character' => l10n.agentChat_toolAddCharacter,
     'update_character' => l10n.agentChat_toolUpdateCharacter,
     'remove_character' => l10n.agentChat_toolRemoveCharacter,
@@ -117,7 +119,9 @@ IconData agentToolIcon(String toolName) => switch (toolName) {
     Icons.photo_filter_outlined,
   'get_prompt_state' ||
   'set_positive_prompt' ||
-  'set_negative_prompt' => Icons.edit_note_outlined,
+  'set_negative_prompt' ||
+  'edit_prompt_sections' ||
+  'remove_prompt_section' => Icons.edit_note_outlined,
   'add_character' ||
   'update_character' ||
   'remove_character' => Icons.manage_accounts_outlined,

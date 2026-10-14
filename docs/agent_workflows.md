@@ -20,6 +20,10 @@
 
 保存与云同步仍仅使用现有 `customSystemPrompt` 和 `systemPromptMode` 字段；自动上下文不写入自定义配置，不新增同步类型。旧自定义文本原样保留，旧客户端仍按旧版覆盖语义工作；跨设备恢复后，新客户端会重新组装本机上下文。旧文本中手写的目录或 Skills 不做猜测式删除，用户可在编辑器中清理。
 
+## 提示词分区
+
+分区模式下，`get_prompt_state` 返回各分区的 id、文本与启用状态；`edit_prompt_sections` 新增、改写、启停或移动分区，`remove_prompt_section` 删除分区并按删除类操作确认。`set_positive_prompt` / `set_negative_prompt` 在分区模式下不合并分区：追加和前置新增一个分区，替换只换掉启用的分区，停用分区原样保留。写入由 `PromptSectionState` 依次发出分区恢复请求、写入编辑器存档、更新生成提示词；生成页不在屏幕上时，打开后同样恢复。
+
 ## 结构化提问
 
 `ask_user_question` 接收非空 `questions` 数组，每题包含：

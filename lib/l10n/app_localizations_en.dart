@@ -1248,6 +1248,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentChat_toolSetNegativePrompt => 'Set negative prompt';
 
   @override
+  String get agentChat_toolEditPromptSections => 'Edit prompt sections';
+
+  @override
+  String get agentChat_toolRemovePromptSection => 'Remove prompt section';
+
+  @override
   String get agentChat_toolAddCharacter => 'Add character';
 
   @override

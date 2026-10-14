@@ -2375,6 +2375,18 @@ abstract class AppLocalizations {
   /// **'Set negative prompt'**
   String get agentChat_toolSetNegativePrompt;
 
+  /// No description provided for @agentChat_toolEditPromptSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit prompt sections'**
+  String get agentChat_toolEditPromptSections;
+
+  /// No description provided for @agentChat_toolRemovePromptSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove prompt section'**
+  String get agentChat_toolRemovePromptSection;
+
   /// No description provided for @agentChat_toolAddCharacter.
   ///
   /// In en, this message translates to:

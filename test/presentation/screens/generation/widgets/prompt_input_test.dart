@@ -14,6 +14,7 @@ import 'package:nai_launcher/data/models/character/character_prompt.dart';
 import 'package:nai_launcher/data/models/gallery/prompt_group_snapshot.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
+import 'package:nai_launcher/presentation/agent_chat/services/prompt_toolbox.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/providers/prompt_assistant_history_provider.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/providers/prompt_assistant_state_provider.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/widgets/prompt_assistant_overlay.dart';
@@ -38,6 +39,8 @@ import 'package:nai_launcher/presentation/widgets/prompt/unified/unified_prompt_
 import 'package:nai_launcher/presentation/widgets/prompt/unified/unified_prompt_input.dart';
 
 import '../../../../helpers/memory_local_storage.dart';
+
+final _refProvider = Provider<Ref>((ref) => ref);
 
 void main() {
   testWidgets('主提示词拖动高度保留正文并跨正负和标签模式复用', (tester) async {
@@ -787,6 +790,74 @@ void main() {
     expect(
       container.read(generationParamsNotifierProvider).prompt,
       snapshot.positivePrompt,
+    );
+    expect(container.read(promptGroupRestoreRequestProvider), isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('智能体追加提示词时保留分区，停用分区也不丢', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(400, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final container = await _pumpMobilePromptHarness(
+      tester,
+      defaultModel: 'nai-diffusion-5-curated',
+    );
+    const snapshot = PromptGroupSnapshot(
+      groupedMode: true,
+      positiveSections: [
+        PromptGroupSectionSnapshot(id: 'a', text: '1girl'),
+        PromptGroupSectionSnapshot(id: 'b', text: 'rain', enabled: false),
+        PromptGroupSectionSnapshot(id: 'c', text: 'smile'),
+      ],
+      negativeSections: [],
+    );
+    container
+        .read(generationParamsNotifierProvider.notifier)
+        .updatePrompt(snapshot.positivePrompt);
+    await tester.pump();
+    container
+        .read(promptGroupRestoreRequestProvider.notifier)
+        .state = const PromptGroupRestoreRequest(
+      snapshot: snapshot,
+      restorePositive: true,
+      restoreNegative: false,
+    );
+    await tester.pump();
+    await tester.pump();
+
+    final tool = PromptToolbox(
+      container.read(_refProvider),
+    ).tools().firstWhere((item) => item.name == 'set_positive_prompt');
+    final pending = tool.execute('append', const {
+      'text': 'night',
+      'mode': 'append',
+    });
+    await tester.pump(Duration.zero);
+    await tester.pump(Duration.zero);
+    final result = await pending;
+    await tester.pump();
+
+    expect(result.isError, isFalse);
+    final groups = find.byKey(
+      const ValueKey('generation_positive_prompt_groups'),
+    );
+    final tiles = tester
+        .widgetList<PromptGroupTile>(
+          find.descendant(of: groups, matching: find.byType(PromptGroupTile)),
+        )
+        .map((tile) => tile.section)
+        .toList();
+    expect(
+      [for (final section in tiles) section.controller.text],
+      ['1girl', 'rain', 'smile', 'night'],
+    );
+    expect(tiles[1].enabled, isFalse);
+    expect(
+      container.read(generationParamsNotifierProvider).prompt,
+      '1girl, smile, night',
     );
     expect(container.read(promptGroupRestoreRequestProvider), isNull);
     expect(tester.takeException(), isNull);

@@ -156,6 +156,7 @@ AgentToolPermissionDescriptor describeAgentToolPermission(String toolName) {
     'cancel_generation_preparation',
     'cancel_manual_inpaint_draft',
     'remove_character',
+    'remove_prompt_section',
     'remove_active_precise_reference',
     'remove_active_vibe',
     'delete_generation_queue_task',
@@ -200,6 +201,8 @@ AgentToolPermissionDescriptor describeAgentToolPermission(String toolName) {
     'get_prompt_state' ||
     'set_positive_prompt' ||
     'set_negative_prompt' ||
+    'edit_prompt_sections' ||
+    'remove_prompt_section' ||
     'add_character' ||
     'update_character' ||
     'remove_character' ||

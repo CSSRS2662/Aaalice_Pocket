@@ -1223,6 +1223,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get agentChat_toolSetNegativePrompt => 'ネガティブプロンプトを設定';
 
   @override
+  String get agentChat_toolEditPromptSections => 'プロンプトのセクションを編集';
+
+  @override
+  String get agentChat_toolRemovePromptSection => 'プロンプトのセクションを削除';
+
+  @override
   String get agentChat_toolAddCharacter => 'キャラクターを追加';
 
   @override

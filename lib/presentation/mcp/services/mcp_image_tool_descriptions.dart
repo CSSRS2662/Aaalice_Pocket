@@ -115,6 +115,8 @@ const mcpToolDescriptionSuffixes = <String, String>{
   'get_generation_settings': _pageReadSuffix,
   'set_positive_prompt': _pageEditSuffix,
   'set_negative_prompt': _pageEditSuffix,
+  'edit_prompt_sections': _pageEditSuffix,
+  'remove_prompt_section': _pageEditSuffix,
   'add_character': _pageEditSuffix,
   'update_character': _pageEditSuffix,
   'remove_character': _pageEditSuffix,

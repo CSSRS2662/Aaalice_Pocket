@@ -132,8 +132,13 @@ class _PromptInputWidgetState extends ConsumerState<PromptInputWidget> {
     if (mounted) setState(() {});
   }
 
-  void _restoreImportedGroups(PromptGroupRestoreRequest? request) {
-    if (request == null) return;
+  /// Applies [request] to the sides whose generation prompt it still matches
+  /// and reports which sides it restored.
+  ({bool positive, bool negative}) _restoreImportedGroups(
+    PromptGroupRestoreRequest? request,
+  ) {
+    const none = (positive: false, negative: false);
+    if (request == null) return none;
     final params = ref.read(generationParamsNotifierProvider);
     final restorePositive =
         request.restorePositive &&
@@ -147,7 +152,7 @@ class _PromptInputWidgetState extends ConsumerState<PromptInputWidget> {
           params.negativePrompt,
           request.snapshot.negativePrompt,
         );
-    if (!restorePositive && !restoreNegative) return;
+    if (!restorePositive && !restoreNegative) return none;
     _controller.restoreGroupSnapshot(
       request.snapshot,
       restorePositive: restorePositive,
@@ -170,6 +175,7 @@ class _PromptInputWidgetState extends ConsumerState<PromptInputWidget> {
       final pending = ref.read(promptGroupRestoreRequestProvider.notifier);
       if (identical(pending.state, request)) pending.state = null;
     });
+    return (positive: restorePositive, negative: restoreNegative);
   }
 
   @override
@@ -191,10 +197,16 @@ class _PromptInputWidgetState extends ConsumerState<PromptInputWidget> {
           // Some focused widget tests intentionally omit queue dependencies.
         }
         if (queueActive) return;
-        if (previous?.prompt != next.prompt) {
+        // A writer that edits partitions (the agent) posts them before the
+        // prompt; syncing first would merge every partition into one.
+        final restored = _restoreImportedGroups(
+          ref.read(promptGroupRestoreRequestProvider),
+        );
+        if (previous?.prompt != next.prompt && !restored.positive) {
           _controller.syncPrompt(next.prompt);
         }
-        if (previous?.negativePrompt != next.negativePrompt) {
+        if (previous?.negativePrompt != next.negativePrompt &&
+            !restored.negative) {
           _controller.syncNegativePrompt(next.negativePrompt);
         }
       },
