@@ -472,6 +472,18 @@ try {
         if (-not (Test-Path -LiteralPath $adbCommand -PathType Leaf)) {
             throw "adb is missing: $adbCommand"
         }
+        # A server started by `adb devices` inherits this script's redirected
+        # output and keeps it open, so a caller waiting for the output never
+        # finishes. Start it through ShellExecute, which inherits no handles.
+        if ($IsWindows) {
+            $serverStart = [System.Diagnostics.ProcessStartInfo]::new($adbCommand, 'start-server')
+            $serverStart.UseShellExecute = $true
+            $serverStart.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+            $serverProcess = [System.Diagnostics.Process]::Start($serverStart)
+            if (-not $serverProcess.WaitForExit(30000)) {
+                Write-Warning 'adb start-server did not finish within 30 seconds.'
+            }
+        }
         $readyDevices = @(
             & $adbCommand devices |
                 Select-Object -Skip 1 |
