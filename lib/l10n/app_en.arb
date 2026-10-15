@@ -7615,5 +7615,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "characterEditor_positiveTab": "Prompt",
+  "characterEditor_negativeTab": "Undesired"
 }

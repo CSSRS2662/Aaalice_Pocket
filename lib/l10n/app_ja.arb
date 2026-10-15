@@ -7638,5 +7638,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "characterEditor_positiveTab": "プロンプト",
+  "characterEditor_negativeTab": "除外"
 }

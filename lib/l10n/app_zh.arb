@@ -7684,5 +7684,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "characterEditor_positiveTab": "正向",
+  "characterEditor_negativeTab": "负向"
 }

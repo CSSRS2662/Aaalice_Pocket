@@ -15841,4 +15841,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String characterPanel_marker(String name, int x, int y) {
     return '$name、横 $x%、縦 $y%';
   }
+
+  @override
+  String get characterEditor_positiveTab => 'プロンプト';
+
+  @override
+  String get characterEditor_negativeTab => '除外';
 }

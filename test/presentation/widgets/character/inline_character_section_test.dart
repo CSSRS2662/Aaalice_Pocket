@@ -442,7 +442,7 @@ void main() {
     final resizedPositiveHeight = tester.getSize(positiveArea).height;
     expect(resizedPositiveHeight, greaterThan(112));
 
-    await tester.tap(find.text('负向提示词'));
+    await tester.tap(find.text('负向'));
     await tester.pump();
     final negativeArea = find.byKey(
       const ValueKey('character-prompt-editor-area-negative'),
@@ -463,7 +463,7 @@ void main() {
     await tester.pump();
     expect(tester.getSize(negativeArea).height, 112);
 
-    await tester.tap(find.text('正向提示词'));
+    await tester.tap(find.text('正向'));
     await tester.pump();
     expect(tester.getSize(positiveArea).height, resizedPositiveHeight);
     expect(tester.takeException(), isNull);
@@ -537,8 +537,8 @@ void main() {
         findsOneWidget,
       );
     }
-    expect(find.text('正向提示词').hitTestable(), findsOneWidget);
-    expect(find.text('负向提示词').hitTestable(), findsOneWidget);
+    expect(find.text('正向').hitTestable(), findsOneWidget);
+    expect(find.text('负向').hitTestable(), findsOneWidget);
 
     await tester.tap(
       find.byIcon(Icons.keyboard_arrow_down_rounded),
@@ -553,7 +553,8 @@ void main() {
     expect(find.text('确定要清空输入内容吗？'), findsOneWidget);
     await tester.tap(find.text('清除').last, kind: PointerDeviceKind.mouse);
     await tester.pumpAndSettle();
-    expect(clear, findsNothing);
+    // The button stays in place, disabled, so the row keeps its layout.
+    expect(tester.widget<IconButton>(clear).onPressed, isNull);
     final editable = tester.widget<EditableText>(
       find.descendant(of: area, matching: find.byType(EditableText)),
     );

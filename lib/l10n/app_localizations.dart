@@ -28203,6 +28203,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name}, {x}% across, {y}% down'**
   String characterPanel_marker(String name, int x, int y);
+
+  /// No description provided for @characterEditor_positiveTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt'**
+  String get characterEditor_positiveTab;
+
+  /// No description provided for @characterEditor_negativeTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Undesired'**
+  String get characterEditor_negativeTab;
 }
 
 class _AppLocalizationsDelegate

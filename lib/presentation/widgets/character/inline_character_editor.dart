@@ -31,7 +31,7 @@ class CharacterPromptEditor extends ConsumerStatefulWidget {
   /// Focuses the input on mount and when the edited character changes.
   final bool autofocus;
 
-  /// Shown after the positive/negative tabs, such as a single/grouped switch.
+  /// Last in the control row, such as a single/grouped switch.
   final Widget? modeSwitch;
 
   /// Replaces the text field while set, for example with a section grid;
@@ -196,20 +196,23 @@ class _CharacterPromptEditorState extends ConsumerState<CharacterPromptEditor> {
     );
   }
 
+  /// One layout in every state: the clear button stays in place while the
+  /// prompt is empty, and grouped editing keeps the same controls.
   Widget _buildEditorHeader(AppLocalizations l10n, String sessionId) {
     final positive = _tabIndex == 0;
-    final currentController = positive
-        ? _promptController
-        : _negativeController;
-    final grouped = widget.groupedBody != null;
+    // The field empties at once on clear; the character can trail a frame,
+    // and in grouped mode the field follows the character after a frame.
+    final empty =
+        (positive ? _promptController : _negativeController).text.isEmpty ||
+        (positive ? widget.character.prompt : widget.character.negativePrompt)
+            .isEmpty;
     return PromptEditorControlRow(
       sessionId: sessionId,
-      showTagModeToggle: !grouped,
       leading: Row(
         children: [
           Flexible(
             child: _EditorTab(
-              label: l10n.prompt_positivePrompt,
+              label: l10n.characterEditor_positiveTab,
               selected: _tabIndex == 0,
               onTap: () {
                 setState(() => _tabIndex = 0);
@@ -220,7 +223,7 @@ class _CharacterPromptEditorState extends ConsumerState<CharacterPromptEditor> {
           const SizedBox(width: 6),
           Flexible(
             child: _EditorTab(
-              label: l10n.prompt_negativePrompt,
+              label: l10n.characterEditor_negativeTab,
               isNegative: true,
               selected: _tabIndex == 1,
               onTap: () {
@@ -229,20 +232,15 @@ class _CharacterPromptEditorState extends ConsumerState<CharacterPromptEditor> {
               },
             ),
           ),
-          if (widget.modeSwitch case final modeSwitch?) ...[
-            const SizedBox(width: 6),
-            modeSwitch,
-          ],
         ],
       ),
-      action: grouped || currentController.text.isEmpty
-          ? null
-          : IconButton(
-              key: const ValueKey('character-prompt-clear-button'),
-              tooltip: l10n.toolbar_clear,
-              onPressed: _clearCurrentPrompt,
-              icon: const Icon(Icons.clear, size: 20),
-            ),
+      action: IconButton(
+        key: const ValueKey('character-prompt-clear-button'),
+        tooltip: l10n.toolbar_clear,
+        onPressed: empty ? null : _clearCurrentPrompt,
+        icon: const Icon(Icons.clear, size: 20),
+      ),
+      trailing: widget.modeSwitch,
     );
   }
 
@@ -437,7 +435,16 @@ class CharacterNameField extends ConsumerStatefulWidget {
   final CharacterPrompt character;
   final TextStyle? style;
 
-  const CharacterNameField({super.key, required this.character, this.style});
+  /// Saves the name as it is typed, not only on Enter or when the field
+  /// loses focus. A word still being composed by the input method waits.
+  final bool commitWhileTyping;
+
+  const CharacterNameField({
+    super.key,
+    required this.character,
+    this.style,
+    this.commitWhileTyping = false,
+  });
 
   @override
   ConsumerState<CharacterNameField> createState() => _CharacterNameFieldState();
@@ -455,6 +462,13 @@ class _CharacterNameFieldState extends ConsumerState<CharacterNameField> {
     // 失焦提交：输入过程完全本地，不触发 provider 更新与整卡重建，
     // 焦点和光标不会被打断
     _focusNode.addListener(_onFocusChanged);
+    if (widget.commitWhileTyping) _controller.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    final composing = _controller.value.composing;
+    if (composing.isValid && !composing.isCollapsed) return;
+    _commit();
   }
 
   void _onFocusChanged() {
@@ -464,11 +478,15 @@ class _CharacterNameFieldState extends ConsumerState<CharacterNameField> {
   }
 
   void _commit() {
+    // The latest stored character, so a rename never undoes other edits.
+    final current = ref
+        .read(characterPromptNotifierProvider)
+        .findCharacterById(widget.character.id);
     final trimmed = _controller.text.trim();
-    if (trimmed.isEmpty || trimmed == widget.character.name) return;
+    if (current == null || trimmed.isEmpty || trimmed == current.name) return;
     ref
         .read(characterPromptNotifierProvider.notifier)
-        .updateCharacter(widget.character.copyWith(name: trimmed));
+        .updateCharacter(current.copyWith(name: trimmed));
   }
 
   @override
@@ -487,6 +505,7 @@ class _CharacterNameFieldState extends ConsumerState<CharacterNameField> {
   @override
   void dispose() {
     _focusNode.removeListener(_onFocusChanged);
+    _controller.removeListener(_onTextChanged);
     _focusNode.dispose();
     _controller.dispose();
     super.dispose();

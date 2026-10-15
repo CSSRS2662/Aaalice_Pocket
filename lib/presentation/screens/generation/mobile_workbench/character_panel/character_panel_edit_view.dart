@@ -51,6 +51,7 @@ class CharacterPanelEditView extends ConsumerWidget {
     final index = characters.indexWhere((item) => item.id == characterId);
     if (index < 0) return const SizedBox.shrink();
     final character = characters[index];
+    final notifier = ref.read(characterPromptNotifierProvider.notifier);
     final subtitle = [
       l10n.characterPanel_editIndex(index + 1, characters.length),
       if (!character.enabled) l10n.characterPanel_notIncluded,
@@ -64,12 +65,17 @@ class CharacterPanelEditView extends ConsumerWidget {
           title: CharacterNameField(
             key: ValueKey('character-panel-name-${character.id}'),
             character: character,
+            commitWhileTyping: true,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           subtitle: subtitle,
           trailing: [
+            _IncludeSwitch(
+              character: character,
+              onChanged: (_) => notifier.toggleCharacterEnabled(character.id),
+            ),
             IconButton(
               key: const ValueKey('character-panel-previous'),
               onPressed: index > 0
@@ -254,17 +260,15 @@ class _EditBodyState extends ConsumerState<_EditBody> {
       );
     }
     final grouped = _groups.grouped;
-    return SingleChildScrollView(
+    // The keyboard needs the room; the pinned part comes back once it closes.
+    final typing = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final editor = SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _IdentityRow(
-            character: character,
-            onGender: _setGender,
-            onEnabled: (_) => _notifier.toggleCharacterEnabled(character.id),
-          ),
+          _GenderRow(character: character, onGender: _setGender),
           const SizedBox(height: 12),
           CharacterPromptEditor(
             key: ValueKey('character-panel-editor-${character.id}'),
@@ -278,51 +282,87 @@ class _EditBodyState extends ConsumerState<_EditBody> {
             ),
             groupedBody: grouped ? _groupedBody : null,
           ),
-          const SizedBox(height: 12),
-          _PositionCard(
-            config: widget.config,
-            character: character,
-            onPlace: widget.onOpenPlace,
-          ),
-          const SizedBox(height: 12),
-          _EditActions(
-            onSaveToLibrary: () => AddToLibraryDialog.show(
-              context,
-              name: character.name,
-              content: CharacterPromptBlockParser.compose(
-                positivePrompt: character.prompt,
-                negativePrompt: character.negativePrompt,
-              ),
-            ),
-            onDelete: () => widget.onDelete(character),
-          ),
         ],
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: editor),
+        if (!typing)
+          Padding(
+            key: const ValueKey('character-panel-edit-footer'),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _PositionCard(
+                  config: widget.config,
+                  character: character,
+                  onPlace: widget.onOpenPlace,
+                ),
+                const SizedBox(height: 4),
+                _EditActions(
+                  onSaveToLibrary: () => AddToLibraryDialog.show(
+                    context,
+                    name: character.name,
+                    content: CharacterPromptBlockParser.compose(
+                      positivePrompt: character.prompt,
+                      negativePrompt: character.negativePrompt,
+                    ),
+                  ),
+                  onDelete: () => widget.onDelete(character),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Whether the character takes part in the generation, as a bare switch in
+/// the header; its name says what it is to screen readers and on hover.
+class _IncludeSwitch extends StatelessWidget {
+  const _IncludeSwitch({required this.character, required this.onChanged});
+
+  final CharacterPrompt character;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Tooltip(
+      message: character.enabled
+          ? l10n.characterPanel_leaveOut(character.name)
+          : l10n.characterPanel_include(character.name),
+      child: Semantics(
+        label: l10n.characterPanel_includeSwitch,
+        child: Switch(
+          key: const ValueKey('character-panel-include'),
+          value: character.enabled,
+          onChanged: onChanged,
+        ),
       ),
     );
   }
 }
 
-class _IdentityRow extends StatelessWidget {
-  const _IdentityRow({
-    required this.character,
-    required this.onGender,
-    required this.onEnabled,
-  });
+class _GenderRow extends StatelessWidget {
+  const _GenderRow({required this.character, required this.onGender});
 
   final CharacterPrompt character;
   final ValueChanged<CharacterGender> onGender;
-  final ValueChanged<bool> onEnabled;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = context.l10n;
     final options = [
       (CharacterGender.female, l10n.characterEditor_addFemale),
       (CharacterGender.male, l10n.characterEditor_addMale),
       (CharacterGender.other, l10n.characterEditor_addOther),
     ];
-    final genders = Semantics(
+    return Semantics(
       label: l10n.characterPanel_gender,
       child: HorizontalSegmentedControl(
         child: SegmentedButton<CharacterGender>(
@@ -343,45 +383,6 @@ class _IdentityRow extends StatelessWidget {
           onSelectionChanged: (selection) => onGender(selection.single),
         ),
       ),
-    );
-    final include = MergeSemantics(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l10n.characterPanel_includeSwitch,
-            style: theme.textTheme.labelLarge,
-          ),
-          Switch(
-            key: const ValueKey('character-panel-include'),
-            value: character.enabled,
-            onChanged: onEnabled,
-          ),
-        ],
-      ),
-    );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Large text puts the switch under the genders instead of squeezing.
-        if (constraints.maxWidth < 360 ||
-            MediaQuery.textScalerOf(context).scale(14) > 20) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              genders,
-              const SizedBox(height: 4),
-              Align(alignment: AlignmentDirectional.centerEnd, child: include),
-            ],
-          );
-        }
-        return Row(
-          children: [
-            Expanded(child: genders),
-            const SizedBox(width: 8),
-            include,
-          ],
-        );
-      },
     );
   }
 }
@@ -419,15 +420,15 @@ class _PositionCard extends ConsumerWidget {
       color: sectionSurfaceColor(theme.colorScheme),
       borderRadius: BorderRadius.circular(theme.appTheme.cardRadius),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
         child: Row(
           children: [
             SizedBox.square(
-              dimension: 56,
+              dimension: 40,
               child: Center(
                 child: CharacterPositionMiniMap(
                   aspectRatio: dimensions.width / dimensions.height,
-                  extent: 56,
+                  extent: 40,
                   position: placed
                       ? Offset(position.column, position.row)
                       : null,
@@ -435,7 +436,7 @@ class _PositionCard extends ConsumerWidget {
                     config.characters,
                     character,
                   ).fill,
-                  dotDiameter: 12,
+                  dotDiameter: 10,
                 ),
               ),
             ),
@@ -446,11 +447,10 @@ class _PositionCard extends ConsumerWidget {
                 children: [
                   Text(
                     l10n.characterPanel_position,
-                    style: theme.textTheme.labelLarge?.copyWith(
+                    style: theme.textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 2),
                   Text(
                     description,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -464,7 +464,7 @@ class _PositionCard extends ConsumerWidget {
             FilledButton.tonal(
               key: const ValueKey('character-panel-place'),
               onPressed: character.enabled ? onPlace : null,
-              style: FilledButton.styleFrom(minimumSize: const Size(64, 44)),
+              style: FilledButton.styleFrom(minimumSize: const Size(56, 44)),
               child: Text(l10n.characterPanel_place),
             ),
           ],

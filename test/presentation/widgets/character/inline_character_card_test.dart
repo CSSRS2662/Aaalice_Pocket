@@ -168,10 +168,10 @@ void main() {
           await tester.pumpAndSettle();
           expect(find.byType(TagEditorView), findsOneWidget);
           final l10n = AppLocalizations.of(tester.element(toggle))!;
-          await tester.tap(find.text(l10n.prompt_negativePrompt));
+          await tester.tap(find.text(l10n.characterEditor_negativeTab));
           await tester.pumpAndSettle();
           expect(find.byType(TagEditorView), findsNothing);
-          await tester.tap(find.text(l10n.prompt_positivePrompt));
+          await tester.tap(find.text(l10n.characterEditor_positiveTab));
           await tester.pumpAndSettle();
           expect(find.byType(TagEditorView), findsOneWidget);
           expect(tester.takeException(), isNull);

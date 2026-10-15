@@ -390,6 +390,85 @@ void main() {
     expect(panel.top, closeTo(52, 1));
   });
 
+  testWidgets('the edit page keeps one control row and pins its footer', (
+    tester,
+  ) async {
+    final container = await _pumpPanel(tester);
+    await tester.tap(find.text('Alice'));
+    await tester.pumpAndSettle();
+
+    Rect rectOf(Key key) => tester.getRect(find.byKey(key));
+    const toggle = ValueKey('tag-mode-button');
+    const clear = ValueKey('character-prompt-clear-button');
+    const mode = ValueKey('character-panel-editor-mode');
+    final before = [rectOf(toggle), rectOf(clear), rectOf(mode)];
+    expect(before[2].left, greaterThan(before[1].right - 1));
+    expect(before[1].left, greaterThan(before[0].right - 1));
+
+    await tester.tap(find.byKey(mode));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('character_positive_prompt_group_grid')),
+      findsOneWidget,
+    );
+    expect([rectOf(toggle), rectOf(clear), rectOf(mode)], before);
+
+    // Position and actions sit at the bottom of the panel.
+    final panel = rectOf(const ValueKey('character-panel'));
+    final footer = rectOf(const ValueKey('character-panel-edit-footer'));
+    expect(panel.bottom - footer.bottom, lessThan(8));
+
+    // The include switch lives in the header, left of the arrows.
+    final include = rectOf(const ValueKey('character-panel-include'));
+    expect(
+      include.right,
+      lessThanOrEqualTo(
+        rectOf(const ValueKey('character-panel-previous')).left,
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('character-panel-include')));
+    await tester.pumpAndSettle();
+    expect(
+      container
+          .read(characterPromptNotifierProvider)
+          .findCharacterById('a')!
+          .enabled,
+      isFalse,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a new name applies while typing, without Enter', (tester) async {
+    final container = await _pumpPanel(tester);
+    await tester.tap(find.text('Alice'));
+    await tester.pumpAndSettle();
+
+    final field = find.descendant(
+      of: find.byKey(const ValueKey('character-panel-name-a')),
+      matching: find.byType(EditableText),
+    );
+    await tester.enterText(field, 'Alicia');
+    await tester.pump();
+    expect(
+      container
+          .read(characterPromptNotifierProvider)
+          .findCharacterById('a')!
+          .name,
+      'Alicia',
+    );
+
+    // The name sits on the back arrow's line.
+    final back = tester.getCenter(
+      find.byKey(const ValueKey('character-panel-back')),
+    );
+    expect(tester.getCenter(field).dy, closeTo(back.dy, 2));
+
+    await tester.tap(find.byKey(const ValueKey('character-panel-back')));
+    await tester.pumpAndSettle();
+    expect(find.text('Alicia'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('every page fits a 320 wide phone with 3x text', (tester) async {
     await _pumpPanel(tester, size: const Size(320, 640), textScale: 3);
     expect(tester.takeException(), isNull);

@@ -15559,6 +15559,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String characterPanel_marker(String name, int x, int y) {
     return '$name，横 $x%，纵 $y%';
   }
+
+  @override
+  String get characterEditor_positiveTab => '正向';
+
+  @override
+  String get characterEditor_negativeTab => '负向';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -31118,4 +31124,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String characterPanel_marker(String name, int x, int y) {
     return '$name，橫 $x%，縱 $y%';
   }
+
+  @override
+  String get characterEditor_positiveTab => '正向';
+
+  @override
+  String get characterEditor_negativeTab => '負向';
 }
