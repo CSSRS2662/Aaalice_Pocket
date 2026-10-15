@@ -8,6 +8,7 @@ import '../../../core/agent/resources/agent_chat_resource_reference.dart';
 import '../../../core/agent/resources/agent_chat_resource_reference_codec.dart';
 import '../../../core/krita/krita_outbound_image.dart';
 import '../../../core/platform/platform_capabilities.dart';
+import '../../../core/services/android_media_store_service.dart';
 import '../../utils/clipboard_image.dart';
 import 'defined_agent_tool.dart';
 import 'generated_image_export_writer.dart';
@@ -35,6 +36,26 @@ typedef ImageResourceActionResolver =
 typedef ResourceImageClipboardWriter = Future<void> Function(Uint8List bytes);
 typedef ResourceImageKritaSender =
     FutureOr<bool> Function(Uint8List bytes, {required String name});
+
+/// Adds a saved image to the device's photo gallery; returns its location.
+typedef ResourceImageGalleryExporter =
+    Future<String?> Function(
+      Uint8List bytes, {
+      required String fileName,
+      required String mimeType,
+    });
+
+/// The Android system gallery, where the app's save button puts images.
+Future<String?> exportImageToSystemGallery(
+  Uint8List bytes, {
+  required String fileName,
+  required String mimeType,
+}) => AndroidMediaStoreService.saveImage(
+  bytes: bytes,
+  fileName: fileName,
+  mimeType: mimeType,
+);
+
 typedef ImageResourceExportPreparer =
     Future<ResolvedImageResourceActionSource> Function(
       ResolvedImageResourceActionSource source,
@@ -66,7 +87,9 @@ final class ImageResourceActionService {
     ResourceImageKritaSender? sendToKrita,
     ResourceImageExclusiveWriter? exclusiveWriter,
     ImageResourceExportPreparer? prepareExport,
+    ResourceImageGalleryExporter? galleryExporter,
   }) : _resolve = resolve,
+       _galleryExporter = galleryExporter,
        _clipboardWriter = clipboardWriter,
        _supportsKritaBridge =
            supportsKritaBridge ??
@@ -86,6 +109,10 @@ final class ImageResourceActionService {
   final ResourceImageKritaSender? _sendToKrita;
   final GeneratedImageExportWriter _exportWriter;
   final ImageResourceExportPreparer? _prepareExport;
+
+  /// Where the app's own save button also puts images, such as the system
+  /// gallery on Android; null when saving stops at the file.
+  final ResourceImageGalleryExporter? _galleryExporter;
 
   Future<AgentToolResult> save(Map<String, dynamic> args) async {
     final loaded = await _loadGeneratedImage(
@@ -115,9 +142,25 @@ final class ImageResourceActionService {
     if (writeFailure != null) return _exportFailureResult(writeFailure, loaded);
 
     final destination = _exportWriter.describeDestination(target.absolutePath);
+    // Like the save button: a failed gallery copy keeps the saved file.
+    String? galleryError;
+    final exporter = _galleryExporter;
+    if (exporter != null) {
+      try {
+        await exporter(
+          loaded.bytes!,
+          fileName: target.absolutePath.split(RegExp(r'[\\/]')).last,
+          mimeType: loaded.mimeType!,
+        );
+      } catch (error) {
+        galleryError = '$error';
+      }
+    }
     return agentToolJsonResult({
       'ok': true,
       'action': 'saved',
+      if (exporter != null) 'system_gallery': galleryError == null,
+      'system_gallery_error': ?galleryError,
       'resource_ref': _exportReferenceJson(loaded),
       if (loaded.metadataStripped != null)
         'metadata_stripped': loaded.metadataStripped,
@@ -373,7 +416,6 @@ final class ImageResourceActionService {
           : reference,
     );
   }
-
 }
 
 final class _LoadedImage {

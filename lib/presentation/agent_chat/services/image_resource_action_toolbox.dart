@@ -8,9 +8,12 @@ import 'toolbox_json.dart';
 /// Registration and permission policy intentionally remain outside this
 /// toolbox so the application registry can grant each action explicitly.
 final class ImageResourceActionToolbox {
-  ImageResourceActionToolbox(this.service);
+  ImageResourceActionToolbox(this.service, {this.includeKrita = true});
 
   final ImageResourceActionService service;
+
+  /// Platforms without the Krita bridge do not offer the tool at all.
+  final bool includeKrita;
 
   List<AgentTool> tools() => [
     DefinedAgentTool(
@@ -20,7 +23,9 @@ final class ImageResourceActionToolbox {
           'Save a generated image resource to one explicit safe file target. '
           'Pass the stable generated-image resource_ref first and a complete '
           'destination_path. The target must be within the configured file '
-          'scope, have a matching image extension, and must not already exist.',
+          'scope, have a matching image extension, and must not already exist. '
+          'Where the app saves to the system gallery (Android), the image is '
+          'added there too; system_gallery reports whether that worked.',
       parameters: toolboxObject(
         properties: {
           'resource_ref': {'type': 'object'},
@@ -50,21 +55,22 @@ final class ImageResourceActionToolbox {
       executionModeOverride: ToolExecutionMode.sequential,
       executeFn: (_, args) => service.copy(args),
     ),
-    DefinedAgentTool(
-      name: 'send_generated_image_to_krita',
-      label: 'Send Generated Image to Krita',
-      description:
-          'Send a stable generated-image resource_ref through the configured '
-          'Krita Bridge. Platform support, bridge configuration, and an '
-          'authenticated client connection are required.',
-      parameters: toolboxObject(
-        properties: {
-          'resource_ref': {'type': 'object'},
-        },
-        required: const ['resource_ref'],
+    if (includeKrita)
+      DefinedAgentTool(
+        name: 'send_generated_image_to_krita',
+        label: 'Send Generated Image to Krita',
+        description:
+            'Send a stable generated-image resource_ref through the configured '
+            'Krita Bridge. Platform support, bridge configuration, and an '
+            'authenticated client connection are required.',
+        parameters: toolboxObject(
+          properties: {
+            'resource_ref': {'type': 'object'},
+          },
+          required: const ['resource_ref'],
+        ),
+        executionModeOverride: ToolExecutionMode.sequential,
+        executeFn: (_, args) => service.sendKrita(args),
       ),
-      executionModeOverride: ToolExecutionMode.sequential,
-      executeFn: (_, args) => service.sendKrita(args),
-    ),
   ];
 }

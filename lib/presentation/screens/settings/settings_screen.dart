@@ -89,16 +89,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  SettingsSection _availableSection(SettingsSection section) {
-    final capabilities = PlatformCapabilities.current;
-    if ((section == SettingsSection.network &&
-            !capabilities.supportsAppProxy) ||
-        (section == SettingsSection.shortcuts &&
-            !capabilities.supportsKeyboardShortcutConfiguration)) {
-      return SettingsSection.account;
-    }
-    return section;
-  }
+  SettingsSection _availableSection(SettingsSection section) =>
+      section.isAvailable ? section : SettingsSection.account;
 
   List<_SettingsSection> _buildSections(BuildContext context) {
     return [

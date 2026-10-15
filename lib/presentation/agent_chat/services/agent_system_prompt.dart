@@ -93,7 +93,7 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'the path unchanged. Never turn resource_ref/resourceId into a path, '
         'filename, or extension.',
     '- Reuse that exact generated-image resource_ref for selection, favorites, '
-        'tag-library thumbnails, saving, clipboard, Krita, and '
+        'tag-library thumbnails, saving, clipboard, image hand-off tools, and '
         'open_generation_image_workflow. Never substitute an index or raw path.',
     '- open_generation_image_workflow only prepares or opens edit, inpaint, '
         'variations, director, enhance, or upscale in the real application. It '

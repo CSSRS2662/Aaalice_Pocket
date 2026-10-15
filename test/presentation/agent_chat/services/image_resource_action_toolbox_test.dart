@@ -45,6 +45,58 @@ void main() {
     ]);
   });
 
+  test('platforms without the Krita bridge do not offer the Krita tool', () {
+    final tools = ImageResourceActionToolbox(
+      _service(workspace),
+      includeKrita: false,
+    ).tools();
+    expect(tools.map((tool) => tool.name), [
+      'save_generated_image',
+      'copy_generated_image_to_clipboard',
+    ]);
+  });
+
+  test('save also adds the image to the system gallery when it can', () async {
+    final exported = <(String, String, int)>[];
+    final service = ImageResourceActionService(
+      resolve: (reference) async => _resolved(reference),
+      env: DartIoExecutionEnv(workingDirectory: workspace.path),
+      clipboardWriter: (_) async {},
+      galleryExporter: (bytes, {required fileName, required mimeType}) async {
+        exported.add((fileName, mimeType, bytes.length));
+        return 'content://media/1';
+      },
+    );
+    final saved = await service.save({
+      ..._resourceArgument,
+      'destination_path': 'exports/gallery.png',
+    });
+    expect(saved.isError, isFalse);
+    expect(saved.details['system_gallery'], isTrue);
+    expect(exported.single.$1, 'gallery.png');
+    expect(exported.single.$2, 'image/png');
+
+    final failing = ImageResourceActionService(
+      resolve: (reference) async => _resolved(reference),
+      env: DartIoExecutionEnv(workingDirectory: workspace.path),
+      clipboardWriter: (_) async {},
+      galleryExporter: (_, {required fileName, required mimeType}) =>
+          throw StateError('permission denied'),
+    );
+    final partial = await failing.save({
+      ..._resourceArgument,
+      'destination_path': 'exports/second.png',
+    });
+    // The file is saved even when the gallery copy fails.
+    expect(partial.isError, isFalse);
+    expect(partial.details['system_gallery'], isFalse);
+    expect(partial.details['system_gallery_error'], contains('permission'));
+    expect(
+      await File(p.join(workspace.path, 'exports', 'second.png')).exists(),
+      isTrue,
+    );
+  });
+
   test(
     'save uses a safe explicit workspace target without overwriting',
     () async {

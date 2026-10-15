@@ -5,6 +5,7 @@ import '../../../core/agent/harness/env/dart_io_execution_env.dart';
 import '../../../core/agent/harness/harness_types.dart';
 import '../../../core/agent/harness/skills.dart';
 import '../../../core/agent/permissions/permissions.dart';
+import '../../../core/platform/platform_capabilities.dart';
 import '../../agent_settings/providers/agent_settings_provider.dart';
 import '../../../data/models/prompt_assistant/prompt_assistant_models.dart';
 import '../../prompt_assistant/providers/web_access_provider.dart';
@@ -175,8 +176,14 @@ class AgentToolRegistryBuilder {
         manualInpaintToolbox: _manualInpaintToolbox,
       ),
     );
+    final capabilities = PlatformCapabilities.current;
     final imageActionService = ImageResourceActionService(
       prepareExport: _prepareImageExport,
+      // Saving matches the app's save button: Android adds the image to the
+      // system gallery too.
+      galleryExporter: capabilities.supportsSystemGalleryExport
+          ? exportImageToSystemGallery
+          : null,
       resolve: (reference) async {
         await resourceResolver.validateImageResource(reference);
         final resolved = await resourceResolver.resolve(reference);
@@ -242,7 +249,10 @@ class AgentToolRegistryBuilder {
       ...GenerationResourceToolbox(_ref).tools(),
       ...GenerationImageWorkflowToolbox(workflowService).tools(),
       ...GenerationImageFavoriteToolbox(_ref).tools(),
-      ...ImageResourceActionToolbox(imageActionService).tools(),
+      ...ImageResourceActionToolbox(
+        imageActionService,
+        includeKrita: capabilities.supportsKritaBridge,
+      ).tools(),
       if (webAccessEnabled)
         ...WebAccessToolbox(
           config: _ref

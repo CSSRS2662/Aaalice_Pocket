@@ -11,6 +11,8 @@ import '../../providers/generation/preview_selection_provider.dart';
 import '../../router/app_router_config.dart';
 import '../../router/app_routes.dart';
 import '../../router/shell_panels_overlay.dart';
+import '../../screens/generation/mobile_workbench/mobile_workbench_state.dart';
+import '../../screens/settings/settings_section.dart';
 import 'defined_agent_tool.dart';
 import 'toolbox_json.dart';
 
@@ -30,7 +32,9 @@ class ApplicationContextToolbox {
     name: 'get_application_context',
     label: 'Get Application Context',
     description:
-        'Read the current destination, gallery filters, selected generated image, local drafts, and queue state.',
+        'Read the current destination, gallery filters, selected generated '
+        'image, local drafts, and queue state. On phones, workbench_tab is '
+        'the tab the generation page shows.',
     parameters: toolboxObject(),
     executeFn: (_, __) async {
       final uri = _ref
@@ -55,6 +59,8 @@ class ApplicationContextToolbox {
           'query': uri.queryParameters,
           'destination': _destinationForPath(uri.path),
         },
+        if (_hasWorkbench)
+          'workbench_tab': _ref.read(mobileWorkbenchNotifierProvider).tab.name,
         'platform': {
           'target': defaultTargetPlatform.name,
           'desktop': switch (defaultTargetPlatform) {
@@ -118,11 +124,17 @@ class ApplicationContextToolbox {
     name: 'navigate_application',
     label: 'Navigate Application',
     description:
-        'Navigate the owning main application or open its queue management surface.',
+        'Navigate the owning main application or open its queue management '
+        'surface. settings_section opens one settings page; on phones, '
+        'generation_tab picks the generation workbench tab.',
     parameters: toolboxObject(
       properties: {
         'destination': {'type': 'string', 'enum': _destinations.keys.toList()},
-        'settings_section': {'type': 'string', 'enum': _settingsSections},
+        'settings_section': {'type': 'string', 'enum': _settingsSections()},
+        'generation_tab': {
+          'type': 'string',
+          'enum': [for (final tab in MobileWorkbenchTab.values) tab.name],
+        },
       },
       required: const ['destination'],
     ),
@@ -147,6 +159,19 @@ class ApplicationContextToolbox {
           'settings_section is valid only for the settings destination.',
         );
       }
+      final tabName = params['generation_tab'] as String?;
+      final tab = MobileWorkbenchTab.values
+          .where((value) => value.name == tabName)
+          .firstOrNull;
+      if (tabName != null && (destination != 'generation' || tab == null)) {
+        return agentToolError(
+          'invalid_generation_tab',
+          'generation_tab is valid only for the generation destination.',
+        );
+      }
+      if (tab != null) {
+        _ref.read(mobileWorkbenchNotifierProvider.notifier).select(tab);
+      }
       final target = section == null
           ? path
           : '$path?section=${Uri.encodeQueryComponent(section)}';
@@ -156,22 +181,22 @@ class ApplicationContextToolbox {
         'ok': true,
         'destination': destination,
         'target_uri': target,
+        'generation_tab': ?tab?.name,
       });
     },
   );
 }
 
-const _settingsSections = [
-  'account',
-  'appearance',
-  'generation',
-  'storage',
-  'privacy',
-  'network',
-  'shortcuts',
-  'integrations',
-  'about',
+/// The settings pages this platform shows, by the ids the route accepts.
+List<String> _settingsSections() => [
+  for (final section in SettingsSection.values)
+    if (section.isAvailable) section.id,
 ];
+
+/// Phones show the generation page as a tabbed workbench.
+bool get _hasWorkbench =>
+    defaultTargetPlatform == TargetPlatform.android ||
+    defaultTargetPlatform == TargetPlatform.iOS;
 
 const _destinations = <String, String>{
   'home': AppRoutes.home,
