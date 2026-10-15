@@ -7,6 +7,7 @@ import '../../../../core/utils/localization_extension.dart';
 import '../../../../core/utils/prompt_edit_document.dart';
 import '../../../themes/core/layered_surface_style.dart';
 import '../../../themes/theme_extension.dart';
+import '../../../widgets/common/reorderable_tile_grid.dart';
 import 'prompt_group_controller.dart';
 import 'prompt_group_summary.dart';
 
@@ -123,7 +124,7 @@ class PromptGroupTile extends StatelessWidget {
                   ),
                 ),
               ),
-              _DeleteCross(
+              ReorderableTileDeleteButton(
                 key: ValueKey('prompt_group_delete_${section.id}'),
                 armed: deleteArmed,
                 tooltip: deleteArmed
@@ -205,59 +206,6 @@ class _EnableDot extends StatelessWidget {
                         child: const SizedBox.square(dimension: 8),
                       )
                     : null,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A bare cross; the first tap arms it as a red circle, the second deletes.
-class _DeleteCross extends StatelessWidget {
-  const _DeleteCross({
-    super.key,
-    required this.armed,
-    required this.tooltip,
-    required this.onTap,
-    required this.onTapOutside,
-  });
-
-  final bool armed;
-  final String tooltip;
-  final VoidCallback onTap;
-  final VoidCallback onTapOutside;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return TapRegion(
-      onTapOutside: armed ? (_) => onTapOutside() : null,
-      child: Tooltip(
-        message: tooltip,
-        child: Semantics(
-          button: true,
-          child: InkResponse(
-            onTap: onTap,
-            radius: 22,
-            child: SizedBox(
-              width: PromptGroupTileMetrics.controlExtent,
-              child: Center(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 120),
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: armed ? colors.error : Colors.transparent,
-                  ),
-                  child: Icon(
-                    Icons.close_rounded,
-                    size: 16,
-                    color: armed ? colors.onError : colors.onSurfaceVariant,
-                  ),
-                ),
               ),
             ),
           ),

@@ -2121,11 +2121,9 @@
   "api_error_network": "Network error",
   "api_error_network_hint": "Cannot connect to server. Please check your network",
   "drop_processing": "Processing image...",
-  "characterEditor_close": "Close",
   "characterEditor_clearAll": "Clear All",
   "characterEditor_clearAllTitle": "Clear All Characters",
   "characterEditor_clearAllConfirm": "Are you sure you want to delete all characters? This action cannot be undone.",
-  "characterEditor_editing": "Editing",
   "characterEditor_nameHint": "Enter character name",
   "characterEditor_enabled": "Enabled",
   "characterEditor_promptHint": "Enter prompt for this character...",
@@ -7489,5 +7487,133 @@
       }
     }
   },
-  "chatgptCodex_providerFormNote": "This provider signs in with a ChatGPT account and needs no address or API key. Sign-in opens after you save."
+  "chatgptCodex_providerFormNote": "This provider signs in with a ChatGPT account and needs no address or API key. Sign-in opens after you save.",
+  "characterPanel_title": "Characters",
+  "characterPanel_position": "Position",
+  "characterPanel_positionAi": "AI decides",
+  "characterPanel_positionManual": "Place manually",
+  "characterPanel_adjust": "Adjust",
+  "characterPanel_gridHint": "Tap a card to edit · the dot includes or leaves it out · long press to reorder · tap × twice to delete",
+  "characterPanel_emptyPrompt": "No prompt yet",
+  "characterPanel_include": "Include {name}",
+  "@characterPanel_include": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_leaveOut": "Leave out {name}",
+  "@characterPanel_leaveOut": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_delete": "Delete {name}",
+  "@characterPanel_delete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_deleteAgain": "Tap again to delete {name}",
+  "@characterPanel_deleteAgain": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_deleted": "Deleted {name}",
+  "@characterPanel_deleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_addFromLibrary": "Add from library",
+  "characterPanel_editIndex": "Character {index} of {total}",
+  "@characterPanel_editIndex": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "characterPanel_notIncluded": "Not in this generation",
+  "characterPanel_includeSwitch": "Include",
+  "characterPanel_gender": "Gender",
+  "characterPanel_positionAiValue": "AI decides for every character",
+  "characterPanel_positionNotIncluded": "Not in this generation, so it takes no position",
+  "characterPanel_positionValue": "Manual · {cell} · {x}% across, {y}% down",
+  "@characterPanel_positionValue": {
+    "placeholders": {
+      "cell": {
+        "type": "String"
+      },
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  },
+  "characterPanel_place": "Place",
+  "characterPanel_deleteCharacter": "Delete character",
+  "characterPanel_placeTitle": "Place characters",
+  "characterPanel_placeReadout": "{name} · {cell} · {x}% across, {y}% down",
+  "@characterPanel_placeReadout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "cell": {
+        "type": "String"
+      },
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  },
+  "characterPanel_noneIncluded": "No character is in this generation",
+  "characterPanel_snap": "Snap",
+  "characterPanel_backdrop": "Backdrop",
+  "characterPanel_spread": "Spread out",
+  "characterPanel_handToAi": "Let AI decide",
+  "characterPanel_includeFirst": "{name} is not in this generation. Include it on its card first.",
+  "@characterPanel_includeFirst": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_previous": "Previous character",
+  "characterPanel_next": "Next character",
+  "characterPanel_canvas": "Character position canvas",
+  "characterPanel_marker": "{name}, {x}% across, {y}% down",
+  "@characterPanel_marker": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -4904,9 +4904,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drop_processing => 'Processing image...';
 
   @override
-  String get characterEditor_close => 'Close';
-
-  @override
   String get characterEditor_clearAll => 'Clear All';
 
   @override
@@ -4915,9 +4912,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get characterEditor_clearAllConfirm =>
       'Are you sure you want to delete all characters? This action cannot be undone.';
-
-  @override
-  String get characterEditor_editing => 'Editing';
 
   @override
   String get characterEditor_nameHint => 'Enter character name';
@@ -16156,4 +16150,129 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatgptCodex_providerFormNote =>
       'This provider signs in with a ChatGPT account and needs no address or API key. Sign-in opens after you save.';
+
+  @override
+  String get characterPanel_title => 'Characters';
+
+  @override
+  String get characterPanel_position => 'Position';
+
+  @override
+  String get characterPanel_positionAi => 'AI decides';
+
+  @override
+  String get characterPanel_positionManual => 'Place manually';
+
+  @override
+  String get characterPanel_adjust => 'Adjust';
+
+  @override
+  String get characterPanel_gridHint =>
+      'Tap a card to edit · the dot includes or leaves it out · long press to reorder · tap × twice to delete';
+
+  @override
+  String get characterPanel_emptyPrompt => 'No prompt yet';
+
+  @override
+  String characterPanel_include(String name) {
+    return 'Include $name';
+  }
+
+  @override
+  String characterPanel_leaveOut(String name) {
+    return 'Leave out $name';
+  }
+
+  @override
+  String characterPanel_delete(String name) {
+    return 'Delete $name';
+  }
+
+  @override
+  String characterPanel_deleteAgain(String name) {
+    return 'Tap again to delete $name';
+  }
+
+  @override
+  String characterPanel_deleted(String name) {
+    return 'Deleted $name';
+  }
+
+  @override
+  String get characterPanel_addFromLibrary => 'Add from library';
+
+  @override
+  String characterPanel_editIndex(int index, int total) {
+    return 'Character $index of $total';
+  }
+
+  @override
+  String get characterPanel_notIncluded => 'Not in this generation';
+
+  @override
+  String get characterPanel_includeSwitch => 'Include';
+
+  @override
+  String get characterPanel_gender => 'Gender';
+
+  @override
+  String get characterPanel_positionAiValue => 'AI decides for every character';
+
+  @override
+  String get characterPanel_positionNotIncluded =>
+      'Not in this generation, so it takes no position';
+
+  @override
+  String characterPanel_positionValue(String cell, int x, int y) {
+    return 'Manual · $cell · $x% across, $y% down';
+  }
+
+  @override
+  String get characterPanel_place => 'Place';
+
+  @override
+  String get characterPanel_deleteCharacter => 'Delete character';
+
+  @override
+  String get characterPanel_placeTitle => 'Place characters';
+
+  @override
+  String characterPanel_placeReadout(String name, String cell, int x, int y) {
+    return '$name · $cell · $x% across, $y% down';
+  }
+
+  @override
+  String get characterPanel_noneIncluded =>
+      'No character is in this generation';
+
+  @override
+  String get characterPanel_snap => 'Snap';
+
+  @override
+  String get characterPanel_backdrop => 'Backdrop';
+
+  @override
+  String get characterPanel_spread => 'Spread out';
+
+  @override
+  String get characterPanel_handToAi => 'Let AI decide';
+
+  @override
+  String characterPanel_includeFirst(String name) {
+    return '$name is not in this generation. Include it on its card first.';
+  }
+
+  @override
+  String get characterPanel_previous => 'Previous character';
+
+  @override
+  String get characterPanel_next => 'Next character';
+
+  @override
+  String get characterPanel_canvas => 'Character position canvas';
+
+  @override
+  String characterPanel_marker(String name, int x, int y) {
+    return '$name, $x% across, $y% down';
+  }
 }

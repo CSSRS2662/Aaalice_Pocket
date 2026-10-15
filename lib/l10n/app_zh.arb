@@ -2145,11 +2145,9 @@
     }
   },
 
-  "characterEditor_close": "关闭",
   "characterEditor_clearAll": "清空所有",
   "characterEditor_clearAllTitle": "清空所有角色",
   "characterEditor_clearAllConfirm": "确定要删除所有角色吗？此操作无法撤销。",
-  "characterEditor_editing": "正在编辑",
   "characterEditor_nameHint": "输入角色名称",
   "characterEditor_enabled": "启用",
   "characterEditor_promptHint": "输入角色的正向提示词...",
@@ -7558,5 +7556,133 @@
       }
     }
   },
-  "chatgptCodex_providerFormNote": "这个服务商用 ChatGPT 账号登录，不需要地址和 API Key。保存后会打开登录。"
+  "chatgptCodex_providerFormNote": "这个服务商用 ChatGPT 账号登录，不需要地址和 API Key。保存后会打开登录。",
+  "characterPanel_title": "角色",
+  "characterPanel_position": "位置",
+  "characterPanel_positionAi": "AI 决定",
+  "characterPanel_positionManual": "手动摆放",
+  "characterPanel_adjust": "调整",
+  "characterPanel_gridHint": "点卡片编辑 · 圆点切换参与生成 · 长按拖动排序 · × 点两次删除",
+  "characterPanel_emptyPrompt": "还没有提示词",
+  "characterPanel_include": "让「{name}」参与生成",
+  "@characterPanel_include": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_leaveOut": "让「{name}」不参与生成",
+  "@characterPanel_leaveOut": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_delete": "删除「{name}」",
+  "@characterPanel_delete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_deleteAgain": "再点一次删除「{name}」",
+  "@characterPanel_deleteAgain": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_deleted": "已删除「{name}」",
+  "@characterPanel_deleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_addFromLibrary": "从词库添加",
+  "characterPanel_editIndex": "第 {index} / {total} 个角色",
+  "@characterPanel_editIndex": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "characterPanel_notIncluded": "未参与生成",
+  "characterPanel_includeSwitch": "参与",
+  "characterPanel_gender": "性别",
+  "characterPanel_positionAiValue": "AI 决定（所有角色）",
+  "characterPanel_positionNotIncluded": "未参与生成，不占位置",
+  "characterPanel_positionValue": "手动 · {cell} · 横 {x}% 纵 {y}%",
+  "@characterPanel_positionValue": {
+    "placeholders": {
+      "cell": {
+        "type": "String"
+      },
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  },
+  "characterPanel_place": "摆放",
+  "characterPanel_deleteCharacter": "删除角色",
+  "characterPanel_placeTitle": "摆放位置",
+  "characterPanel_placeReadout": "{name} · {cell} · 横 {x}% 纵 {y}%",
+  "@characterPanel_placeReadout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "cell": {
+        "type": "String"
+      },
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  },
+  "characterPanel_noneIncluded": "没有参与生成的角色",
+  "characterPanel_snap": "吸附",
+  "characterPanel_backdrop": "底图",
+  "characterPanel_spread": "一键排开",
+  "characterPanel_handToAi": "交给 AI 决定",
+  "characterPanel_includeFirst": "「{name}」未参与生成，先在卡片上启用",
+  "@characterPanel_includeFirst": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_previous": "上一个角色",
+  "characterPanel_next": "下一个角色",
+  "characterPanel_canvas": "角色位置画布",
+  "characterPanel_marker": "{name}，横 {x}%，纵 {y}%",
+  "@characterPanel_marker": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  }
 }

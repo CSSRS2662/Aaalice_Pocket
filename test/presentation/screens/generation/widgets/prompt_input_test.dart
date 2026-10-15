@@ -999,20 +999,13 @@ void main() {
 
     expect(find.text('测试角色'), findsWidgets);
     expect(find.byType(CharacterPromptEditor), findsNothing);
-    expect(
-      tester
-          .getSize(
-            find.byKey(
-              const ValueKey('generation_mobile_character_manager_sheet'),
-            ),
-          )
-          .height,
-      greaterThan(600),
-    );
+    final panel = find.byKey(const ValueKey('character-panel'));
+    expect(panel, findsOneWidget);
+    expect(tester.getSize(panel).height, greaterThan(560));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('手机已有角色时添加菜单仍可新建角色', (tester) async {
+  testWidgets('手机已有角色时添加卡仍可新建角色', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(380, 800);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -1029,25 +1022,22 @@ void main() {
       find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
     );
     await tester.pumpAndSettle();
-    final sheet = find.byKey(
-      const ValueKey('generation_mobile_character_manager_sheet'),
-    );
-    final l10n = AppLocalizations.of(tester.element(sheet))!;
 
-    await tester.tap(find.byKey(const Key('character-add-menu')));
+    await tester.tap(find.byKey(const ValueKey('character_panel_add_tile')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(l10n.characterEditor_addMale));
+    await tester.tap(find.byKey(const ValueKey('character-panel-add-male')));
     await tester.pumpAndSettle();
 
-    expect(
-      container.read(characterPromptNotifierProvider).characters,
-      hasLength(2),
-    );
+    final characters = container
+        .read(characterPromptNotifierProvider)
+        .characters;
+    expect(characters, hasLength(2));
+    expect(characters.last.effectiveGender, CharacterGender.male);
     expect(find.byType(CharacterPromptEditor), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('手机多角色管理使用全高 bottom sheet 并保持概览到编辑器状态', (tester) async {
+  testWidgets('手机角色面板从卡片进入编辑时高度不变，返回回到卡片', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(380, 800);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -1066,25 +1056,27 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final sheet = find.byKey(
-      const ValueKey('generation_mobile_character_manager_sheet'),
-    );
-    final formHeight = tester.getSize(sheet).height;
+    final panel = find.byKey(const ValueKey('character-panel'));
+    final height = tester.getSize(panel).height;
     expect(find.byKey(const ValueKey('adaptive-bottom-sheet')), findsOneWidget);
     expect(find.text('角色甲'), findsOneWidget);
     expect(find.text('角色乙'), findsOneWidget);
     expect(find.byType(CharacterPromptEditor), findsNothing);
-    expect(formHeight, greaterThan(600));
 
     await tester.tap(find.text('角色乙'));
     await tester.pumpAndSettle();
 
     expect(find.byType(CharacterPromptEditor), findsOneWidget);
-    expect(tester.getSize(sheet).height, formHeight);
+    expect(tester.getSize(panel).height, height);
+
+    await tester.tap(find.byKey(const ValueKey('character-panel-back')));
+    await tester.pumpAndSettle();
+    expect(find.byType(CharacterPromptEditor), findsNothing);
+    expect(find.text('角色甲'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('手机角色位置入口关闭管理层并显示预览画布', (tester) async {
+  testWidgets('手机手动摆放在面板内展开，画布比例跟随生成尺寸', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(380, 800);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -1100,6 +1092,7 @@ void main() {
     final notifier = container.read(characterPromptNotifierProvider.notifier);
     (notifier as _TestCharacterPromptNotifier).seed([
       CharacterPrompt.create(name: '角色甲', prompt: '1girl'),
+      CharacterPrompt.create(name: '角色乙', prompt: '1boy'),
     ]);
     await tester.pump();
 
@@ -1107,24 +1100,46 @@ void main() {
       find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
     );
     await tester.pumpAndSettle();
+    final panel = find.byKey(const ValueKey('character-panel'));
+    final gridHeight = tester.getSize(panel).height;
+    final l10n = AppLocalizations.of(tester.element(panel))!;
 
-    final sheet = find.byKey(
-      const ValueKey('generation_mobile_character_manager_sheet'),
-    );
-    expect(sheet, findsOneWidget);
-
-    final positionAction = find.byIcon(Icons.control_camera);
-    await tester.ensureVisible(positionAction);
-    await tester.pump();
-    await tester.tap(positionAction);
+    await tester.tap(find.text(l10n.characterPanel_positionManual));
     await tester.pumpAndSettle();
 
-    expect(sheet, findsNothing);
-    expect(container.read(characterPositionCanvasProvider), isTrue);
+    final picture = find.byKey(const ValueKey('character-place-picture'));
+    expect(picture, findsOneWidget);
+    expect(tester.getSize(panel).height, greaterThan(gridHeight));
+    expect(
+      container.read(characterPromptNotifierProvider).globalAiChoice,
+      isFalse,
+    );
+    expect(container.read(characterPositionCanvasProvider), isFalse);
+    final params = container.read(generationParamsNotifierProvider);
+    var size = tester.getSize(picture);
+    expect(
+      size.width / size.height,
+      closeTo(params.width / params.height, 0.01),
+    );
+
+    container
+        .read(generationParamsNotifierProvider.notifier)
+        .updateSize(1216, 832);
+    await tester.pumpAndSettle();
+    size = tester.getSize(picture);
+    expect(size.width / size.height, closeTo(1216 / 832, 0.01));
+
+    await tester.tap(find.byKey(const ValueKey('character-place-done')));
+    await tester.pumpAndSettle();
+    expect(picture, findsNothing);
+    expect(
+      find.byKey(const ValueKey('character-panel-adjust')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('手机空角色管理可直接添加并进入新角色编辑器', (tester) async {
+  testWidgets('手机空角色面板添加角色后直接进入编辑', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(380, 800);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -1136,33 +1151,22 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final sheet = find.byKey(
-      const ValueKey('generation_mobile_character_manager_sheet'),
-    );
-    final l10n = AppLocalizations.of(tester.element(sheet))!;
-    final addMenu = find.byKey(const Key('character-add-menu'));
-    expect(addMenu, findsOneWidget);
+    final panel = find.byKey(const ValueKey('character-panel'));
+    final l10n = AppLocalizations.of(tester.element(panel))!;
     expect(find.byType(CharacterPromptEditor), findsNothing);
-    final addEntryRect = tester.getRect(addMenu);
 
-    await tester.tap(addMenu);
+    await tester.tap(find.byKey(const ValueKey('character_panel_add_tile')));
     await tester.pumpAndSettle();
-    final addFemale = find.text(l10n.characterEditor_addFemale);
-    expect(addFemale, findsOneWidget);
-    expect(
-      tester.getRect(addFemale).top,
-      greaterThanOrEqualTo(addEntryRect.bottom),
-    );
-
-    await tester.tap(addFemale);
+    await tester.tap(find.byKey(const ValueKey('character-panel-add-female')));
     await tester.pumpAndSettle();
 
-    expect(
-      container.read(characterPromptNotifierProvider).characters,
-      hasLength(1),
-    );
+    final characters = container
+        .read(characterPromptNotifierProvider)
+        .characters;
+    expect(characters, hasLength(1));
+    expect(characters.single.name, l10n.character_number(1));
+    expect(characters.single.effectiveGender, CharacterGender.female);
     expect(find.byType(CharacterPromptEditor), findsOneWidget);
-    expect(tester.getSize(sheet).height, greaterThan(600));
     expect(tester.takeException(), isNull);
   });
 
@@ -2525,6 +2529,17 @@ class _TestCharacterPromptNotifier extends CharacterPromptNotifier {
 
   void seed(List<CharacterPrompt> characters) {
     state = CharacterPromptConfig(characters: characters);
+  }
+
+  @override
+  void setGlobalAiChoice(bool value) {
+    final next = state.copyWith(globalAiChoice: value);
+    state = value ? next : next.normalizeCustomPositions();
+  }
+
+  @override
+  void updateCharacter(CharacterPrompt character) {
+    state = state.updateCharacter(character).normalizeCustomPositions();
   }
 
   @override

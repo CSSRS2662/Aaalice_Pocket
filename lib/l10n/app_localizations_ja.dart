@@ -4779,9 +4779,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get drop_processing => '画像を処理しています...';
 
   @override
-  String get characterEditor_close => '閉じる';
-
-  @override
   String get characterEditor_clearAll => 'すべてクリア';
 
   @override
@@ -4790,9 +4787,6 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get characterEditor_clearAllConfirm =>
       'すべてのキャラクターを削除しますか？この操作は元に戻せません。';
-
-  @override
-  String get characterEditor_editing => '編集中';
 
   @override
   String get characterEditor_nameHint => 'キャラクター名を入力してください';
@@ -15724,4 +15718,127 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get chatgptCodex_providerFormNote =>
       'このプロバイダーは ChatGPT アカウントでサインインするため、アドレスと API キーは不要です。保存後にサインインが開きます。';
+
+  @override
+  String get characterPanel_title => 'キャラクター';
+
+  @override
+  String get characterPanel_position => '位置';
+
+  @override
+  String get characterPanel_positionAi => 'AIにおまかせ';
+
+  @override
+  String get characterPanel_positionManual => '手動で配置';
+
+  @override
+  String get characterPanel_adjust => '調整';
+
+  @override
+  String get characterPanel_gridHint =>
+      'カードをタップで編集・丸で生成への参加を切替・長押しで並べ替え・× を2回タップで削除';
+
+  @override
+  String get characterPanel_emptyPrompt => 'プロンプトはまだありません';
+
+  @override
+  String characterPanel_include(String name) {
+    return '「$name」を生成に含める';
+  }
+
+  @override
+  String characterPanel_leaveOut(String name) {
+    return '「$name」を生成から外す';
+  }
+
+  @override
+  String characterPanel_delete(String name) {
+    return '「$name」を削除';
+  }
+
+  @override
+  String characterPanel_deleteAgain(String name) {
+    return 'もう一度タップで「$name」を削除';
+  }
+
+  @override
+  String characterPanel_deleted(String name) {
+    return '「$name」を削除しました';
+  }
+
+  @override
+  String get characterPanel_addFromLibrary => 'ライブラリから追加';
+
+  @override
+  String characterPanel_editIndex(int index, int total) {
+    return '$total 人中 $index 人目';
+  }
+
+  @override
+  String get characterPanel_notIncluded => '生成に不参加';
+
+  @override
+  String get characterPanel_includeSwitch => '参加';
+
+  @override
+  String get characterPanel_gender => '性別';
+
+  @override
+  String get characterPanel_positionAiValue => 'AIにおまかせ（全キャラクター）';
+
+  @override
+  String get characterPanel_positionNotIncluded => '生成に不参加のため位置なし';
+
+  @override
+  String characterPanel_positionValue(String cell, int x, int y) {
+    return '手動 · $cell · 横 $x% 縦 $y%';
+  }
+
+  @override
+  String get characterPanel_place => '配置';
+
+  @override
+  String get characterPanel_deleteCharacter => 'キャラクターを削除';
+
+  @override
+  String get characterPanel_placeTitle => '位置を配置';
+
+  @override
+  String characterPanel_placeReadout(String name, String cell, int x, int y) {
+    return '$name · $cell · 横 $x% 縦 $y%';
+  }
+
+  @override
+  String get characterPanel_noneIncluded => '生成に参加するキャラクターがいません';
+
+  @override
+  String get characterPanel_snap => 'スナップ';
+
+  @override
+  String get characterPanel_backdrop => '背景画像';
+
+  @override
+  String get characterPanel_spread => '横に並べる';
+
+  @override
+  String get characterPanel_handToAi => 'AIにおまかせ';
+
+  @override
+  String characterPanel_includeFirst(String name) {
+    return '「$name」は生成に不参加です。先にカードで有効にしてください';
+  }
+
+  @override
+  String get characterPanel_previous => '前のキャラクター';
+
+  @override
+  String get characterPanel_next => '次のキャラクター';
+
+  @override
+  String get characterPanel_canvas => 'キャラクター位置キャンバス';
+
+  @override
+  String characterPanel_marker(String name, int x, int y) {
+    return '$name、横 $x%、縦 $y%';
+  }
 }

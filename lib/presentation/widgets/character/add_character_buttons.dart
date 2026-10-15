@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/utils/character_prompt_block_parser.dart';
 import '../../../data/models/character/character_prompt.dart';
 import '../../providers/character_prompt_provider.dart';
-import '../../providers/tag_library_page_provider.dart';
-import '../tag_library/tag_library_picker_dialog.dart';
+import 'character_library_import.dart';
 
 /// 添加角色按钮组件。
 ///
@@ -63,26 +61,7 @@ class AddCharacterButtons extends ConsumerWidget {
   }
 
   Future<void> _addFromLibrary(BuildContext context, WidgetRef ref) async {
-    final entry = await TagLibraryPickerDialog.show(context);
-
-    if (entry != null) {
-      final parsed = CharacterPromptBlockParser.parse(entry.content);
-      // 记录使用
-      ref.read(tagLibraryPageNotifierProvider.notifier).recordUsage(entry.id);
-
-      // 创建新角色
-      ref
-          .read(characterPromptNotifierProvider.notifier)
-          .addCharacter(
-            CharacterGender.female, // 默认女性
-            name: entry.displayName,
-            prompt: parsed.positivePrompt,
-            negativePrompt: parsed.hasNegativeBlock
-                ? parsed.negativePrompt
-                : null,
-            thumbnailPath: entry.thumbnail,
-          );
-    }
+    await addCharacterFromLibrary(context, ref);
   }
 }
 

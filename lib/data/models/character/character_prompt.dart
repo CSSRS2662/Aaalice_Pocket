@@ -289,6 +289,30 @@ class CharacterPrompt with _$CharacterPrompt {
     return CharacterGender.other;
   }
 
+  /// 改写提示词首个性别 tag，使 [effectiveGender] 变为 [target]。
+  ///
+  /// 其余 tag 及顺序不变；原首 tag 带数字前缀（1girl/1boy）时保留前缀，
+  /// 选「其他」时移除性别 tag。[gender] 字段同步更新。
+  CharacterPrompt withGender(CharacterGender target) {
+    if (effectiveGender == target) return copyWith(gender: target);
+    final tags = prompt.split(',');
+    final first = tags.indexWhere((tag) => tag.trim().isNotEmpty);
+    final leading = first < 0 ? '' : tags[first].trim().toLowerCase();
+    const genderTags = {'girl', '1girl', 'boy', '1boy'};
+    final hasGenderTag = genderTags.contains(leading);
+    final body = hasGenderTag
+        ? tags.sublist(first + 1).join(',').trimLeft()
+        : prompt.trimLeft();
+    final numbered = hasGenderTag && leading.startsWith('1');
+    final tag = switch (target) {
+      CharacterGender.female => numbered ? '1girl' : 'girl',
+      CharacterGender.male => numbered ? '1boy' : 'boy',
+      CharacterGender.other => null,
+    };
+    final nextPrompt = tag == null ? body : '$tag, $body';
+    return copyWith(gender: target, prompt: nextPrompt);
+  }
+
   /// 生成NAI格式的角色提示词
   /// [useAiPosition] 是否使用AI选择位置（全局设置）
   String toNaiPrompt({bool useAiPosition = false}) {

@@ -28,10 +28,14 @@ class CharacterPromptEditor extends ConsumerStatefulWidget {
   final CharacterPrompt character;
   final bool compact;
 
+  /// Focuses the input on mount and when the edited character changes.
+  final bool autofocus;
+
   const CharacterPromptEditor({
     super.key,
     required this.character,
     this.compact = false,
+    this.autofocus = true,
   });
 
   @override
@@ -56,7 +60,7 @@ class _CharacterPromptEditorState extends ConsumerState<CharacterPromptEditor> {
   void initState() {
     super.initState();
     // 编辑器只在进入编辑态时挂载，挂载即聚焦
-    _focusCurrentTab();
+    if (widget.autofocus) _focusCurrentTab();
   }
 
   @override
@@ -66,12 +70,27 @@ class _CharacterPromptEditorState extends ConsumerState<CharacterPromptEditor> {
     if (oldWidget.character.id != widget.character.id) {
       _promptController.text = widget.character.prompt;
       _negativeController.text = widget.character.negativePrompt;
-      _focusCurrentTab();
+      if (widget.autofocus) _focusCurrentTab();
       return;
     }
-    // 外部状态变化（随机生成、词库导入等）时同步到输入框。
-    // 输入框聚焦中绝不同步：生命周期内的 controller.text 赋值会重置
-    // 光标并打断键盘输入连接，聚焦时以用户输入为准
+    // 外部状态变化（随机生成、词库导入、改性别等）时同步到输入框。
+    // 赋值会经输入框的监听回写 provider，不能发生在构建阶段，推迟到帧后
+    if (_hasExternalChanges()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _syncExternalChanges();
+      });
+    }
+  }
+
+  // 输入框聚焦中绝不同步：controller.text 赋值会重置光标并打断键盘输入
+  // 连接，聚焦时以用户输入为准
+  bool _hasExternalChanges() =>
+      (!_promptFocusNode.hasFocus &&
+          widget.character.prompt != _promptController.text) ||
+      (!_negativeFocusNode.hasFocus &&
+          widget.character.negativePrompt != _negativeController.text);
+
+  void _syncExternalChanges() {
     if (!_promptFocusNode.hasFocus &&
         widget.character.prompt != _promptController.text) {
       _promptController.text = widget.character.prompt;

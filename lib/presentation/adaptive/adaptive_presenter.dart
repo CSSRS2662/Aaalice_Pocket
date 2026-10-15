@@ -32,6 +32,10 @@ class AdaptivePresenter {
     double? maxCenteredHeight,
     bool expandCompact = false,
     bool barrierDismissible = true,
+
+    /// Whether a compact sheet follows a downward drag to close. Forms with
+    /// their own drag gestures turn it off; the sheet then shows no handle.
+    bool? allowDragDismissal,
     bool requestFocus = true,
     bool restoreFocus = true,
     bool showHeader = true,
@@ -72,6 +76,7 @@ class AdaptivePresenter {
       maxHeight: maxCenteredHeight,
       expand: expandCompact,
       barrierDismissible: barrierDismissible,
+      allowDragDismissal: allowDragDismissal ?? barrierDismissible,
       requestFocus: requestFocus,
       showHeader: showHeader,
     );
@@ -90,6 +95,7 @@ class AdaptivePresenter {
     required WidgetBuilder titleBuilder,
     required AdaptivePanelBuilder builder,
     required bool barrierDismissible,
+    required bool allowDragDismissal,
     required bool requestFocus,
     required bool showHeader,
     required bool expand,
@@ -102,7 +108,7 @@ class AdaptivePresenter {
       isScrollControlled: true,
       useSafeArea: true,
       isDismissible: barrierDismissible,
-      enableDrag: barrierDismissible,
+      enableDrag: allowDragDismissal,
       requestFocus: requestFocus,
       backgroundColor: Colors.transparent,
       barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.4),
@@ -124,6 +130,7 @@ class AdaptivePresenter {
                     titleBuilder: titleBuilder,
                     scrollController: scrollController,
                     showHeader: showHeader,
+                    showHandle: allowDragDismissal,
                     child: builder(context, scrollController),
                   ),
                 )
@@ -131,6 +138,7 @@ class AdaptivePresenter {
                   titleBuilder: titleBuilder,
                   builder: builder,
                   showHeader: showHeader,
+                  showHandle: allowDragDismissal,
                   maxHeight: maxHeight,
                 ),
         );
@@ -334,12 +342,14 @@ class _BottomFormPanel extends StatefulWidget {
     required this.titleBuilder,
     required this.builder,
     required this.showHeader,
+    required this.showHandle,
     this.maxHeight,
   });
 
   final WidgetBuilder titleBuilder;
   final AdaptivePanelBuilder builder;
   final bool showHeader;
+  final bool showHandle;
   final double? maxHeight;
 
   @override
@@ -373,6 +383,7 @@ class _BottomFormPanelState extends State<_BottomFormPanel> {
               scrollController: _scrollController,
               contentSized: true,
               showHeader: widget.showHeader,
+              showHandle: widget.showHandle,
               child: widget.builder(context, _scrollController),
             ),
           ),
@@ -481,6 +492,7 @@ class _PanelSurface extends StatelessWidget {
     this.centered = false,
     this.contentSized = false,
     this.showHeader = true,
+    this.showHandle = true,
   });
 
   final WidgetBuilder titleBuilder;
@@ -489,6 +501,7 @@ class _PanelSurface extends StatelessWidget {
   final bool centered;
   final bool contentSized;
   final bool showHeader;
+  final bool showHandle;
 
   @override
   Widget build(BuildContext context) {
@@ -514,7 +527,7 @@ class _PanelSurface extends StatelessWidget {
                 ? MainAxisSize.min
                 : MainAxisSize.max,
             children: [
-              if (!centered)
+              if (!centered && showHandle)
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: Container(

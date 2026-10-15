@@ -2102,11 +2102,9 @@
   "api_error_network_hint": "サーバーに接続できません。ネットワークを確認してください",
   "common_close": "閉じる",
   "drop_processing": "画像を処理しています...",
-  "characterEditor_close": "閉じる",
   "characterEditor_clearAll": "すべてクリア",
   "characterEditor_clearAllTitle": "すべてのキャラクターをクリア",
   "characterEditor_clearAllConfirm": "すべてのキャラクターを削除しますか？この操作は元に戻せません。",
-  "characterEditor_editing": "編集中",
   "characterEditor_nameHint": "キャラクター名を入力してください",
   "characterEditor_enabled": "有効",
   "characterEditor_promptHint": "このキャラクターのプロンプトを入力してください...",
@@ -7512,5 +7510,133 @@
       }
     }
   },
-  "chatgptCodex_providerFormNote": "このプロバイダーは ChatGPT アカウントでサインインするため、アドレスと API キーは不要です。保存後にサインインが開きます。"
+  "chatgptCodex_providerFormNote": "このプロバイダーは ChatGPT アカウントでサインインするため、アドレスと API キーは不要です。保存後にサインインが開きます。",
+  "characterPanel_title": "キャラクター",
+  "characterPanel_position": "位置",
+  "characterPanel_positionAi": "AIにおまかせ",
+  "characterPanel_positionManual": "手動で配置",
+  "characterPanel_adjust": "調整",
+  "characterPanel_gridHint": "カードをタップで編集・丸で生成への参加を切替・長押しで並べ替え・× を2回タップで削除",
+  "characterPanel_emptyPrompt": "プロンプトはまだありません",
+  "characterPanel_include": "「{name}」を生成に含める",
+  "@characterPanel_include": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_leaveOut": "「{name}」を生成から外す",
+  "@characterPanel_leaveOut": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_delete": "「{name}」を削除",
+  "@characterPanel_delete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_deleteAgain": "もう一度タップで「{name}」を削除",
+  "@characterPanel_deleteAgain": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_deleted": "「{name}」を削除しました",
+  "@characterPanel_deleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_addFromLibrary": "ライブラリから追加",
+  "characterPanel_editIndex": "{total} 人中 {index} 人目",
+  "@characterPanel_editIndex": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "characterPanel_notIncluded": "生成に不参加",
+  "characterPanel_includeSwitch": "参加",
+  "characterPanel_gender": "性別",
+  "characterPanel_positionAiValue": "AIにおまかせ（全キャラクター）",
+  "characterPanel_positionNotIncluded": "生成に不参加のため位置なし",
+  "characterPanel_positionValue": "手動 · {cell} · 横 {x}% 縦 {y}%",
+  "@characterPanel_positionValue": {
+    "placeholders": {
+      "cell": {
+        "type": "String"
+      },
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  },
+  "characterPanel_place": "配置",
+  "characterPanel_deleteCharacter": "キャラクターを削除",
+  "characterPanel_placeTitle": "位置を配置",
+  "characterPanel_placeReadout": "{name} · {cell} · 横 {x}% 縦 {y}%",
+  "@characterPanel_placeReadout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "cell": {
+        "type": "String"
+      },
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  },
+  "characterPanel_noneIncluded": "生成に参加するキャラクターがいません",
+  "characterPanel_snap": "スナップ",
+  "characterPanel_backdrop": "背景画像",
+  "characterPanel_spread": "横に並べる",
+  "characterPanel_handToAi": "AIにおまかせ",
+  "characterPanel_includeFirst": "「{name}」は生成に不参加です。先にカードで有効にしてください",
+  "@characterPanel_includeFirst": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterPanel_previous": "前のキャラクター",
+  "characterPanel_next": "次のキャラクター",
+  "characterPanel_canvas": "キャラクター位置キャンバス",
+  "characterPanel_marker": "{name}、横 {x}%、縦 {y}%",
+  "@characterPanel_marker": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  }
 }

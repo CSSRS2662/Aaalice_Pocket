@@ -17,6 +17,7 @@ import '../../providers/generation/image_generation_selectors.dart';
 import '../../providers/image_generation_provider.dart';
 import '../common/composition_guide.dart';
 import '../common/decoded_memory_image.dart';
+import 'character_marker.dart';
 import 'composition_guide_button.dart';
 
 /// 芯片显示信息：性别符号 + 显示名
@@ -216,14 +217,8 @@ class _CharacterPositionCanvasViewState
                     ),
                   )
                 else
-                  for (var i = 0; i < config.characters.length; i++)
-                    _buildAnchor(
-                      context,
-                      config,
-                      config.characters[i],
-                      i,
-                      size,
-                    ),
+                  for (final character in config.characters)
+                    _buildAnchor(context, config, character, size),
                 // 参考线压在锚点之上，才看得清锚点落在哪条线的哪一侧
                 CompositionGuideOverlay(
                   mode: guide.mode,
@@ -286,7 +281,6 @@ class _CharacterPositionCanvasViewState
     BuildContext context,
     CharacterPromptConfig config,
     CharacterPrompt character,
-    int index,
     Size canvasSize,
   ) {
     final selectedId = ref.watch(selectedCharacterIdProvider);
@@ -362,7 +356,7 @@ class _CharacterPositionCanvasViewState
             onPanCancel: () => _commitDrag(character),
             child: _AnchorDot(
               character: character,
-              index: index,
+              colors: CharacterMarkerPalette.of(config.characters, character),
               diameter: diameter,
               emphasized: isSelected || isDragging,
             ),
@@ -564,7 +558,7 @@ class _ChipBar extends ConsumerWidget {
             for (var i = 0; i < characters.length; i++) ...[
               _CharacterChip(
                 character: characters[i],
-                index: i,
+                colors: CharacterMarkerPalette.of(characters, characters[i]),
                 selected: characters[i].id == selectedId,
                 onTap: () => ref
                     .read(selectedCharacterIdProvider.notifier)
@@ -579,16 +573,16 @@ class _ChipBar extends ConsumerWidget {
   }
 }
 
-/// 单个角色切换芯片：序号 + 性别符号（依提示词首 tag）+ 显示名
+/// 单个角色切换芯片：角色色盘与性别符号 + 显示名
 class _CharacterChip extends StatelessWidget {
   final CharacterPrompt character;
-  final int index;
+  final CharacterMarkerColors colors;
   final bool selected;
   final VoidCallback onTap;
 
   const _CharacterChip({
     required this.character,
-    required this.index,
+    required this.colors,
     required this.selected,
     required this.onTap,
   });
@@ -619,19 +613,13 @@ class _CharacterChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '${index + 1}',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: foreground,
-                fontWeight: FontWeight.w600,
-              ),
+            CharacterMarkerDisc(
+              colors: colors,
+              diameter: 18,
+              outlined: !character.enabled,
             ),
-            if (display.genderIcon != null) ...[
-              const SizedBox(width: 3),
-              Icon(display.genderIcon, size: 14, color: foreground),
-            ],
             if (display.label != null) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 120),
                 child: Text(
@@ -651,30 +639,19 @@ class _CharacterChip extends StatelessWidget {
   }
 }
 
-/// 锚点圆点：性别色填充（词库角色显示圆形缩略图）+ 序号 + 白描边
+/// 锚点圆点：角色色填充（词库角色显示圆形缩略图）+ 性别符号 + 白描边
 class _AnchorDot extends StatelessWidget {
   final CharacterPrompt character;
-  final int index;
+  final CharacterMarkerColors colors;
   final double diameter;
   final bool emphasized;
 
   const _AnchorDot({
     required this.character,
-    required this.index,
+    required this.colors,
     required this.diameter,
     required this.emphasized,
   });
-
-  static Color _genderColor(CharacterGender gender) {
-    switch (gender) {
-      case CharacterGender.female:
-        return const Color(0xFFEC4899);
-      case CharacterGender.male:
-        return const Color(0xFF3B82F6);
-      case CharacterGender.other:
-        return const Color(0xFF8B5CF6);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -688,7 +665,7 @@ class _AnchorDot extends StatelessWidget {
       width: diameter,
       height: diameter,
       decoration: BoxDecoration(
-        color: _genderColor(character.effectiveGender),
+        color: colors.fill,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: emphasized ? 2.5 : 2),
         boxShadow: const [
@@ -714,15 +691,14 @@ class _AnchorDot extends StatelessWidget {
               ),
               errorBuilder: (context, error, stack) => const SizedBox.shrink(),
             ),
+          // 缩略图上压一层角色色，符号在任意图上都看得清
+          if (hasThumbnail)
+            ColoredBox(color: colors.fill.withValues(alpha: 0.55)),
           Center(
-            child: Text(
-              '${index + 1}',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: diameter * 0.4,
-                fontWeight: FontWeight.w600,
-                shadows: const [Shadow(color: Colors.black87, blurRadius: 4)],
-              ),
+            child: CharacterGenderGlyph(
+              gender: colors.gender,
+              color: colors.ink,
+              size: (diameter - 5) * CharacterMarkerDisc.glyphRatio,
             ),
           ),
         ],

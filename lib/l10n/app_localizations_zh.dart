@@ -4685,9 +4685,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get drop_processing => '正在解析图片...';
 
   @override
-  String get characterEditor_close => '关闭';
-
-  @override
   String get characterEditor_clearAll => '清空所有';
 
   @override
@@ -4695,9 +4692,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get characterEditor_clearAllConfirm => '确定要删除所有角色吗？此操作无法撤销。';
-
-  @override
-  String get characterEditor_editing => '正在编辑';
 
   @override
   String get characterEditor_nameHint => '输入角色名称';
@@ -15443,6 +15437,128 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get chatgptCodex_providerFormNote =>
       '这个服务商用 ChatGPT 账号登录，不需要地址和 API Key。保存后会打开登录。';
+
+  @override
+  String get characterPanel_title => '角色';
+
+  @override
+  String get characterPanel_position => '位置';
+
+  @override
+  String get characterPanel_positionAi => 'AI 决定';
+
+  @override
+  String get characterPanel_positionManual => '手动摆放';
+
+  @override
+  String get characterPanel_adjust => '调整';
+
+  @override
+  String get characterPanel_gridHint => '点卡片编辑 · 圆点切换参与生成 · 长按拖动排序 · × 点两次删除';
+
+  @override
+  String get characterPanel_emptyPrompt => '还没有提示词';
+
+  @override
+  String characterPanel_include(String name) {
+    return '让「$name」参与生成';
+  }
+
+  @override
+  String characterPanel_leaveOut(String name) {
+    return '让「$name」不参与生成';
+  }
+
+  @override
+  String characterPanel_delete(String name) {
+    return '删除「$name」';
+  }
+
+  @override
+  String characterPanel_deleteAgain(String name) {
+    return '再点一次删除「$name」';
+  }
+
+  @override
+  String characterPanel_deleted(String name) {
+    return '已删除「$name」';
+  }
+
+  @override
+  String get characterPanel_addFromLibrary => '从词库添加';
+
+  @override
+  String characterPanel_editIndex(int index, int total) {
+    return '第 $index / $total 个角色';
+  }
+
+  @override
+  String get characterPanel_notIncluded => '未参与生成';
+
+  @override
+  String get characterPanel_includeSwitch => '参与';
+
+  @override
+  String get characterPanel_gender => '性别';
+
+  @override
+  String get characterPanel_positionAiValue => 'AI 决定（所有角色）';
+
+  @override
+  String get characterPanel_positionNotIncluded => '未参与生成，不占位置';
+
+  @override
+  String characterPanel_positionValue(String cell, int x, int y) {
+    return '手动 · $cell · 横 $x% 纵 $y%';
+  }
+
+  @override
+  String get characterPanel_place => '摆放';
+
+  @override
+  String get characterPanel_deleteCharacter => '删除角色';
+
+  @override
+  String get characterPanel_placeTitle => '摆放位置';
+
+  @override
+  String characterPanel_placeReadout(String name, String cell, int x, int y) {
+    return '$name · $cell · 横 $x% 纵 $y%';
+  }
+
+  @override
+  String get characterPanel_noneIncluded => '没有参与生成的角色';
+
+  @override
+  String get characterPanel_snap => '吸附';
+
+  @override
+  String get characterPanel_backdrop => '底图';
+
+  @override
+  String get characterPanel_spread => '一键排开';
+
+  @override
+  String get characterPanel_handToAi => '交给 AI 决定';
+
+  @override
+  String characterPanel_includeFirst(String name) {
+    return '「$name」未参与生成，先在卡片上启用';
+  }
+
+  @override
+  String get characterPanel_previous => '上一个角色';
+
+  @override
+  String get characterPanel_next => '下一个角色';
+
+  @override
+  String get characterPanel_canvas => '角色位置画布';
+
+  @override
+  String characterPanel_marker(String name, int x, int y) {
+    return '$name，横 $x%，纵 $y%';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -20126,9 +20242,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get drop_processing => '正在解析圖片...';
 
   @override
-  String get characterEditor_close => '關閉';
-
-  @override
   String get characterEditor_clearAll => '清空所有';
 
   @override
@@ -20136,9 +20249,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get characterEditor_clearAllConfirm => '確定要刪除所有角色嗎？此操作無法撤銷。';
-
-  @override
-  String get characterEditor_editing => '正在編輯';
 
   @override
   String get characterEditor_nameHint => '輸入角色名稱';
@@ -30886,4 +30996,126 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get chatgptCodex_providerFormNote =>
       '這個服務商使用 ChatGPT 帳號登入，不需要位址與 API Key。儲存後會開啟登入。';
+
+  @override
+  String get characterPanel_title => '角色';
+
+  @override
+  String get characterPanel_position => '位置';
+
+  @override
+  String get characterPanel_positionAi => 'AI 決定';
+
+  @override
+  String get characterPanel_positionManual => '手動擺放';
+
+  @override
+  String get characterPanel_adjust => '調整';
+
+  @override
+  String get characterPanel_gridHint => '點卡片編輯 · 圓點切換參與生成 · 長按拖動排序 · × 點兩次刪除';
+
+  @override
+  String get characterPanel_emptyPrompt => '還沒有提示詞';
+
+  @override
+  String characterPanel_include(String name) {
+    return '讓「$name」參與生成';
+  }
+
+  @override
+  String characterPanel_leaveOut(String name) {
+    return '讓「$name」不參與生成';
+  }
+
+  @override
+  String characterPanel_delete(String name) {
+    return '刪除「$name」';
+  }
+
+  @override
+  String characterPanel_deleteAgain(String name) {
+    return '再點一次刪除「$name」';
+  }
+
+  @override
+  String characterPanel_deleted(String name) {
+    return '已刪除「$name」';
+  }
+
+  @override
+  String get characterPanel_addFromLibrary => '從詞庫新增';
+
+  @override
+  String characterPanel_editIndex(int index, int total) {
+    return '第 $index / $total 個角色';
+  }
+
+  @override
+  String get characterPanel_notIncluded => '未參與生成';
+
+  @override
+  String get characterPanel_includeSwitch => '參與';
+
+  @override
+  String get characterPanel_gender => '性別';
+
+  @override
+  String get characterPanel_positionAiValue => 'AI 決定（所有角色）';
+
+  @override
+  String get characterPanel_positionNotIncluded => '未參與生成，不佔位置';
+
+  @override
+  String characterPanel_positionValue(String cell, int x, int y) {
+    return '手動 · $cell · 橫 $x% 縱 $y%';
+  }
+
+  @override
+  String get characterPanel_place => '擺放';
+
+  @override
+  String get characterPanel_deleteCharacter => '刪除角色';
+
+  @override
+  String get characterPanel_placeTitle => '擺放位置';
+
+  @override
+  String characterPanel_placeReadout(String name, String cell, int x, int y) {
+    return '$name · $cell · 橫 $x% 縱 $y%';
+  }
+
+  @override
+  String get characterPanel_noneIncluded => '沒有參與生成的角色';
+
+  @override
+  String get characterPanel_snap => '吸附';
+
+  @override
+  String get characterPanel_backdrop => '底圖';
+
+  @override
+  String get characterPanel_spread => '一鍵排開';
+
+  @override
+  String get characterPanel_handToAi => '交給 AI 決定';
+
+  @override
+  String characterPanel_includeFirst(String name) {
+    return '「$name」未參與生成，先在卡片上啟用';
+  }
+
+  @override
+  String get characterPanel_previous => '上一個角色';
+
+  @override
+  String get characterPanel_next => '下一個角色';
+
+  @override
+  String get characterPanel_canvas => '角色位置畫布';
+
+  @override
+  String characterPanel_marker(String name, int x, int y) {
+    return '$name，橫 $x%，縱 $y%';
+  }
 }
