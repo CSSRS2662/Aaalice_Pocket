@@ -1,28 +1,35 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/agent/agent_types.dart';
-import '../../../core/autocomplete/autocomplete_providers.dart';
+import '../../../core/autocomplete/autocomplete_settings.dart';
 import '../../../core/autocomplete/completion_models.dart';
-import '../../../core/database/services/service_providers.dart';
-import '../../../core/services/smart_tag_recommendation_service.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../providers/autocomplete_services_provider.dart';
+import 'agent_tag_lookup.dart';
 import 'defined_agent_tool.dart';
 
-/// 标签数据工具集：基于内置 tag_catalog.db 与可选下载的中文字典 /
-/// 共现数据包，为提示词写作提供标签检索、中文翻译与共现推荐。
+/// 标签数据工具集：与提示词输入框的联想走同一套本地流程（内置标签库、拼音与
+/// 自然码双拼、中文译名、语义搜索、按上下文打分的相关标签），不联网。
 ///
-/// - `search_tags`：统一入口，mode = search（英文模糊搜标签）/ translate
-///   （中文→danbooru 标签，需中文字典）/ suggest（共现推荐，需数据包）；
-///   `queries` 批量查询，每项独立成组。
+/// - `search_tags`：统一入口，mode = search（英文、中文、拼音或描述查标签）/
+///   suggest（相关标签，可按角色、作品、一般分类筛选）；translate 与 search
+///   相同，保留给旧调用；`queries` 批量查询，每项独立成组。
 class TagToolbox {
-  TagToolbox(this._ref);
+  TagToolbox(this._ref, {AgentTagLookup Function()? lookup})
+    : _lookupOverride = lookup;
 
   final Ref _ref;
+  final AgentTagLookup Function()? _lookupOverride;
+
+  /// Related tags can be narrowed to these, as in the editor's filter.
+  static const _categoryNames = {
+    'character': TagCategory.character,
+    'copyright': TagCategory.copyright,
+    'general': TagCategory.general,
+  };
 
   static const int _maxBatchQueries = 10;
   static const Set<String> _modes = {'auto', 'search', 'translate', 'suggest'};
-
-  static final RegExp _chinesePattern = RegExp(r'[\u3400-\u9fff]');
 
   List<AgentTool> tools() {
     return [
@@ -31,14 +38,16 @@ class TagToolbox {
         label: 'Search Tags',
         description:
             'Look up danbooru tags in the built-in databases as a '
-            'reference. Modes: '
-            '"search" (default for English input) fuzzy-matches canonical '
-            'tags and aliases in the built-in catalog (always available); '
-            '"translate" maps a Chinese (or English) concept to danbooru '
-            'tags with Chinese meanings, requires the optional Chinese '
-            'dictionary; "suggest" recommends statistically related tags '
-            'for existing tags taken together as one context, requires the '
-            'optional co-occurrence data pack. Requirements: pass either '
+            'reference, with the same local search the prompt editor uses. '
+            'Modes: "search" (default) finds tags for an English tag or '
+            'alias, a Chinese word, pinyin, or a short description, and '
+            'returns each tag with its category, post count and Chinese '
+            'name; "translate" is the same as search. "suggest" recommends '
+            'tags that go with the given tags taken together: the first tag '
+            'is the anchor (Chinese or an alias is resolved), the others '
+            'weigh the ranking; pass "categories" to keep only characters, '
+            'series (copyright) or general tags, for example the characters '
+            'of a series. Requirements: pass either '
             '"query" (one term) or "queries" (up to $_maxBatchQueries terms '
             'resolved independently, each returned as its own group); '
             '"limit" 1-30 (default 10) caps every group. In search and '
@@ -73,8 +82,17 @@ class TagToolbox {
               'type': 'string',
               'enum': ['auto', 'search', 'translate', 'suggest'],
               'description':
-                  'auto (default) picks translate for Chinese '
-                  'input, otherwise search, per term.',
+                  'auto (default) and translate search; suggest lists '
+                  'related tags.',
+            },
+            'categories': {
+              'type': 'array',
+              'items': {
+                'type': 'string',
+                'enum': ['character', 'copyright', 'general'],
+              },
+              'description':
+                  'suggest only: keep related tags of these categories.',
             },
             'limit': {
               'type': 'integer',
@@ -102,6 +120,25 @@ class TagToolbox {
       );
     }
     final limit = ((args['limit'] as num?)?.toInt() ?? 10).clamp(1, 30);
+    final categories = <TagCategory>{};
+    if (args['categories'] case final Object raw?) {
+      if (raw is! List) {
+        return agentToolError(
+          'invalid_categories',
+          'Parameter "categories" must be an array.',
+        );
+      }
+      for (final name in raw) {
+        final category = _categoryNames[name];
+        if (category == null) {
+          return agentToolError(
+            'invalid_categories',
+            'Unknown category "$name". Use character / copyright / general.',
+          );
+        }
+        categories.add(category);
+      }
+    }
 
     final rawQueries = args['queries'];
     final batched = rawQueries != null;
@@ -143,9 +180,10 @@ class TagToolbox {
     }
 
     // 串行执行：底层 catalog / 共现服务都是懒初始化，并发首调会重复 initialize。
+    final lookup = _lookupOverride?.call() ?? _createLookup();
     final outcomes = <_TagQueryOutcome>[];
     for (final request in requests) {
-      outcomes.add(await _run(request, limit));
+      outcomes.add(await _run(lookup, request, limit, categories));
     }
 
     if (!batched && requests.length == 1) {
@@ -155,6 +193,7 @@ class TagToolbox {
       }
       return agentToolJsonResult({
         'ok': true,
+        if (only.anchor != null) 'anchor': only.anchor,
         'results': only.results,
         if (only.note != null) 'note': only.note,
       });
@@ -170,6 +209,7 @@ class TagToolbox {
           {
             'query': requests[index].term,
             'mode': requests[index].mode,
+            if (outcomes[index].anchor != null) 'anchor': outcomes[index].anchor,
             'results': outcomes[index].results,
             if (outcomes[index].note != null) 'note': outcomes[index].note,
             if (outcomes[index].errorCode != null) ...{
@@ -207,140 +247,111 @@ class TagToolbox {
     return requests;
   }
 
+  /// One local search serves English, Chinese and pinyin alike.
   static String _resolveMode(String requested, String term) =>
-      requested == 'auto'
-      ? (_chinesePattern.hasMatch(term) ? 'translate' : 'search')
-      : requested;
+      requested == 'suggest' ? 'suggest' : 'search';
 
-  Future<_TagQueryOutcome> _run(_TagQuery request, int limit) =>
-      switch (request.mode) {
-        'translate' => _translate(request.term, limit),
-        'suggest' => _suggest(request.term, limit),
-        _ => _search(request.term, limit),
-      };
+  AgentTagLookup _createLookup() => AgentTagLookup(
+    services: _ref.read(autocompleteServicesProvider),
+    settings: _ref.read(autocompleteSettingsProvider),
+  );
 
-  /// 内置词库模糊搜索（英文标签 + 别名，FTS5）。
-  Future<_TagQueryOutcome> _search(String query, int limit) async {
+  Future<_TagQueryOutcome> _run(
+    AgentTagLookup lookup,
+    _TagQuery request,
+    int limit,
+    Set<TagCategory> categories,
+  ) async {
+    final suggest = request.mode == 'suggest';
     try {
-      final repository = _ref.read(tagCatalogRepositoryProvider);
-      final token = query.replaceAll(' ', '_').toLowerCase();
-      final candidates = await repository.search(
-        CompletionQuery(
-          fullText: token,
-          cursorPosition: token.length,
-          token: token,
-          replacementRange: const TextReplacementRange(start: 0, end: 0),
-          existingTags: const {},
+      final AgentTagLookupResult result;
+      if (suggest) {
+        final tags = [
+          for (final part in request.term.split(','))
+            if (part.trim().isNotEmpty) part.trim(),
+        ];
+        if (tags.isEmpty) {
+          return const _TagQueryOutcome(
+            errorCode: 'invalid_query',
+            errorMessage: 'Parameter "query" needs at least one tag.',
+          );
+        }
+        result = await lookup.related(
+          tags,
           limit: limit,
-          locale: 'zh',
-        ),
-      );
-      if (candidates.isEmpty) {
-        return _TagQueryOutcome(note: 'No catalog match for "$query".');
+          categories: categories,
+        );
+      } else {
+        result = await lookup.search(request.term, limit: limit);
       }
       return _TagQueryOutcome(
         results: [
-          for (final candidate in candidates)
-            {
-              'tag': candidate.canonicalTag,
-              'category': candidate.category.name,
-              'post_count': candidate.postCount,
-              if (candidate.aliases.isNotEmpty) 'aliases': candidate.aliases,
-              if (candidate.translation != null)
-                'chinese': candidate.translation,
-            },
+          for (final candidate in result.candidates)
+            _candidateJson(candidate, related: suggest),
         ],
+        note: _note(request, result, suggest: suggest),
+        anchor: suggest ? result.relatedAnchor : null,
       );
     } catch (e) {
-      AppLogger.w('search_tags(search) failed: $e', 'AgentChat');
+      AppLogger.w('search_tags(${request.mode}) failed: $e', 'AgentChat');
       return _TagQueryOutcome(
-        errorCode: 'tag_search_failed',
-        errorMessage: 'Tag search failed: $e',
+        errorCode: suggest ? 'tag_suggestion_failed' : 'tag_search_failed',
+        errorMessage: 'Tag lookup failed: $e',
       );
     }
   }
 
-  /// 中文（或英文）→ danbooru 标签，依赖可选下载的 ffdkj 中文字典。
-  Future<_TagQueryOutcome> _translate(String query, int limit) async {
-    try {
-      final dataSource = await _ref.read(translationDataSourceProvider.future);
-      final matches = await dataSource.search(query, limit: limit);
-      if (matches.isEmpty) {
-        return _TagQueryOutcome(
-          note:
-              'No translation match for "$query". If Chinese input '
-              'keeps returning nothing, the Chinese dictionary may not be '
-              'installed yet (download it in Settings).',
-        );
-      }
-      return _TagQueryOutcome(
-        results: [
-          for (final match in matches)
-            {
-              'tag': match.tag,
-              'chinese': match.translation,
-              'category': match.category,
-              'post_count': match.count,
-            },
-        ],
-      );
-    } catch (e) {
-      AppLogger.w('search_tags(translate) failed: $e', 'AgentChat');
-      return _TagQueryOutcome(
-        errorCode: 'tag_translation_failed',
-        errorMessage:
-            'Tag translation failed: $e (the Chinese dictionary may not be '
-            'installed)',
-      );
-    }
-  }
+  static Map<String, dynamic> _candidateJson(
+    CompletionCandidate candidate, {
+    required bool related,
+  }) => {
+    'tag': candidate.canonicalTag,
+    'category': candidate.category.name,
+    'post_count': candidate.postCount,
+    if (candidate.translation case final chinese? when chinese.isNotEmpty)
+      'chinese': chinese,
+    if (candidate.matchedAlias case final alias?) 'matched_alias': alias,
+    // How a non-literal row matched, so the model can weigh it.
+    if (_looseMatches.contains(candidate.matchKind))
+      'match': candidate.matchKind.name,
+    if (related && candidate.cooccurrenceCount != null)
+      'cooccurrence': candidate.cooccurrenceCount,
+  };
 
-  /// 共现推荐：基于一个或多个已有标签推荐统计上强相关的标签。
-  Future<_TagQueryOutcome> _suggest(String query, int limit) async {
-    try {
-      final service = await _ref.read(
-        smartTagRecommendationServiceProvider.future,
-      );
-      final inputTags = [
-        for (final part in query.split(','))
-          if (part.trim().isNotEmpty) part.trim().replaceAll(' ', '_'),
-      ];
-      if (inputTags.isEmpty) {
-        return const _TagQueryOutcome(
-          errorCode: 'invalid_query',
-          errorMessage: 'Parameter "query" needs at least one tag.',
-        );
-      }
-      final recommendations = await service.getRecommendations(
-        inputTags: inputTags,
-        limit: limit,
-      );
-      if (recommendations.isEmpty) {
-        return const _TagQueryOutcome(
-          note:
-              'No suggestions. The co-occurrence data pack may not be '
-              'installed (download it in Settings).',
-        );
-      }
-      return _TagQueryOutcome(
-        results: [
-          for (final recommendation in recommendations)
-            {
-              'tag': recommendation.tag,
-              if (recommendation.translation != null)
-                'chinese': recommendation.translation,
-              'score': double.parse(recommendation.score.toStringAsFixed(4)),
-              'cooccurrence': recommendation.cooccurrence,
-            },
-        ],
-      );
-    } catch (e) {
-      AppLogger.w('search_tags(suggest) failed: $e', 'AgentChat');
-      return _TagQueryOutcome(
-        errorCode: 'tag_suggestion_failed',
-        errorMessage: 'Tag suggestion failed: $e',
-      );
+  static const _looseMatches = {
+    CompletionMatchKind.fullText,
+    CompletionMatchKind.homophone,
+    CompletionMatchKind.spellCorrected,
+    CompletionMatchKind.englishVariant,
+    CompletionMatchKind.pinyin,
+    CompletionMatchKind.shuangpin,
+    CompletionMatchKind.crossLingual,
+    CompletionMatchKind.approximate,
+    CompletionMatchKind.fuzzyPinyin,
+    CompletionMatchKind.pinyinInitials,
+  };
+
+  static String? _note(
+    _TagQuery request,
+    AgentTagLookupResult result, {
+    required bool suggest,
+  }) {
+    if (suggest && result.relatedAnchor == null) {
+      return 'The first tag of "${request.term}" is not an exact tag, so '
+          'these are search results for it. Call suggest again with one of '
+          'them first.';
     }
+    if (result.candidates.isNotEmpty) {
+      return result.partial
+          ? 'Meaning search did not finish in time; results may be incomplete.'
+          : null;
+    }
+    if (suggest) {
+      return 'No related tags for "${request.term}". The co-occurrence data '
+          'pack may still be downloading, or the tag is too rare to have '
+          'related data.';
+    }
+    return 'No catalog match for "${request.term}".';
   }
 }
 
@@ -358,7 +369,11 @@ class _TagQueryOutcome {
     this.note,
     this.errorCode,
     this.errorMessage,
+    this.anchor,
   });
+
+  /// The canonical tag suggestions were scored for.
+  final String? anchor;
 
   final List<Map<String, dynamic>> results;
   final String? note;

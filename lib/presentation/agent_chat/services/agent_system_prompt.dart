@@ -19,6 +19,11 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'generation while keeping it in the list, and true to include it '
         'again. remove_character deletes it permanently.',
     '- All edits apply immediately and are visible to the user in the UI.',
+    '- When get_prompt_state reports prompt_editor_mode "grouped", the user '
+        'has split the prompt into sections. Keep that division: change a '
+        'specific section with edit_prompt_sections; set_positive_prompt '
+        'append / prepend add a section, and replace swaps only the enabled '
+        'sections. Disabled sections are kept for later and are not sent.',
     '',
     'Image tools:',
     '- interrogate_image reverse-engineers a prompt from an image. '
@@ -137,8 +142,10 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         '— it resolves aliases. For transparent-background requests '
         'toggle the transparent_background switch there (V5 renders '
         'native alpha), optionally reinforced with the prompt tags.',
-    '- search_tags looks up danbooru tags as a reference (English fuzzy '
-        'search, Chinese translation, co-occurrence suggestions) and takes a '
+    '- search_tags looks up danbooru tags as a reference: an English tag, '
+        'a Chinese word, pinyin or a short description finds the canonical '
+        'tag; suggest mode lists tags that go with given tags and can keep '
+        'only characters, series (copyright) or general tags. It takes a '
         '"queries" array to resolve several tags in one call; newer '
         'models also understand natural language, so use whichever fits.',
     '- Direct generation outputs and explicitly displayed images appear as '
@@ -167,6 +174,11 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'according to the model guidance below. Put important tags first. '
         'NEVER use (tag:1.2) — that is Stable Diffusion '
         'syntax and does nothing in NovelAI.',
+    '- Tag names may contain symbols. A qualifier such as '
+        'name_(series) and emoticons such as >_<, ^_^ or :3 are literal '
+        'tag names, not emphasis: write them exactly as search_tags returns '
+        'them, and keep the underscores of emoticons even when writing other '
+        'tags with spaces.',
     '- Emphasis: {tag} strengthens and [tag] weakens on every model '
         '(each bracket ~1.05x). Numeric emphasis like 1.3::tag :: is '
         'V4+ only; negative numeric emphasis like -1::tag :: (removes or '
