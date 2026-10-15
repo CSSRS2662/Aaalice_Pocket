@@ -90,6 +90,11 @@ class StorageKeys {
       'image_comparison_follow_mouse';
   static const String promptEditorManualHeight = 'prompt_editor_manual_height';
   static const String promptGroupEditorState = 'prompt_group_editor_state_v1';
+
+  /// Per-character section state of grouped character prompts; local only,
+  /// like [promptGroupEditorState].
+  static const String characterPromptGroupState =
+      'character_prompt_group_state_v1';
   static const String promptMaximized = 'prompt_maximized';
   static const String generationLayoutMode = 'generation_layout_mode';
   static const String mobileGenerationGestureHintCompleted =

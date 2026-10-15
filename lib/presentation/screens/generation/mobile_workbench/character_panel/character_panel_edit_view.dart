@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/constants/api_constants.dart';
+import '../../../../../core/storage/local_storage_service.dart';
 import '../../../../../core/utils/character_prompt_block_parser.dart';
 import '../../../../../core/utils/localization_extension.dart';
 import '../../../../../data/models/character/character_prompt.dart';
+import '../../../../prompt_assistant/providers/prompt_assistant_history_provider.dart';
+import '../../../../prompt_assistant/widgets/prompt_assistant_quick_settings.dart';
 import '../../../../providers/character_prompt_provider.dart';
 import '../../../../providers/generation/generation_params_selectors.dart';
 import '../../../../providers/image_generation_provider.dart';
@@ -13,8 +17,12 @@ import '../../../../widgets/character/add_to_library_dialog.dart';
 import '../../../../widgets/character/character_marker.dart';
 import '../../../../widgets/character/inline_character_editor.dart';
 import '../../../../widgets/common/horizontal_segmented_control.dart';
+import '../../widgets/prompt_editor_mode_switch.dart';
+import '../../widgets/prompt_group_controller.dart';
+import '../../widgets/prompt_group_editor.dart';
 import 'character_panel_header.dart';
 import 'character_place_canvas.dart';
+import 'character_prompt_groups.dart';
 
 /// Edits one character inside the panel: name, gender, whether it takes part,
 /// its prompts and where it stands.
@@ -43,7 +51,6 @@ class CharacterPanelEditView extends ConsumerWidget {
     final index = characters.indexWhere((item) => item.id == characterId);
     if (index < 0) return const SizedBox.shrink();
     final character = characters[index];
-    final notifier = ref.read(characterPromptNotifierProvider.notifier);
     final subtitle = [
       l10n.characterPanel_editIndex(index + 1, characters.length),
       if (!character.enabled) l10n.characterPanel_notIncluded,
@@ -82,51 +89,215 @@ class CharacterPanelEditView extends ConsumerWidget {
           ],
         ),
         Expanded(
-          child: SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _IdentityRow(
-                  character: character,
-                  onGender: (gender) {
-                    // The editor only takes outside changes while unfocused.
-                    FocusManager.instance.primaryFocus?.unfocus();
-                    notifier.updateCharacter(character.withGender(gender));
-                  },
-                  onEnabled: (_) =>
-                      notifier.toggleCharacterEnabled(character.id),
-                ),
-                const SizedBox(height: 12),
-                CharacterPromptEditor(
-                  key: ValueKey('character-panel-editor-${character.id}'),
-                  character: character,
-                  autofocus: false,
-                ),
-                const SizedBox(height: 12),
-                _PositionCard(
-                  config: config,
-                  character: character,
-                  onPlace: onOpenPlace,
-                ),
-                const SizedBox(height: 12),
-                _EditActions(
-                  onSaveToLibrary: () => AddToLibraryDialog.show(
-                    context,
-                    name: character.name,
-                    content: CharacterPromptBlockParser.compose(
-                      positivePrompt: character.prompt,
-                      negativePrompt: character.negativePrompt,
-                    ),
-                  ),
-                  onDelete: () => onDelete(character),
-                ),
-              ],
-            ),
+          child: _EditBody(
+            key: ValueKey('character-panel-body-${character.id}'),
+            character: character,
+            config: config,
+            onOpenPlace: onOpenPlace,
+            onDelete: onDelete,
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Everything below the header for one character. It owns the character's
+/// prompt sections, so it is keyed by character and rebuilt when switching.
+class _EditBody extends ConsumerStatefulWidget {
+  const _EditBody({
+    super.key,
+    required this.character,
+    required this.config,
+    required this.onOpenPlace,
+    required this.onDelete,
+  });
+
+  final CharacterPrompt character;
+  final CharacterPromptConfig config;
+  final VoidCallback onOpenPlace;
+  final ValueChanged<CharacterPrompt> onDelete;
+
+  @override
+  ConsumerState<_EditBody> createState() => _EditBodyState();
+}
+
+class _EditBodyState extends ConsumerState<_EditBody> {
+  late final CharacterPromptNotifier _notifier = ref.read(
+    characterPromptNotifierProvider.notifier,
+  );
+  late final CharacterPromptGroups _groups = CharacterPromptGroups.load(
+    ref.read(localStorageServiceProvider),
+    widget.character,
+  );
+
+  @override
+  void dispose() {
+    _groups.dispose();
+    super.dispose();
+  }
+
+  CharacterPrompt? get _current => ref
+      .read(characterPromptNotifierProvider)
+      .findCharacterById(widget.character.id);
+
+  void _save(CharacterPrompt character) {
+    final ids = {
+      for (final item in ref.read(characterPromptNotifierProvider).characters)
+        item.id,
+    };
+    _groups.save(character, liveIds: ids);
+  }
+
+  /// Writes the included sections back as the character's prompt.
+  void _commit(bool negative) {
+    final character = _current;
+    if (character == null) return;
+    final text = _groups.groupsFor(negative).effectiveText;
+    final next = negative
+        ? character.copyWith(negativePrompt: text)
+        : character.copyWith(prompt: text);
+    _notifier.updateCharacter(next);
+    _save(next);
+  }
+
+  void _setMode(PromptEditorMode mode) {
+    final character = _current;
+    if (character == null) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      if (mode == PromptEditorMode.grouped) _groups.align(character);
+      _groups.grouped = mode == PromptEditorMode.grouped;
+    });
+    _save(character);
+  }
+
+  void _setGender(CharacterGender gender) {
+    // The text editor only takes outside changes while unfocused.
+    FocusManager.instance.primaryFocus?.unfocus();
+    final character = _current;
+    if (character == null) return;
+    if (!_groups.grouped) {
+      _notifier.updateCharacter(character.withGender(gender));
+      return;
+    }
+    // The first included section starts the prompt, so its first tag is the
+    // one that sets the gender; rewriting it keeps the other sections.
+    final sections = _groups.positive.sections;
+    final first =
+        sections
+            .where((s) => s.enabled && s.controller.text.trim().isNotEmpty)
+            .firstOrNull ??
+        sections.first;
+    first.controller.text = CharacterPrompt(
+      id: character.id,
+      name: character.name,
+      prompt: first.controller.text,
+    ).withGender(gender).prompt;
+    _groups.positive.setEnabled(first.id, true);
+    _commit(false);
+    final current = _current;
+    if (current != null) {
+      _notifier.updateCharacter(current.copyWith(gender: gender));
+    }
+  }
+
+  Widget _groupedBody(BuildContext context, bool negative) {
+    final id = widget.character.id;
+    return PromptGroupBoard(
+      groups: _groups.groupsFor(negative),
+      negative: negative,
+      gridKey: ValueKey(
+        negative
+            ? 'character_negative_prompt_group_grid'
+            : 'character_positive_prompt_group_grid',
+      ),
+      listKey: ValueKey(
+        negative
+            ? 'character_negative_prompt_groups'
+            : 'character_positive_prompt_groups',
+      ),
+      numericEmphasisEnabled: ImageModels.isV4Model(
+        ref.read(generationParamsNotifierProvider).model,
+      ),
+      onCommit: _commit,
+      onOpenAssistantSettings: () => PromptAssistantQuickSettings.show(context),
+      modeSessionId: negative
+          ? PromptHistorySessionIds.characterNegative(id)
+          : PromptHistorySessionIds.characterPrompt(id),
+      excludeFixedTags: false,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final character = widget.character;
+    // A prompt changed elsewhere (agent, import) regroups into one section.
+    ref.listen(
+      characterPromptNotifierProvider.select(
+        (config) => config.findCharacterById(character.id),
+      ),
+      (_, next) {
+        if (next != null && _groups.grouped) _groups.align(next);
+      },
+    );
+    final highlight = ref.watch(highlightEmphasisSettingsProvider);
+    final numericEmphasis = ImageModels.isV4Model(
+      ref.watch(
+        generationParamsNotifierProvider.select((params) => params.model),
+      ),
+    );
+    for (final groups in [_groups.positive, _groups.negative]) {
+      groups.configureHighlighting(
+        enabled: highlight,
+        numericEmphasisEnabled: numericEmphasis,
+      );
+    }
+    final grouped = _groups.grouped;
+    return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _IdentityRow(
+            character: character,
+            onGender: _setGender,
+            onEnabled: (_) => _notifier.toggleCharacterEnabled(character.id),
+          ),
+          const SizedBox(height: 12),
+          CharacterPromptEditor(
+            key: ValueKey('character-panel-editor-${character.id}'),
+            character: character,
+            autofocus: false,
+            modeSwitch: PromptEditorModeButton(
+              buttonKey: const ValueKey('character-panel-editor-mode'),
+              grouped: grouped,
+              iconOnly: true,
+              onSelected: _setMode,
+            ),
+            groupedBody: grouped ? _groupedBody : null,
+          ),
+          const SizedBox(height: 12),
+          _PositionCard(
+            config: widget.config,
+            character: character,
+            onPlace: widget.onOpenPlace,
+          ),
+          const SizedBox(height: 12),
+          _EditActions(
+            onSaveToLibrary: () => AddToLibraryDialog.show(
+              context,
+              name: character.name,
+              content: CharacterPromptBlockParser.compose(
+                positivePrompt: character.prompt,
+                negativePrompt: character.negativePrompt,
+              ),
+            ),
+            onDelete: () => widget.onDelete(character),
+          ),
+        ],
+      ),
     );
   }
 }

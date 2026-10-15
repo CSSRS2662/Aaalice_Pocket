@@ -48,6 +48,11 @@ class PromptGroupEditCallbacks {
 /// Opens one section as a full-height editor: a navigation row on top, the
 /// prompt field filling the middle and the editing tools at the bottom, so
 /// with the keyboard up the tools sit right above it.
+///
+/// [modeSessionId] names the prompt the sections belong to (text/tag mode and
+/// assistant history); it defaults to the main prompt of that side. Sections
+/// of other prompts pass [excludeFixedTags] false, since fixed tags only join
+/// the main prompt.
 Future<void> showPromptGroupEditSheet(
   BuildContext context, {
   required PromptGroupCollection groups,
@@ -55,6 +60,8 @@ Future<void> showPromptGroupEditSheet(
   required bool negative,
   required bool numericEmphasisEnabled,
   required PromptGroupEditCallbacks callbacks,
+  String? modeSessionId,
+  bool excludeFixedTags = true,
 }) {
   final current = ValueNotifier(sectionId);
   String? pendingDelete;
@@ -69,6 +76,8 @@ Future<void> showPromptGroupEditSheet(
       groups: groups,
       current: current,
       negative: negative,
+      modeSessionId: modeSessionId,
+      excludeFixedTags: excludeFixedTags,
       numericEmphasisEnabled: numericEmphasisEnabled,
       callbacks: callbacks,
       onDeleteRequested: (id) => pendingDelete = id,
@@ -85,6 +94,8 @@ class _PromptGroupEditor extends ConsumerStatefulWidget {
     required this.groups,
     required this.current,
     required this.negative,
+    required this.modeSessionId,
+    required this.excludeFixedTags,
     required this.numericEmphasisEnabled,
     required this.callbacks,
     required this.onDeleteRequested,
@@ -93,6 +104,8 @@ class _PromptGroupEditor extends ConsumerStatefulWidget {
   final PromptGroupCollection groups;
   final ValueNotifier<String> current;
   final bool negative;
+  final String? modeSessionId;
+  final bool excludeFixedTags;
   final bool numericEmphasisEnabled;
   final PromptGroupEditCallbacks callbacks;
   final ValueChanged<String> onDeleteRequested;
@@ -136,9 +149,11 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
     });
   }
 
-  String get _modeSessionId => widget.negative
-      ? PromptHistorySessionIds.generationNegative
-      : PromptHistorySessionIds.generationPrompt;
+  String get _modeSessionId =>
+      widget.modeSessionId ??
+      (widget.negative
+          ? PromptHistorySessionIds.generationNegative
+          : PromptHistorySessionIds.generationPrompt);
 
   /// The 联想 key shows only when related suggestions can come.
   bool get _suggestsRelated => ref.watch(
@@ -279,6 +294,7 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
       promptCompletionExclusions(
         ref,
         negative: widget.negative,
+        includeFixedTags: widget.excludeFixedTags,
         otherTexts: [
           for (final other in widget.groups.sections)
             if (other.id != section.id && other.enabled) other.controller.text,
@@ -354,7 +370,7 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
         enableSdSyntaxAutoConvert: ref.watch(
           sdSyntaxAutoConvertSettingsProvider,
         ),
-        enableComfyuiImport: !widget.negative,
+        enableComfyuiImport: callbacks.onComfyuiImport != null,
         enableTagMode: true,
         autocompleteConfig: AutocompleteConfig(
           showTranslation: true,

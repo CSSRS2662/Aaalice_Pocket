@@ -15,6 +15,7 @@ import 'character_panel_add_view.dart';
 import 'character_panel_edit_view.dart';
 import 'character_panel_grid_view.dart';
 import 'character_panel_toast.dart';
+import '../mobile_generation_header.dart';
 import 'character_place_view.dart';
 
 /// Opens the character panel from the prompt page's character button.
@@ -136,11 +137,17 @@ class _CharacterPanelState extends ConsumerState<CharacterPanel> {
     );
   }
 
+  /// The bottom sheet already stops this far below the status bar.
+  static const double _sheetTopGap = 16;
+
   double _height(BoxConstraints constraints) {
     final available = constraints.maxHeight;
     if (!context.adaptiveWindow.isCompact) return math.min(available, 720);
     if (_page == CharacterPanelPage.place) return available;
-    return math.min(available, math.max(available * 0.86, 420));
+    // Up to the bottom of the generation header, which stays in view above
+    // the sheet with the model and size.
+    const headerClearance = MobileGenerationHeader.toolbarHeight - _sheetTopGap;
+    return math.min(available, math.max(available - headerClearance, 420));
   }
 
   Widget _buildPage() {

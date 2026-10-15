@@ -9,18 +9,24 @@ class PromptEditorControlRow extends StatelessWidget {
     required this.sessionId,
     required this.leading,
     this.action,
+    this.showTagModeToggle = true,
   });
 
   final Object sessionId;
   final Widget leading;
   final Widget? action;
 
+  /// Off where the field below is not a text field, such as a section grid.
+  final bool showTagModeToggle;
+
   @override
   Widget build(BuildContext context) => Row(
     children: [
       Expanded(child: leading),
-      const SizedBox(width: 4),
-      PromptTagModeToggle(sessionId: sessionId),
+      if (showTagModeToggle) ...[
+        const SizedBox(width: 4),
+        PromptTagModeToggle(sessionId: sessionId),
+      ],
       if (action != null) ...[const SizedBox(width: 4), action!],
     ],
   );

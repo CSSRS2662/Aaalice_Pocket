@@ -93,6 +93,11 @@ class PromptGroupCollection extends ChangeNotifier {
         .map((section) => section.controller.text),
   );
 
+  /// Whether the included sections still add up to [prompt], ignoring the
+  /// separators at its ends that joining drops.
+  bool matchesPrompt(String prompt) =>
+      effectiveText == joinPromptSections([prompt]);
+
   void _insert(PromptGroupSection section, [int? index]) {
     if (index == null) {
       _sections.add(section);

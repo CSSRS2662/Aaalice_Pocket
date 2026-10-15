@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nai_launcher/core/constants/storage_keys.dart';
 import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/data/models/character/character_prompt.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
@@ -9,6 +12,7 @@ import 'package:nai_launcher/presentation/providers/character_place_options_prov
 import 'package:nai_launcher/presentation/providers/character_prompt_provider.dart';
 import 'package:nai_launcher/presentation/providers/image_generation_provider.dart';
 import 'package:nai_launcher/presentation/screens/generation/mobile_workbench/character_panel/character_panel.dart';
+import 'package:nai_launcher/presentation/screens/generation/widgets/prompt_group_tile.dart';
 import 'package:nai_launcher/presentation/widgets/character/inline_character_editor.dart';
 
 import '../../../../../helpers/memory_local_storage.dart';
@@ -81,6 +85,7 @@ Future<ProviderContainer> _pumpPanel(
   ),
   Size size = const Size(390, 844),
   double textScale = 1,
+  MemoryLocalStorage? storage,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -89,7 +94,9 @@ Future<ProviderContainer> _pumpPanel(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        localStorageServiceProvider.overrideWith((ref) => MemoryLocalStorage()),
+        localStorageServiceProvider.overrideWith(
+          (ref) => storage ?? MemoryLocalStorage(),
+        ),
         characterPromptNotifierProvider.overrideWith(() => _Characters(config)),
         characterPlaceOptionsProvider.overrideWith(
           (ref) => (snap: false, backdrop: false),
@@ -306,6 +313,81 @@ void main() {
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('grouped mode shows sections and writes them back', (
+    tester,
+  ) async {
+    final container = await _pumpPanel(tester);
+    await tester.tap(find.text('Alice'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('character-panel-editor-mode')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('character_positive_prompt_group_grid')),
+      findsOneWidget,
+    );
+    expect(find.byType(PromptGroupTile), findsOneWidget);
+
+    final dot = find.byWidgetPredicate(
+      (widget) =>
+          widget.key is ValueKey<String> &&
+          (widget.key! as ValueKey<String>).value.startsWith(
+            'prompt_group_enabled_',
+          ),
+    );
+    await tester.tap(dot);
+    await tester.pumpAndSettle();
+    final alice = container
+        .read(characterPromptNotifierProvider)
+        .findCharacterById('a')!;
+    expect(alice.prompt, '');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a gender change keeps the sections apart', (tester) async {
+    final storage = MemoryLocalStorage();
+    storage.values[StorageKeys.characterPromptGroupState] = jsonEncode({
+      'a': {
+        'mode': 'grouped',
+        'positivePrompt': 'girl, red hair',
+        'negativePrompt': '',
+        'positiveSections': [
+          {'id': 's1', 'text': 'girl'},
+          {'id': 's2', 'text': 'red hair'},
+        ],
+        'negativeSections': [
+          {'id': 'n1', 'text': ''},
+        ],
+      },
+    });
+    final container = await _pumpPanel(tester, storage: storage);
+    await tester.tap(find.text('Alice'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PromptGroupTile), findsNWidgets(2));
+
+    await tester.tap(find.text(_l10n(tester).characterEditor_addMale));
+    await tester.pumpAndSettle();
+
+    final alice = container
+        .read(characterPromptNotifierProvider)
+        .findCharacterById('a')!;
+    expect(alice.prompt, 'boy, red hair');
+    expect(alice.effectiveGender, CharacterGender.male);
+    expect(find.byType(PromptGroupTile), findsNWidgets(2));
+    final saved = jsonDecode(
+      storage.values[StorageKeys.characterPromptGroupState]! as String,
+    );
+    expect(saved['a']['positivePrompt'], 'boy, red hair');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('pages below the header leave it in view', (tester) async {
+    await _pumpPanel(tester);
+    final panel = tester.getRect(find.byKey(const ValueKey('character-panel')));
+    // 52 of header plus the sheet's own 16 gap above the panel.
+    expect(panel.top, closeTo(52, 1));
   });
 
   testWidgets('every page fits a 320 wide phone with 3x text', (tester) async {

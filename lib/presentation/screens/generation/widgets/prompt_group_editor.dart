@@ -17,7 +17,7 @@ import 'prompt_input_models.dart';
 /// Grouped prompt mode: a grid of section tiles, each edited in its own sheet.
 ///
 /// Every change to the sections is recombined into the generation prompt.
-class PromptGroupEditor extends ConsumerStatefulWidget {
+class PromptGroupEditor extends StatelessWidget {
   const PromptGroupEditor({
     super.key,
     required this.controller,
@@ -30,7 +30,70 @@ class PromptGroupEditor extends ConsumerStatefulWidget {
   final PromptInputViewData viewData;
 
   @override
-  ConsumerState<PromptGroupEditor> createState() => _PromptGroupEditorState();
+  Widget build(BuildContext context) {
+    final negative = controller.isNegativeMode;
+    return PromptGroupBoard(
+      groups: controller.groupsFor(negative),
+      negative: negative,
+      gridKey: ValueKey(
+        negative
+            ? 'generation_negative_prompt_group_grid'
+            : 'generation_positive_prompt_group_grid',
+      ),
+      listKey: ValueKey(
+        negative
+            ? 'generation_negative_prompt_groups'
+            : 'generation_positive_prompt_groups',
+      ),
+      numericEmphasisEnabled: viewData.numericEmphasisEnabled,
+      onCommit: (negative) {
+        final prompt = controller.commitGroupedPrompt(negative: negative);
+        if (negative) {
+          commands.updateNegativePrompt(prompt);
+        } else {
+          commands.updatePrompt(prompt);
+        }
+      },
+      onOpenAssistantSettings: commands.openAssistantSettings,
+      onComfyuiImport: negative ? null : commands.importComfyuiPrompt,
+    );
+  }
+}
+
+/// The section grid of one prompt with everything around it: the section
+/// editor sheet, the long-press menu and delete with undo.
+///
+/// [onCommit] recombines the prompt after any change. [modeSessionId] and
+/// [excludeFixedTags] describe whose prompt this is, see
+/// [showPromptGroupEditSheet].
+class PromptGroupBoard extends ConsumerStatefulWidget {
+  const PromptGroupBoard({
+    super.key,
+    required this.groups,
+    required this.negative,
+    required this.gridKey,
+    required this.listKey,
+    required this.numericEmphasisEnabled,
+    required this.onCommit,
+    required this.onOpenAssistantSettings,
+    this.onComfyuiImport,
+    this.modeSessionId,
+    this.excludeFixedTags = true,
+  });
+
+  final PromptGroupCollection groups;
+  final bool negative;
+  final Key gridKey;
+  final Key listKey;
+  final bool numericEmphasisEnabled;
+  final ValueChanged<bool> onCommit;
+  final VoidCallback onOpenAssistantSettings;
+  final PromptImportCallback? onComfyuiImport;
+  final String? modeSessionId;
+  final bool excludeFixedTags;
+
+  @override
+  ConsumerState<PromptGroupBoard> createState() => _PromptGroupBoardState();
 }
 
 /// A deletion that can still be undone from the floating bar.
@@ -42,15 +105,12 @@ class _PendingUndo {
   final bool negative;
 }
 
-class _PromptGroupEditorState extends ConsumerState<PromptGroupEditor> {
+class _PromptGroupBoardState extends ConsumerState<PromptGroupBoard> {
   static const Duration _undoDuration = Duration(seconds: 4);
   static const double _undoBarSpace = 72;
 
   _PendingUndo? _undo;
   Timer? _undoTimer;
-
-  PromptInputController get controller => widget.controller;
-  PromptInputCommands get commands => widget.commands;
 
   @override
   void dispose() {
@@ -60,25 +120,16 @@ class _PromptGroupEditorState extends ConsumerState<PromptGroupEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final negative = controller.isNegativeMode;
-    final groups = controller.groupsFor(negative);
+    final negative = widget.negative;
+    final groups = widget.groups;
     final grid = PromptGroupGrid(
-      key: ValueKey(
-        negative
-            ? 'generation_negative_prompt_group_grid'
-            : 'generation_positive_prompt_group_grid',
-      ),
+      key: widget.gridKey,
       groups: groups,
       onOpen: (id) => _open(groups, id, negative),
       onShowActions: (id) => _showActions(groups, id, negative),
       onToggleEnabled: (id) => _toggle(groups, id, negative),
       onDelete: (id) => _delete(groups, id, negative),
-      onReordered: () => _commit(negative),
-    );
-    final listKey = ValueKey(
-      negative
-          ? 'generation_negative_prompt_groups'
-          : 'generation_positive_prompt_groups',
+      onReordered: () => widget.onCommit(negative),
     );
     final undo = _undo != null && identical(_undo!.groups, groups)
         ? _undo
@@ -92,7 +143,7 @@ class _PromptGroupEditorState extends ConsumerState<PromptGroupEditor> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              KeyedSubtree(key: listKey, child: grid),
+              KeyedSubtree(key: widget.listKey, child: grid),
               _undoBar(undo, top: 12),
             ],
           );
@@ -103,7 +154,7 @@ class _PromptGroupEditorState extends ConsumerState<PromptGroupEditor> {
           children: [
             Positioned.fill(
               child: SingleChildScrollView(
-                key: listKey,
+                key: widget.listKey,
                 padding: EdgeInsets.only(
                   bottom: undo == null ? 0 : _undoBarSpace,
                 ),
@@ -146,29 +197,20 @@ class _PromptGroupEditorState extends ConsumerState<PromptGroupEditor> {
     );
   }
 
-  void _commit(bool negative) {
-    final prompt = controller.commitGroupedPrompt(negative: negative);
-    if (negative) {
-      commands.updateNegativePrompt(prompt);
-    } else {
-      commands.updatePrompt(prompt);
-    }
-  }
-
   void _toggle(PromptGroupCollection groups, String id, bool negative) {
     final section = groups.sectionById(id);
     if (section == null) return;
     groups.setEnabled(id, !section.enabled);
-    _commit(negative);
+    widget.onCommit(negative);
   }
 
   void _duplicate(PromptGroupCollection groups, String id, bool negative) {
-    if (groups.duplicate(id) != null) _commit(negative);
+    if (groups.duplicate(id) != null) widget.onCommit(negative);
   }
 
   void _moveToFront(PromptGroupCollection groups, String id, bool negative) {
     groups.move(id, 0);
-    _commit(negative);
+    widget.onCommit(negative);
   }
 
   /// Deletes at once; the floating bar offers undo for a few seconds instead
@@ -176,7 +218,7 @@ class _PromptGroupEditorState extends ConsumerState<PromptGroupEditor> {
   void _delete(PromptGroupCollection groups, String id, bool negative) {
     final removed = groups.remove(id);
     if (removed == null) return;
-    _commit(negative);
+    widget.onCommit(negative);
     if (!mounted) return;
     _undoTimer?.cancel();
     _undoTimer = Timer(_undoDuration, _dismissUndo);
@@ -194,7 +236,7 @@ class _PromptGroupEditorState extends ConsumerState<PromptGroupEditor> {
     _dismissUndo();
     if (undo == null) return;
     undo.groups.restoreRemoved(undo.removed);
-    _commit(undo.negative);
+    widget.onCommit(undo.negative);
   }
 
   Future<void> _open(PromptGroupCollection groups, String id, bool negative) {
@@ -204,17 +246,19 @@ class _PromptGroupEditorState extends ConsumerState<PromptGroupEditor> {
       groups: groups,
       sectionId: id,
       negative: negative,
-      numericEmphasisEnabled: widget.viewData.numericEmphasisEnabled,
+      numericEmphasisEnabled: widget.numericEmphasisEnabled,
+      modeSessionId: widget.modeSessionId,
+      excludeFixedTags: widget.excludeFixedTags,
       callbacks: PromptGroupEditCallbacks(
-        onChanged: () => _commit(negative),
+        onChanged: () => widget.onCommit(negative),
         onToggleEnabled: (id) => _toggle(groups, id, negative),
         onDuplicate: (id) => _duplicate(groups, id, negative),
         onMoveToFront: (id) => _moveToFront(groups, id, negative),
         onDelete: (id) {
           if (mounted) _delete(groups, id, negative);
         },
-        onOpenAssistantSettings: commands.openAssistantSettings,
-        onComfyuiImport: negative ? null : commands.importComfyuiPrompt,
+        onOpenAssistantSettings: widget.onOpenAssistantSettings,
+        onComfyuiImport: widget.onComfyuiImport,
       ),
     );
   }

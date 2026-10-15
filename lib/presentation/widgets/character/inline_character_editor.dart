@@ -31,11 +31,20 @@ class CharacterPromptEditor extends ConsumerStatefulWidget {
   /// Focuses the input on mount and when the edited character changes.
   final bool autofocus;
 
+  /// Shown after the positive/negative tabs, such as a single/grouped switch.
+  final Widget? modeSwitch;
+
+  /// Replaces the text field while set, for example with a section grid;
+  /// receives whether the negative tab is open.
+  final Widget Function(BuildContext context, bool negative)? groupedBody;
+
   const CharacterPromptEditor({
     super.key,
     required this.character,
     this.compact = false,
     this.autofocus = true,
+    this.modeSwitch,
+    this.groupedBody,
   });
 
   @override
@@ -116,7 +125,8 @@ class _CharacterPromptEditorState extends ConsumerState<CharacterPromptEditor> {
 
   void _focusCurrentTab() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      // A grouped body has no field to focus.
+      if (!mounted || widget.groupedBody != null) return;
       (_tabIndex == 0 ? _promptFocusNode : _negativeFocusNode).requestFocus();
     });
   }
@@ -163,7 +173,9 @@ class _CharacterPromptEditorState extends ConsumerState<CharacterPromptEditor> {
       children: [
         _buildEditorHeader(l10n, assistantSessionId),
         const SizedBox(height: 6),
-        if (_tabIndex == 0)
+        if (widget.groupedBody case final body?)
+          body(context, _tabIndex == 1)
+        else if (_tabIndex == 0)
           _buildPromptEditor(
             controller: _promptController,
             focusNode: _promptFocusNode,
@@ -189,8 +201,10 @@ class _CharacterPromptEditorState extends ConsumerState<CharacterPromptEditor> {
     final currentController = positive
         ? _promptController
         : _negativeController;
+    final grouped = widget.groupedBody != null;
     return PromptEditorControlRow(
       sessionId: sessionId,
+      showTagModeToggle: !grouped,
       leading: Row(
         children: [
           Flexible(
@@ -215,9 +229,13 @@ class _CharacterPromptEditorState extends ConsumerState<CharacterPromptEditor> {
               },
             ),
           ),
+          if (widget.modeSwitch case final modeSwitch?) ...[
+            const SizedBox(width: 6),
+            modeSwitch,
+          ],
         ],
       ),
-      action: currentController.text.isEmpty
+      action: grouped || currentController.text.isEmpty
           ? null
           : IconButton(
               key: const ValueKey('character-prompt-clear-button'),

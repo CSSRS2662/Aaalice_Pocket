@@ -19,9 +19,33 @@ class PromptEditorModeSwitch extends StatelessWidget {
   final bool iconOnly;
 
   @override
+  Widget build(BuildContext context) => PromptEditorModeButton(
+    buttonKey: const ValueKey('generation_prompt_editor_mode_switch'),
+    grouped: controller.isGroupedMode,
+    onSelected: commands.setEditorMode,
+    iconOnly: iconOnly,
+  );
+}
+
+/// Single-box or grouped editing as one button that shows the current mode;
+/// a tap asks for the other one.
+class PromptEditorModeButton extends StatelessWidget {
+  const PromptEditorModeButton({
+    super.key,
+    required this.grouped,
+    required this.onSelected,
+    this.buttonKey,
+    this.iconOnly = false,
+  });
+
+  final bool grouped;
+  final ValueChanged<PromptEditorMode> onSelected;
+  final Key? buttonKey;
+  final bool iconOnly;
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final grouped = controller.isGroupedMode;
     final label = grouped
         ? context.l10n.prompt_groupedEditorMode
         : context.l10n.prompt_singleEditorMode;
@@ -42,8 +66,8 @@ class PromptEditorModeSwitch extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        key: const ValueKey('generation_prompt_editor_mode_switch'),
-        onTap: () => commands.setEditorMode(nextMode),
+        key: buttonKey,
+        onTap: () => onSelected(nextMode),
         child: ConstrainedBox(
           constraints: BoxConstraints(
             minWidth: iconOnly ? 48 : 0,
