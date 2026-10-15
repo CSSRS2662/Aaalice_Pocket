@@ -12,6 +12,8 @@ import '../../../prompt_assistant/providers/prompt_assistant_config_provider.dar
 import '../../../prompt_assistant/services/prompt_assistant_service.dart';
 import '../../../widgets/common/themed_confirm_dialog.dart';
 import '../../../widgets/common/searchable_model_picker.dart';
+import '../widgets/chatgpt_codex_account_widgets.dart';
+import '../widgets/chatgpt_codex_login_sheet.dart';
 import '../widgets/prompt_assistant_settings_forms.dart';
 import '../widgets/assistant_task_thinking_field.dart';
 import '../widgets/settings_card.dart';
@@ -386,17 +388,23 @@ class PromptAssistantSettingsSection extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  [
-                    hasApiKey
-                        ? context.l10n.promptAssistant_apiKeyConfigured
-                        : context.l10n.promptAssistant_apiKeyNotConfigured,
-                    provider.allowImageInput
-                        ? context.l10n.promptAssistant_supportsImageInput
-                        : context.l10n.promptAssistant_textOnly,
-                  ].join(' · '),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                if (provider.protocol.usesChatGptLogin)
+                  ChatGptCodexAccountStatus(
+                    provider: provider,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  )
+                else
+                  Text(
+                    [
+                      hasApiKey
+                          ? context.l10n.promptAssistant_apiKeyConfigured
+                          : context.l10n.promptAssistant_apiKeyNotConfigured,
+                      provider.allowImageInput
+                          ? context.l10n.promptAssistant_supportsImageInput
+                          : context.l10n.promptAssistant_textOnly,
+                    ].join(' · '),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
               ],
             );
           }
@@ -408,15 +416,19 @@ class PromptAssistantSettingsSection extends ConsumerWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               alignment: WrapAlignment.end,
               children: [
-                TextButton.icon(
-                  onPressed: () => _showConnectionDialog(
-                    context,
-                    notifier,
-                    provider: provider,
+                // A ChatGPT login has no key or address to configure.
+                if (provider.protocol.usesChatGptLogin)
+                  ChatGptCodexAccountAction(provider: provider)
+                else
+                  TextButton.icon(
+                    onPressed: () => _showConnectionDialog(
+                      context,
+                      notifier,
+                      provider: provider,
+                    ),
+                    icon: const Icon(Icons.link, size: 16),
+                    label: Text(context.l10n.promptAssistant_connectionConfig),
                   ),
-                  icon: const Icon(Icons.link, size: 16),
-                  label: Text(context.l10n.promptAssistant_connectionConfig),
-                ),
                 IconButton(
                   icon: const Icon(Icons.download_for_offline_outlined),
                   tooltip: context.l10n.promptAssistant_pullModelList,
@@ -649,6 +661,12 @@ class PromptAssistantSettingsSection extends ConsumerWidget {
           ),
         );
       }
+    }
+
+    if (provider == null &&
+        next.protocol.usesChatGptLogin &&
+        context.mounted) {
+      await showChatGptCodexLoginSheet(context, next);
     }
   }
 

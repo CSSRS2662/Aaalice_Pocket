@@ -7325,5 +7325,169 @@
     "placeholders": {
       "cost": {}
     }
-  }
+  },
+  "chatgptCodex_quotaTitle": "ChatGPT subscription quota",
+  "chatgptCodex_windowShortTerm": "Short-term limit",
+  "chatgptCodex_windowLongTerm": "Long-term limit",
+  "chatgptCodex_windowWeekly": "Weekly limit",
+  "chatgptCodex_windowHours": "{hours}-hour limit",
+  "@chatgptCodex_windowHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_windowDays": "{days}-day limit",
+  "@chatgptCodex_windowDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_resetToday": "today at {time}",
+  "@chatgptCodex_resetToday": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_resetTomorrow": "tomorrow at {time}",
+  "@chatgptCodex_resetTomorrow": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_resetOn": "{date} at {time}",
+  "@chatgptCodex_resetOn": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "MMMEd"
+      },
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_durationDaysHours": "{days} d {hours} h",
+  "@chatgptCodex_durationDaysHours": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_durationHoursMinutes": "{hours} h {minutes} min",
+  "@chatgptCodex_durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_durationMinutes": "{minutes} min",
+  "@chatgptCodex_durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_resetWithRemaining": "Resets {when} (in about {duration})",
+  "@chatgptCodex_resetWithRemaining": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_remaining": "{percent} left",
+  "@chatgptCodex_remaining": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_plan": "{plan} plan",
+  "@chatgptCodex_plan": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_quotaEmpty": "No quota data yet. Send a message with a ChatGPT model, or tap Refresh.",
+  "chatgptCodex_limitReached": "A limit window is used up. Requests to ChatGPT models are refused until it resets.",
+  "chatgptCodex_quotaNote": "Percentages come from the ChatGPT server; reset times use this device's time zone.",
+  "chatgptCodex_updatedAt": "Updated {time}",
+  "@chatgptCodex_updatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_notSignedIn": "Not signed in to ChatGPT",
+  "chatgptCodex_needsLogin": "ChatGPT sign-in expired. Sign in again.",
+  "chatgptCodex_signedIn": "Signed in: {account}",
+  "@chatgptCodex_signedIn": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_signedInNoEmail": "Signed in to ChatGPT",
+  "chatgptCodex_signIn": "Sign in",
+  "chatgptCodex_signOut": "Sign out",
+  "chatgptCodex_loginTitle": "Sign in to ChatGPT",
+  "chatgptCodex_loginIntro": "Use your ChatGPT subscription (Plus, Pro and others) for the agent and the prompt assistant. Usage counts toward the account's Codex limits. Sign-in tokens stay on this device and are not synced.",
+  "chatgptCodex_methodDeviceCode": "Device code",
+  "chatgptCodex_methodDeviceCodeDescription": "Open the verification page in a browser and enter a one-time code. Switching apps does not interrupt it.",
+  "chatgptCodex_recommended": "Recommended",
+  "chatgptCodex_methodBrowser": "Browser sign-in",
+  "chatgptCodex_methodBrowserDescription": "Sign in in the browser; the app receives the result automatically.",
+  "chatgptCodex_finishing": "Finishing sign-in…",
+  "chatgptCodex_deviceCodeStep": "Open the verification page, sign in to ChatGPT and enter this code:",
+  "chatgptCodex_openVerificationPage": "Open verification page",
+  "chatgptCodex_waitingApproval": "Waiting for you to confirm in the browser…",
+  "chatgptCodex_deviceCodeNote": "The code is valid for 15 minutes.",
+  "chatgptCodex_browserStep": "The sign-in page is open in your browser. The result returns here when you finish.",
+  "chatgptCodex_portBusy": "Port 1455 on this device is in use, so the result cannot be received automatically. After signing in, paste the address from the browser's address bar below.",
+  "chatgptCodex_openLoginPage": "Open sign-in page again",
+  "chatgptCodex_waitingBrowser": "Waiting for the browser to return the result…",
+  "chatgptCodex_pasteRedirectLabel": "Address from the browser's address bar",
+  "chatgptCodex_pasteRedirectHint": "If the browser does not return, paste the full address of the page it stopped on.",
+  "chatgptCodex_pasteRedirectInvalid": "The address contains no valid sign-in code.",
+  "chatgptCodex_submitRedirect": "Submit",
+  "chatgptCodex_deviceCodeUnavailable": "Device code sign-in is not enabled for this account. Turn it on in ChatGPT's security settings, or use browser sign-in.",
+  "chatgptCodex_loginTimedOut": "Sign-in timed out. Try again.",
+  "chatgptCodex_loginFailed": "Sign-in failed: {error}",
+  "@chatgptCodex_loginFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_providerFormNote": "This provider signs in with a ChatGPT account and needs no address or API key. Sign-in opens after you save."
 }

@@ -27717,6 +27717,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{cost} Anlas'**
   String stamina_costAnlas(Object cost);
+
+  /// No description provided for @chatgptCodex_quotaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ChatGPT subscription quota'**
+  String get chatgptCodex_quotaTitle;
+
+  /// No description provided for @chatgptCodex_windowShortTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Short-term limit'**
+  String get chatgptCodex_windowShortTerm;
+
+  /// No description provided for @chatgptCodex_windowLongTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-term limit'**
+  String get chatgptCodex_windowLongTerm;
+
+  /// No description provided for @chatgptCodex_windowWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly limit'**
+  String get chatgptCodex_windowWeekly;
+
+  /// No description provided for @chatgptCodex_windowHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}-hour limit'**
+  String chatgptCodex_windowHours(int hours);
+
+  /// No description provided for @chatgptCodex_windowDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day limit'**
+  String chatgptCodex_windowDays(int days);
+
+  /// No description provided for @chatgptCodex_resetToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today at {time}'**
+  String chatgptCodex_resetToday(DateTime time);
+
+  /// No description provided for @chatgptCodex_resetTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'tomorrow at {time}'**
+  String chatgptCodex_resetTomorrow(DateTime time);
+
+  /// No description provided for @chatgptCodex_resetOn.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} at {time}'**
+  String chatgptCodex_resetOn(DateTime date, DateTime time);
+
+  /// No description provided for @chatgptCodex_durationDaysHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} d {hours} h'**
+  String chatgptCodex_durationDaysHours(int days, int hours);
+
+  /// No description provided for @chatgptCodex_durationHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String chatgptCodex_durationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @chatgptCodex_durationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String chatgptCodex_durationMinutes(int minutes);
+
+  /// No description provided for @chatgptCodex_resetWithRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets {when} (in about {duration})'**
+  String chatgptCodex_resetWithRemaining(String when, String duration);
+
+  /// No description provided for @chatgptCodex_remaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} left'**
+  String chatgptCodex_remaining(String percent);
+
+  /// No description provided for @chatgptCodex_plan.
+  ///
+  /// In en, this message translates to:
+  /// **'{plan} plan'**
+  String chatgptCodex_plan(String plan);
+
+  /// No description provided for @chatgptCodex_quotaEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No quota data yet. Send a message with a ChatGPT model, or tap Refresh.'**
+  String get chatgptCodex_quotaEmpty;
+
+  /// No description provided for @chatgptCodex_limitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'A limit window is used up. Requests to ChatGPT models are refused until it resets.'**
+  String get chatgptCodex_limitReached;
+
+  /// No description provided for @chatgptCodex_quotaNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentages come from the ChatGPT server; reset times use this device\'s time zone.'**
+  String get chatgptCodex_quotaNote;
+
+  /// No description provided for @chatgptCodex_updatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String chatgptCodex_updatedAt(DateTime time);
+
+  /// No description provided for @chatgptCodex_notSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in to ChatGPT'**
+  String get chatgptCodex_notSignedIn;
+
+  /// No description provided for @chatgptCodex_needsLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'ChatGPT sign-in expired. Sign in again.'**
+  String get chatgptCodex_needsLogin;
+
+  /// No description provided for @chatgptCodex_signedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in: {account}'**
+  String chatgptCodex_signedIn(String account);
+
+  /// No description provided for @chatgptCodex_signedInNoEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in to ChatGPT'**
+  String get chatgptCodex_signedInNoEmail;
+
+  /// No description provided for @chatgptCodex_signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get chatgptCodex_signIn;
+
+  /// No description provided for @chatgptCodex_signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get chatgptCodex_signOut;
+
+  /// No description provided for @chatgptCodex_loginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to ChatGPT'**
+  String get chatgptCodex_loginTitle;
+
+  /// No description provided for @chatgptCodex_loginIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your ChatGPT subscription (Plus, Pro and others) for the agent and the prompt assistant. Usage counts toward the account\'s Codex limits. Sign-in tokens stay on this device and are not synced.'**
+  String get chatgptCodex_loginIntro;
+
+  /// No description provided for @chatgptCodex_methodDeviceCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Device code'**
+  String get chatgptCodex_methodDeviceCode;
+
+  /// No description provided for @chatgptCodex_methodDeviceCodeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the verification page in a browser and enter a one-time code. Switching apps does not interrupt it.'**
+  String get chatgptCodex_methodDeviceCodeDescription;
+
+  /// No description provided for @chatgptCodex_recommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get chatgptCodex_recommended;
+
+  /// No description provided for @chatgptCodex_methodBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser sign-in'**
+  String get chatgptCodex_methodBrowser;
+
+  /// No description provided for @chatgptCodex_methodBrowserDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in in the browser; the app receives the result automatically.'**
+  String get chatgptCodex_methodBrowserDescription;
+
+  /// No description provided for @chatgptCodex_finishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing sign-in…'**
+  String get chatgptCodex_finishing;
+
+  /// No description provided for @chatgptCodex_deviceCodeStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the verification page, sign in to ChatGPT and enter this code:'**
+  String get chatgptCodex_deviceCodeStep;
+
+  /// No description provided for @chatgptCodex_openVerificationPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open verification page'**
+  String get chatgptCodex_openVerificationPage;
+
+  /// No description provided for @chatgptCodex_waitingApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for you to confirm in the browser…'**
+  String get chatgptCodex_waitingApproval;
+
+  /// No description provided for @chatgptCodex_deviceCodeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The code is valid for 15 minutes.'**
+  String get chatgptCodex_deviceCodeNote;
+
+  /// No description provided for @chatgptCodex_browserStep.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in page is open in your browser. The result returns here when you finish.'**
+  String get chatgptCodex_browserStep;
+
+  /// No description provided for @chatgptCodex_portBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Port 1455 on this device is in use, so the result cannot be received automatically. After signing in, paste the address from the browser\'s address bar below.'**
+  String get chatgptCodex_portBusy;
+
+  /// No description provided for @chatgptCodex_openLoginPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open sign-in page again'**
+  String get chatgptCodex_openLoginPage;
+
+  /// No description provided for @chatgptCodex_waitingBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the browser to return the result…'**
+  String get chatgptCodex_waitingBrowser;
+
+  /// No description provided for @chatgptCodex_pasteRedirectLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Address from the browser\'s address bar'**
+  String get chatgptCodex_pasteRedirectLabel;
+
+  /// No description provided for @chatgptCodex_pasteRedirectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'If the browser does not return, paste the full address of the page it stopped on.'**
+  String get chatgptCodex_pasteRedirectHint;
+
+  /// No description provided for @chatgptCodex_pasteRedirectInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The address contains no valid sign-in code.'**
+  String get chatgptCodex_pasteRedirectInvalid;
+
+  /// No description provided for @chatgptCodex_submitRedirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get chatgptCodex_submitRedirect;
+
+  /// No description provided for @chatgptCodex_deviceCodeUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Device code sign-in is not enabled for this account. Turn it on in ChatGPT\'s security settings, or use browser sign-in.'**
+  String get chatgptCodex_deviceCodeUnavailable;
+
+  /// No description provided for @chatgptCodex_loginTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in timed out. Try again.'**
+  String get chatgptCodex_loginTimedOut;
+
+  /// No description provided for @chatgptCodex_loginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in failed: {error}'**
+  String chatgptCodex_loginFailed(String error);
+
+  /// No description provided for @chatgptCodex_providerFormNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This provider signs in with a ChatGPT account and needs no address or API key. Sign-in opens after you save.'**
+  String get chatgptCodex_providerFormNote;
 }
 
 class _AppLocalizationsDelegate

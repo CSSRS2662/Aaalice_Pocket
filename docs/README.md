@@ -12,6 +12,7 @@
 | 提示词助手 | [组件与挂载](design/prompt_assistant_component.md) | 共享尺寸、外壳、挂载方式与回归入口 |
 | 图像卡片 | [组件组合与交互](design/image_card_composition.md) | 共享动作、页面选择、资源拖放与接收边界 |
 | 智能体工作流 | [调查、提问与确认](agent_workflows.md) | 角色证据流程、可复用问题表单、权限与零费用提交 |
+| ChatGPT 订阅 | [Codex 登录与额度](chatgpt_codex.md) | 登录流程、凭据、请求差异、额度来源与限制 |
 | 测试 | [test/README.md](../test/README.md) | 受控测试入口、证据范围和运行验收的区别 |
 | 开发会话 | [aaalice-dev-sessions](../.agents/skills/aaalice-dev-sessions/SKILL.md) | Windows/Android 热重载窗口的启动、复用与关闭 |
 | 刷新应用 | [aaalice-hot-reload](../.agents/skills/aaalice-hot-reload/SKILL.md) | Reload、Restart、完整重建的选择与日志验证 |

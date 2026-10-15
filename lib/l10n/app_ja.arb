@@ -7348,5 +7348,169 @@
     "placeholders": {
       "cost": {}
     }
-  }
+  },
+  "chatgptCodex_quotaTitle": "ChatGPT サブスクリプションの利用枠",
+  "chatgptCodex_windowShortTerm": "短期の上限",
+  "chatgptCodex_windowLongTerm": "長期の上限",
+  "chatgptCodex_windowWeekly": "週間の上限",
+  "chatgptCodex_windowHours": "{hours} 時間の上限",
+  "@chatgptCodex_windowHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_windowDays": "{days} 日間の上限",
+  "@chatgptCodex_windowDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_resetToday": "今日 {time}",
+  "@chatgptCodex_resetToday": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_resetTomorrow": "明日 {time}",
+  "@chatgptCodex_resetTomorrow": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_resetOn": "{date} {time}",
+  "@chatgptCodex_resetOn": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "MMMEd"
+      },
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_durationDaysHours": "{days} 日 {hours} 時間",
+  "@chatgptCodex_durationDaysHours": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_durationHoursMinutes": "{hours} 時間 {minutes} 分",
+  "@chatgptCodex_durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_durationMinutes": "{minutes} 分",
+  "@chatgptCodex_durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_resetWithRemaining": "{when}にリセット（約 {duration}後）",
+  "@chatgptCodex_resetWithRemaining": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_remaining": "残り {percent}",
+  "@chatgptCodex_remaining": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_plan": "{plan} プラン",
+  "@chatgptCodex_plan": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_quotaEmpty": "利用枠のデータはまだありません。ChatGPT モデルでメッセージを送るか、更新をタップしてください。",
+  "chatgptCodex_limitReached": "上限に達した期間があります。リセットまで ChatGPT モデルへのリクエストは拒否されます。",
+  "chatgptCodex_quotaNote": "割合は ChatGPT サーバーの値です。リセット時刻はこの端末のタイムゾーンで表示します。",
+  "chatgptCodex_updatedAt": "{time} に更新",
+  "@chatgptCodex_updatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_notSignedIn": "ChatGPT に未サインイン",
+  "chatgptCodex_needsLogin": "ChatGPT のサインインが無効になりました。もう一度サインインしてください。",
+  "chatgptCodex_signedIn": "サインイン中：{account}",
+  "@chatgptCodex_signedIn": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_signedInNoEmail": "ChatGPT にサインイン済み",
+  "chatgptCodex_signIn": "サインイン",
+  "chatgptCodex_signOut": "サインアウト",
+  "chatgptCodex_loginTitle": "ChatGPT にサインイン",
+  "chatgptCodex_loginIntro": "ChatGPT のサブスクリプション（Plus、Pro など）でエージェントとプロンプトアシスタントを利用します。使用量はそのアカウントの Codex の利用枠に計上されます。サインイン情報はこの端末にのみ保存され、クラウド同期されません。",
+  "chatgptCodex_methodDeviceCode": "デバイスコード",
+  "chatgptCodex_methodDeviceCodeDescription": "ブラウザで確認ページを開き、ワンタイムコードを入力します。アプリを切り替えても中断されません。",
+  "chatgptCodex_recommended": "おすすめ",
+  "chatgptCodex_methodBrowser": "ブラウザでサインイン",
+  "chatgptCodex_methodBrowserDescription": "ブラウザでサインインすると、結果は自動でアプリに届きます。",
+  "chatgptCodex_finishing": "サインインを完了しています…",
+  "chatgptCodex_deviceCodeStep": "確認ページを開き、ChatGPT にサインインして次のコードを入力してください：",
+  "chatgptCodex_openVerificationPage": "確認ページを開く",
+  "chatgptCodex_waitingApproval": "ブラウザでの確認を待っています…",
+  "chatgptCodex_deviceCodeNote": "コードの有効期限は 15 分です。",
+  "chatgptCodex_browserStep": "ブラウザでサインインページを開きました。完了すると結果がここに届きます。",
+  "chatgptCodex_portBusy": "この端末のポート 1455 が使用中のため、結果を自動で受け取れません。サインイン後、ブラウザのアドレスバーの URL を下に貼り付けてください。",
+  "chatgptCodex_openLoginPage": "サインインページをもう一度開く",
+  "chatgptCodex_waitingBrowser": "ブラウザからの結果を待っています…",
+  "chatgptCodex_pasteRedirectLabel": "ブラウザのアドレスバーの URL",
+  "chatgptCodex_pasteRedirectHint": "ブラウザが戻らない場合は、表示中のページの URL をすべて貼り付けてください。",
+  "chatgptCodex_pasteRedirectInvalid": "URL に有効なサインインコードが見つかりません。",
+  "chatgptCodex_submitRedirect": "送信",
+  "chatgptCodex_deviceCodeUnavailable": "このアカウントではデバイスコードによるサインインが有効になっていません。ChatGPT のセキュリティ設定で有効にするか、ブラウザでサインインしてください。",
+  "chatgptCodex_loginTimedOut": "サインインがタイムアウトしました。もう一度お試しください。",
+  "chatgptCodex_loginFailed": "サインインに失敗しました：{error}",
+  "@chatgptCodex_loginFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_providerFormNote": "このプロバイダーは ChatGPT アカウントでサインインするため、アドレスと API キーは不要です。保存後にサインインが開きます。"
 }

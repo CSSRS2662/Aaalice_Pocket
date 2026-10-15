@@ -10,6 +10,7 @@ import 'assistant_request_scheduler.dart';
 import 'provider_adapters/anthropic_messages_adapter.dart';
 import 'provider_adapters/gemini_generate_content_adapter.dart';
 import 'provider_adapters/openai_chat_completions_adapter.dart';
+import 'provider_adapters/openai_codex_responses_adapter.dart';
 import 'provider_adapters/openai_responses_adapter.dart';
 import 'provider_adapters/prompt_assistant_adapter.dart';
 
@@ -129,6 +130,8 @@ class PromptAssistantApiClient {
         return const GeminiGenerateContentAdapter();
       case ProviderProtocol.ollamaChatCompletions:
         return const OpenAiChatCompletionsAdapter(ollamaTagsFallback: true);
+      case ProviderProtocol.openaiCodexResponses:
+        return const OpenAiCodexResponsesAdapter();
     }
   }
 

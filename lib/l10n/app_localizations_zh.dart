@@ -15249,6 +15249,200 @@ class AppLocalizationsZh extends AppLocalizations {
   String stamina_costAnlas(Object cost) {
     return '$cost Anlas';
   }
+
+  @override
+  String get chatgptCodex_quotaTitle => 'ChatGPT 订阅额度';
+
+  @override
+  String get chatgptCodex_windowShortTerm => '短周期额度';
+
+  @override
+  String get chatgptCodex_windowLongTerm => '长周期额度';
+
+  @override
+  String get chatgptCodex_windowWeekly => '每周额度';
+
+  @override
+  String chatgptCodex_windowHours(int hours) {
+    return '$hours 小时额度';
+  }
+
+  @override
+  String chatgptCodex_windowDays(int days) {
+    return '$days 天额度';
+  }
+
+  @override
+  String chatgptCodex_resetToday(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '今天 $timeString';
+  }
+
+  @override
+  String chatgptCodex_resetTomorrow(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '明天 $timeString';
+  }
+
+  @override
+  String chatgptCodex_resetOn(DateTime date, DateTime time) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.MMMEd(localeName);
+    final String dateString = dateDateFormat.format(date);
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '$dateString $timeString';
+  }
+
+  @override
+  String chatgptCodex_durationDaysHours(int days, int hours) {
+    return '$days 天 $hours 小时';
+  }
+
+  @override
+  String chatgptCodex_durationHoursMinutes(int hours, int minutes) {
+    return '$hours 小时 $minutes 分钟';
+  }
+
+  @override
+  String chatgptCodex_durationMinutes(int minutes) {
+    return '$minutes 分钟';
+  }
+
+  @override
+  String chatgptCodex_resetWithRemaining(String when, String duration) {
+    return '$when 重置（约 $duration后）';
+  }
+
+  @override
+  String chatgptCodex_remaining(String percent) {
+    return '剩余 $percent';
+  }
+
+  @override
+  String chatgptCodex_plan(String plan) {
+    return '$plan 套餐';
+  }
+
+  @override
+  String get chatgptCodex_quotaEmpty => '还没有额度数据。用 ChatGPT 模型发送一条消息，或点“刷新”。';
+
+  @override
+  String get chatgptCodex_limitReached => '有一个额度周期已用完，重置前对 ChatGPT 模型的请求会被拒绝。';
+
+  @override
+  String get chatgptCodex_quotaNote => '百分比由 ChatGPT 服务端提供，重置时间按本机时区显示。';
+
+  @override
+  String chatgptCodex_updatedAt(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '更新于 $timeString';
+  }
+
+  @override
+  String get chatgptCodex_notSignedIn => '未登录 ChatGPT';
+
+  @override
+  String get chatgptCodex_needsLogin => 'ChatGPT 登录已失效，请重新登录';
+
+  @override
+  String chatgptCodex_signedIn(String account) {
+    return '已登录：$account';
+  }
+
+  @override
+  String get chatgptCodex_signedInNoEmail => '已登录 ChatGPT';
+
+  @override
+  String get chatgptCodex_signIn => '登录';
+
+  @override
+  String get chatgptCodex_signOut => '退出登录';
+
+  @override
+  String get chatgptCodex_loginTitle => '登录 ChatGPT';
+
+  @override
+  String get chatgptCodex_loginIntro =>
+      '用 ChatGPT 订阅（Plus、Pro 等）驱动智能体和提示词助手，用量计入该账号的 Codex 额度。登录凭据只保存在本机，不参与云同步。';
+
+  @override
+  String get chatgptCodex_methodDeviceCode => '设备码登录';
+
+  @override
+  String get chatgptCodex_methodDeviceCodeDescription =>
+      '在浏览器打开验证页并输入一次性代码，切换应用不会中断。';
+
+  @override
+  String get chatgptCodex_recommended => '推荐';
+
+  @override
+  String get chatgptCodex_methodBrowser => '浏览器登录';
+
+  @override
+  String get chatgptCodex_methodBrowserDescription => '跳转到浏览器登录，完成后应用自动收到结果。';
+
+  @override
+  String get chatgptCodex_finishing => '正在完成登录…';
+
+  @override
+  String get chatgptCodex_deviceCodeStep => '打开验证页，登录 ChatGPT 后输入下面的代码：';
+
+  @override
+  String get chatgptCodex_openVerificationPage => '打开验证页';
+
+  @override
+  String get chatgptCodex_waitingApproval => '等待你在浏览器中确认…';
+
+  @override
+  String get chatgptCodex_deviceCodeNote => '代码 15 分钟内有效。';
+
+  @override
+  String get chatgptCodex_browserStep => '已在浏览器打开登录页，登录完成后结果会自动回到这里。';
+
+  @override
+  String get chatgptCodex_portBusy =>
+      '本机 1455 端口被占用，无法自动接收登录结果。登录完成后，请把浏览器地址栏的网址粘贴到下面。';
+
+  @override
+  String get chatgptCodex_openLoginPage => '重新打开登录页';
+
+  @override
+  String get chatgptCodex_waitingBrowser => '等待浏览器返回登录结果…';
+
+  @override
+  String get chatgptCodex_pasteRedirectLabel => '浏览器地址栏中的网址';
+
+  @override
+  String get chatgptCodex_pasteRedirectHint => '浏览器没有自动跳回时，把停留页面的完整网址粘贴到这里。';
+
+  @override
+  String get chatgptCodex_pasteRedirectInvalid => '网址中没有找到有效的登录代码。';
+
+  @override
+  String get chatgptCodex_submitRedirect => '提交';
+
+  @override
+  String get chatgptCodex_deviceCodeUnavailable =>
+      '这个账号没有开启设备码登录。可以在 ChatGPT 的安全设置中开启，或改用浏览器登录。';
+
+  @override
+  String get chatgptCodex_loginTimedOut => '登录超时，请重试。';
+
+  @override
+  String chatgptCodex_loginFailed(String error) {
+    return '登录失败：$error';
+  }
+
+  @override
+  String get chatgptCodex_providerFormNote =>
+      '这个服务商用 ChatGPT 账号登录，不需要地址和 API Key。保存后会打开登录。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -30497,4 +30691,199 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String stamina_costAnlas(Object cost) {
     return '$cost Anlas';
   }
+
+  @override
+  String get chatgptCodex_quotaTitle => 'ChatGPT 訂閱額度';
+
+  @override
+  String get chatgptCodex_windowShortTerm => '短週期額度';
+
+  @override
+  String get chatgptCodex_windowLongTerm => '長週期額度';
+
+  @override
+  String get chatgptCodex_windowWeekly => '每週額度';
+
+  @override
+  String chatgptCodex_windowHours(int hours) {
+    return '$hours 小時額度';
+  }
+
+  @override
+  String chatgptCodex_windowDays(int days) {
+    return '$days 天額度';
+  }
+
+  @override
+  String chatgptCodex_resetToday(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '今天 $timeString';
+  }
+
+  @override
+  String chatgptCodex_resetTomorrow(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '明天 $timeString';
+  }
+
+  @override
+  String chatgptCodex_resetOn(DateTime date, DateTime time) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.MMMEd(localeName);
+    final String dateString = dateDateFormat.format(date);
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '$dateString $timeString';
+  }
+
+  @override
+  String chatgptCodex_durationDaysHours(int days, int hours) {
+    return '$days 天 $hours 小時';
+  }
+
+  @override
+  String chatgptCodex_durationHoursMinutes(int hours, int minutes) {
+    return '$hours 小時 $minutes 分鐘';
+  }
+
+  @override
+  String chatgptCodex_durationMinutes(int minutes) {
+    return '$minutes 分鐘';
+  }
+
+  @override
+  String chatgptCodex_resetWithRemaining(String when, String duration) {
+    return '$when 重置（約 $duration後）';
+  }
+
+  @override
+  String chatgptCodex_remaining(String percent) {
+    return '剩餘 $percent';
+  }
+
+  @override
+  String chatgptCodex_plan(String plan) {
+    return '$plan 方案';
+  }
+
+  @override
+  String get chatgptCodex_quotaEmpty => '還沒有額度資料。用 ChatGPT 模型傳送一則訊息，或點「重新整理」。';
+
+  @override
+  String get chatgptCodex_limitReached => '有一個額度週期已用完，重置前對 ChatGPT 模型的請求會被拒絕。';
+
+  @override
+  String get chatgptCodex_quotaNote => '百分比由 ChatGPT 伺服器提供，重置時間依本機時區顯示。';
+
+  @override
+  String chatgptCodex_updatedAt(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '更新於 $timeString';
+  }
+
+  @override
+  String get chatgptCodex_notSignedIn => '未登入 ChatGPT';
+
+  @override
+  String get chatgptCodex_needsLogin => 'ChatGPT 登入已失效，請重新登入';
+
+  @override
+  String chatgptCodex_signedIn(String account) {
+    return '已登入：$account';
+  }
+
+  @override
+  String get chatgptCodex_signedInNoEmail => '已登入 ChatGPT';
+
+  @override
+  String get chatgptCodex_signIn => '登入';
+
+  @override
+  String get chatgptCodex_signOut => '登出';
+
+  @override
+  String get chatgptCodex_loginTitle => '登入 ChatGPT';
+
+  @override
+  String get chatgptCodex_loginIntro =>
+      '使用 ChatGPT 訂閱（Plus、Pro 等）驅動智慧體與提示詞助手，用量計入該帳號的 Codex 額度。登入憑證只儲存在本機，不參與雲端同步。';
+
+  @override
+  String get chatgptCodex_methodDeviceCode => '裝置碼登入';
+
+  @override
+  String get chatgptCodex_methodDeviceCodeDescription =>
+      '在瀏覽器開啟驗證頁並輸入一次性代碼，切換 App 不會中斷。';
+
+  @override
+  String get chatgptCodex_recommended => '推薦';
+
+  @override
+  String get chatgptCodex_methodBrowser => '瀏覽器登入';
+
+  @override
+  String get chatgptCodex_methodBrowserDescription =>
+      '跳轉到瀏覽器登入，完成後 App 自動收到結果。';
+
+  @override
+  String get chatgptCodex_finishing => '正在完成登入…';
+
+  @override
+  String get chatgptCodex_deviceCodeStep => '開啟驗證頁，登入 ChatGPT 後輸入下方的代碼：';
+
+  @override
+  String get chatgptCodex_openVerificationPage => '開啟驗證頁';
+
+  @override
+  String get chatgptCodex_waitingApproval => '等待你在瀏覽器中確認…';
+
+  @override
+  String get chatgptCodex_deviceCodeNote => '代碼 15 分鐘內有效。';
+
+  @override
+  String get chatgptCodex_browserStep => '已在瀏覽器開啟登入頁，登入完成後結果會自動回到這裡。';
+
+  @override
+  String get chatgptCodex_portBusy =>
+      '本機 1455 連接埠被占用，無法自動接收登入結果。登入完成後，請把瀏覽器網址列的網址貼到下方。';
+
+  @override
+  String get chatgptCodex_openLoginPage => '重新開啟登入頁';
+
+  @override
+  String get chatgptCodex_waitingBrowser => '等待瀏覽器回傳登入結果…';
+
+  @override
+  String get chatgptCodex_pasteRedirectLabel => '瀏覽器網址列中的網址';
+
+  @override
+  String get chatgptCodex_pasteRedirectHint => '瀏覽器沒有自動跳回時，把停留頁面的完整網址貼到這裡。';
+
+  @override
+  String get chatgptCodex_pasteRedirectInvalid => '網址中沒有找到有效的登入代碼。';
+
+  @override
+  String get chatgptCodex_submitRedirect => '送出';
+
+  @override
+  String get chatgptCodex_deviceCodeUnavailable =>
+      '這個帳號沒有開啟裝置碼登入。可以在 ChatGPT 的安全性設定中開啟，或改用瀏覽器登入。';
+
+  @override
+  String get chatgptCodex_loginTimedOut => '登入逾時，請重試。';
+
+  @override
+  String chatgptCodex_loginFailed(String error) {
+    return '登入失敗：$error';
+  }
+
+  @override
+  String get chatgptCodex_providerFormNote =>
+      '這個服務商使用 ChatGPT 帳號登入，不需要位址與 API Key。儲存後會開啟登入。';
 }

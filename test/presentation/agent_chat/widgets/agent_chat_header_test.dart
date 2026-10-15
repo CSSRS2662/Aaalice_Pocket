@@ -1,8 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/core/agent/harness/session/session_types.dart';
+import 'package:nai_launcher/data/models/agent/agent_settings.dart';
+import 'package:nai_launcher/data/services/chatgpt_codex/chatgpt_codex_usage.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
 import 'package:nai_launcher/presentation/agent_chat/providers/agent_chat_notifier.dart';
@@ -11,6 +14,8 @@ import 'package:nai_launcher/presentation/agent_chat/widgets/agent_chat_header.d
 import 'package:nai_launcher/presentation/agent_chat/widgets/agent_chat_panel_view_data.dart';
 import 'package:nai_launcher/presentation/agent_settings/providers/agent_settings_provider.dart';
 import 'package:nai_launcher/data/models/prompt_assistant/prompt_assistant_models.dart';
+import 'package:nai_launcher/presentation/prompt_assistant/providers/chatgpt_codex_account_provider.dart';
+import 'package:nai_launcher/presentation/prompt_assistant/providers/chatgpt_codex_usage_provider.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/providers/web_access_provider.dart';
 import 'package:nai_launcher/presentation/widgets/common/workspace_panel_header.dart';
 
@@ -85,6 +90,36 @@ void main() {
       }
     },
   );
+
+  testWidgets('ChatGPT quota fits the header beside the session name', (
+    tester,
+  ) async {
+    for (final mobile in [false, true]) {
+      for (final width in const [320.0, 360.0, 412.0, 600.0]) {
+        await tester.pumpWidget(
+          _app(width: width, mobile: mobile, textScale: 2, chatGptCodex: true),
+        );
+        await tester.pump();
+
+        expect(
+          find.byKey(const ValueKey('agent-chat-codex-quota')),
+          findsOneWidget,
+          reason: 'width=$width mobile=$mobile',
+        );
+        // Wide headers show every window; narrower ones fall back to the
+        // tightest window, then to an icon.
+        if (width >= 600) expect(find.text('5h'), findsOneWidget);
+        expect(
+          tester
+              .getSize(find.byKey(const ValueKey('agent-chat-session-selector')))
+              .width,
+          greaterThanOrEqualTo(56),
+          reason: 'width=$width mobile=$mobile',
+        );
+        expect(tester.takeException(), isNull);
+      }
+    }
+  });
 
   testWidgets('touch targets stay 48dp after switching from touch to mouse', (
     tester,
@@ -368,7 +403,9 @@ Widget _app({
   VoidCallback? onDock,
   InteractionPolicy? interactionPolicy,
   Locale locale = const Locale('zh'),
+  bool chatGptCodex = false,
 }) {
+  final codex = ProviderPreset.chatgptCodex.createConfig();
   final state = AgentChatState(
     initialized: true,
     sessions: [
@@ -387,8 +424,21 @@ Widget _app({
   );
   final viewData = AgentChatPanelViewData(
     state: state,
-    config: PromptAssistantConfigState.defaults(),
-    agentSettings: const AgentSettingsState(),
+    config: chatGptCodex
+        ? PromptAssistantConfigState.defaults().copyWith(providers: [codex])
+        : PromptAssistantConfigState.defaults(),
+    agentSettings: chatGptCodex
+        ? AgentSettingsState(
+            settings: AgentSettings(
+              chat: AgentChatConfig(
+                modelReference: AgentModelReference(
+                  providerId: codex.id,
+                  model: 'gpt-5.5',
+                ),
+              ),
+            ),
+          )
+        : const AgentSettingsState(),
     webAccess: const WebAccessConfigState(),
     fullScreen: mobile,
     compactHeight: false,
@@ -433,7 +483,7 @@ Widget _app({
     addPendingResource: (_) async {},
     removePendingResource: (_) async {},
   );
-  return MaterialApp(
+  final app = MaterialApp(
     locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
@@ -457,4 +507,46 @@ Widget _app({
       ),
     ),
   );
+  if (!chatGptCodex) return app;
+  return ProviderScope(
+    overrides: [
+      chatGptCodexAccountProvider.overrideWith(
+        (ref) => _SignedIn(ref, codex.id),
+      ),
+      chatGptCodexUsageProvider.overrideWith(_KnownUsage.new),
+    ],
+    child: app,
+  );
+}
+
+class _SignedIn extends ChatGptCodexAccountNotifier {
+  _SignedIn(super.ref, String providerId) {
+    state = {
+      providerId: ChatGptCodexAccount(
+        accountId: 'acc_1',
+        expiresAt: DateTime(2100),
+      ),
+    };
+  }
+}
+
+class _KnownUsage extends ChatGptCodexUsageNotifier {
+  _KnownUsage(super.ref) {
+    state = {
+      'acc_1': ChatGptCodexUsage(
+        observedAt: DateTime(2026),
+        primary: const ChatGptCodexUsageWindow(
+          usedPercent: 7,
+          length: Duration(hours: 5),
+        ),
+        secondary: const ChatGptCodexUsageWindow(
+          usedPercent: 60,
+          length: Duration(days: 7),
+        ),
+      ),
+    };
+  }
+
+  @override
+  Future<void> refresh(ProviderConfig provider, {bool force = false}) async {}
 }

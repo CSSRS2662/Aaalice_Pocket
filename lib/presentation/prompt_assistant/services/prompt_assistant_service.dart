@@ -13,6 +13,8 @@ import '../models/agent_protocol.dart';
 import '../../../data/models/prompt_assistant/assistant_execution_settings.dart';
 import '../models/assistant_model_capability.dart';
 import '../../../data/models/prompt_assistant/prompt_assistant_models.dart';
+import '../../../data/services/chatgpt_codex/chatgpt_codex_usage_interceptor.dart';
+import '../providers/chatgpt_codex_usage_provider.dart';
 import '../providers/prompt_assistant_config_provider.dart';
 import 'assistant_cancellation.dart';
 import 'prompt_assistant_api_client.dart';
@@ -25,13 +27,22 @@ final promptAssistantDioProvider = Provider<Dio>((ref) {
   // 使用独立 Dio，避免第三方服务的 401 触发全局登录态刷新/登出逻辑。
   // 始终使用默认 HTTP/1.1 适配器（内部使用 dart:io.HttpClient，
   // 自动遵循 HttpOverrides.global），保证有代理时流量走应用代理。
-  return Dio(
+  final dio = Dio(
     BaseOptions(
       connectTimeout: const Duration(seconds: 20),
       receiveTimeout: const Duration(minutes: 2),
       sendTimeout: const Duration(seconds: 30),
     ),
   );
+  // ChatGPT Codex responses report the subscription quota in their headers.
+  dio.interceptors.add(
+    ChatGptCodexUsageInterceptor(
+      (accountId, usage) => ref
+          .read(chatGptCodexUsageProvider.notifier)
+          .record(accountId, usage),
+    ),
+  );
+  return dio;
 });
 
 final promptAssistantServiceProvider = Provider<PromptAssistantService>((ref) {

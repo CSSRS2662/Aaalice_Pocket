@@ -9,6 +9,7 @@ import '../../adaptive/interaction_policy.dart';
 import '../../../data/models/prompt_assistant/prompt_assistant_models.dart';
 import '../../widgets/common/workspace_panel_header.dart';
 import 'agent_chat_panel_view_data.dart';
+import 'chatgpt_codex_quota_pill.dart';
 
 class AgentChatHeader extends StatelessWidget {
   const AgentChatHeader({
@@ -59,7 +60,26 @@ class AgentChatHeader extends StatelessWidget {
           ? TextFieldTapRegion(child: collapseButton)
           : collapseButton,
       icon: Icons.auto_awesome_rounded,
-      title: SizedBox(height: 48, child: _sessionSelector(context)),
+      title: SizedBox(
+        height: 48,
+        child: switch (_chatGptCodexProvider()) {
+          null => _sessionSelector(context),
+          final provider => LayoutBuilder(
+            builder: (context, constraints) => Row(
+              children: [
+                Expanded(child: _sessionSelector(context)),
+                ChatGptCodexQuotaSlot(
+                  provider: provider,
+                  density: ChatGptCodexQuotaDensity.forTitleWidth(
+                    constraints.maxWidth,
+                    MediaQuery.textScalerOf(context).scale(1),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        },
+      ),
       actions: [
         if (windowActionInline)
           _HeaderIconButton(
@@ -88,6 +108,21 @@ class AgentChatHeader extends StatelessWidget {
       ],
     );
     return viewData.headerWrapper?.call(header) ?? header;
+  }
+
+  /// The agent's provider when it signs in with ChatGPT; its quota then
+  /// shows next to the session name.
+  ProviderConfig? _chatGptCodexProvider() {
+    final reference = viewData.agentSettings.settings.chat.modelReference;
+    if (!reference.isConfigured) return null;
+    for (final provider in viewData.config.providers) {
+      if (provider.id == reference.providerId &&
+          provider.enabled &&
+          provider.protocol.usesChatGptLogin) {
+        return provider;
+      }
+    }
+    return null;
   }
 
   _WindowAction? _windowAction(AppLocalizations l10n) {

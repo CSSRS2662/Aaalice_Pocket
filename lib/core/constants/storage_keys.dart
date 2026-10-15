@@ -341,6 +341,10 @@ class StorageKeys {
   static const String promptAssistantConfigJson =
       'prompt_assistant_config_json';
   static const String promptAssistantApiKeyPrefix = 'prompt_assistant_api_key_';
+
+  /// Secure storage only: ChatGPT (Codex) OAuth tokens per provider.
+  static const String chatGptCodexCredentialsPrefix =
+      'chatgpt_codex_credentials_';
   static const String agentWebAccessConfigJson = 'agent_web_access_config_json';
   static const String agentWebAccessExaApiKey = 'agent_web_access_exa_api_key';
   static const String agentSettingsJson = 'agent_settings_json_v2';

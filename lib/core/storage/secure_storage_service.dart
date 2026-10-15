@@ -405,6 +405,46 @@ class SecureStorageService {
     }
   }
 
+  // ==================== ChatGPT Codex OAuth ====================
+
+  /// Raw JSON of the OAuth tokens; parsing belongs to the Codex account
+  /// service. Never cached in memory so a logout leaves no copy behind.
+  Future<String?> getChatGptCodexCredentials(String providerId) async {
+    try {
+      return await _storage.read(
+        key: '${StorageKeys.chatGptCodexCredentialsPrefix}$providerId',
+      );
+    } catch (e) {
+      AppLogger.w('Failed to read ChatGPT credentials: $e', 'SecureStorage');
+      return null;
+    }
+  }
+
+  Future<void> saveChatGptCodexCredentials(
+    String providerId,
+    String json,
+  ) async {
+    try {
+      await _storage.write(
+        key: '${StorageKeys.chatGptCodexCredentialsPrefix}$providerId',
+        value: json,
+      );
+    } catch (e) {
+      AppLogger.w('Failed to save ChatGPT credentials: $e', 'SecureStorage');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteChatGptCodexCredentials(String providerId) async {
+    try {
+      await _storage.delete(
+        key: '${StorageKeys.chatGptCodexCredentialsPrefix}$providerId',
+      );
+    } catch (e) {
+      AppLogger.w('Failed to delete ChatGPT credentials: $e', 'SecureStorage');
+    }
+  }
+
   // ==================== Agent Web Access ====================
 
   Future<void> saveAgentWebAccessExaApiKey(String apiKey) async {

@@ -310,6 +310,11 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
     final agent = Agent(
       AgentOptions(
         streamFn: _streamFn,
+        // Pi resolves the key before every model call, so a ChatGPT login
+        // that expires during a long run is refreshed in time.
+        getApiKey: (providerId) => _ref
+            .read(promptAssistantConfigProvider.notifier)
+            .getProviderApiKey(providerId),
         initialSystemPrompt: await _buildSystemPrompt(),
         initialModel: capability.model,
         // 提示词工具（含 read_skill）+ 只读文件工具 + 生成/反推/队列工具
@@ -658,7 +663,7 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
               ),
             ),
         ],
-        apiKey: route.$3,
+        apiKey: options?.apiKey ?? route.$3,
         maxOutputTokens: _clampMaxOutputTokens(
           capability,
           context.messages,

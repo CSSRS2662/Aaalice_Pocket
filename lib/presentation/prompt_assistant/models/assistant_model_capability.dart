@@ -301,6 +301,8 @@ class AssistantModelCatalog {
     switch (provider.preset) {
       case ProviderPreset.openaiResponses:
         return 'openai';
+      case ProviderPreset.chatgptCodex:
+        return 'openai-codex';
       case ProviderPreset.anthropic:
         return 'anthropic';
       case ProviderPreset.gemini:
@@ -400,7 +402,8 @@ class AssistantModelCatalog {
     AgentReasoningApi api,
   ) => switch (api) {
     AgentReasoningApi.openAiResponses =>
-      protocol == ProviderProtocol.openaiResponses,
+      protocol == ProviderProtocol.openaiResponses ||
+          protocol == ProviderProtocol.openaiCodexResponses,
     AgentReasoningApi.anthropicBudget || AgentReasoningApi.anthropicAdaptive =>
       protocol == ProviderProtocol.anthropicMessages,
     AgentReasoningApi.geminiBudget || AgentReasoningApi.geminiLevel =>

@@ -166,11 +166,18 @@ class _PromptAssistantProviderFormState
           ),
         ),
         const SizedBox(height: 12),
-        TextField(
-          controller: _baseController,
-          keyboardType: TextInputType.url,
-          decoration: const InputDecoration(labelText: 'Base URL'),
-        ),
+        if (_preset.defaultProtocol.usesChatGptLogin)
+          Text(
+            context.l10n.chatgptCodex_providerFormNote,
+            key: const ValueKey('prompt-assistant-chatgpt-login-note'),
+            style: Theme.of(context).textTheme.bodySmall,
+          )
+        else
+          TextField(
+            controller: _baseController,
+            keyboardType: TextInputType.url,
+            decoration: const InputDecoration(labelText: 'Base URL'),
+          ),
         const SizedBox(height: 8),
         SwitchListTile(
           value: _allowImageInput,
@@ -229,14 +236,16 @@ class _PromptAssistantProviderFormState
             context.l10n.promptAssistant_concurrencyAutoDescription,
             style: Theme.of(context).textTheme.bodySmall,
           ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _keyController,
-          decoration: InputDecoration(
-            labelText: context.l10n.promptAssistant_apiKeyLeaveEmpty,
+        if (!_preset.defaultProtocol.usesChatGptLogin) ...[
+          const SizedBox(height: 12),
+          TextField(
+            controller: _keyController,
+            decoration: InputDecoration(
+              labelText: context.l10n.promptAssistant_apiKeyLeaveEmpty,
+            ),
+            obscureText: true,
           ),
-          obscureText: true,
-        ),
+        ],
       ],
       footer: _FormFooter(onSave: _save),
     );

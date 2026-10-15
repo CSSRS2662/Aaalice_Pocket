@@ -4,6 +4,7 @@ import '../../../core/constants/storage_keys.dart';
 import '../../../core/storage/local_storage_service.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../../data/models/prompt_assistant/prompt_assistant_models.dart';
+import 'chatgpt_codex_account_provider.dart';
 
 final promptAssistantConfigProvider =
     StateNotifierProvider<
@@ -50,9 +51,21 @@ class PromptAssistantConfigNotifier
     );
   }
 
+  /// The credential sent to [providerId]: its API key, or for a ChatGPT
+  /// login a fresh access token.
   Future<String?> getProviderApiKey(String providerId) async {
+    if (_usesChatGptLogin(providerId)) {
+      return _ref
+          .read(chatGptCodexAccountProvider.notifier)
+          .accessToken(providerId);
+    }
     return _secure.getPromptAssistantApiKey(providerId);
   }
+
+  bool _usesChatGptLogin(String providerId) => state.providers.any(
+    (provider) =>
+        provider.id == providerId && provider.protocol.usesChatGptLogin,
+  );
 
   Future<void> setProviderApiKey(String providerId, String apiKey) async {
     final trimmed = apiKey.trim();
@@ -106,6 +119,9 @@ class PromptAssistantConfigNotifier
   }
 
   Future<void> deleteProvider(String providerId) async {
+    if (_usesChatGptLogin(providerId)) {
+      await _ref.read(chatGptCodexAccountProvider.notifier).logout(providerId);
+    }
     final providers = state.providers.where((p) => p.id != providerId).toList();
     final models = state.models
         .where((m) => m.providerId != providerId)

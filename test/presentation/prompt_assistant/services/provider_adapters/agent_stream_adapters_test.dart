@@ -984,7 +984,8 @@ void main() {
         ProviderProtocol.openaiChatCompletions ||
         ProviderProtocol.ollamaChatCompletions =>
           ((payload['messages'] as List).first as Map)['content'],
-        ProviderProtocol.openaiResponses => payload['instructions'],
+        ProviderProtocol.openaiResponses ||
+        ProviderProtocol.openaiCodexResponses => payload['instructions'],
         ProviderProtocol.anthropicMessages => payload['system'],
         ProviderProtocol.geminiGenerateContent =>
           ((((payload['systemInstruction'] as Map)['parts'] as List).single

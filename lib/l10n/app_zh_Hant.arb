@@ -7674,5 +7674,169 @@
     "placeholders": {
       "cost": {}
     }
-  }
+  },
+  "chatgptCodex_quotaTitle": "ChatGPT 訂閱額度",
+  "chatgptCodex_windowShortTerm": "短週期額度",
+  "chatgptCodex_windowLongTerm": "長週期額度",
+  "chatgptCodex_windowWeekly": "每週額度",
+  "chatgptCodex_windowHours": "{hours} 小時額度",
+  "@chatgptCodex_windowHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_windowDays": "{days} 天額度",
+  "@chatgptCodex_windowDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_resetToday": "今天 {time}",
+  "@chatgptCodex_resetToday": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_resetTomorrow": "明天 {time}",
+  "@chatgptCodex_resetTomorrow": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_resetOn": "{date} {time}",
+  "@chatgptCodex_resetOn": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "MMMEd"
+      },
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_durationDaysHours": "{days} 天 {hours} 小時",
+  "@chatgptCodex_durationDaysHours": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_durationHoursMinutes": "{hours} 小時 {minutes} 分鐘",
+  "@chatgptCodex_durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_durationMinutes": "{minutes} 分鐘",
+  "@chatgptCodex_durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_resetWithRemaining": "{when} 重置（約 {duration}後）",
+  "@chatgptCodex_resetWithRemaining": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_remaining": "剩餘 {percent}",
+  "@chatgptCodex_remaining": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_plan": "{plan} 方案",
+  "@chatgptCodex_plan": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_quotaEmpty": "還沒有額度資料。用 ChatGPT 模型傳送一則訊息，或點「重新整理」。",
+  "chatgptCodex_limitReached": "有一個額度週期已用完，重置前對 ChatGPT 模型的請求會被拒絕。",
+  "chatgptCodex_quotaNote": "百分比由 ChatGPT 伺服器提供，重置時間依本機時區顯示。",
+  "chatgptCodex_updatedAt": "更新於 {time}",
+  "@chatgptCodex_updatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_notSignedIn": "未登入 ChatGPT",
+  "chatgptCodex_needsLogin": "ChatGPT 登入已失效，請重新登入",
+  "chatgptCodex_signedIn": "已登入：{account}",
+  "@chatgptCodex_signedIn": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_signedInNoEmail": "已登入 ChatGPT",
+  "chatgptCodex_signIn": "登入",
+  "chatgptCodex_signOut": "登出",
+  "chatgptCodex_loginTitle": "登入 ChatGPT",
+  "chatgptCodex_loginIntro": "使用 ChatGPT 訂閱（Plus、Pro 等）驅動智慧體與提示詞助手，用量計入該帳號的 Codex 額度。登入憑證只儲存在本機，不參與雲端同步。",
+  "chatgptCodex_methodDeviceCode": "裝置碼登入",
+  "chatgptCodex_methodDeviceCodeDescription": "在瀏覽器開啟驗證頁並輸入一次性代碼，切換 App 不會中斷。",
+  "chatgptCodex_recommended": "推薦",
+  "chatgptCodex_methodBrowser": "瀏覽器登入",
+  "chatgptCodex_methodBrowserDescription": "跳轉到瀏覽器登入，完成後 App 自動收到結果。",
+  "chatgptCodex_finishing": "正在完成登入…",
+  "chatgptCodex_deviceCodeStep": "開啟驗證頁，登入 ChatGPT 後輸入下方的代碼：",
+  "chatgptCodex_openVerificationPage": "開啟驗證頁",
+  "chatgptCodex_waitingApproval": "等待你在瀏覽器中確認…",
+  "chatgptCodex_deviceCodeNote": "代碼 15 分鐘內有效。",
+  "chatgptCodex_browserStep": "已在瀏覽器開啟登入頁，登入完成後結果會自動回到這裡。",
+  "chatgptCodex_portBusy": "本機 1455 連接埠被占用，無法自動接收登入結果。登入完成後，請把瀏覽器網址列的網址貼到下方。",
+  "chatgptCodex_openLoginPage": "重新開啟登入頁",
+  "chatgptCodex_waitingBrowser": "等待瀏覽器回傳登入結果…",
+  "chatgptCodex_pasteRedirectLabel": "瀏覽器網址列中的網址",
+  "chatgptCodex_pasteRedirectHint": "瀏覽器沒有自動跳回時，把停留頁面的完整網址貼到這裡。",
+  "chatgptCodex_pasteRedirectInvalid": "網址中沒有找到有效的登入代碼。",
+  "chatgptCodex_submitRedirect": "送出",
+  "chatgptCodex_deviceCodeUnavailable": "這個帳號沒有開啟裝置碼登入。可以在 ChatGPT 的安全性設定中開啟，或改用瀏覽器登入。",
+  "chatgptCodex_loginTimedOut": "登入逾時，請重試。",
+  "chatgptCodex_loginFailed": "登入失敗：{error}",
+  "@chatgptCodex_loginFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_providerFormNote": "這個服務商使用 ChatGPT 帳號登入，不需要位址與 API Key。儲存後會開啟登入。"
 }

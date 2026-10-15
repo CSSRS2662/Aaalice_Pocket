@@ -60,6 +60,7 @@ Aaalice Pocket keeps the upstream capabilities that work on phones:
 - **Share to import**: share an image or a direct image link from Discord or other apps to Aaalice Pocket to extract metadata or use it as an img2img source or reference.
 - **Online galleries**: Danbooru, Safebooru, Gelbooru, AI TAG, and the QuickTagCloud codex, with original prompts you can send back to the generation page.
 - **Queue and agent**: pause, resume, reorder, and retry batch tasks. The agent can look up tags, tidy prompts, and prepare tasks; paid and destructive actions still need your confirmation.
+- **ChatGPT subscription sign-in**: the agent and the prompt assistant can sign in with a ChatGPT account (Plus, Pro and others); usage counts toward that account's Codex limits. The agent header shows how much of the 5-hour and weekly limits is left, and tapping it shows the reset times in your device's time zone.
 - **Backup and restore**: cloud backup to GitHub and WebDAV; you start every push, pull, and restore. OneDrive and Google Drive need OAuth settings at build time, which this branch's release packages do not include.
 
 ## 🖼️ Screenshots
@@ -111,7 +112,7 @@ Aaalice Pocket has no server of its own and collects no usage data. Data leaves 
 | --- | --- |
 | Generation, img2img, inpainting, Vibe encoding | NovelAI, including the prompt, parameters, and source or reference images the request needs. |
 | Online gallery search and downloads | The third-party gallery you choose; each site sets its own availability, rate limits, and content rules. |
-| AI translation or the agent | The model service you configure, which may charge fees. |
+| AI translation or the agent | The model service you configure, which may charge fees. With ChatGPT sign-in, requests go to ChatGPT's Codex service; the sign-in tokens stay on this device and are not synced. |
 | Cloud backup | The GitHub or WebDAV target you choose; only the items you select are uploaded. |
 
 - Your NovelAI token, GitHub token, and WebDAV password stay in the device's secure storage and are never written to backups.

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show protected;
 
 import '../../../../core/agent/agent_types.dart';
 import '../../models/agent_protocol.dart';
@@ -249,10 +250,11 @@ class OpenAiResponsesAdapter extends PromptAssistantProviderAdapter {
     try {
       final stream = agentStreamPost(
         dio,
-        endpoint: _resolveEndpoint(request.provider),
-        payload: _buildAgentPayload(request),
-        headers: _agentHeaders(request.apiKey),
+        endpoint: agentEndpoint(request.provider),
+        payload: agentPayload(request),
+        headers: agentHeaders(request),
         cancelToken: cancelToken,
+        receiveTimeout: agentReceiveTimeout(request),
       );
       await for (final chunk in stream) {
         parser.push(chunk);
@@ -270,7 +272,7 @@ class OpenAiResponsesAdapter extends PromptAssistantProviderAdapter {
       if (pending.isNotEmpty) {
         yield* Stream.fromIterable(List.of(pending));
       }
-      yield agentWireErrorFrom(error, request.provider);
+      yield agentWireError(error, request.provider);
       return;
     }
 
@@ -286,7 +288,23 @@ class OpenAiResponsesAdapter extends PromptAssistantProviderAdapter {
     yield AgentWireFinish(stopReason: stopReason, usage: usage);
   }
 
-  Map<String, dynamic> _buildAgentPayload(AgentChatRequest request) {
+  @protected
+  String agentEndpoint(ProviderConfig provider) => _resolveEndpoint(provider);
+
+  @protected
+  Map<String, dynamic> agentHeaders(AgentChatRequest request) =>
+      _agentHeaders(request.apiKey);
+
+  @protected
+  Duration? agentReceiveTimeout(AgentChatRequest request) =>
+      const Duration(minutes: 5);
+
+  @protected
+  AgentWireError agentWireError(Object error, ProviderConfig provider) =>
+      agentWireErrorFrom(error, provider);
+
+  @protected
+  Map<String, dynamic> agentPayload(AgentChatRequest request) {
     final input = <Map<String, dynamic>>[];
     for (final message in request.messages) {
       if (message is UserMessage) {

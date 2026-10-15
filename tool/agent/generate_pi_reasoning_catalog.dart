@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 
 const _providers = <String>[
   'openai',
+  'openai-codex',
   'anthropic',
   'google',
   'deepseek',
@@ -313,7 +314,10 @@ String _geminiMinimumLevel(String modelId) {
 String _reasoningApi(Map<String, dynamic> model, Map<String, dynamic> compat) {
   final api = model['api'];
   final id = model['id'] as String;
-  if (api == 'openai-responses') return 'openAiResponses';
+  // The ChatGPT Codex backend speaks the Responses API with its own transport.
+  if (api == 'openai-responses' || api == 'openai-codex-responses') {
+    return 'openAiResponses';
+  }
   if (api == 'anthropic-messages') {
     return compat['forceAdaptiveThinking'] == true
         ? 'anthropicAdaptive'

@@ -7394,5 +7394,169 @@
     "placeholders": {
       "cost": {}
     }
-  }
+  },
+  "chatgptCodex_quotaTitle": "ChatGPT 订阅额度",
+  "chatgptCodex_windowShortTerm": "短周期额度",
+  "chatgptCodex_windowLongTerm": "长周期额度",
+  "chatgptCodex_windowWeekly": "每周额度",
+  "chatgptCodex_windowHours": "{hours} 小时额度",
+  "@chatgptCodex_windowHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_windowDays": "{days} 天额度",
+  "@chatgptCodex_windowDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_resetToday": "今天 {time}",
+  "@chatgptCodex_resetToday": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_resetTomorrow": "明天 {time}",
+  "@chatgptCodex_resetTomorrow": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_resetOn": "{date} {time}",
+  "@chatgptCodex_resetOn": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "MMMEd"
+      },
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_durationDaysHours": "{days} 天 {hours} 小时",
+  "@chatgptCodex_durationDaysHours": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_durationHoursMinutes": "{hours} 小时 {minutes} 分钟",
+  "@chatgptCodex_durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_durationMinutes": "{minutes} 分钟",
+  "@chatgptCodex_durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "chatgptCodex_resetWithRemaining": "{when} 重置（约 {duration}后）",
+  "@chatgptCodex_resetWithRemaining": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_remaining": "剩余 {percent}",
+  "@chatgptCodex_remaining": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_plan": "{plan} 套餐",
+  "@chatgptCodex_plan": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_quotaEmpty": "还没有额度数据。用 ChatGPT 模型发送一条消息，或点“刷新”。",
+  "chatgptCodex_limitReached": "有一个额度周期已用完，重置前对 ChatGPT 模型的请求会被拒绝。",
+  "chatgptCodex_quotaNote": "百分比由 ChatGPT 服务端提供，重置时间按本机时区显示。",
+  "chatgptCodex_updatedAt": "更新于 {time}",
+  "@chatgptCodex_updatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime",
+        "format": "Hm"
+      }
+    }
+  },
+  "chatgptCodex_notSignedIn": "未登录 ChatGPT",
+  "chatgptCodex_needsLogin": "ChatGPT 登录已失效，请重新登录",
+  "chatgptCodex_signedIn": "已登录：{account}",
+  "@chatgptCodex_signedIn": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_signedInNoEmail": "已登录 ChatGPT",
+  "chatgptCodex_signIn": "登录",
+  "chatgptCodex_signOut": "退出登录",
+  "chatgptCodex_loginTitle": "登录 ChatGPT",
+  "chatgptCodex_loginIntro": "用 ChatGPT 订阅（Plus、Pro 等）驱动智能体和提示词助手，用量计入该账号的 Codex 额度。登录凭据只保存在本机，不参与云同步。",
+  "chatgptCodex_methodDeviceCode": "设备码登录",
+  "chatgptCodex_methodDeviceCodeDescription": "在浏览器打开验证页并输入一次性代码，切换应用不会中断。",
+  "chatgptCodex_recommended": "推荐",
+  "chatgptCodex_methodBrowser": "浏览器登录",
+  "chatgptCodex_methodBrowserDescription": "跳转到浏览器登录，完成后应用自动收到结果。",
+  "chatgptCodex_finishing": "正在完成登录…",
+  "chatgptCodex_deviceCodeStep": "打开验证页，登录 ChatGPT 后输入下面的代码：",
+  "chatgptCodex_openVerificationPage": "打开验证页",
+  "chatgptCodex_waitingApproval": "等待你在浏览器中确认…",
+  "chatgptCodex_deviceCodeNote": "代码 15 分钟内有效。",
+  "chatgptCodex_browserStep": "已在浏览器打开登录页，登录完成后结果会自动回到这里。",
+  "chatgptCodex_portBusy": "本机 1455 端口被占用，无法自动接收登录结果。登录完成后，请把浏览器地址栏的网址粘贴到下面。",
+  "chatgptCodex_openLoginPage": "重新打开登录页",
+  "chatgptCodex_waitingBrowser": "等待浏览器返回登录结果…",
+  "chatgptCodex_pasteRedirectLabel": "浏览器地址栏中的网址",
+  "chatgptCodex_pasteRedirectHint": "浏览器没有自动跳回时，把停留页面的完整网址粘贴到这里。",
+  "chatgptCodex_pasteRedirectInvalid": "网址中没有找到有效的登录代码。",
+  "chatgptCodex_submitRedirect": "提交",
+  "chatgptCodex_deviceCodeUnavailable": "这个账号没有开启设备码登录。可以在 ChatGPT 的安全设置中开启，或改用浏览器登录。",
+  "chatgptCodex_loginTimedOut": "登录超时，请重试。",
+  "chatgptCodex_loginFailed": "登录失败：{error}",
+  "@chatgptCodex_loginFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chatgptCodex_providerFormNote": "这个服务商用 ChatGPT 账号登录，不需要地址和 API Key。保存后会打开登录。"
 }

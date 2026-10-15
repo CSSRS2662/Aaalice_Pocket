@@ -22,6 +22,7 @@
     "dist/providers/data/mistral.json": "e3a109306644bf2f2fa38fece50b2d3ce1dbe3b87b1f1b9e2d70cce7eb5c0ea1",
     "dist/providers/data/moonshotai-cn.json": "1e6146ff3477883636448c0f44222f0a52b3c4562ef8f4eecf7e941cdd59d12e",
     "dist/providers/data/moonshotai.json": "d8d5209873058ddccd37c1f026833e2ea3f9476c3dc9628b4a940d407acc0b2e",
+    "dist/providers/data/openai-codex.json": "2712c2924a4a75213dddc743c0e5f08d50a781fe807f16d5afb5fb65b41c64c7",
     "dist/providers/data/openai.json": "2f32f5796138f03153a0314edf4c8ee27531d62f3477de0da46e51095f5e4782",
     "dist/providers/data/openrouter.json": "fcf3b27503b0c61f00fae4e6340627aa276d8f6ca52b1c5170dcb45b44a4a9c9",
     "dist/providers/data/qwen-token-plan-cn.json": "d24c5318361ae5395866faaaffde5e52341be58e607def0cc219cae49326492a",

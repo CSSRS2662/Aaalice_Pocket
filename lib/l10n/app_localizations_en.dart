@@ -15950,4 +15950,210 @@ class AppLocalizationsEn extends AppLocalizations {
   String stamina_costAnlas(Object cost) {
     return '$cost Anlas';
   }
+
+  @override
+  String get chatgptCodex_quotaTitle => 'ChatGPT subscription quota';
+
+  @override
+  String get chatgptCodex_windowShortTerm => 'Short-term limit';
+
+  @override
+  String get chatgptCodex_windowLongTerm => 'Long-term limit';
+
+  @override
+  String get chatgptCodex_windowWeekly => 'Weekly limit';
+
+  @override
+  String chatgptCodex_windowHours(int hours) {
+    return '$hours-hour limit';
+  }
+
+  @override
+  String chatgptCodex_windowDays(int days) {
+    return '$days-day limit';
+  }
+
+  @override
+  String chatgptCodex_resetToday(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return 'today at $timeString';
+  }
+
+  @override
+  String chatgptCodex_resetTomorrow(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return 'tomorrow at $timeString';
+  }
+
+  @override
+  String chatgptCodex_resetOn(DateTime date, DateTime time) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.MMMEd(localeName);
+    final String dateString = dateDateFormat.format(date);
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '$dateString at $timeString';
+  }
+
+  @override
+  String chatgptCodex_durationDaysHours(int days, int hours) {
+    return '$days d $hours h';
+  }
+
+  @override
+  String chatgptCodex_durationHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String chatgptCodex_durationMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String chatgptCodex_resetWithRemaining(String when, String duration) {
+    return 'Resets $when (in about $duration)';
+  }
+
+  @override
+  String chatgptCodex_remaining(String percent) {
+    return '$percent left';
+  }
+
+  @override
+  String chatgptCodex_plan(String plan) {
+    return '$plan plan';
+  }
+
+  @override
+  String get chatgptCodex_quotaEmpty =>
+      'No quota data yet. Send a message with a ChatGPT model, or tap Refresh.';
+
+  @override
+  String get chatgptCodex_limitReached =>
+      'A limit window is used up. Requests to ChatGPT models are refused until it resets.';
+
+  @override
+  String get chatgptCodex_quotaNote =>
+      'Percentages come from the ChatGPT server; reset times use this device\'s time zone.';
+
+  @override
+  String chatgptCodex_updatedAt(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return 'Updated $timeString';
+  }
+
+  @override
+  String get chatgptCodex_notSignedIn => 'Not signed in to ChatGPT';
+
+  @override
+  String get chatgptCodex_needsLogin =>
+      'ChatGPT sign-in expired. Sign in again.';
+
+  @override
+  String chatgptCodex_signedIn(String account) {
+    return 'Signed in: $account';
+  }
+
+  @override
+  String get chatgptCodex_signedInNoEmail => 'Signed in to ChatGPT';
+
+  @override
+  String get chatgptCodex_signIn => 'Sign in';
+
+  @override
+  String get chatgptCodex_signOut => 'Sign out';
+
+  @override
+  String get chatgptCodex_loginTitle => 'Sign in to ChatGPT';
+
+  @override
+  String get chatgptCodex_loginIntro =>
+      'Use your ChatGPT subscription (Plus, Pro and others) for the agent and the prompt assistant. Usage counts toward the account\'s Codex limits. Sign-in tokens stay on this device and are not synced.';
+
+  @override
+  String get chatgptCodex_methodDeviceCode => 'Device code';
+
+  @override
+  String get chatgptCodex_methodDeviceCodeDescription =>
+      'Open the verification page in a browser and enter a one-time code. Switching apps does not interrupt it.';
+
+  @override
+  String get chatgptCodex_recommended => 'Recommended';
+
+  @override
+  String get chatgptCodex_methodBrowser => 'Browser sign-in';
+
+  @override
+  String get chatgptCodex_methodBrowserDescription =>
+      'Sign in in the browser; the app receives the result automatically.';
+
+  @override
+  String get chatgptCodex_finishing => 'Finishing sign-in…';
+
+  @override
+  String get chatgptCodex_deviceCodeStep =>
+      'Open the verification page, sign in to ChatGPT and enter this code:';
+
+  @override
+  String get chatgptCodex_openVerificationPage => 'Open verification page';
+
+  @override
+  String get chatgptCodex_waitingApproval =>
+      'Waiting for you to confirm in the browser…';
+
+  @override
+  String get chatgptCodex_deviceCodeNote => 'The code is valid for 15 minutes.';
+
+  @override
+  String get chatgptCodex_browserStep =>
+      'The sign-in page is open in your browser. The result returns here when you finish.';
+
+  @override
+  String get chatgptCodex_portBusy =>
+      'Port 1455 on this device is in use, so the result cannot be received automatically. After signing in, paste the address from the browser\'s address bar below.';
+
+  @override
+  String get chatgptCodex_openLoginPage => 'Open sign-in page again';
+
+  @override
+  String get chatgptCodex_waitingBrowser =>
+      'Waiting for the browser to return the result…';
+
+  @override
+  String get chatgptCodex_pasteRedirectLabel =>
+      'Address from the browser\'s address bar';
+
+  @override
+  String get chatgptCodex_pasteRedirectHint =>
+      'If the browser does not return, paste the full address of the page it stopped on.';
+
+  @override
+  String get chatgptCodex_pasteRedirectInvalid =>
+      'The address contains no valid sign-in code.';
+
+  @override
+  String get chatgptCodex_submitRedirect => 'Submit';
+
+  @override
+  String get chatgptCodex_deviceCodeUnavailable =>
+      'Device code sign-in is not enabled for this account. Turn it on in ChatGPT\'s security settings, or use browser sign-in.';
+
+  @override
+  String get chatgptCodex_loginTimedOut => 'Sign-in timed out. Try again.';
+
+  @override
+  String chatgptCodex_loginFailed(String error) {
+    return 'Sign-in failed: $error';
+  }
+
+  @override
+  String get chatgptCodex_providerFormNote =>
+      'This provider signs in with a ChatGPT account and needs no address or API key. Sign-in opens after you save.';
 }

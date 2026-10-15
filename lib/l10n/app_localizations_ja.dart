@@ -15523,4 +15523,205 @@ class AppLocalizationsJa extends AppLocalizations {
   String stamina_costAnlas(Object cost) {
     return '$cost Anlas';
   }
+
+  @override
+  String get chatgptCodex_quotaTitle => 'ChatGPT サブスクリプションの利用枠';
+
+  @override
+  String get chatgptCodex_windowShortTerm => '短期の上限';
+
+  @override
+  String get chatgptCodex_windowLongTerm => '長期の上限';
+
+  @override
+  String get chatgptCodex_windowWeekly => '週間の上限';
+
+  @override
+  String chatgptCodex_windowHours(int hours) {
+    return '$hours 時間の上限';
+  }
+
+  @override
+  String chatgptCodex_windowDays(int days) {
+    return '$days 日間の上限';
+  }
+
+  @override
+  String chatgptCodex_resetToday(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '今日 $timeString';
+  }
+
+  @override
+  String chatgptCodex_resetTomorrow(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '明日 $timeString';
+  }
+
+  @override
+  String chatgptCodex_resetOn(DateTime date, DateTime time) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.MMMEd(localeName);
+    final String dateString = dateDateFormat.format(date);
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '$dateString $timeString';
+  }
+
+  @override
+  String chatgptCodex_durationDaysHours(int days, int hours) {
+    return '$days 日 $hours 時間';
+  }
+
+  @override
+  String chatgptCodex_durationHoursMinutes(int hours, int minutes) {
+    return '$hours 時間 $minutes 分';
+  }
+
+  @override
+  String chatgptCodex_durationMinutes(int minutes) {
+    return '$minutes 分';
+  }
+
+  @override
+  String chatgptCodex_resetWithRemaining(String when, String duration) {
+    return '$whenにリセット（約 $duration後）';
+  }
+
+  @override
+  String chatgptCodex_remaining(String percent) {
+    return '残り $percent';
+  }
+
+  @override
+  String chatgptCodex_plan(String plan) {
+    return '$plan プラン';
+  }
+
+  @override
+  String get chatgptCodex_quotaEmpty =>
+      '利用枠のデータはまだありません。ChatGPT モデルでメッセージを送るか、更新をタップしてください。';
+
+  @override
+  String get chatgptCodex_limitReached =>
+      '上限に達した期間があります。リセットまで ChatGPT モデルへのリクエストは拒否されます。';
+
+  @override
+  String get chatgptCodex_quotaNote =>
+      '割合は ChatGPT サーバーの値です。リセット時刻はこの端末のタイムゾーンで表示します。';
+
+  @override
+  String chatgptCodex_updatedAt(DateTime time) {
+    final intl.DateFormat timeDateFormat = intl.DateFormat.Hm(localeName);
+    final String timeString = timeDateFormat.format(time);
+
+    return '$timeString に更新';
+  }
+
+  @override
+  String get chatgptCodex_notSignedIn => 'ChatGPT に未サインイン';
+
+  @override
+  String get chatgptCodex_needsLogin =>
+      'ChatGPT のサインインが無効になりました。もう一度サインインしてください。';
+
+  @override
+  String chatgptCodex_signedIn(String account) {
+    return 'サインイン中：$account';
+  }
+
+  @override
+  String get chatgptCodex_signedInNoEmail => 'ChatGPT にサインイン済み';
+
+  @override
+  String get chatgptCodex_signIn => 'サインイン';
+
+  @override
+  String get chatgptCodex_signOut => 'サインアウト';
+
+  @override
+  String get chatgptCodex_loginTitle => 'ChatGPT にサインイン';
+
+  @override
+  String get chatgptCodex_loginIntro =>
+      'ChatGPT のサブスクリプション（Plus、Pro など）でエージェントとプロンプトアシスタントを利用します。使用量はそのアカウントの Codex の利用枠に計上されます。サインイン情報はこの端末にのみ保存され、クラウド同期されません。';
+
+  @override
+  String get chatgptCodex_methodDeviceCode => 'デバイスコード';
+
+  @override
+  String get chatgptCodex_methodDeviceCodeDescription =>
+      'ブラウザで確認ページを開き、ワンタイムコードを入力します。アプリを切り替えても中断されません。';
+
+  @override
+  String get chatgptCodex_recommended => 'おすすめ';
+
+  @override
+  String get chatgptCodex_methodBrowser => 'ブラウザでサインイン';
+
+  @override
+  String get chatgptCodex_methodBrowserDescription =>
+      'ブラウザでサインインすると、結果は自動でアプリに届きます。';
+
+  @override
+  String get chatgptCodex_finishing => 'サインインを完了しています…';
+
+  @override
+  String get chatgptCodex_deviceCodeStep =>
+      '確認ページを開き、ChatGPT にサインインして次のコードを入力してください：';
+
+  @override
+  String get chatgptCodex_openVerificationPage => '確認ページを開く';
+
+  @override
+  String get chatgptCodex_waitingApproval => 'ブラウザでの確認を待っています…';
+
+  @override
+  String get chatgptCodex_deviceCodeNote => 'コードの有効期限は 15 分です。';
+
+  @override
+  String get chatgptCodex_browserStep => 'ブラウザでサインインページを開きました。完了すると結果がここに届きます。';
+
+  @override
+  String get chatgptCodex_portBusy =>
+      'この端末のポート 1455 が使用中のため、結果を自動で受け取れません。サインイン後、ブラウザのアドレスバーの URL を下に貼り付けてください。';
+
+  @override
+  String get chatgptCodex_openLoginPage => 'サインインページをもう一度開く';
+
+  @override
+  String get chatgptCodex_waitingBrowser => 'ブラウザからの結果を待っています…';
+
+  @override
+  String get chatgptCodex_pasteRedirectLabel => 'ブラウザのアドレスバーの URL';
+
+  @override
+  String get chatgptCodex_pasteRedirectHint =>
+      'ブラウザが戻らない場合は、表示中のページの URL をすべて貼り付けてください。';
+
+  @override
+  String get chatgptCodex_pasteRedirectInvalid => 'URL に有効なサインインコードが見つかりません。';
+
+  @override
+  String get chatgptCodex_submitRedirect => '送信';
+
+  @override
+  String get chatgptCodex_deviceCodeUnavailable =>
+      'このアカウントではデバイスコードによるサインインが有効になっていません。ChatGPT のセキュリティ設定で有効にするか、ブラウザでサインインしてください。';
+
+  @override
+  String get chatgptCodex_loginTimedOut => 'サインインがタイムアウトしました。もう一度お試しください。';
+
+  @override
+  String chatgptCodex_loginFailed(String error) {
+    return 'サインインに失敗しました：$error';
+  }
+
+  @override
+  String get chatgptCodex_providerFormNote =>
+      'このプロバイダーは ChatGPT アカウントでサインインするため、アドレスと API キーは不要です。保存後にサインインが開きます。';
 }

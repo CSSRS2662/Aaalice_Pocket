@@ -14,7 +14,9 @@ String? providerIconAsset({ProviderConfig? provider, ProviderPreset? preset}) {
     }
   }
   final asset = switch (preset ?? provider?.preset) {
-    ProviderPreset.openaiChat || ProviderPreset.openaiResponses => 'openai',
+    ProviderPreset.openaiChat ||
+    ProviderPreset.openaiResponses ||
+    ProviderPreset.chatgptCodex => 'openai',
     ProviderPreset.anthropic => 'anthropic',
     ProviderPreset.gemini => 'gemini-color',
     ProviderPreset.deepseek => 'deepseek-color',

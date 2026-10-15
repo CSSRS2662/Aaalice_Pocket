@@ -53,6 +53,10 @@ enum ProviderProtocol {
   anthropicMessages,
   geminiGenerateContent,
   ollamaChatCompletions,
+
+  /// ChatGPT subscription through the Codex backend; signs in instead of
+  /// using an API key.
+  openaiCodexResponses,
 }
 
 extension ProviderProtocolLabel on ProviderProtocol {
@@ -68,8 +72,13 @@ extension ProviderProtocolLabel on ProviderProtocol {
         return 'Gemini generateContent';
       case ProviderProtocol.ollamaChatCompletions:
         return 'Ollama Chat Completions';
+      case ProviderProtocol.openaiCodexResponses:
+        return 'ChatGPT Codex';
     }
   }
+
+  /// Authenticates with a ChatGPT login instead of an API key.
+  bool get usesChatGptLogin => this == ProviderProtocol.openaiCodexResponses;
 
   bool get supportsModelList => true;
 
@@ -79,6 +88,7 @@ extension ProviderProtocolLabel on ProviderProtocol {
       case ProviderProtocol.openaiResponses:
       case ProviderProtocol.anthropicMessages:
       case ProviderProtocol.geminiGenerateContent:
+      case ProviderProtocol.openaiCodexResponses:
         return true;
       case ProviderProtocol.ollamaChatCompletions:
         return false;
@@ -89,6 +99,7 @@ extension ProviderProtocolLabel on ProviderProtocol {
 enum ProviderPreset {
   openaiChat,
   openaiResponses,
+  chatgptCodex,
   openaiCompatibleChat,
   openaiCompatibleResponses,
   anthropic,
@@ -120,6 +131,8 @@ extension ProviderPresetDefaults on ProviderPreset {
         return 'OpenAI Chat Completions';
       case ProviderPreset.openaiResponses:
         return 'OpenAI Responses';
+      case ProviderPreset.chatgptCodex:
+        return 'ChatGPT (Codex)';
       case ProviderPreset.openaiCompatibleChat:
         return 'Custom OpenAI-compatible (Chat)';
       case ProviderPreset.openaiCompatibleResponses:
@@ -173,6 +186,8 @@ extension ProviderPresetDefaults on ProviderPreset {
         return 'openai_chat';
       case ProviderPreset.openaiResponses:
         return 'openai_responses';
+      case ProviderPreset.chatgptCodex:
+        return 'chatgpt_codex';
       case ProviderPreset.openaiCompatibleChat:
         return 'openai_compatible_chat';
       case ProviderPreset.openaiCompatibleResponses:
@@ -226,6 +241,8 @@ extension ProviderPresetDefaults on ProviderPreset {
         return 'OpenAI Chat';
       case ProviderPreset.openaiResponses:
         return 'OpenAI Responses';
+      case ProviderPreset.chatgptCodex:
+        return 'ChatGPT Codex';
       case ProviderPreset.openaiCompatibleChat:
         return 'Custom OpenAI-compatible Chat';
       case ProviderPreset.openaiCompatibleResponses:
@@ -278,6 +295,8 @@ extension ProviderPresetDefaults on ProviderPreset {
       case ProviderPreset.openaiChat:
       case ProviderPreset.openaiResponses:
         return 'https://api.openai.com/v1';
+      case ProviderPreset.chatgptCodex:
+        return 'https://chatgpt.com/backend-api';
       case ProviderPreset.openaiCompatibleChat:
       case ProviderPreset.openaiCompatibleResponses:
         return '';
@@ -355,6 +374,8 @@ extension ProviderPresetDefaults on ProviderPreset {
         return ProviderProtocol.geminiGenerateContent;
       case ProviderPreset.ollama:
         return ProviderProtocol.ollamaChatCompletions;
+      case ProviderPreset.chatgptCodex:
+        return ProviderProtocol.openaiCodexResponses;
     }
   }
 
@@ -363,6 +384,7 @@ extension ProviderPresetDefaults on ProviderPreset {
       case ProviderPreset.openaiChat:
         return const ['gpt-4.1-mini'];
       case ProviderPreset.openaiResponses:
+      case ProviderPreset.chatgptCodex:
         return const ['gpt-5.5'];
       case ProviderPreset.anthropic:
         return const ['claude-opus-4-8'];
@@ -410,6 +432,8 @@ extension ProviderPresetDefaults on ProviderPreset {
       case ProviderPreset.lmStudioResponses:
       case ProviderPreset.ollama:
       case ProviderPreset.pollinations:
+      // Signs in with a ChatGPT account instead.
+      case ProviderPreset.chatgptCodex:
         return false;
       case ProviderPreset.openaiChat:
       case ProviderPreset.openaiResponses:
@@ -439,6 +463,7 @@ extension ProviderPresetDefaults on ProviderPreset {
     switch (this) {
       case ProviderPreset.openaiChat:
       case ProviderPreset.openaiResponses:
+      case ProviderPreset.chatgptCodex:
       case ProviderPreset.openaiCompatibleChat:
       case ProviderPreset.openaiCompatibleResponses:
       case ProviderPreset.anthropic:
@@ -490,6 +515,7 @@ extension ProviderPresetDefaults on ProviderPreset {
         return ProviderType.ollama;
       case ProviderPreset.openaiChat:
       case ProviderPreset.openaiResponses:
+      case ProviderPreset.chatgptCodex:
       case ProviderPreset.openaiCompatibleChat:
       case ProviderPreset.openaiCompatibleResponses:
       case ProviderPreset.anthropic:

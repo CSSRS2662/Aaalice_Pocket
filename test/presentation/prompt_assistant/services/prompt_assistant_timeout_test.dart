@@ -39,7 +39,11 @@ void main() {
     }
   });
 
-  for (final protocol in ProviderProtocol.values) {
+  // ChatGPT Codex needs a login and only streams; its adapter test covers
+  // the same timeout rule.
+  for (final protocol in ProviderProtocol.values.where(
+    (protocol) => !protocol.usesChatGptLogin,
+  )) {
     test('$protocol 使用请求配置而非适配器固定超时', () async {
       final dio = _Dio();
       when(
