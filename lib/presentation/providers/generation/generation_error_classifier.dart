@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/utils/inpaint_mask/empty_inpaint_mask_exception.dart';
+
 /// Whether retrying a failed generation request can succeed.
 ///
 /// Client errors such as bad parameters, a lost sign-in, missing Anlas or a
@@ -19,6 +21,10 @@ int? _httpStatus(Object error) {
   final match = _apiErrorStatus.firstMatch(error.toString());
   return match == null ? null : int.parse(match.group(1)!);
 }
+
+/// Rejected locally from the same inputs, so retrying only delays the error.
+bool isDeterministicGenerationError(Object? error) =>
+    EmptyInpaintMaskException.matches(error);
 
 /// Whether a generation error says the endpoint cannot serve streaming output.
 bool isStreamingGenerationUnsupportedError(Object? error) {
