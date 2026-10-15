@@ -1053,7 +1053,7 @@ void main() {
           minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
           focusedSelectionRect: any(named: 'focusedSelectionRect'),
         ),
-      ).thenThrow(const EmptyInpaintMaskException(latentGridSize: 8));
+      ).thenThrow(const EmptyInpaintMaskException());
 
       final coordinator = ImageGenerationCoordinator(
         apiService: apiService,
@@ -1091,7 +1091,7 @@ void main() {
     test('empty inpaint mask stream errors skip multi-image retries', () async {
       final apiService = _MockNAIImageGenerationApiService();
       final delays = <Duration>[];
-      const emptyMask = EmptyInpaintMaskException(latentGridSize: 8);
+      const emptyMask = EmptyInpaintMaskException();
       when(
         () => apiService.generateImageStream(
           any(),
@@ -1119,10 +1119,7 @@ void main() {
       final events = await coordinator.execute(command, handle).toList();
 
       final failed = events.last as GenerationFailed;
-      expect(
-        EmptyInpaintMaskException.tryParse(failed.error)?.latentGridSize,
-        8,
-      );
+      expect(EmptyInpaintMaskException.matches(failed.error), isTrue);
       expect(delays, isEmpty);
       verify(
         () => apiService.generateImageStream(
