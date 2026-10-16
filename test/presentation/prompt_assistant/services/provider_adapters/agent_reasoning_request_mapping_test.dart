@@ -10,6 +10,7 @@ import 'package:nai_launcher/presentation/prompt_assistant/services/provider_ada
 import 'package:nai_launcher/presentation/prompt_assistant/services/provider_adapters/openai_chat_completions_adapter.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/services/provider_adapters/openai_responses_adapter.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/services/provider_adapters/prompt_assistant_adapter.dart';
+import 'package:nai_launcher/presentation/prompt_assistant/services/provider_adapters/reasoning_payload.dart';
 
 void main() {
   group('Pi provider-native reasoning request mapping', () {
@@ -173,6 +174,36 @@ void main() {
       expect(payload, isNot(contains('thinking')));
     });
 
+    test('Kimi Coding chat requests use max_tokens', () async {
+      final base = _request(
+        ProviderProtocol.openaiChatCompletions,
+        const AgentReasoningRequest(
+          api: AgentReasoningApi.openAiCompletions,
+          enabled: true,
+          effort: 'high',
+        ),
+      );
+      final payload = await _capture(
+        const OpenAiChatCompletionsAdapter(),
+        AgentChatRequest(
+          sessionId: base.sessionId,
+          provider: ProviderPreset.kimiCoding.createConfig(),
+          model: 'kimi-for-coding',
+          systemPrompt: base.systemPrompt,
+          messages: base.messages,
+          tools: base.tools,
+          apiKey: null,
+          modelMaxOutputTokens: 32768,
+          reasoning: 'high',
+          reasoningRequest: base.reasoningRequest,
+        ),
+      );
+
+      expect(payload['max_tokens'], 32768);
+      expect(payload, isNot(contains('max_completion_tokens')));
+      expect(payload['reasoning_effort'], 'high');
+    });
+
     test('Mistral separates prompt mode from effort models', () async {
       final promptMode = await _capture(
         const OpenAiChatCompletionsAdapter(),
@@ -200,6 +231,26 @@ void main() {
       expect(promptMode, isNot(contains('reasoning_effort')));
       expect(effort['reasoning_effort'], 'high');
       expect(effort, isNot(contains('prompt_mode')));
+      // Thinking off sends the model's mapped `off` effort, as Pi does.
+      expect(
+        chatReasoningPayload(
+          const AgentReasoningRequest(
+            api: AgentReasoningApi.mistralEffort,
+            enabled: false,
+            effort: 'none',
+          ),
+        ),
+        {'reasoning_effort': 'none'},
+      );
+      expect(
+        chatReasoningPayload(
+          const AgentReasoningRequest(
+            api: AgentReasoningApi.mistralEffort,
+            enabled: false,
+          ),
+        ),
+        isEmpty,
+      );
 
       final replay = await _capture(
         const OpenAiChatCompletionsAdapter(),

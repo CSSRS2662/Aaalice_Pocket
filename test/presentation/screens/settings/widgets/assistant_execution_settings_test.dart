@@ -55,7 +55,16 @@ void main() {
         await tester.tap(find.text('打开'));
         await tester.pumpAndSettle();
         final mode = find.byKey(const ValueKey('assistant-concurrency-mode'));
-        await tester.scrollUntilVisible(mode, 180, scrollable: find.descendant(of: find.byType(PromptAssistantProviderForm), matching: find.byType(Scrollable)).first);
+        await tester.scrollUntilVisible(
+          mode,
+          180,
+          scrollable: find
+              .descendant(
+                of: find.byType(PromptAssistantProviderForm),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
         await tester.pumpAndSettle();
         expect(find.text('自动'), findsOneWidget);
         await tester.tap(mode);
@@ -63,7 +72,16 @@ void main() {
         await tester.tap(find.text('手动').last);
         await tester.pumpAndSettle();
         final count = find.byKey(const ValueKey('assistant-concurrency-count'));
-        await tester.scrollUntilVisible(count, 180, scrollable: find.descendant(of: find.byType(PromptAssistantProviderForm), matching: find.byType(Scrollable)).first);
+        await tester.scrollUntilVisible(
+          count,
+          180,
+          scrollable: find
+              .descendant(
+                of: find.byType(PromptAssistantProviderForm),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
         await tester.enterText(count, '7');
         await tester.tap(find.text('保存'));
         await tester.pumpAndSettle();
@@ -87,7 +105,7 @@ void main() {
                 child: AssistantTaskThinkingField(
                   task: AssistantTaskType.translate,
                   provider: ProviderPreset.deepseek.createConfig(),
-                  model: 'deepseek-v4-flash',
+                  model: 'deepseek-flash',
                   value: value,
                   onChanged: (next) => setState(() => value = next),
                 ),
@@ -120,7 +138,7 @@ void main() {
               AssistantTaskThinkingField(
                 task: AssistantTaskType.translate,
                 provider: ProviderPreset.moonshot.createConfig(),
-                model: 'kimi-k2.5',
+                model: 'kimi-k2.6',
                 value: AssistantThinkingLevel.high,
                 onChanged: (_) {},
               ),
@@ -176,7 +194,16 @@ void main() {
         ),
       );
       final count = find.byKey(const ValueKey('assistant-concurrency-count'));
-      await tester.scrollUntilVisible(count, 180, scrollable: find.descendant(of: find.byType(PromptAssistantProviderForm), matching: find.byType(Scrollable)).first);
+      await tester.scrollUntilVisible(
+        count,
+        180,
+        scrollable: find
+            .descendant(
+              of: find.byType(PromptAssistantProviderForm),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       await tester.enterText(count, '');
       await tester.tap(find.text('保存'));
       await tester.pumpAndSettle();

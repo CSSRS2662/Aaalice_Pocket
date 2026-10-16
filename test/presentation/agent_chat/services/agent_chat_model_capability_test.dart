@@ -4,6 +4,7 @@ import 'package:nai_launcher/presentation/prompt_assistant/models/agent_reasonin
 import 'package:nai_launcher/presentation/prompt_assistant/models/assistant_model_capability.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/models/agent_protocol.dart';
 import 'package:nai_launcher/data/models/prompt_assistant/prompt_assistant_models.dart';
+import 'package:nai_launcher/presentation/prompt_assistant/services/provider_adapters/reasoning_payload.dart';
 
 void main() {
   group('Pi reasoning capability matrix', () {
@@ -50,13 +51,17 @@ void main() {
             protocol: ProviderProtocol.geminiGenerateContent,
             baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
             model: 'gemini-3.1-pro-preview',
-            levels: const [ThinkingLevel.low, ThinkingLevel.high],
+            levels: const [
+              ThinkingLevel.low,
+              ThinkingLevel.medium,
+              ThinkingLevel.high,
+            ],
           ),
           (
             provider: 'deepseek',
             protocol: ProviderProtocol.openaiChatCompletions,
             baseUrl: 'https://api.deepseek.com',
-            model: 'deepseek-v4-flash',
+            model: 'deepseek-flash',
             levels: const [
               ThinkingLevel.off,
               ThinkingLevel.low,
@@ -105,13 +110,7 @@ void main() {
             protocol: ProviderProtocol.openaiChatCompletions,
             baseUrl: 'https://api.mistral.ai',
             model: 'magistral-medium-latest',
-            levels: const [
-              ThinkingLevel.off,
-              ThinkingLevel.minimal,
-              ThinkingLevel.low,
-              ThinkingLevel.medium,
-              ThinkingLevel.high,
-            ],
+            levels: const [ThinkingLevel.off, ThinkingLevel.high],
           ),
           (
             provider: 'groq',
@@ -128,7 +127,7 @@ void main() {
             provider: 'cerebras',
             protocol: ProviderProtocol.openaiChatCompletions,
             baseUrl: 'https://api.cerebras.ai/v1',
-            model: 'gemma-4-31b',
+            model: 'qwen-3.8-27b',
             levels: const [
               ThinkingLevel.off,
               ThinkingLevel.low,
@@ -199,7 +198,7 @@ void main() {
       (ProviderPreset.xai, 'grok-4.6'),
       (ProviderPreset.mistral, 'magistral-medium-latest'),
       (ProviderPreset.groq, 'openai/gpt-oss-120b'),
-      (ProviderPreset.cerebras, 'gemma-4-31b'),
+      (ProviderPreset.cerebras, 'qwen-3.8-27b'),
       (ProviderPreset.minimax, 'MiniMax-M3'),
       (ProviderPreset.minimaxCn, 'MiniMax-M3'),
       (ProviderPreset.kimiCoding, 'kimi-for-coding'),
@@ -222,7 +221,7 @@ void main() {
     }
   });
 
-  test('maps DeepSeek effort and preserves Mistral level aliases', () {
+  test('maps DeepSeek and Mistral efforts', () {
     final deepSeek = AgentChatModelCapability.resolve(
       const ProviderConfig(
         id: 'deepseek',
@@ -231,7 +230,7 @@ void main() {
         baseUrl: 'https://api.deepseek.com',
         preset: ProviderPreset.deepseek,
       ),
-      'deepseek-v4-flash',
+      'deepseek-flash',
     );
     final mistral = AgentChatModelCapability.resolve(
       const ProviderConfig(
@@ -240,7 +239,7 @@ void main() {
         protocol: ProviderProtocol.openaiChatCompletions,
         baseUrl: 'https://api.mistral.ai',
       ),
-      'magistral-small',
+      'mistral-small-latest',
     );
 
     expect(deepSeek.levels, [
@@ -249,13 +248,17 @@ void main() {
       ThinkingLevel.high,
       ThinkingLevel.max,
     ]);
-    expect(mistral.levels, [
-      ThinkingLevel.off,
-      ThinkingLevel.minimal,
-      ThinkingLevel.low,
-      ThinkingLevel.medium,
-      ThinkingLevel.high,
-    ]);
+    // Pi 1.3.0: Mistral models with a level map send reasoning_effort,
+    // including `none` when thinking is off.
+    expect(mistral.levels, [ThinkingLevel.off, ThinkingLevel.high]);
+    expect(
+      mistral.resolveReasoningRequest(null),
+      isA<AgentReasoningRequest>()
+          .having((r) => r.api, 'api', AgentReasoningApi.mistralEffort)
+          .having((r) => r.enabled, 'enabled', isFalse)
+          .having((r) => r.effort, 'effort', 'none'),
+    );
+    expect(mistral.resolveReasoningRequest('high')?.effort, 'high');
     expect(
       deepSeek.resolveReasoningRequest('high'),
       isA<AgentReasoningRequest>()
@@ -337,6 +340,29 @@ void main() {
     );
     expect(capability.resolveReasoningRequest('low')?.effort, 'low');
     expect(capability.resolveReasoningRequest('high')?.effort, 'high');
+  });
+
+  test('ChatGPT GPT-6 models follow their Pi off mappings', () {
+    final provider = ProviderPreset.chatgptCodex.createConfig(id: 'chatgpt');
+    final sol = AgentChatModelCapability.resolve(provider, 'gpt-6-sol');
+    final next = AgentChatModelCapability.resolve(provider, 'gpt-6.1-sol');
+
+    // gpt-6-sol maps off to `none`; gpt-6.1-sol cannot turn thinking off.
+    expect(sol.levels.first, ThinkingLevel.off);
+    expect(
+      responsesReasoningEffort(sol.resolveReasoningRequest(null), null),
+      'none',
+    );
+    expect(next.levels, isNot(contains(ThinkingLevel.off)));
+    expect(
+      responsesReasoningEffort(next.resolveReasoningRequest(null), null),
+      isNull,
+    );
+    expect(
+      responsesReasoningEffort(next.resolveReasoningRequest('max'), null),
+      'max',
+    );
+    expect(next.model.contextWindow, 500000);
   });
 
   test('omits missing reasoning on models whose off mapping is null', () {
@@ -423,10 +449,7 @@ void main() {
     });
 
     test('borrows the window for a transparently proxied model', () {
-      final capability = AgentChatModelCapability.resolve(
-        relay,
-        'kimi-k2-thinking',
-      );
+      final capability = AgentChatModelCapability.resolve(relay, 'kimi-k2.6');
 
       expect(capability.model.contextWindow, 262144);
     });
@@ -435,7 +458,7 @@ void main() {
       expect(
         AgentChatModelCapability.resolve(
           relay,
-          'Kimi-K2-Thinking',
+          'Kimi-K2.6',
         ).model.contextWindow,
         262144,
       );
@@ -490,7 +513,7 @@ void main() {
     test('a manual window outranks the catalog', () {
       final capability = AgentChatModelCapability.resolve(
         relay,
-        'kimi-k2-thinking',
+        'kimi-k2.6',
         contextWindowOverride: 32000,
       );
 

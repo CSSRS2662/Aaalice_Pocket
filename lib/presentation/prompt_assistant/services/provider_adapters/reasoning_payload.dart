@@ -29,8 +29,12 @@ Map<String, dynamic> chatReasoningPayload(AgentReasoningRequest? reasoning) {
     AgentReasoningApi.mistralPromptMode => {
       if (reasoning.enabled) 'prompt_mode': 'reasoning',
     },
+    // Pi: thinking off sends the model's mapped `off` effort, such as `none`.
     AgentReasoningApi.mistralEffort => {
-      if (reasoning.enabled) 'reasoning_effort': reasoning.effort ?? 'high',
+      if (reasoning.enabled)
+        'reasoning_effort': reasoning.effort ?? 'high'
+      else if (reasoning.effort case final effort?)
+        'reasoning_effort': effort,
     },
     _ => const {},
   };

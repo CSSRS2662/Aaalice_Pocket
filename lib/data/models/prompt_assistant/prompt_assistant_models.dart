@@ -321,7 +321,7 @@ extension ProviderPresetDefaults on ProviderPreset {
       case ProviderPreset.minimaxCn:
         return 'https://api.minimaxi.com/anthropic';
       case ProviderPreset.kimiCoding:
-        return 'https://api.kimi.com/coding';
+        return 'https://api.kimi.com/coding/v1';
       case ProviderPreset.moonshot:
         return 'https://api.moonshot.ai/v1';
       case ProviderPreset.moonshotCn:
@@ -359,6 +359,8 @@ extension ProviderPresetDefaults on ProviderPreset {
       case ProviderPreset.qwenTokenPlanIndividual:
       case ProviderPreset.lmStudioChat:
       case ProviderPreset.pollinations:
+      // Pi 1.3.0 moved Kimi Coding from Anthropic Messages to this protocol.
+      case ProviderPreset.kimiCoding:
         return ProviderProtocol.openaiChatCompletions;
       case ProviderPreset.openaiResponses:
       case ProviderPreset.openaiCompatibleResponses:
@@ -368,7 +370,6 @@ extension ProviderPresetDefaults on ProviderPreset {
       case ProviderPreset.anthropic:
       case ProviderPreset.minimax:
       case ProviderPreset.minimaxCn:
-      case ProviderPreset.kimiCoding:
         return ProviderProtocol.anthropicMessages;
       case ProviderPreset.gemini:
         return ProviderProtocol.geminiGenerateContent;
@@ -607,11 +608,16 @@ class ProviderConfig {
       orElse: () => ProviderType.openaiCompatible,
     );
     final preset = _decodePreset(json['preset'] as String?);
-    final protocol = _decodeProtocol(
+    var protocol = _decodeProtocol(
       json['protocol'] as String?,
       legacyType: type,
       preset: preset,
     );
+    var baseUrl = json['baseUrl'] as String? ?? '';
+    if (_isLegacyKimiCodingEndpoint(preset, protocol, baseUrl)) {
+      protocol = ProviderProtocol.openaiChatCompletions;
+      baseUrl = ProviderPreset.kimiCoding.defaultBaseUrl;
+    }
     return ProviderConfig(
       concurrency: AssistantConcurrencySettings.fromJson(
         json['concurrency'] as Map<String, dynamic>? ?? const {},
@@ -621,12 +627,27 @@ class ProviderConfig {
       type: type,
       protocol: protocol,
       preset: preset ?? _inferPreset(type, json['id'] as String?, protocol),
-      baseUrl: json['baseUrl'] as String? ?? '',
+      baseUrl: baseUrl,
       enabled: json['enabled'] as bool? ?? true,
       allowImageInput:
           json['allowImageInput'] as bool? ??
           (preset?.defaultAllowImageInput ?? protocol.supportsImagePayload),
     );
+  }
+
+  /// Kimi Coding saved with the old Anthropic default endpoint follows the
+  /// preset to Chat Completions; a custom base URL is left as configured.
+  static bool _isLegacyKimiCodingEndpoint(
+    ProviderPreset? preset,
+    ProviderProtocol protocol,
+    String baseUrl,
+  ) {
+    if (preset != ProviderPreset.kimiCoding ||
+        protocol != ProviderProtocol.anthropicMessages) {
+      return false;
+    }
+    final normalized = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
+    return normalized.isEmpty || normalized == 'https://api.kimi.com/coding';
   }
 
   static ProviderPreset? _decodePreset(String? value) {

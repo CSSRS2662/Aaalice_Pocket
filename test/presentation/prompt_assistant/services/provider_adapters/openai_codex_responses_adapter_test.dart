@@ -134,7 +134,7 @@ void main() {
       request: PromptAssistantRequest(
         sessionId: 'assistant',
         provider: _provider,
-        model: 'gpt-5.4-mini',
+        model: 'gpt-5.5',
         systemPrompt: 'Translate.',
         userParts: [
           const PromptAssistantTextPart('猫'),
@@ -175,6 +175,9 @@ void main() {
       provider: _provider,
       apiKey: null,
     );
-    expect(models, containsAll(['gpt-5.4', 'gpt-5.5', 'gpt-5.3-codex-spark']));
+    expect(
+      models,
+      containsAll(['gpt-5.5', 'gpt-5.6-sol', 'gpt-6-sol', 'gpt-6.1-sol']),
+    );
   });
 }

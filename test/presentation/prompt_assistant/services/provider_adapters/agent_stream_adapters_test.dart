@@ -178,7 +178,7 @@ void main() {
               preset: ProviderPreset.deepseek,
               baseUrl: 'https://api.deepseek.com',
             ),
-            model: 'deepseek-v4-flash',
+            model: 'deepseek-flash',
             systemPrompt: base.systemPrompt,
             messages: base.messages,
             tools: base.tools,
@@ -193,7 +193,7 @@ void main() {
       'https://api.deepseek.com/chat/completions',
     );
     final payload = capture.options!.data as Map<String, dynamic>;
-    expect(payload['model'], 'deepseek-v4-flash');
+    expect(payload['model'], 'deepseek-flash');
     expect(payload['thinking'], {'type': 'disabled'});
   });
 
@@ -210,7 +210,7 @@ void main() {
             request: AgentChatRequest(
               sessionId: 'session',
               provider: ProviderPreset.deepseek.createConfig(id: 'deepseek'),
-              model: 'deepseek-v4-flash',
+              model: 'deepseek-flash',
               systemPrompt: 'system',
               messages: [
                 UserMessage(

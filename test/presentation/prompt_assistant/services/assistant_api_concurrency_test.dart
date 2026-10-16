@@ -162,7 +162,7 @@ void main() {
   for (final (preset, model, field) in [
     (ProviderPreset.openaiChat, 'gpt-5', 'reasoning_effort'),
     (ProviderPreset.openaiResponses, 'gpt-5', 'reasoning'),
-    (ProviderPreset.deepseek, 'deepseek-v4-flash', 'thinking'),
+    (ProviderPreset.deepseek, 'deepseek-flash', 'thinking'),
     (ProviderPreset.anthropic, 'claude-sonnet-4-5', 'thinking'),
     (ProviderPreset.gemini, 'gemini-2.5-flash', 'generationConfig'),
   ]) {

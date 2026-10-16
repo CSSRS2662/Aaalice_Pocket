@@ -32,11 +32,6 @@ const _levels = <String>[
   'xhigh',
   'max',
 ];
-const _mistralEffortModels = <String>{
-  'mistral-small-2603',
-  'mistral-small-latest',
-  'mistral-medium-3.5',
-};
 
 void main(List<String> arguments) {
   final check = arguments.contains('--check');
@@ -178,7 +173,7 @@ String _generate(Directory root, String version) {
       ];
       final supportsEffort = _supportsReasoningEffort(model, compat);
       final thinkingBudgets = _thinkingBudgets(api, model['id'] as String);
-      final disabledEffort = _disabledEffort(api, model['id'] as String);
+      final disabledEffort = _disabledEffort(api, modelId, sourceLevelMap);
       output.writeln(
         '    ${_quote(model['id'] as String)}: AgentReasoningModelRule('
         'api: AgentReasoningApi.$api, '
@@ -241,11 +236,6 @@ bool _supportsLevel(
   if (api == 'geminiBudget' && modelId.contains('2.5-pro') && level == 'off') {
     return false;
   }
-  if (api == 'geminiLevel' &&
-      level == 'minimal' &&
-      _geminiMinimumLevel(modelId) == 'LOW') {
-    return false;
-  }
   if (levelMap[level] == null && levelMap.containsKey(level)) return false;
   if ((level == 'xhigh' || level == 'max') && !levelMap.containsKey(level)) {
     return false;
@@ -264,22 +254,26 @@ Map<String, dynamic> _emittedLevelMap(
       if (source[level] == null && source.containsKey(level))
         level: null
       else if (level != 'off' && _supportsLevel(api, modelId, level, source))
-        level: _geminiNativeLevel(
-          modelId,
-          (source[level] as String?)?.toLowerCase() ?? level,
-        ),
+        level: _googleThinkingLevel(modelId, level, source),
   };
 }
 
-String _geminiNativeLevel(String modelId, String level) {
-  final id = modelId.toLowerCase();
-  if (RegExp(r'gemini-3(?:\.\d+)?-pro').hasMatch(id)) {
-    return level == 'minimal' || level == 'low' ? 'LOW' : 'HIGH';
+/// Pi's `resolveGoogleThinkingLevel` + `toGoogleThinkingLevel`
+/// (api/google-shared.js): the mapped name, or the level itself, upper-cased.
+String _googleThinkingLevel(
+  String modelId,
+  String level,
+  Map<String, dynamic> levelMap,
+) {
+  final mapped = levelMap[level];
+  final resolved = mapped is String ? mapped.toLowerCase() : level;
+  if (!const {'minimal', 'low', 'medium', 'high'}.contains(resolved)) {
+    throw StateError(
+      'Unsupported Google thinking level mapping for $modelId: '
+      '$level -> $mapped',
+    );
   }
-  if (RegExp(r'gemma-?4').hasMatch(id)) {
-    return level == 'minimal' || level == 'low' ? 'MINIMAL' : 'HIGH';
-  }
-  return level.toUpperCase();
+  return resolved.toUpperCase();
 }
 
 Map<String, int> _thinkingBudgets(String api, String modelId) {
@@ -296,19 +290,31 @@ Map<String, int> _thinkingBudgets(String api, String modelId) {
   return const {};
 }
 
-String? _disabledEffort(String api, String modelId) {
+/// Pi's `getDisabledGoogleThinkingConfig`: a level-controlled model that
+/// cannot turn thinking off runs at the lowest level it supports.
+String? _disabledEffort(
+  String api,
+  String modelId,
+  Map<String, dynamic> levelMap,
+) {
   if (api != 'geminiLevel') return null;
-  return _geminiMinimumLevel(modelId);
+  for (final level in _levels) {
+    if (!_supportsLevel(api, modelId, level, levelMap)) continue;
+    return level == 'off'
+        ? null
+        : _googleThinkingLevel(modelId, level, levelMap);
+  }
+  return null;
 }
 
-String _geminiMinimumLevel(String modelId) {
-  final normalizedId = modelId.toLowerCase();
-  if (RegExp(r'gemini-3(?:\.\d+)?-pro').hasMatch(normalizedId) ||
-      normalizedId == 'gemini-3.7-flash' ||
-      normalizedId == 'gemini-3.8-flash') {
-    return 'LOW';
-  }
-  return 'MINIMAL';
+/// Pi's `usesGoogleThinkingLevel` (api/google-shared.js).
+bool _usesGoogleThinkingLevel(String modelId) {
+  final id = modelId.toLowerCase();
+  return RegExp(r'gemini-3(?:\.\d+)?-(?:pro|flash)').hasMatch(id) ||
+      RegExp(r'gemini-(?:[4-9]|[1-9]\d)').hasMatch(id) ||
+      id == 'gemini-flash-latest' ||
+      id == 'gemini-flash-lite-latest' ||
+      RegExp(r'gemma-?4').hasMatch(id);
 }
 
 String _reasoningApi(Map<String, dynamic> model, Map<String, dynamic> compat) {
@@ -324,17 +330,13 @@ String _reasoningApi(Map<String, dynamic> model, Map<String, dynamic> compat) {
         : 'anthropicBudget';
   }
   if (api == 'google-generative-ai') {
-    return id.startsWith('gemini-3') ||
-            id.startsWith('gemma-4') ||
-            id == 'gemini-flash-latest' ||
-            id == 'gemini-flash-lite-latest'
-        ? 'geminiLevel'
-        : 'geminiBudget';
+    return _usesGoogleThinkingLevel(id) ? 'geminiLevel' : 'geminiBudget';
   }
+  // Pi: reasoning models with a thinking level map send `reasoning_effort`.
   if (api == 'mistral-conversations') {
-    return _mistralEffortModels.contains(id)
-        ? 'mistralEffort'
-        : 'mistralPromptMode';
+    return model['thinkingLevelMap'] == null
+        ? 'mistralPromptMode'
+        : 'mistralEffort';
   }
   return switch (compat['thinkingFormat']) {
     'deepseek' => 'deepSeek',

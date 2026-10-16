@@ -92,7 +92,7 @@ void main() {
           models: [
             const ModelConfig(
               providerId: 'deepseek',
-              name: 'deepseek-v4-flash',
+              name: 'deepseek-flash',
               displayName: 'DeepSeek',
               forTask: AssistantTaskType.translate,
             ),
@@ -100,7 +100,7 @@ void main() {
           routing: config.routing.copyWithTask(
             taskType: AssistantTaskType.translate,
             providerId: 'deepseek',
-            model: 'deepseek-v4-flash',
+            model: 'deepseek-flash',
           ),
         )
         .encode();

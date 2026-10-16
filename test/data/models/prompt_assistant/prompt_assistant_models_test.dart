@@ -44,8 +44,8 @@ void main() {
           'MiniMax-M2.7',
         ),
         ProviderPreset.kimiCoding: (
-          'https://api.kimi.com/coding',
-          ProviderProtocol.anthropicMessages,
+          'https://api.kimi.com/coding/v1',
+          ProviderProtocol.openaiChatCompletions,
           'kimi-for-coding',
         ),
         ProviderPreset.moonshot: (
@@ -91,6 +91,25 @@ void main() {
       ]);
     },
   );
+
+  test('Kimi Coding saved on the old Anthropic endpoint moves to chat', () {
+    ProviderConfig decode(String protocol, String baseUrl) =>
+        ProviderConfig.fromJson({
+          'id': 'kimi-coding',
+          'name': 'Kimi Coding',
+          'preset': 'kimiCoding',
+          'protocol': protocol,
+          'baseUrl': baseUrl,
+        });
+
+    final legacy = decode('anthropicMessages', 'https://api.kimi.com/coding/');
+    expect(legacy.protocol, ProviderProtocol.openaiChatCompletions);
+    expect(legacy.baseUrl, 'https://api.kimi.com/coding/v1');
+
+    final proxied = decode('anthropicMessages', 'https://proxy.example/kimi');
+    expect(proxied.protocol, ProviderProtocol.anthropicMessages);
+    expect(proxied.baseUrl, 'https://proxy.example/kimi');
+  });
 
   group('Agent chat isolation', () {
     test('defaults and default merge do not recreate chat rules', () {

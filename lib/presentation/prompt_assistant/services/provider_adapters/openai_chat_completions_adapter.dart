@@ -678,6 +678,10 @@ class OpenAiChatCompletionsAdapter extends PromptAssistantProviderAdapter {
         id == 'moonshotai-cn' ||
         baseUrl.contains('api.moonshot.') ||
         baseUrl.contains('chutes.ai') ||
+        // Pi's Kimi Coding models declare `maxTokensField: max_tokens`.
+        provider.preset == ProviderPreset.kimiCoding ||
+        id == 'kimi-coding' ||
+        baseUrl.contains('api.kimi.com/coding') ||
         id == 'together' ||
         baseUrl.contains('api.together.ai') ||
         baseUrl.contains('api.together.xyz') ||

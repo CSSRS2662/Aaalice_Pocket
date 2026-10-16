@@ -1,6 +1,6 @@
 # ChatGPT（Codex）订阅登录
 
-智能体与提示词助手可以用 ChatGPT 账号登录，通过 Codex 后端使用订阅额度，不需要 API Key。实现移植自 Pi（`@earendil-works/pi-ai` 0.85.0，与 `tool/agent/pi_reasoning_source_lock.json` 锁定的版本一致）。
+智能体与提示词助手可以用 ChatGPT 账号登录，通过 Codex 后端使用订阅额度，不需要 API Key。实现移植自 Pi（`@earendil-works/pi-ai` 1.3.0，与 `tool/agent/pi_reasoning_source_lock.json` 锁定的版本一致）。
 
 ## 组成
 
@@ -35,6 +35,7 @@
 
 - 使用 Codex CLI 的公共 client ID 与未公开的 ChatGPT 后端，服务端可能随时变化；`originator` 使用本应用自己的标识。
 - 凭据只保存在本机安全存储，服务商配置本身随提示词助手配置同步，换设备需重新登录。
+- 后端不提供模型列表：新建服务商只登记默认模型，「拉取模型列表」读取的是随应用打包的目录；Pi 新增模型后要更新锁定版本并重新生成目录，用户再拉取一次才能看到。
 
 ## 验证入口
 
