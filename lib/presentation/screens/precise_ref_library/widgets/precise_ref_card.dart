@@ -204,38 +204,38 @@ class _PreciseRefCardState extends ConsumerState<PreciseRefCard> {
             restingShadow: true,
             hoverScaleEnabled: !isTouch,
             hoverLift: 2,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _buildThumbnail(theme),
-                _buildInfoOverlay(theme),
-                if (isTouch || !_hovering) _buildTypeBadge(),
-                if (widget.isSelectionMode)
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Checkbox(
-                      value: widget.isSelected,
-                      onChanged: (_) => widget.onToggleSelection?.call(),
-                    ),
-                  )
-                else if (!isTouch && !_hovering && widget.entry.isFavorite)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: LibraryCardFavoriteBadge(
-                      key: Key(
-                        'precise-ref-card-favorite-badge-${widget.entry.id}',
+            child: LayoutBuilder(
+              builder: (context, box) => Stack(
+                fit: StackFit.expand,
+                children: [
+                  _buildThumbnail(theme),
+                  _buildInfoOverlay(theme),
+                  if (isTouch || !_hovering) _buildTypeBadge(),
+                  if (widget.isSelectionMode)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Checkbox(
+                        value: widget.isSelected,
+                        onChanged: (_) => widget.onToggleSelection?.call(),
                       ),
-                      semanticLabel: context.l10n.common_favorite,
+                    )
+                  else if (!isTouch && !_hovering && widget.entry.isFavorite)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: LibraryCardFavoriteBadge(
+                        key: Key(
+                          'precise-ref-card-favorite-badge-${widget.entry.id}',
+                        ),
+                        semanticLabel: context.l10n.common_favorite,
+                      ),
                     ),
-                  ),
-                if (!widget.isSelectionMode)
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) => CardActionButtons(
+                  if (!widget.isSelectionMode)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: CardActionButtons(
                         menuKey: Key(
                           'precise-ref-card-more-${widget.entry.id}',
                         ),
@@ -244,10 +244,14 @@ class _PreciseRefCardState extends ConsumerState<PreciseRefCard> {
                         visible: isTouch || _hovering,
                         direction: Axis.vertical,
                         buttons: actions,
+                        availableSize: Size(
+                          box.maxWidth - 12,
+                          box.maxHeight - 12,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

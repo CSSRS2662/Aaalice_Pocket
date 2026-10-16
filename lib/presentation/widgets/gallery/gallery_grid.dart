@@ -6,6 +6,7 @@ import '../../../core/cache/local_image_aspect_ratio_cache.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../../data/models/gallery/local_image_record.dart';
 import '../../screens/online_gallery/online_gallery_masonry_layout.dart';
+import '../common/grid_column_count.dart';
 import '../../selection/card_drag_select.dart';
 import 'draggable_image_card.dart';
 import 'local_image_card_3d.dart';
@@ -205,8 +206,11 @@ class _GalleryGridState extends State<GalleryGrid> {
                     minimumHorizontalPadding -
                     widget.padding.right)
                 .clamp(0.0, double.infinity);
+        // The chosen count is already fitted to the width; this only keeps
+        // cards from getting narrower than the masonry minimum.
         final maximumColumns =
-            ((availableWidth + widget.spacing) / (96 + widget.spacing))
+            ((availableWidth + widget.spacing) /
+                    (MasonryColumnCount.minCellWidth + widget.spacing))
                 .floor()
                 .clamp(1, 8);
         final columns = widget.columns.clamp(1, maximumColumns);

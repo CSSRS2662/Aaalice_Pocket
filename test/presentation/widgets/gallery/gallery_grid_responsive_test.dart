@@ -26,6 +26,8 @@ void main() {
   const cases = <(double, int)>[
     (320, 2),
     (360, 2),
+    // Four columns fit a phone: the grid must not cap them at three.
+    (390, 4),
     (600, 3),
     (840, 4),
     (1180, 6),

@@ -69,6 +69,12 @@ class ImageCardSurface extends StatelessWidget {
               ...actions.where((action) => action.id == id && action.visible),
           ]
         : const <ImageCardAction>[];
+    void toggleFavorite() => unawaited(
+      dispatchImageCardAction(
+        context,
+        actions.firstWhere((a) => a.id == ImageCardActionId.favorite),
+      ),
+    );
     final showIndexBadge =
         data.dragPreparationReady &&
         controller.showPreparedIndexBadge &&
@@ -109,158 +115,179 @@ class ImageCardSurface extends StatelessWidget {
           restingShadow: true,
           hoverScaleEnabled: capabilities.enableHoverScale,
           animate: capabilities.hoverEffectsEnabled,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (data.imageContent != null && data.underlay != null)
-                data.underlay!,
-              RepaintBoundary(
-                child: data.imageContent ?? _completedImage(theme),
-              ),
-              _DragPreparationOverlay(data: data, controller: controller),
-              if (controller.isHovering && capabilities.enableGlossEffect)
-                Positioned.fill(
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: 1),
-                    duration: reducedMotion
-                        ? Duration.zero
-                        : motion.fastDuration,
-                    curve: motion.standardCurve,
-                    builder: (context, glowIntensity, _) => AnimatedBuilder(
-                      animation: controller.glossAnimation,
-                      builder: (context, _) => ImageCardEffects(
-                        glowColor: theme.colorScheme.primary,
-                        glowIntensity: glowIntensity,
-                        glossProgress: controller.glossAnimation.value,
-                      ),
-                    ),
+          child: LayoutBuilder(
+            builder: (context, box) {
+              // Narrow touch cards show small chips, not 48 circles.
+              final compact =
+                  interaction.usesTouchActionMenu &&
+                  CompactImageOverlay.applies(box.biggest);
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (data.imageContent != null && data.underlay != null)
+                    data.underlay!,
+                  RepaintBoundary(
+                    child: data.imageContent ?? _completedImage(theme),
                   ),
-                ),
-              if (controller.isHovering || data.isSelected)
-                IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.center,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.4),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              if (data.statusBadgeLabel != null)
-                Positioned(top: 8, left: 8, child: _StatusBadge(data: data)),
-              if (capabilities.enableSelection &&
-                  data.statusBadgeLabel == null &&
-                  (capabilities.selectionMode ||
-                      (capabilities.showSelectionOnHover &&
-                          controller.isHovering) ||
-                      data.isSelected))
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: _SelectionCheckbox(
-                    selected: data.isSelected,
-                    onChanged: capabilities.onSelectionChanged,
-                  ),
-                ),
-              if (!capabilities.selectionMode &&
-                  (capabilities.onFavoriteToggle != null ||
-                      pinnedActions.isNotEmpty))
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: ImageCardCornerActionRail(
-                    pinnedActions: pinnedActions,
-                    favorite: capabilities.onFavoriteToggle == null
-                        ? null
-                        : CardFavoriteButton(
-                            isFavorite: data.isFavorite,
-                            onToggle: () => unawaited(
-                              dispatchImageCardAction(
-                                context,
-                                actions.firstWhere(
-                                  (a) => a.id == ImageCardActionId.favorite,
-                                ),
-                              ),
-                            ),
-                            size: 16,
-                            borderRadius: 999,
+                  _DragPreparationOverlay(data: data, controller: controller),
+                  if (controller.isHovering && capabilities.enableGlossEffect)
+                    Positioned.fill(
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: 1),
+                        duration: reducedMotion
+                            ? Duration.zero
+                            : motion.fastDuration,
+                        curve: motion.standardCurve,
+                        builder: (context, glowIntensity, _) => AnimatedBuilder(
+                          animation: controller.glossAnimation,
+                          builder: (context, _) => ImageCardEffects(
+                            glowColor: theme.colorScheme.primary,
+                            glowIntensity: glowIntensity,
+                            glossProgress: controller.glossAnimation.value,
                           ),
-                  ),
-                ),
-              if (showHoverBar)
-                Positioned(
-                  bottom: 12,
-                  left: 0,
-                  right: 0,
-                  child: ImageCardHoverActionBar(actions: hoverActions),
-                ),
-              Positioned(
-                bottom: 8,
-                left: 8,
-                child: Offstage(
-                  key: const ValueKey('selectable-image-index-badge-offstage'),
-                  offstage: !showIndexBadge,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      data.index == null ? '' : '${data.index! + 1}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              if (data.isSelected)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(
-                          alpha: 0.15,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  if (controller.isHovering || data.isSelected)
+                    IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.center,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.4),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (data.statusBadgeLabel != null)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: _StatusBadge(data: data),
+                    ),
+                  if (capabilities.enableSelection &&
+                      data.statusBadgeLabel == null &&
+                      (capabilities.selectionMode ||
+                          (capabilities.showSelectionOnHover &&
+                              controller.isHovering) ||
+                          data.isSelected))
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: _SelectionCheckbox(
+                        selected: data.isSelected,
+                        onChanged: capabilities.onSelectionChanged,
+                      ),
+                    ),
+                  if (!capabilities.selectionMode &&
+                      (capabilities.onFavoriteToggle != null ||
+                          pinnedActions.isNotEmpty))
+                    Positioned(
+                      top: compact ? 4 : 8,
+                      right: compact ? 4 : 8,
+                      child: ImageCardCornerActionRail(
+                        pinnedActions: pinnedActions,
+                        favorite: capabilities.onFavoriteToggle == null
+                            ? null
+                            : compact
+                            ? _CompactFavorite(
+                                isFavorite: data.isFavorite,
+                                onToggle: toggleFavorite,
+                              )
+                            : CardFavoriteButton(
+                                isFavorite: data.isFavorite,
+                                onToggle: toggleFavorite,
+                                size: 16,
+                                borderRadius: 999,
+                              ),
+                      ),
+                    ),
+                  if (showHoverBar)
+                    Positioned(
+                      bottom: 12,
+                      left: 0,
+                      right: 0,
+                      child: ImageCardHoverActionBar(actions: hoverActions),
+                    ),
+                  Positioned(
+                    bottom: 8,
+                    left: 8,
+                    child: Offstage(
+                      key: const ValueKey(
+                        'selectable-image-index-badge-offstage',
+                      ),
+                      offstage: !showIndexBadge,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          data.index == null ? '' : '${data.index! + 1}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              // 悬停条在触屏菜单模式下自带「更多」，不显示悬停条时这里必须补上入口。
-              if (interaction.usesTouchActionMenu &&
-                  (!showHoverBar || interaction.prefersTouchPresentation) &&
-                  capabilities.enableContextMenu &&
-                  actions.isNotEmpty)
-                Positioned(
-                  right: 8,
-                  bottom: 8,
-                  child: IconButton(
-                    onPressed: () => unawaited(onShowContextMenu(Offset.zero)),
-                    tooltip: context.l10n.common_moreActions,
-                    constraints: const BoxConstraints.tightFor(
-                      width: 48,
-                      height: 48,
+                  if (data.isSelected)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.15,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
-                    style: ImageOverlayControlStyle.iconButton(
-                      context,
-                      extent: 48,
+                  // 悬停条在触屏菜单模式下自带「更多」，不显示悬停条时这里必须补上入口。
+                  if (interaction.usesTouchActionMenu &&
+                      (!showHoverBar || interaction.prefersTouchPresentation) &&
+                      capabilities.enableContextMenu &&
+                      actions.isNotEmpty)
+                    Positioned(
+                      right: compact ? 4 : 8,
+                      bottom: compact ? 4 : 8,
+                      child: compact
+                          ? CompactImageOverlayButton(
+                              icon: Icons.more_horiz_rounded,
+                              tooltip: context.l10n.common_moreActions,
+                              alignment: Alignment.bottomRight,
+                              onPressed: () =>
+                                  unawaited(onShowContextMenu(Offset.zero)),
+                            )
+                          : IconButton(
+                              onPressed: () =>
+                                  unawaited(onShowContextMenu(Offset.zero)),
+                              tooltip: context.l10n.common_moreActions,
+                              constraints: const BoxConstraints.tightFor(
+                                width: 48,
+                                height: 48,
+                              ),
+                              style: ImageOverlayControlStyle.iconButton(
+                                context,
+                                extent: 48,
+                              ),
+                              icon: const Icon(Icons.more_horiz_rounded),
+                            ),
                     ),
-                    icon: const Icon(Icons.more_horiz_rounded),
-                  ),
-                ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -347,6 +374,29 @@ class ImageCardHoverActionBar extends StatelessWidget {
 }
 
 /// 右上角操作轨：悬停动作按顺序排在常驻收藏左侧，收藏位置不随悬停移动。
+/// The favorite toggle as a [CompactImageOverlayButton].
+class _CompactFavorite extends StatelessWidget {
+  const _CompactFavorite({required this.isFavorite, required this.onToggle});
+
+  final bool isFavorite;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) => CompactImageOverlayButton(
+    key: const ValueKey('image-card-compact-favorite'),
+    icon: isFavorite ? Icons.favorite : Icons.favorite_border,
+    tooltip: isFavorite
+        ? context.l10n.common_unfavorite
+        : context.l10n.common_favorite,
+    foregroundColor: isFavorite
+        ? ImageOverlayControlStyle.errorForeground(
+            Theme.of(context).colorScheme,
+          )
+        : ImageOverlayControlStyle.foreground,
+    onPressed: onToggle,
+  );
+}
+
 class ImageCardCornerActionRail extends StatelessWidget {
   const ImageCardCornerActionRail({
     super.key,

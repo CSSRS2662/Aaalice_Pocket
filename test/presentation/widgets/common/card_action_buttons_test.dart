@@ -236,6 +236,58 @@ void main() {
     expect(find.byIcon(Icons.more_vert_rounded), findsNothing);
   });
 
+  testWidgets('narrow touch cards show one small chip with a full target', (
+    tester,
+  ) async {
+    var favorited = false;
+    Widget card(double width) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: InteractionPolicyScope(
+        initialPolicy: InteractionPolicy.touchFirst,
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: CardActionButtons(
+            menuKey: const ValueKey('more'),
+            visible: true,
+            touchShortcuts: const {ImageCardActionId.favorite},
+            availableSize: Size(width, 120),
+            buttons: [
+              ImageCardAction(
+                id: ImageCardActionId.favorite,
+                icon: Icons.favorite_border,
+                label: 'favorite',
+                invoke: () => favorited = true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    // Three or four columns on a phone.
+    await tester.pumpWidget(card(82));
+    final more = find.byKey(const ValueKey('more'));
+    expect(tester.getSize(more), const Size.square(48));
+    final chip = find.descendant(of: more, matching: find.byType(Container));
+    expect(tester.getSize(chip), const Size.square(CompactImageOverlay.chip));
+    expect(tester.getTopRight(chip), tester.getTopRight(more));
+    expect(find.byIcon(Icons.favorite_border), findsNothing);
+
+    // The favorite is one tap away in the menu; the chip's corner counts.
+    await tester.tapAt(tester.getBottomLeft(more) + const Offset(4, -4));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('favorite'));
+    await tester.pumpAndSettle();
+    expect(favorited, isTrue);
+
+    // Two columns keep the full buttons.
+    await tester.pumpWidget(card(160));
+    expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+    expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('touch device without a mouse keeps its menu with a keyboard', (
     tester,
   ) async {

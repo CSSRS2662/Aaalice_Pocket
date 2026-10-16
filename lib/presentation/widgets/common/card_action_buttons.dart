@@ -65,6 +65,73 @@ abstract final class ImageOverlayControlStyle {
   }
 }
 
+/// 窄卡片（手机上三到四列）的覆盖按钮：图上只露出一个小圆，触摸范围
+/// 仍是完整的触屏尺寸，免得按钮盖住大半张图。
+abstract final class CompactImageOverlay {
+  /// 比这更窄的卡片使用紧凑覆盖按钮。
+  static const double cardWidth = 140;
+
+  /// 图上露出的圆的直径。
+  static const double chip = 28;
+
+  static bool applies(Size? cardSize) =>
+      cardSize != null && cardSize.width < cardWidth;
+}
+
+/// [CompactImageOverlay] 的按钮：右上角对齐的小圆，外围透明区域同样可点。
+class CompactImageOverlayButton extends StatelessWidget {
+  const CompactImageOverlayButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.foregroundColor = ImageOverlayControlStyle.foreground,
+    this.alignment = Alignment.topRight,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+  final Color foregroundColor;
+
+  /// The card corner the chip sits in.
+  final Alignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    final extent = context.interactionPolicy.minimumControlExtent;
+    return Semantics(
+      button: true,
+      label: tooltip,
+      child: ExcludeSemantics(
+        child: Tooltip(
+          message: tooltip,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onPressed,
+            child: SizedBox.square(
+              dimension: extent,
+              child: Align(
+                alignment: alignment,
+                child: Container(
+                  width: CompactImageOverlay.chip,
+                  height: CompactImageOverlay.chip,
+                  decoration: BoxDecoration(
+                    color: ImageOverlayControlStyle.surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: ImageOverlayControlStyle.border),
+                  ),
+                  child: Icon(icon, size: 16, color: foregroundColor),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// 卡片操作按钮组。高频悬浮操作必须即时响应，不做延迟或出现动画。
 class CardActionButtons extends StatelessWidget {
   final List<ImageCardAction> buttons;
@@ -102,12 +169,23 @@ class CardActionButtons extends StatelessWidget {
         AppLocalizations.of(context)?.common_loading ?? 'Loading…';
 
     if (interactionPolicy.usesTouchActionMenu) {
+      final moreLabel =
+          AppLocalizations.of(context)?.common_moreActions ??
+          MaterialLocalizations.of(context).showMenuTooltip;
+      // Narrow cards keep one small menu chip; the shortcuts, favorite
+      // included, are in the menu it opens.
+      if (CompactImageOverlay.applies(availableSize)) {
+        return CompactImageOverlayButton(
+          key: menuKey,
+          icon: Icons.more_vert_rounded,
+          tooltip: moreLabel,
+          onPressed: () => _showTouchActions(context, loadingLabel),
+        );
+      }
       final extent = interactionPolicy.minimumControlExtent;
       final more = IconButton(
         key: menuKey,
-        tooltip:
-            AppLocalizations.of(context)?.common_moreActions ??
-            MaterialLocalizations.of(context).showMenuTooltip,
+        tooltip: moreLabel,
         onPressed: () => _showTouchActions(context, loadingLabel),
         constraints: BoxConstraints.tightFor(width: extent, height: extent),
         style: ImageOverlayControlStyle.iconButton(context, extent: extent),
