@@ -1,9 +1,6 @@
-import 'dart:async';
-import 'dart:convert';
-
-import '../../../../../core/constants/storage_keys.dart';
 import '../../../../../core/storage/local_storage_service.dart';
 import '../../../../../data/models/character/character_prompt.dart';
+import '../../../../../data/services/prompt_group/character_section_store.dart';
 import '../../widgets/prompt_group_controller.dart';
 
 /// Grouped editing of one character's prompts.
@@ -24,7 +21,7 @@ class CharacterPromptGroups {
     LocalStorageService storage,
     CharacterPrompt character,
   ) {
-    final entry = _readAll(storage)[character.id];
+    final entry = CharacterSectionStore.readAll(storage)[character.id];
     final saved = entry is Map ? entry : null;
     final positiveMatches = saved?['positivePrompt'] == character.prompt;
     final negativeMatches =
@@ -65,7 +62,7 @@ class CharacterPromptGroups {
   /// Stores the sections for [character], dropping the entries of
   /// characters that no longer exist.
   void save(CharacterPrompt character, {required Set<String> liveIds}) {
-    final all = _readAll(_storage)
+    final all = CharacterSectionStore.readAll(_storage)
       ..removeWhere((id, _) => !liveIds.contains(id));
     all[characterId] = {
       'version': 1,
@@ -74,29 +71,11 @@ class CharacterPromptGroups {
       'positiveSections': positive.toJson(),
       'negativeSections': negative.toJson(),
     };
-    unawaited(
-      _storage.setSetting(
-        StorageKeys.characterPromptGroupState,
-        jsonEncode(all),
-      ),
-    );
+    CharacterSectionStore.writeAll(_storage, all);
   }
 
   void dispose() {
     positive.dispose();
     negative.dispose();
-  }
-
-  static Map<String, Object?> _readAll(LocalStorageService storage) {
-    final raw = storage.getSetting<String>(
-      StorageKeys.characterPromptGroupState,
-    );
-    if (raw == null || raw.isEmpty) return {};
-    try {
-      final value = jsonDecode(raw);
-      return value is Map ? Map<String, Object?>.from(value) : {};
-    } on FormatException {
-      return {};
-    }
   }
 }

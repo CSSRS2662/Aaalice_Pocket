@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:nai_launcher/core/constants/storage_keys.dart';
+import 'package:nai_launcher/data/models/character/character_prompt.dart';
+import 'package:nai_launcher/data/models/gallery/character_panel_snapshot.dart';
 import 'package:nai_launcher/data/models/gallery/prompt_group_snapshot.dart';
 import 'package:nai_launcher/data/services/metadata/hash_calculator.dart';
 import 'package:nai_launcher/data/services/prompt_group/prompt_group_record_store.dart';
@@ -97,6 +99,66 @@ void main() {
       'lowres',
     );
   });
+
+  test(
+    'a character panel comes back whole, with or without sections',
+    () async {
+      const panel = CharacterPanelSnapshot(
+        config: CharacterPromptConfig(
+          characters: [
+            CharacterPrompt(
+              id: 'a',
+              name: 'Alice',
+              prompt: 'girl, red hair',
+              positionMode: CharacterPositionMode.custom,
+              customPosition: CharacterPosition(
+                mode: CharacterPositionMode.custom,
+                row: 0.3,
+                column: 0.7,
+              ),
+            ),
+            CharacterPrompt(id: 'b', name: 'Bob', enabled: false),
+          ],
+          globalAiChoice: false,
+        ),
+        sections: {
+          'a': {'positivePrompt': 'girl, red hair'},
+        },
+        sentPrompts: ['girl, red hair'],
+      );
+      await store.record(
+        contentHash: _hashA,
+        snapshot: PromptGroupSnapshot.withCharacters(_snapshot, panel)!,
+      );
+      await store.record(
+        contentHash: _hashB,
+        snapshot: PromptGroupSnapshot.withCharacters(null, panel)!,
+      );
+
+      final withSections = store.lookup(_hashA)!;
+      expect(withSections.hasPromptSections, isTrue);
+      expect(withSections.characters!.config, panel.config);
+      expect(withSections.characters!.sections, panel.sections);
+      expect(withSections.characters!.sentPrompts, panel.sentPrompts);
+
+      final charactersOnly = store.lookup(_hashB)!;
+      expect(charactersOnly.hasPromptSections, isFalse);
+      expect(
+        charactersOnly.characters!.config.characters.last.enabled,
+        isFalse,
+      );
+      expect(
+        charactersOnly
+            .characters!
+            .config
+            .characters
+            .first
+            .customPosition
+            ?.column,
+        0.7,
+      );
+    },
+  );
 
   test('lookup returns null once the boxes are closed', () async {
     await store.record(contentHash: _hashA, snapshot: _snapshot);

@@ -8,12 +8,17 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nai_launcher/core/constants/api_constants.dart';
 import 'package:nai_launcher/core/constants/storage_keys.dart';
 import 'package:nai_launcher/core/enums/precise_ref_type.dart';
+import 'package:nai_launcher/core/storage/local_storage_service.dart';
+import 'package:nai_launcher/data/models/character/character_prompt.dart';
+import 'package:nai_launcher/data/models/gallery/character_panel_snapshot.dart';
 import 'package:nai_launcher/data/models/gallery/nai_image_metadata.dart';
+import 'package:nai_launcher/data/models/gallery/prompt_group_snapshot.dart';
 import 'package:nai_launcher/data/models/fixed_tag/fixed_tag_entry.dart';
 import 'package:nai_launcher/data/models/fixed_tag/fixed_tag_prompt_type.dart';
 import 'package:nai_launcher/data/models/fixed_tag/fixed_tag_usage_snapshot.dart';
 import 'package:nai_launcher/data/models/metadata/metadata_import_options.dart';
 import 'package:nai_launcher/data/models/vibe/vibe_reference.dart';
+import 'package:nai_launcher/data/services/prompt_group/character_section_store.dart';
 import 'package:nai_launcher/l10n/app_localizations_en.dart';
 import 'package:nai_launcher/presentation/providers/character_prompt_provider.dart';
 import 'package:nai_launcher/presentation/providers/fixed_tags_provider.dart';
@@ -123,6 +128,147 @@ void main() {
       );
     },
   );
+
+  group('reused characters', () {
+    const alice = CharacterPrompt(
+      id: 'a',
+      name: 'Alice',
+      prompt: 'girl, red hair',
+    );
+    const bob = CharacterPrompt(
+      id: 'b',
+      name: 'Bob',
+      gender: CharacterGender.male,
+      prompt: 'boy, glasses',
+      enabled: false,
+    );
+    const cora = CharacterPrompt(id: 'c', name: 'Cora', prompt: 'girl, maid');
+    const charactersOnly = MetadataImportOptions(
+      importPrompt: false,
+      importNegativePrompt: false,
+      importFixedTags: false,
+      importQualityTags: false,
+      selectedCharacterIndices: [0],
+    );
+
+    Future<CharacterPromptConfig> reuse(
+      ProviderContainer container,
+      NaiImageMetadata metadata,
+    ) async {
+      await MetadataImportCoordinator.apply(
+        read: container.read,
+        metadata: metadata,
+        options: charactersOnly,
+        l10n: AppLocalizationsEn(),
+      );
+      return container.read(characterPromptNotifierProvider);
+    }
+
+    test('the recorded panel comes back with names, sections and '
+        'left-out characters', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(characterPromptNotifierProvider.notifier).replaceAll([
+        cora,
+      ]);
+      const sections = {
+        'a': {
+          'version': 1,
+          'positivePrompt': 'girl, red hair',
+          'negativePrompt': '',
+          'positiveSections': [
+            {'id': 's1', 'text': 'girl'},
+            {'id': 's2', 'text': 'red hair'},
+          ],
+          'negativeSections': [
+            {'id': 'n1', 'text': ''},
+          ],
+        },
+      };
+      final panel = PromptGroupSnapshot.withCharacters(
+        null,
+        const CharacterPanelSnapshot(
+          config: CharacterPromptConfig(characters: [alice, bob]),
+          sections: sections,
+          sentPrompts: ['girl, red hair'],
+        ),
+      )!;
+      final config = await reuse(
+        container,
+        NaiImageMetadata(
+          characterPrompts: const ['girl, red hair'],
+          promptGroupData: panel.toJson(),
+        ),
+      );
+
+      expect(config.characters, [alice, bob]);
+      final stored = CharacterSectionStore.readAll(
+        container.read(localStorageServiceProvider),
+      );
+      expect(stored['a'], sections['a']);
+    });
+
+    test('a panel recorded for other characters is not applied', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(characterPromptNotifierProvider.notifier).replaceAll([
+        cora,
+      ]);
+      final panel = PromptGroupSnapshot.withCharacters(
+        null,
+        const CharacterPanelSnapshot(
+          config: CharacterPromptConfig(characters: [alice, bob]),
+          sections: {},
+          sentPrompts: ['girl, red hair'],
+        ),
+      )!;
+      final config = await reuse(
+        container,
+        NaiImageMetadata(
+          characterPrompts: const ['girl, maid'],
+          promptGroupData: panel.toJson(),
+        ),
+      );
+
+      expect(config.characters.single.prompt, 'girl, maid');
+      expect(config.characters.single.id, 'c');
+    });
+
+    test('without a record, matching characters keep their names and '
+        'left-out ones stay in place', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(characterPromptNotifierProvider.notifier).replaceAll([
+        alice,
+        bob,
+        cora,
+      ]);
+      final config = await reuse(
+        container,
+        const NaiImageMetadata(
+          characterPrompts: ['girl,  red hair', '1other, cat ears'],
+          characterInfos: [
+            CharacterPromptInfo(
+              prompt: 'girl,  red hair',
+              centerX: 0.1,
+              centerY: 0.9,
+            ),
+            CharacterPromptInfo(prompt: '1other, cat ears'),
+          ],
+        ),
+      );
+
+      final characters = config.characters;
+      expect(characters.map((c) => c.id).take(2), ['a', 'b']);
+      expect(characters[0].name, 'Alice');
+      // The panel's text stays, so its saved sections still add up to it.
+      expect(characters[0].prompt, 'girl, red hair');
+      expect(characters[0].customPosition?.column, closeTo(0.1, 0.0001));
+      expect(characters[1], bob);
+      expect(characters[2].prompt, '1other, cat ears');
+      expect(characters, hasLength(3));
+    });
+  });
 
   test('publishes stored prompt partitions after parameter reuse', () async {
     final container = ProviderContainer();

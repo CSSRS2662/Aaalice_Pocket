@@ -25,6 +25,7 @@ import '../../core/utils/prompt_preset_resolution.dart';
 import '../../data/datasources/remote/nai_image_generation_api_service.dart';
 import '../../data/models/character/character_prompt.dart' as ui_character;
 import '../../data/models/fixed_tag/fixed_tag_usage_snapshot.dart';
+import '../../data/models/gallery/character_panel_snapshot.dart';
 import '../../data/models/gallery/nai_image_metadata.dart';
 import '../../data/models/gallery/prompt_group_snapshot.dart';
 import '../../data/models/image/image_params.dart';
@@ -32,6 +33,7 @@ import '../../data/models/image/image_stream_chunk.dart';
 import '../../data/repositories/gallery_folder_repository.dart';
 import 'alias_resolver_service.dart';
 import '../../data/services/gallery/gallery_image_file_deleter.dart';
+import '../../data/services/prompt_group/character_section_store.dart';
 import '../../data/services/prompt_group/prompt_group_record_store.dart';
 import '../../data/services/statistics_cache_service.dart';
 import '../services/generation_history_storage_service.dart';
@@ -391,7 +393,12 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
       final runId = ++_runCounter;
       _activeRunId = runId;
       _activeFixedTagUsageSnapshot = prepared.fixedTagUsageSnapshot;
-      _activePromptGroupSnapshot = promptGroupSnapshot;
+      _activePromptGroupSnapshot = PromptGroupSnapshot.withCharacters(
+        promptGroupSnapshot,
+        preserveCharacterSnapshot
+            ? null
+            : _characterPanelSnapshot(prepared.params),
+      );
       _streamPreviews.clear();
       _failedSnapshotKeys.clear();
       final dlss = ref.read(dlssProvider);
@@ -1341,6 +1348,23 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     return groups == null
         ? withFixedTags
         : withFixedTags.copyWith(promptGroupData: groups.toJson());
+  }
+
+  /// 请求里的角色取自面板时连同整个面板一起记下：角色名、未启用的角色与
+  /// 分区不在图片元数据里，复用参数时靠它原样恢复。
+  CharacterPanelSnapshot? _characterPanelSnapshot(ImageParams params) {
+    final config = ref.read(characterPromptNotifierProvider);
+    if (config.characters.isEmpty) return null;
+    return CharacterPanelSnapshot(
+      config: config,
+      sections: CharacterSectionStore.entriesFor(
+        ref.read(localStorageServiceProvider),
+        [for (final character in config.characters) character.id],
+      ),
+      sentPrompts: [
+        for (final character in params.characters) character.prompt,
+      ],
+    );
   }
 
   /// 分区结构不写进 PNG，按结果图内容哈希写入旁路记录库。

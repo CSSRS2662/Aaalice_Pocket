@@ -275,6 +275,14 @@ class CharacterPromptNotifier extends _$CharacterPromptNotifier {
     unawaited(_saveConfig());
   }
 
+  /// 整体换成 [config]：复用参数时恢复生成那张图时记下的角色面板，
+  /// 位置模式随面板一起恢复。
+  void restoreConfig(CharacterPromptConfig config) {
+    final model = ref.read(generationParamsNotifierProvider).model;
+    state = limitCharacterConfigForModel(config, model);
+    unawaited(_saveConfig());
+  }
+
   /// 向上移动角色
   ///
   /// [index] 当前位置索引

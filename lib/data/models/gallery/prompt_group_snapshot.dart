@@ -1,3 +1,5 @@
+import 'character_panel_snapshot.dart';
+
 class PromptGroupSectionSnapshot {
   const PromptGroupSectionSnapshot({
     required this.id,
@@ -35,13 +37,30 @@ class PromptGroupSectionSnapshot {
 /// Launcher-only prompt editor state stored alongside NovelAI metadata.
 ///
 /// NovelAI still receives the normal flattened prompt. This snapshot only lets
-/// Aaalice Pocket reconstruct the user's untitled prompt partitions later.
+/// Aaalice Pocket reconstruct the user's untitled prompt partitions later,
+/// and with [characters] the whole character panel. A snapshot may carry only
+/// the characters; [hasPromptSections] tells.
 class PromptGroupSnapshot {
   const PromptGroupSnapshot({
     required this.groupedMode,
     required this.positiveSections,
     required this.negativeSections,
+    this.characters,
   });
+
+  /// [main]'s sections, or none, with [characters] beside them.
+  static PromptGroupSnapshot? withCharacters(
+    PromptGroupSnapshot? main,
+    CharacterPanelSnapshot? characters,
+  ) {
+    if (characters == null) return main;
+    return PromptGroupSnapshot(
+      groupedMode: main?.groupedMode ?? false,
+      positiveSections: main?.positiveSections ?? const [],
+      negativeSections: main?.negativeSections ?? const [],
+      characters: characters,
+    );
+  }
 
   static const metadataKey = 'aaalice_prompt_groups';
   static const version = 1;
@@ -49,6 +68,10 @@ class PromptGroupSnapshot {
   final bool groupedMode;
   final List<PromptGroupSectionSnapshot> positiveSections;
   final List<PromptGroupSectionSnapshot> negativeSections;
+  final CharacterPanelSnapshot? characters;
+
+  bool get hasPromptSections =>
+      positiveSections.isNotEmpty || negativeSections.isNotEmpty;
 
   String get positivePrompt => _joinEnabled(positiveSections);
   String get negativePrompt => _joinEnabled(negativeSections);
@@ -64,13 +87,24 @@ class PromptGroupSnapshot {
     'negativeSections': [
       for (final section in negativeSections) section.toJson(),
     ],
+    if (characters case final characters?) 'characters': characters.toJson(),
   };
 
   static PromptGroupSnapshot? fromJson(Object? raw) {
     if (raw is! Map) return null;
     final positive = _readSections(raw['positiveSections']);
     final negative = _readSections(raw['negativeSections']);
-    if (positive.isEmpty && negative.isEmpty) return null;
+    final characters = CharacterPanelSnapshot.fromJson(raw['characters']);
+    if (positive.isEmpty && negative.isEmpty) {
+      return characters == null
+          ? null
+          : PromptGroupSnapshot(
+              groupedMode: false,
+              positiveSections: const [],
+              negativeSections: const [],
+              characters: characters,
+            );
+    }
     return PromptGroupSnapshot(
       groupedMode: raw['mode'] == 'grouped',
       positiveSections: positive.isEmpty
@@ -79,6 +113,7 @@ class PromptGroupSnapshot {
       negativeSections: negative.isEmpty
           ? _fallbackSections(raw['negativePrompt'])
           : negative,
+      characters: characters,
     );
   }
 

@@ -1,11 +1,15 @@
+import '../../core/storage/local_storage_service.dart';
 import '../../data/models/character/character_prompt.dart' as char;
 import '../../data/models/fixed_tag/fixed_tag_entry.dart';
 import '../../data/models/fixed_tag/fixed_tag_prompt_type.dart';
 import '../../data/models/fixed_tag/fixed_tag_usage_snapshot.dart';
 import '../../data/models/gallery/nai_image_metadata.dart';
+import '../../data/models/gallery/character_panel_snapshot.dart';
 import '../../data/models/metadata/metadata_import_options.dart';
+import '../../data/services/prompt_group/character_section_store.dart';
 import '../../l10n/app_localizations.dart';
 import '../providers/character_prompt_provider.dart';
+import '../providers/character_workspace_provider.dart';
 import '../providers/fixed_tags_provider.dart';
 import '../providers/image_generation_provider.dart';
 import '../providers/quality_preset_provider.dart';
@@ -33,6 +37,7 @@ class MetadataImportCoordinator {
     final resolvedMetadata = resolution.metadata;
     final notifier = read(generationParamsNotifierProvider.notifier);
     final characterPrompts = resolvedMetadata.characterPrompts;
+    final previousCharacters = read(characterPromptNotifierProvider).characters;
 
     if (options.importCharacterPrompts && characterPrompts.isNotEmpty) {
       read(characterPromptNotifierProvider.notifier).clearAllCharacters();
@@ -74,7 +79,7 @@ class MetadataImportCoordinator {
     );
 
     if (options.importCharacterPrompts && characterPrompts.isNotEmpty) {
-      _applyCharacterPrompts(read, resolvedMetadata);
+      _applyCharacterPrompts(read, resolvedMetadata, previousCharacters);
       appliedCount++;
     }
 
@@ -89,6 +94,7 @@ class MetadataImportCoordinator {
 
     final promptGroupSnapshot = resolvedMetadata.promptGroupSnapshot;
     if (promptGroupSnapshot != null &&
+        promptGroupSnapshot.hasPromptSections &&
         (options.importPrompt || options.importNegativePrompt)) {
       read(
         promptGroupRestoreRequestProvider.notifier,
@@ -155,10 +161,32 @@ class MetadataImportCoordinator {
     return 1;
   }
 
+  /// The image's characters onto the panel.
+  ///
+  /// The image only carries the prompts and places of the characters it was
+  /// generated with. When this device recorded the whole panel for it, the
+  /// panel comes back as it was: names, sections and the characters left out
+  /// of that generation. Otherwise characters still on the panel with the same
+  /// prompt keep their name and sections, and left-out ones stay.
   static void _applyCharacterPrompts(
     ProviderReader read,
     NaiImageMetadata metadata,
+    List<char.CharacterPrompt> previous,
   ) {
+    final notifier = read(characterPromptNotifierProvider.notifier);
+    // An open character keeps its sections in memory; closing it makes the
+    // next opening read the restored ones.
+    read(characterWorkspaceExpandedProvider.notifier).state = null;
+    final panel = metadata.promptGroupSnapshot?.characters;
+    if (panel != null && _panelSent(panel, metadata.characterPrompts)) {
+      CharacterSectionStore.restore(
+        read(localStorageServiceProvider),
+        panel.sections,
+      );
+      notifier.restoreConfig(panel.config);
+      return;
+    }
+
     final characters = <char.CharacterPrompt>[];
     final negativePrompts = metadata.characterNegativePrompts;
     final characterInfos = metadata.characterInfos;
@@ -199,10 +227,68 @@ class MetadataImportCoordinator {
       );
     }
 
-    final notifier = read(characterPromptNotifierProvider.notifier);
-    notifier.replaceAll(characters);
+    notifier.replaceAll(keepPanelCharacters(characters, previous));
     final useCoords = metadata.characterUseCoords ?? hasImportedCenters;
     notifier.setGlobalAiChoice(!useCoords);
+  }
+
+  /// Whether [panel] was recorded for a request that sent [prompts]; random
+  /// batches change the characters after the panel is recorded.
+  static bool _panelSent(CharacterPanelSnapshot panel, List<String> prompts) {
+    final sent = panel.sentPrompts;
+    if (sent.length != prompts.length) return false;
+    for (var index = 0; index < sent.length; index++) {
+      if (!PromptGroupRestoreRequest.samePromptTags(
+        prompts[index],
+        sent[index],
+      )) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// [imported] characters, reusing the panel's [current] ones that have the
+  /// same prompt (their id, name and sections stay), with the current
+  /// characters that were left out of generation kept where they were.
+  static List<char.CharacterPrompt> keepPanelCharacters(
+    List<char.CharacterPrompt> imported,
+    List<char.CharacterPrompt> current,
+  ) {
+    final unused = [...current];
+    final merged = <char.CharacterPrompt>[];
+    for (final character in imported) {
+      final index = unused.indexWhere(
+        (item) => PromptGroupRestoreRequest.samePromptTags(
+          item.prompt,
+          character.prompt,
+        ),
+      );
+      if (index < 0) {
+        merged.add(character);
+        continue;
+      }
+      final match = unused.removeAt(index);
+      merged.add(
+        match.copyWith(
+          negativePrompt:
+              PromptGroupRestoreRequest.samePromptTags(
+                match.negativePrompt,
+                character.negativePrompt,
+              )
+              ? match.negativePrompt
+              : character.negativePrompt,
+          positionMode: character.positionMode,
+          customPosition: character.customPosition,
+          enabled: true,
+        ),
+      );
+    }
+    for (final (index, character) in current.indexed) {
+      if (character.enabled || !unused.contains(character)) continue;
+      merged.insert(index.clamp(0, merged.length), character);
+    }
+    return merged;
   }
 
   static char.CharacterGender _inferGenderFromPrompt(String prompt) {
