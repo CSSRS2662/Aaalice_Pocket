@@ -15720,9 +15720,6 @@ class AppLocalizationsJa extends AppLocalizations {
       'このプロバイダーは ChatGPT アカウントでサインインするため、アドレスと API キーは不要です。保存後にサインインが開きます。';
 
   @override
-  String get characterPanel_title => 'キャラクター';
-
-  @override
   String get characterPanel_position => '位置';
 
   @override
@@ -15730,13 +15727,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get characterPanel_positionManual => '手動で配置';
-
-  @override
-  String get characterPanel_adjust => '調整';
-
-  @override
-  String get characterPanel_gridHint =>
-      'カードをタップで編集・丸で生成への参加を切替・長押しで並べ替え・× を2回タップで削除';
 
   @override
   String get characterPanel_emptyPrompt => 'プロンプトはまだありません';
@@ -15752,46 +15742,8 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String characterPanel_delete(String name) {
-    return '「$name」を削除';
-  }
-
-  @override
-  String characterPanel_deleteAgain(String name) {
-    return 'もう一度タップで「$name」を削除';
-  }
-
-  @override
   String characterPanel_deleted(String name) {
     return '「$name」を削除しました';
-  }
-
-  @override
-  String get characterPanel_addFromLibrary => 'ライブラリから追加';
-
-  @override
-  String characterPanel_editIndex(int index, int total) {
-    return '$total 人中 $index 人目';
-  }
-
-  @override
-  String get characterPanel_notIncluded => '生成に不参加';
-
-  @override
-  String get characterPanel_includeSwitch => '参加';
-
-  @override
-  String get characterPanel_gender => '性別';
-
-  @override
-  String get characterPanel_positionAiValue => 'AIにおまかせ（全キャラクター）';
-
-  @override
-  String get characterPanel_positionNotIncluded => '生成に不参加のため位置なし';
-
-  @override
-  String characterPanel_positionValue(String cell, int x, int y) {
-    return '手動 · $cell · 横 $x% 縦 $y%';
   }
 
   @override
@@ -15829,12 +15781,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get characterPanel_previous => '前のキャラクター';
-
-  @override
-  String get characterPanel_next => '次のキャラクター';
-
-  @override
   String get characterPanel_canvas => 'キャラクター位置キャンバス';
 
   @override
@@ -15847,4 +15793,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get characterEditor_negativeTab => '除外';
+
+  @override
+  String characterWorkspace_count(int count, int included) {
+    return '$count 人 · 参加 $included 人';
+  }
 }

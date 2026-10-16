@@ -33,7 +33,7 @@ class PromptInputCommands {
     required this.clearNegativePrompt,
     required this.generateRandomPrompt,
     required this.openAssistantSettings,
-    required this.showMobileCharacterManager,
+    required this.toggleCharacterWorkspace,
     required this.toggleMaximize,
   });
 
@@ -46,6 +46,6 @@ class PromptInputCommands {
   final VoidCallback clearNegativePrompt;
   final Future<void> Function() generateRandomPrompt;
   final VoidCallback openAssistantSettings;
-  final Future<void> Function() showMobileCharacterManager;
+  final VoidCallback toggleCharacterWorkspace;
   final VoidCallback toggleMaximize;
 }

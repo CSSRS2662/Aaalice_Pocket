@@ -34,6 +34,7 @@ class CharacterPromptButton extends ConsumerWidget {
     this.iconOnly = false,
     this.showZeroCount = false,
     this.segment = false,
+    this.selected = false,
   }) : assert(!segment || onManage != null, 'segment mode opens the manager');
 
   /// When supplied, the button opens an existing-character manager instead of
@@ -46,6 +47,9 @@ class CharacterPromptButton extends ConsumerWidget {
   /// 作为 [PromptRoleSegmentGroup] 的一个分段显示：图标加角色数量，
   /// 点按打开 [onManage]。
   final bool segment;
+
+  /// Segment mode: the characters are showing, so the segment is filled.
+  final bool selected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,6 +69,7 @@ class CharacterPromptButton extends ConsumerWidget {
               ? Icons.person_rounded
               : Icons.person_outline_rounded,
           active: hasCharacters,
+          selected: selected,
           count: characterCount,
           semanticLabel: AppLocalizations.of(context)!.character_buttonLabel,
           onPressed: onManage!,

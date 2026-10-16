@@ -16152,9 +16152,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This provider signs in with a ChatGPT account and needs no address or API key. Sign-in opens after you save.';
 
   @override
-  String get characterPanel_title => 'Characters';
-
-  @override
   String get characterPanel_position => 'Position';
 
   @override
@@ -16162,13 +16159,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get characterPanel_positionManual => 'Place manually';
-
-  @override
-  String get characterPanel_adjust => 'Adjust';
-
-  @override
-  String get characterPanel_gridHint =>
-      'Tap a card to edit · the dot includes or leaves it out · long press to reorder · tap × twice to delete';
 
   @override
   String get characterPanel_emptyPrompt => 'No prompt yet';
@@ -16184,47 +16174,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String characterPanel_delete(String name) {
-    return 'Delete $name';
-  }
-
-  @override
-  String characterPanel_deleteAgain(String name) {
-    return 'Tap again to delete $name';
-  }
-
-  @override
   String characterPanel_deleted(String name) {
     return 'Deleted $name';
-  }
-
-  @override
-  String get characterPanel_addFromLibrary => 'Add from library';
-
-  @override
-  String characterPanel_editIndex(int index, int total) {
-    return 'Character $index of $total';
-  }
-
-  @override
-  String get characterPanel_notIncluded => 'Not in this generation';
-
-  @override
-  String get characterPanel_includeSwitch => 'Include';
-
-  @override
-  String get characterPanel_gender => 'Gender';
-
-  @override
-  String get characterPanel_positionAiValue => 'AI decides for every character';
-
-  @override
-  String get characterPanel_positionNotIncluded =>
-      'Not in this generation, so it takes no position';
-
-  @override
-  String characterPanel_positionValue(String cell, int x, int y) {
-    return 'Manual · $cell · $x% across, $y% down';
   }
 
   @override
@@ -16263,12 +16214,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get characterPanel_previous => 'Previous character';
-
-  @override
-  String get characterPanel_next => 'Next character';
-
-  @override
   String get characterPanel_canvas => 'Character position canvas';
 
   @override
@@ -16281,4 +16226,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get characterEditor_negativeTab => 'Undesired';
+
+  @override
+  String characterWorkspace_count(int count, int included) {
+    return '$count characters · $included included';
+  }
 }

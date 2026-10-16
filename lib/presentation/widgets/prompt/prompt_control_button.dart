@@ -147,10 +147,14 @@ class PromptRoleSegment extends StatelessWidget {
     required this.semanticLabel,
     this.onLongPress,
     this.count,
+    this.selected = false,
   });
 
   final IconData icon;
   final bool active;
+
+  /// Filled with the accent while the segment's view is open.
+  final bool selected;
   final VoidCallback onPressed;
   final VoidCallback? onLongPress;
   final String semanticLabel;
@@ -161,8 +165,19 @@ class PromptRoleSegment extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final count = this.count;
+    final iconColor = selected
+        ? colors.onPrimary
+        : active
+        ? colors.primary
+        : colors.onSurfaceVariant;
+    final textColor = selected
+        ? colors.onPrimary
+        : active
+        ? colors.onSurface
+        : colors.onSurfaceVariant;
     return Semantics(
       button: true,
+      selected: selected,
       toggled: count == null ? active : null,
       label: semanticLabel,
       value: count?.toString(),
@@ -172,16 +187,16 @@ class PromptRoleSegment extends StatelessWidget {
       child: InkWell(
         onTap: onPressed,
         onLongPress: onLongPress,
-        child: SizedBox.expand(
+        child: AnimatedContainer(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 160),
+          color: selected ? colors.primary : Colors.transparent,
           child: Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  icon,
-                  size: 20,
-                  color: active ? colors.primary : colors.onSurfaceVariant,
-                ),
+                Icon(icon, size: 20, color: iconColor),
                 if (count != null) ...[
                   const SizedBox(width: 6),
                   Text(
@@ -189,9 +204,7 @@ class PromptRoleSegment extends StatelessWidget {
                     maxLines: 1,
                     style: (theme.textTheme.labelLarge ?? const TextStyle())
                         .copyWith(
-                          color: active
-                              ? colors.onSurface
-                              : colors.onSurfaceVariant,
+                          color: textColor,
                           fontWeight: FontWeight.w700,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),

@@ -11,7 +11,7 @@ import '../../../providers/character_prompt_provider.dart';
 import '../../../providers/image_generation_provider.dart';
 import '../../../providers/pending_prompt_provider.dart';
 import '../../../widgets/common/app_toast.dart';
-import '../mobile_workbench/character_panel/character_panel.dart';
+import '../../../providers/character_workspace_provider.dart';
 import 'prompt_input_controller.dart';
 import 'random_prompt_action.dart';
 
@@ -226,9 +226,12 @@ class PromptInputCoordinator {
     PromptAssistantQuickSettings.show(_context());
   }
 
-  Future<void> showMobileCharacterManager() async {
+  /// Switches the phone prompt page between the main prompt and the
+  /// characters; the choice stays until it is switched back.
+  void toggleCharacterWorkspace() {
     if (!_mounted()) return;
     FocusManager.instance.primaryFocus?.unfocus();
-    await showCharacterPanel(_context());
+    final active = _ref.read(characterWorkspaceActiveProvider.notifier);
+    active.state = !active.state;
   }
 }

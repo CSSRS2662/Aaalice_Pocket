@@ -6,6 +6,7 @@ import '../../../themes/core/layered_surface_style.dart';
 import '../../../themes/theme_extension.dart';
 import '../../../widgets/common/reorderable_tile_grid.dart';
 import 'prompt_group_controller.dart';
+import 'prompt_group_summary.dart';
 import 'prompt_group_tile.dart';
 
 /// Prompt sections as a grid of fixed-height tiles.
@@ -22,9 +23,13 @@ class PromptGroupGrid extends StatefulWidget {
     required this.onToggleEnabled,
     required this.onDelete,
     required this.onReordered,
+    this.summaryLines = PromptGroupSummary.defaultMaxLines,
   });
 
   final PromptGroupCollection groups;
+
+  /// Lines of tags each tile shows; one keeps dense layouts short.
+  final int summaryLines;
   final ValueChanged<String> onOpen;
   final ValueChanged<String> onShowActions;
   final ValueChanged<String> onToggleEnabled;
@@ -89,7 +94,10 @@ class _PromptGroupGridState extends State<PromptGroupGrid> {
 
   @override
   Widget build(BuildContext context) {
-    final metrics = PromptGroupTileMetrics.of(context);
+    final metrics = PromptGroupTileMetrics.of(
+      context,
+      lines: widget.summaryLines,
+    );
     final groups = widget.groups;
     return ReorderableTileGrid(
       ids: [for (final section in groups.sections) section.id],

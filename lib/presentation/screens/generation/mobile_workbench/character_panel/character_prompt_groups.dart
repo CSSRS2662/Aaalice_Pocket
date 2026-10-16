@@ -17,7 +17,6 @@ class CharacterPromptGroups {
     required this.characterId,
     required this.positive,
     required this.negative,
-    required this.grouped,
     required LocalStorageService storage,
   }) : _storage = storage;
 
@@ -33,7 +32,6 @@ class CharacterPromptGroups {
     return CharacterPromptGroups._(
       characterId: character.id,
       storage: storage,
-      grouped: saved?['mode'] == PromptEditorMode.grouped.name,
       positive: PromptGroupCollection.fromJson(
         positiveMatches ? saved!['positiveSections'] : null,
         fallbackText: character.prompt,
@@ -49,7 +47,6 @@ class CharacterPromptGroups {
   final PromptGroupCollection positive;
   final PromptGroupCollection negative;
   final LocalStorageService _storage;
-  bool grouped;
 
   PromptGroupCollection groupsFor(bool negative) =>
       negative ? this.negative : positive;
@@ -72,9 +69,6 @@ class CharacterPromptGroups {
       ..removeWhere((id, _) => !liveIds.contains(id));
     all[characterId] = {
       'version': 1,
-      'mode': grouped
-          ? PromptEditorMode.grouped.name
-          : PromptEditorMode.single.name,
       'positivePrompt': character.prompt,
       'negativePrompt': character.negativePrompt,
       'positiveSections': positive.toJson(),

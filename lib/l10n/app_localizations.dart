@@ -28000,12 +28000,6 @@ abstract class AppLocalizations {
   /// **'This provider signs in with a ChatGPT account and needs no address or API key. Sign-in opens after you save.'**
   String get chatgptCodex_providerFormNote;
 
-  /// No description provided for @characterPanel_title.
-  ///
-  /// In en, this message translates to:
-  /// **'Characters'**
-  String get characterPanel_title;
-
   /// No description provided for @characterPanel_position.
   ///
   /// In en, this message translates to:
@@ -28023,18 +28017,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Place manually'**
   String get characterPanel_positionManual;
-
-  /// No description provided for @characterPanel_adjust.
-  ///
-  /// In en, this message translates to:
-  /// **'Adjust'**
-  String get characterPanel_adjust;
-
-  /// No description provided for @characterPanel_gridHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap a card to edit · the dot includes or leaves it out · long press to reorder · tap × twice to delete'**
-  String get characterPanel_gridHint;
 
   /// No description provided for @characterPanel_emptyPrompt.
   ///
@@ -28054,71 +28036,11 @@ abstract class AppLocalizations {
   /// **'Leave out {name}'**
   String characterPanel_leaveOut(String name);
 
-  /// No description provided for @characterPanel_delete.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete {name}'**
-  String characterPanel_delete(String name);
-
-  /// No description provided for @characterPanel_deleteAgain.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap again to delete {name}'**
-  String characterPanel_deleteAgain(String name);
-
   /// No description provided for @characterPanel_deleted.
   ///
   /// In en, this message translates to:
   /// **'Deleted {name}'**
   String characterPanel_deleted(String name);
-
-  /// No description provided for @characterPanel_addFromLibrary.
-  ///
-  /// In en, this message translates to:
-  /// **'Add from library'**
-  String get characterPanel_addFromLibrary;
-
-  /// No description provided for @characterPanel_editIndex.
-  ///
-  /// In en, this message translates to:
-  /// **'Character {index} of {total}'**
-  String characterPanel_editIndex(int index, int total);
-
-  /// No description provided for @characterPanel_notIncluded.
-  ///
-  /// In en, this message translates to:
-  /// **'Not in this generation'**
-  String get characterPanel_notIncluded;
-
-  /// No description provided for @characterPanel_includeSwitch.
-  ///
-  /// In en, this message translates to:
-  /// **'Include'**
-  String get characterPanel_includeSwitch;
-
-  /// No description provided for @characterPanel_gender.
-  ///
-  /// In en, this message translates to:
-  /// **'Gender'**
-  String get characterPanel_gender;
-
-  /// No description provided for @characterPanel_positionAiValue.
-  ///
-  /// In en, this message translates to:
-  /// **'AI decides for every character'**
-  String get characterPanel_positionAiValue;
-
-  /// No description provided for @characterPanel_positionNotIncluded.
-  ///
-  /// In en, this message translates to:
-  /// **'Not in this generation, so it takes no position'**
-  String get characterPanel_positionNotIncluded;
-
-  /// No description provided for @characterPanel_positionValue.
-  ///
-  /// In en, this message translates to:
-  /// **'Manual · {cell} · {x}% across, {y}% down'**
-  String characterPanel_positionValue(String cell, int x, int y);
 
   /// No description provided for @characterPanel_place.
   ///
@@ -28180,18 +28102,6 @@ abstract class AppLocalizations {
   /// **'{name} is not in this generation. Include it on its card first.'**
   String characterPanel_includeFirst(String name);
 
-  /// No description provided for @characterPanel_previous.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous character'**
-  String get characterPanel_previous;
-
-  /// No description provided for @characterPanel_next.
-  ///
-  /// In en, this message translates to:
-  /// **'Next character'**
-  String get characterPanel_next;
-
   /// No description provided for @characterPanel_canvas.
   ///
   /// In en, this message translates to:
@@ -28215,6 +28125,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Undesired'**
   String get characterEditor_negativeTab;
+
+  /// No description provided for @characterWorkspace_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} characters · {included} included'**
+  String characterWorkspace_count(int count, int included);
 }
 
 class _AppLocalizationsDelegate

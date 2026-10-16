@@ -7837,12 +7837,9 @@
     }
   },
   "chatgptCodex_providerFormNote": "這個服務商使用 ChatGPT 帳號登入，不需要位址與 API Key。儲存後會開啟登入。",
-  "characterPanel_title": "角色",
   "characterPanel_position": "位置",
   "characterPanel_positionAi": "AI 決定",
   "characterPanel_positionManual": "手動擺放",
-  "characterPanel_adjust": "調整",
-  "characterPanel_gridHint": "點卡片編輯 · 圓點切換參與生成 · 長按拖動排序 · × 點兩次刪除",
   "characterPanel_emptyPrompt": "還沒有提示詞",
   "characterPanel_include": "讓「{name}」參與生成",
   "@characterPanel_include": {
@@ -7860,58 +7857,11 @@
       }
     }
   },
-  "characterPanel_delete": "刪除「{name}」",
-  "@characterPanel_delete": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "characterPanel_deleteAgain": "再點一次刪除「{name}」",
-  "@characterPanel_deleteAgain": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "characterPanel_deleted": "已刪除「{name}」",
   "@characterPanel_deleted": {
     "placeholders": {
       "name": {
         "type": "String"
-      }
-    }
-  },
-  "characterPanel_addFromLibrary": "從詞庫新增",
-  "characterPanel_editIndex": "第 {index} / {total} 個角色",
-  "@characterPanel_editIndex": {
-    "placeholders": {
-      "index": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "characterPanel_notIncluded": "未參與生成",
-  "characterPanel_includeSwitch": "參與",
-  "characterPanel_gender": "性別",
-  "characterPanel_positionAiValue": "AI 決定（所有角色）",
-  "characterPanel_positionNotIncluded": "未參與生成，不佔位置",
-  "characterPanel_positionValue": "手動 · {cell} · 橫 {x}% 縱 {y}%",
-  "@characterPanel_positionValue": {
-    "placeholders": {
-      "cell": {
-        "type": "String"
-      },
-      "x": {
-        "type": "int"
-      },
-      "y": {
-        "type": "int"
       }
     }
   },
@@ -7948,8 +7898,6 @@
       }
     }
   },
-  "characterPanel_previous": "上一個角色",
-  "characterPanel_next": "下一個角色",
   "characterPanel_canvas": "角色位置畫布",
   "characterPanel_marker": "{name}，橫 {x}%，縱 {y}%",
   "@characterPanel_marker": {
@@ -7966,5 +7914,16 @@
     }
   },
   "characterEditor_positiveTab": "正向",
-  "characterEditor_negativeTab": "負向"
+  "characterEditor_negativeTab": "負向",
+  "characterWorkspace_count": "{count} 個角色 · {included} 個參與",
+  "@characterWorkspace_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "included": {
+        "type": "int"
+      }
+    }
+  }
 }

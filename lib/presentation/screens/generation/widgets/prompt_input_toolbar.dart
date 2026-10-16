@@ -6,7 +6,12 @@ import '../../../../core/autocomplete/autocomplete_settings.dart'
 import '../../../../core/platform/platform_capabilities.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../adaptive/interaction_policy.dart';
+import '../../../../core/utils/nai_prompt_parser.dart';
+import '../../../../data/models/character/character_prompt.dart';
+import '../../../providers/character_prompt_provider.dart';
+import '../../../providers/character_workspace_provider.dart';
 import '../../../providers/image_generation_provider.dart';
+import '../../../themes/theme_extension.dart';
 import '../../../providers/prompt_regex_rules_provider.dart';
 import '../../../widgets/character/character_prompt_button.dart';
 import '../../../widgets/prompt/fixed_tags_button.dart';
@@ -505,7 +510,7 @@ class PromptInputBottomActions extends ConsumerWidget {
   }
 }
 
-class _MobileFullscreenToolbar extends StatelessWidget {
+class _MobileFullscreenToolbar extends ConsumerWidget {
   const _MobileFullscreenToolbar({
     required this.controller,
     required this.commands,
@@ -520,8 +525,29 @@ class _MobileFullscreenToolbar extends StatelessWidget {
   final Widget editor;
   final Widget footer;
 
+  /// Tags of the characters taking part, per side, for the count badge.
+  static ({int positive, int negative}) _characterCounts(
+    List<CharacterPrompt> characters,
+  ) {
+    var positive = 0;
+    var negative = 0;
+    for (final character in characters) {
+      if (!character.enabled) continue;
+      positive += NaiPromptParser.splitSegments(character.prompt).length;
+      negative += NaiPromptParser.splitSegments(
+        character.negativePrompt,
+      ).length;
+    }
+    return (positive: positive, negative: negative);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final characterMode = ref.watch(characterWorkspaceActiveProvider);
+    final characters = ref.watch(
+      characterPromptNotifierProvider.select((config) => config.characters),
+    );
+    final charactersGrouped = ref.watch(characterPromptsGroupedProvider);
     return LayoutBuilder(
       key: const ValueKey('generation_prompt_mobile_workbench'),
       builder: (context, constraints) {
@@ -536,97 +562,117 @@ class _MobileFullscreenToolbar extends StatelessWidget {
         final actionExtent = 48 + textGrowth * 16;
         final typeSwitchWidth = 84 + textGrowth * 24;
         const gap = 4.0;
+        // The switch, the add button and the editing mode act on what the
+        // page shows: the main prompt or the characters.
         final typeSwitch = PromptTypeSwitch(
           controller: controller,
           commands: commands,
           compact: true,
           toggleOnly: true,
           iconOnly: true,
+          counts: characterMode ? _characterCounts(characters) : null,
         );
+        final Widget? addButton = characterMode
+            ? _AddCharacterButton(
+                onPressed: () {
+                  final adding = ref.read(
+                    characterWorkspaceAddingProvider.notifier,
+                  );
+                  adding.state = !adding.state;
+                },
+              )
+            : controller.isGroupedMode
+            ? PromptAddGroupButton(controller: controller, iconOnly: true)
+            : null;
+        final modeSwitch = characterMode
+            ? PromptEditorModeButton(
+                buttonKey: const ValueKey(
+                  'generation_prompt_editor_mode_switch',
+                ),
+                grouped: charactersGrouped,
+                iconOnly: true,
+                onSelected: (mode) => ref
+                    .read(characterPromptsGroupedProvider.notifier)
+                    .set(mode == PromptEditorMode.grouped),
+              )
+            : PromptEditorModeSwitch(
+                controller: controller,
+                commands: commands,
+                iconOnly: true,
+              );
 
-        final roleActionsWidth = actionExtent * 3 + 2;
-        Widget buildPromptRoleActions() => SizedBox(
-          width: roleActionsWidth,
-          child: PromptRoleSegmentGroup(
-            height: controlRowHeight,
-            children: [
-              _MobilePromptToolbarAction(
-                actionKey: const ValueKey(
-                  'generation_prompt_mobile_character_action',
-                ),
-                height: controlRowHeight,
-                child: CharacterPromptButton(
-                  onManage: commands.showMobileCharacterManager,
-                  segment: true,
-                ),
+        final roleActions = PromptRoleSegmentGroup(
+          height: controlRowHeight,
+          children: [
+            _MobilePromptToolbarAction(
+              actionKey: const ValueKey(
+                'generation_prompt_mobile_character_action',
               ),
-              _MobilePromptToolbarAction(
-                actionKey: const ValueKey(
-                  'generation_prompt_mobile_fixed_tags_action',
-                ),
-                height: controlRowHeight,
-                child: const FixedTagsButton(segment: true),
+              height: controlRowHeight,
+              child: CharacterPromptButton(
+                onManage: commands.toggleCharacterWorkspace,
+                segment: true,
+                selected: characterMode,
               ),
-              _MobilePromptToolbarAction(
-                actionKey: const ValueKey(
-                  'generation_prompt_mobile_quality_action',
-                ),
-                height: controlRowHeight,
-                child: controller.isNegativeMode
-                    ? UcPresetSelector(model: model, segment: true)
-                    : QualityTagsSelector(model: model, segment: true),
+            ),
+            _MobilePromptToolbarAction(
+              actionKey: const ValueKey(
+                'generation_prompt_mobile_fixed_tags_action',
               ),
-            ],
-          ),
+              height: controlRowHeight,
+              child: const FixedTagsButton(segment: true),
+            ),
+            _MobilePromptToolbarAction(
+              actionKey: const ValueKey(
+                'generation_prompt_mobile_quality_action',
+              ),
+              height: controlRowHeight,
+              child: controller.isNegativeMode
+                  ? UcPresetSelector(model: model, segment: true)
+                  : QualityTagsSelector(model: model, segment: true),
+            ),
+          ],
         );
 
         Widget buildControls() {
-          final grouped = controller.isGroupedMode;
-          final leadingWidth =
-              typeSwitchWidth + (grouped ? gap + controlRowHeight : 0);
-          final trailingWidth = roleActionsWidth + gap + controlRowHeight;
-          final middleGap =
-              (constraints.maxWidth - leadingWidth - trailingWidth).clamp(
-                gap,
-                double.infinity,
-              );
+          final minimumRoleWidth = actionExtent * 3 + 2;
+          final fixedWidth =
+              typeSwitchWidth +
+              (addButton == null ? 0 : gap + controlRowHeight) +
+              gap * 2 +
+              controlRowHeight;
+          // The role segments take the room left over, so the row has no
+          // gaps; only very large text makes it scroll sideways instead.
+          final fits = constraints.maxWidth - fixedWidth >= minimumRoleWidth;
+          final row = Row(
+            children: [
+              SizedBox(width: typeSwitchWidth, child: typeSwitch),
+              if (addButton != null) ...[
+                const SizedBox(width: gap),
+                SizedBox.square(dimension: controlRowHeight, child: addButton),
+              ],
+              const SizedBox(width: gap),
+              if (fits)
+                Expanded(child: roleActions)
+              else
+                SizedBox(width: minimumRoleWidth, child: roleActions),
+              const SizedBox(width: gap),
+              SizedBox.square(dimension: controlRowHeight, child: modeSwitch),
+            ],
+          );
           return SizedBox(
             key: const ValueKey('generation_prompt_mobile_controls'),
             height: controlRowHeight,
-            // Wider than the pane only with very large text: scroll, not clip.
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: leadingWidth + middleGap + trailingWidth,
-                height: controlRowHeight,
-                child: Row(
-                  children: [
-                    SizedBox(width: typeSwitchWidth, child: typeSwitch),
-                    if (grouped) ...[
-                      const SizedBox(width: gap),
-                      SizedBox.square(
-                        dimension: controlRowHeight,
-                        child: PromptAddGroupButton(
-                          controller: controller,
-                          iconOnly: true,
-                        ),
-                      ),
-                    ],
-                    SizedBox(width: middleGap),
-                    buildPromptRoleActions(),
-                    const SizedBox(width: gap),
-                    SizedBox.square(
-                      dimension: controlRowHeight,
-                      child: PromptEditorModeSwitch(
-                        controller: controller,
-                        commands: commands,
-                        iconOnly: true,
-                      ),
+            child: fits
+                ? row
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: fixedWidth + minimumRoleWidth,
+                      height: controlRowHeight,
+                      child: row,
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
           );
         }
 
@@ -647,6 +693,40 @@ class _MobileFullscreenToolbar extends StatelessWidget {
           child: SizedBox(height: scrollableHeight, child: buildWorkbench()),
         );
       },
+    );
+  }
+}
+
+/// Adds a character in the character view, where the main prompt's add
+/// section button sits otherwise.
+class _AddCharacterButton extends StatelessWidget {
+  const _AddCharacterButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: context.l10n.character_addCharacter,
+      child: Material(
+        color: colors.surfaceContainerHigh.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(
+          Theme.of(context).appTheme.controlRadius,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: const ValueKey('generation_prompt_mobile_add_character'),
+          onTap: onPressed,
+          child: Center(
+            child: Icon(
+              Icons.person_add_alt_1_rounded,
+              size: 22,
+              color: colors.onSurface,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

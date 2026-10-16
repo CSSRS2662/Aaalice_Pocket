@@ -1,3 +1,5 @@
+import '../mobile_workbench/character_panel/character_workspace.dart';
+import '../../../providers/character_workspace_provider.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -246,7 +248,7 @@ class _PromptInputWidgetState extends ConsumerState<PromptInputWidget> {
       clearNegativePrompt: _coordinator.clearNegativePrompt,
       generateRandomPrompt: _coordinator.generateRandomPrompt,
       openAssistantSettings: _coordinator.openAssistantSettings,
-      showMobileCharacterManager: _coordinator.showMobileCharacterManager,
+      toggleCharacterWorkspace: _coordinator.toggleCharacterWorkspace,
       toggleMaximize:
           widget.onToggleMaximize ??
           () => ref.read(promptMaximizeNotifierProvider.notifier).toggle(),
@@ -316,19 +318,30 @@ class _FullPromptInput extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (viewData.isMaximized && constraints.maxWidth < 600) {
+          // The character button swaps the main prompt for the characters
+          // until it is tapped again; their footer tools do not apply.
+          final characterMode = ref.watch(characterWorkspaceActiveProvider);
           return PromptInputToolbar(
             controller: controller,
             commands: commands,
             viewData: viewData,
             mobileFullscreen: true,
-            mobileEditor: editor,
-            mobileFooter: buildFooter(
-              includeBottomActions: true,
-              showTransparentBackground: false,
-              showEditorModeButton: false,
-              showClearButton: false,
-              clearAllInsteadOfRandom: true,
-            ),
+            mobileEditor: characterMode
+                ? ListenableBuilder(
+                    listenable: controller,
+                    builder: (context, _) =>
+                        CharacterWorkspace(negative: controller.isNegativeMode),
+                  )
+                : editor,
+            mobileFooter: characterMode
+                ? const SizedBox.shrink()
+                : buildFooter(
+                    includeBottomActions: true,
+                    showTransparentBackground: false,
+                    showEditorModeButton: false,
+                    showClearButton: false,
+                    clearAllInsteadOfRandom: true,
+                  ),
           );
         }
         return Column(

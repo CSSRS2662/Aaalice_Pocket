@@ -18,11 +18,13 @@ import 'package:nai_launcher/presentation/agent_chat/services/prompt_toolbox.dar
 import 'package:nai_launcher/presentation/prompt_assistant/providers/prompt_assistant_history_provider.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/providers/prompt_assistant_state_provider.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/widgets/prompt_assistant_overlay.dart';
-import 'package:nai_launcher/presentation/providers/character_position_canvas_provider.dart';
 import 'package:nai_launcher/presentation/providers/character_prompt_provider.dart';
 import 'package:nai_launcher/presentation/providers/generation/generation_params_notifier.dart';
 import 'package:nai_launcher/presentation/providers/prompt_group_state_provider.dart';
 import 'package:nai_launcher/presentation/providers/prompt_token_counter_provider.dart';
+import 'package:nai_launcher/presentation/providers/character_workspace_provider.dart';
+import 'package:nai_launcher/presentation/screens/generation/mobile_workbench/character_panel/character_workspace.dart';
+import 'package:nai_launcher/presentation/screens/generation/mobile_workbench/character_panel/character_workspace_editor.dart';
 import 'package:nai_launcher/presentation/screens/generation/widgets/prompt_group_tile.dart';
 import 'package:nai_launcher/presentation/screens/generation/widgets/prompt_input.dart';
 import 'package:nai_launcher/presentation/themes/core/input_surface_style.dart';
@@ -30,7 +32,6 @@ import 'package:nai_launcher/presentation/widgets/common/input_surface_container
 import 'package:nai_launcher/presentation/widgets/common/themed_input.dart';
 import 'package:nai_launcher/presentation/widgets/common/weight_adjust_toolbar.dart';
 import 'package:nai_launcher/presentation/widgets/character/character_prompt_button.dart';
-import 'package:nai_launcher/presentation/widgets/character/inline_character_editor.dart';
 import 'package:nai_launcher/presentation/widgets/prompt/fixed_tags_button.dart';
 import 'package:nai_launcher/presentation/widgets/prompt/prompt_control_button.dart';
 import 'package:nai_launcher/presentation/widgets/prompt/quality_tags_selector.dart';
@@ -429,8 +430,11 @@ void main() {
       expect(tester.getCenter(control).dy, closeTo(rowCenter, 0.1));
       expect(control.hitTestable(), findsOneWidget);
     }
+    // The role segments share the room left over, so the row has no gaps.
+    final roleWidth = tester.getSize(roleActions.first).width;
     for (final action in roleActions) {
-      expect(tester.getSize(action).width, 48);
+      expect(tester.getSize(action).width, greaterThanOrEqualTo(48));
+      expect(tester.getSize(action).width, closeTo(roleWidth, 0.5));
     }
     expect(
       tester.getRect(modeSwitch).right,
@@ -942,70 +946,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('手机角色管理不会自动触发单角色编辑', (tester) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(380, 800);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          localStorageServiceProvider.overrideWith((ref) {
-            return _TestLocalStorageService();
-          }),
-          characterPromptNotifierProvider.overrideWith(
-            _TestCharacterPromptNotifier.new,
-          ),
-          promptTokenUsageProvider(
-            PromptTokenCountTarget.positive,
-          ).overrideWith(
-            (ref) async => const PromptTokenUsage(usedTokens: 0, limit: 512),
-          ),
-          promptTokenUsageProvider(
-            PromptTokenCountTarget.negative,
-          ).overrideWith(
-            (ref) async => const PromptTokenUsage(usedTokens: 0, limit: 512),
-          ),
-        ],
-        child: const MaterialApp(
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: Scaffold(
-            body: SizedBox(
-              width: 380,
-              height: 720,
-              child: PromptInputWidget(isMaximized: true),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    await tester.pump();
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(PromptInputWidget)),
-    );
-    final notifier = container.read(characterPromptNotifierProvider.notifier);
-    (notifier as _TestCharacterPromptNotifier).seed([
-      CharacterPrompt.create(name: '测试角色', prompt: '1girl, blue hair'),
-    ]);
-    await tester.pump();
-
-    await tester.tap(
-      find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('测试角色'), findsWidgets);
-    expect(find.byType(CharacterPromptEditor), findsNothing);
-    final panel = find.byKey(const ValueKey('character-panel'));
-    expect(panel, findsOneWidget);
-    expect(tester.getSize(panel).height, greaterThan(560));
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('手机已有角色时添加卡仍可新建角色', (tester) async {
+  testWidgets('手机角色按钮常驻切换到角色界面，控制行铺满不留空', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(380, 800);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -1014,30 +955,153 @@ void main() {
     final container = await _pumpMobilePromptHarness(tester);
     final notifier = container.read(characterPromptNotifierProvider.notifier);
     (notifier as _TestCharacterPromptNotifier).seed([
-      CharacterPrompt.create(name: '已有角色', prompt: '1girl'),
+      CharacterPrompt.create(name: '角色甲', prompt: '1girl'),
+      CharacterPrompt.create(name: '角色乙', prompt: '1boy'),
     ]);
     await tester.pump();
+
+    final controls = find.byKey(
+      const ValueKey('generation_prompt_mobile_controls'),
+    );
+    final group = find.byKey(const ValueKey('prompt-role-segment-group'));
+    final mode = find.byKey(
+      const ValueKey('generation_prompt_editor_mode_switch'),
+    );
+    final typeSwitch = find.byKey(
+      const ValueKey('generation_prompt_type_switch'),
+    );
+    expect(
+      tester.getRect(mode).right,
+      closeTo(tester.getRect(controls).right, 0.5),
+    );
+    expect(
+      tester.getRect(mode).left - tester.getRect(group).right,
+      closeTo(4, 0.5),
+    );
+    expect(
+      tester.getRect(group).left - tester.getRect(typeSwitch).right,
+      closeTo(4, 0.5),
+    );
 
     await tester.tap(
       find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('character_panel_add_tile')));
+    expect(container.read(characterWorkspaceActiveProvider), isTrue);
+    expect(find.byType(CharacterWorkspace), findsOneWidget);
+    expect(find.text('角色甲'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('generation_prompt_positive_input')),
+      findsNothing,
+    );
+    expect(
+      tester
+          .widget<CharacterPromptButton>(find.byType(CharacterPromptButton))
+          .selected,
+      isTrue,
+    );
+    final add = find.byKey(
+      const ValueKey('generation_prompt_mobile_add_character'),
+    );
+    expect(add, findsOneWidget);
+    expect(
+      tester.getRect(group).left - tester.getRect(add).right,
+      closeTo(4, 0.5),
+    );
+    expect(
+      tester.getRect(mode).left - tester.getRect(group).right,
+      closeTo(4, 0.5),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
+    );
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('character-panel-add-male')));
+    expect(container.read(characterWorkspaceActiveProvider), isFalse);
+    expect(find.byType(CharacterWorkspace), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('手机角色界面添加角色后就地展开编辑', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(380, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final container = await _pumpMobilePromptHarness(tester);
+    await tester.tap(
+      find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('generation_prompt_mobile_add_character')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('character-workspace-add-picker')),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('character-workspace-add-female')),
+    );
     await tester.pumpAndSettle();
 
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(CharacterWorkspace)),
+    )!;
     final characters = container
         .read(characterPromptNotifierProvider)
         .characters;
-    expect(characters, hasLength(2));
-    expect(characters.last.effectiveGender, CharacterGender.male);
-    expect(find.byType(CharacterPromptEditor), findsOneWidget);
+    expect(characters, hasLength(1));
+    expect(characters.single.name, l10n.character_number(1));
+    expect(characters.single.effectiveGender, CharacterGender.female);
+    expect(find.byType(CharacterWorkspaceEditor), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('手机角色面板从卡片进入编辑时高度不变，返回回到卡片', (tester) async {
+  testWidgets('手机角色界面随正负向切换显示对应分区', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(380, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final container = await _pumpMobilePromptHarness(tester);
+    final notifier = container.read(characterPromptNotifierProvider.notifier);
+    (notifier as _TestCharacterPromptNotifier).seed([
+      const CharacterPrompt(
+        id: 'x',
+        name: '角色甲',
+        prompt: 'girl, red hair',
+        negativePrompt: 'hat',
+      ),
+    ]);
+    await tester.pump();
+    await tester.tap(
+      find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('character_workspace_row_x')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('character_positive_prompt_group_grid')),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('generation_prompt_type_switch')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('character_negative_prompt_group_grid')),
+      findsOneWidget,
+    );
+    expect(find.byType(CharacterWorkspace), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('手机角色界面打开全高摆放，画布比例跟随生成尺寸', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(380, 800);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -1050,78 +1114,29 @@ void main() {
       CharacterPrompt.create(name: '角色乙', prompt: '1boy'),
     ]);
     await tester.pump();
-
     await tester.tap(
       find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
     );
     await tester.pumpAndSettle();
-
-    final panel = find.byKey(const ValueKey('character-panel'));
-    final height = tester.getSize(panel).height;
-    expect(find.byKey(const ValueKey('adaptive-bottom-sheet')), findsOneWidget);
-    expect(find.text('角色甲'), findsOneWidget);
-    expect(find.text('角色乙'), findsOneWidget);
-    expect(find.byType(CharacterPromptEditor), findsNothing);
-
-    await tester.tap(find.text('角色乙'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(CharacterPromptEditor), findsOneWidget);
-    expect(tester.getSize(panel).height, height);
-
-    await tester.tap(find.byKey(const ValueKey('character-panel-back')));
-    await tester.pumpAndSettle();
-    expect(find.byType(CharacterPromptEditor), findsNothing);
-    expect(find.text('角色甲'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('手机手动摆放在面板内展开，画布比例跟随生成尺寸', (tester) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(380, 800);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-
-    final container = await _pumpMobilePromptHarness(tester);
-    final canvasSubscription = container.listen<bool>(
-      characterPositionCanvasProvider,
-      (_, __) {},
-      fireImmediately: true,
-    );
-    addTearDown(canvasSubscription.close);
-    final notifier = container.read(characterPromptNotifierProvider.notifier);
-    (notifier as _TestCharacterPromptNotifier).seed([
-      CharacterPrompt.create(name: '角色甲', prompt: '1girl'),
-      CharacterPrompt.create(name: '角色乙', prompt: '1boy'),
-    ]);
-    await tester.pump();
-
     await tester.tap(
-      find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
+      find.byKey(const ValueKey('character-workspace-position-mode')),
     );
     await tester.pumpAndSettle();
-    final panel = find.byKey(const ValueKey('character-panel'));
-    final gridHeight = tester.getSize(panel).height;
-    final l10n = AppLocalizations.of(tester.element(panel))!;
-
-    await tester.tap(find.text(l10n.characterPanel_positionManual));
-    await tester.pumpAndSettle();
-
-    final picture = find.byKey(const ValueKey('character-place-picture'));
-    expect(picture, findsOneWidget);
-    expect(tester.getSize(panel).height, greaterThan(gridHeight));
     expect(
       container.read(characterPromptNotifierProvider).globalAiChoice,
       isFalse,
     );
-    expect(container.read(characterPositionCanvasProvider), isFalse);
+    await tester.tap(find.byKey(const ValueKey('character-workspace-place')));
+    await tester.pumpAndSettle();
+
+    final picture = find.byKey(const ValueKey('character-place-picture'));
+    expect(picture, findsOneWidget);
     final params = container.read(generationParamsNotifierProvider);
     var size = tester.getSize(picture);
     expect(
       size.width / size.height,
       closeTo(params.width / params.height, 0.01),
     );
-
     container
         .read(generationParamsNotifierProvider.notifier)
         .updateSize(1216, 832);
@@ -1132,41 +1147,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('character-place-done')));
     await tester.pumpAndSettle();
     expect(picture, findsNothing);
-    expect(
-      find.byKey(const ValueKey('character-panel-adjust')),
-      findsOneWidget,
-    );
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('手机空角色面板添加角色后直接进入编辑', (tester) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(380, 800);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-
-    final container = await _pumpMobilePromptHarness(tester);
-    await tester.tap(
-      find.byKey(const ValueKey('generation_prompt_mobile_character_action')),
-    );
-    await tester.pumpAndSettle();
-
-    final panel = find.byKey(const ValueKey('character-panel'));
-    final l10n = AppLocalizations.of(tester.element(panel))!;
-    expect(find.byType(CharacterPromptEditor), findsNothing);
-
-    await tester.tap(find.byKey(const ValueKey('character_panel_add_tile')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('character-panel-add-female')));
-    await tester.pumpAndSettle();
-
-    final characters = container
-        .read(characterPromptNotifierProvider)
-        .characters;
-    expect(characters, hasLength(1));
-    expect(characters.single.name, l10n.character_number(1));
-    expect(characters.single.effectiveGender, CharacterGender.female);
-    expect(find.byType(CharacterPromptEditor), findsOneWidget);
+    expect(find.byType(CharacterWorkspace), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

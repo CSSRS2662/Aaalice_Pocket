@@ -27,7 +27,12 @@ class PromptTypeSwitch extends ConsumerWidget {
     this.compact = false,
     this.toggleOnly = false,
     this.iconOnly = false,
+    this.counts,
   });
+
+  /// Tag counts to show instead of the main prompt's, such as the
+  /// characters' while the phone prompt page shows them.
+  final ({int positive, int negative})? counts;
 
   final PromptInputController controller;
   final PromptInputCommands commands;
@@ -64,11 +69,14 @@ class PromptTypeSwitch extends ConsumerWidget {
         controller.negativeController,
       ]),
       builder: (context, _) {
+        final positiveCount = counts?.positive ?? controller.promptCount;
+        final negativeCount =
+            counts?.negative ?? controller.negativePromptCount;
         final positive = PromptTypeButton(
           key: const ValueKey('generation_prompt_positive_mode'),
           icon: Icons.auto_awesome,
           label: context.l10n.prompt_positive,
-          count: controller.promptCount,
+          count: positiveCount,
           isSelected: !controller.isNegativeMode,
           color: theme.promptSemanticColors.positivePrompt,
           compact: compact,
@@ -89,7 +97,7 @@ class PromptTypeSwitch extends ConsumerWidget {
           key: const ValueKey('generation_prompt_negative_mode'),
           icon: Icons.block,
           label: context.l10n.prompt_negative,
-          count: controller.negativePromptCount,
+          count: negativeCount,
           isSelected: controller.isNegativeMode,
           color: theme.promptSemanticColors.negativePrompt,
           compact: compact,
@@ -120,9 +128,7 @@ class PromptTypeSwitch extends ConsumerWidget {
               label: controller.isNegativeMode
                   ? context.l10n.prompt_negative
                   : context.l10n.prompt_positive,
-              count: controller.isNegativeMode
-                  ? controller.negativePromptCount
-                  : controller.promptCount,
+              count: controller.isNegativeMode ? negativeCount : positiveCount,
               isSelected: true,
               color: controller.isNegativeMode
                   ? theme.promptSemanticColors.negativePrompt

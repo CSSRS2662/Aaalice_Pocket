@@ -95,6 +95,9 @@ class StorageKeys {
   /// like [promptGroupEditorState].
   static const String characterPromptGroupState =
       'character_prompt_group_state_v1';
+
+  /// Whether character prompts are edited as sections; local only.
+  static const String characterPromptsGrouped = 'character_prompts_grouped';
   static const String promptMaximized = 'prompt_maximized';
   static const String generationLayoutMode = 'generation_layout_mode';
   static const String mobileGenerationGestureHintCompleted =

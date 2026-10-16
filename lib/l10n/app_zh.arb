@@ -7557,12 +7557,9 @@
     }
   },
   "chatgptCodex_providerFormNote": "这个服务商用 ChatGPT 账号登录，不需要地址和 API Key。保存后会打开登录。",
-  "characterPanel_title": "角色",
   "characterPanel_position": "位置",
   "characterPanel_positionAi": "AI 决定",
   "characterPanel_positionManual": "手动摆放",
-  "characterPanel_adjust": "调整",
-  "characterPanel_gridHint": "点卡片编辑 · 圆点切换参与生成 · 长按拖动排序 · × 点两次删除",
   "characterPanel_emptyPrompt": "还没有提示词",
   "characterPanel_include": "让「{name}」参与生成",
   "@characterPanel_include": {
@@ -7580,58 +7577,11 @@
       }
     }
   },
-  "characterPanel_delete": "删除「{name}」",
-  "@characterPanel_delete": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "characterPanel_deleteAgain": "再点一次删除「{name}」",
-  "@characterPanel_deleteAgain": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "characterPanel_deleted": "已删除「{name}」",
   "@characterPanel_deleted": {
     "placeholders": {
       "name": {
         "type": "String"
-      }
-    }
-  },
-  "characterPanel_addFromLibrary": "从词库添加",
-  "characterPanel_editIndex": "第 {index} / {total} 个角色",
-  "@characterPanel_editIndex": {
-    "placeholders": {
-      "index": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "characterPanel_notIncluded": "未参与生成",
-  "characterPanel_includeSwitch": "参与",
-  "characterPanel_gender": "性别",
-  "characterPanel_positionAiValue": "AI 决定（所有角色）",
-  "characterPanel_positionNotIncluded": "未参与生成，不占位置",
-  "characterPanel_positionValue": "手动 · {cell} · 横 {x}% 纵 {y}%",
-  "@characterPanel_positionValue": {
-    "placeholders": {
-      "cell": {
-        "type": "String"
-      },
-      "x": {
-        "type": "int"
-      },
-      "y": {
-        "type": "int"
       }
     }
   },
@@ -7668,8 +7618,6 @@
       }
     }
   },
-  "characterPanel_previous": "上一个角色",
-  "characterPanel_next": "下一个角色",
   "characterPanel_canvas": "角色位置画布",
   "characterPanel_marker": "{name}，横 {x}%，纵 {y}%",
   "@characterPanel_marker": {
@@ -7686,5 +7634,16 @@
     }
   },
   "characterEditor_positiveTab": "正向",
-  "characterEditor_negativeTab": "负向"
+  "characterEditor_negativeTab": "负向",
+  "characterWorkspace_count": "{count} 个角色 · {included} 个参与",
+  "@characterWorkspace_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "included": {
+        "type": "int"
+      }
+    }
+  }
 }

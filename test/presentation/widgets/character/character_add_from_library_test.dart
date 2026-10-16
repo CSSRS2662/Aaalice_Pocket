@@ -12,7 +12,7 @@ import 'package:nai_launcher/data/models/tag_library/tag_library_entry.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/providers/character_prompt_provider.dart';
 import 'package:nai_launcher/presentation/providers/tag_library_page_provider.dart';
-import 'package:nai_launcher/presentation/screens/generation/mobile_workbench/character_panel/character_panel_add_view.dart';
+import 'package:nai_launcher/presentation/screens/generation/mobile_workbench/character_panel/character_workspace.dart';
 import 'package:nai_launcher/presentation/widgets/character/character_prompt_button.dart';
 import 'package:nai_launcher/presentation/widgets/tag_library/tag_library_picker_dialog.dart';
 
@@ -143,7 +143,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('character panel add page opens the library picker', (
+  testWidgets('the character workspace adds from the library picker', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1200, 800);
@@ -152,11 +152,15 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      buildTestApp(CharacterPanelAddView(onBack: () {}, onAdded: (_) {})),
+      buildTestApp(const CharacterWorkspace(negative: false)),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('character-panel-add-library')));
+    await tester.tap(find.byKey(const ValueKey('character-workspace-add')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('character-workspace-add-library')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(TagLibraryPickerDialog), findsOneWidget);
