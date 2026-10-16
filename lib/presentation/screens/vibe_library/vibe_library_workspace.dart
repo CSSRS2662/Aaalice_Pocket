@@ -10,6 +10,7 @@ import '../../../data/models/vibe/vibe_import_progress.dart';
 import '../../../core/platform/platform_capabilities.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../adaptive/interaction_policy.dart';
+import '../../providers/grid_columns_provider.dart';
 import '../../providers/selection_mode_provider.dart';
 import '../../providers/vibe_library_category_provider.dart';
 import '../../providers/vibe_library_provider.dart';
@@ -20,6 +21,7 @@ import '../../widgets/gallery/gallery_album_tree_view.dart';
 import '../../widgets/gallery/gallery_library_toolbar.dart';
 import '../../widgets/gallery/gallery_scope_controls.dart';
 import '../../widgets/gallery/library_masonry_grid.dart';
+import '../../widgets/gallery/masonry_columns_action.dart';
 import '../../widgets/gallery/gallery_sidebar.dart';
 import '../../widgets/gallery/gallery_sidebar_sort_control.dart';
 import '../../providers/library_sidebar_sort_provider.dart';
@@ -76,23 +78,33 @@ class VibeLibraryWorkspace extends StatelessWidget {
                       onCommand: onCommand,
                     )
                   : null,
-              body: LayoutBuilder(
-                builder: (context, constraints) {
-                  final gridWidth = (constraints.maxWidth - 32).clamp(
-                    0.0,
-                    double.infinity,
+              body: Consumer(
+                builder: (context, ref, _) {
+                  final preferredColumns = ref.watch(
+                    gridColumnsProvider(GridColumnsSurface.vibeLibrary),
                   );
-                  final columns = libraryMasonryColumns(
-                    gridWidth,
-                    spacing: vibeLibraryGridSpacing,
-                    textScale: MediaQuery.textScalerOf(context).scale(14) / 14,
-                  );
-                  return _Body(
-                    state: libraryState,
-                    itemWidth:
-                        (gridWidth - vibeLibraryGridSpacing * (columns - 1)) /
-                        columns,
-                    onCommand: onCommand,
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final gridWidth = (constraints.maxWidth - 32).clamp(
+                        0.0,
+                        double.infinity,
+                      );
+                      final columns = libraryMasonryColumns(
+                        gridWidth,
+                        preferred: preferredColumns,
+                        spacing: vibeLibraryGridSpacing,
+                        textScale:
+                            MediaQuery.textScalerOf(context).scale(14) / 14,
+                      );
+                      return _Body(
+                        state: libraryState,
+                        itemWidth:
+                            (gridWidth -
+                                vibeLibraryGridSpacing * (columns - 1)) /
+                            columns,
+                        onCommand: onCommand,
+                      );
+                    },
                   );
                 },
               ),
@@ -313,6 +325,10 @@ class _Toolbar extends StatelessWidget {
         ),
       ),
       titleActions: [
+        const MasonryColumnsAction(
+          surface: GridColumnsSurface.vibeLibrary,
+          iconOnly: true,
+        ),
         IconButton(
           key: const Key('vibe-library-select-action'),
           tooltip: l10n.vibeLibrary_enterSelectionMode,

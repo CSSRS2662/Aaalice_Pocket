@@ -13,6 +13,7 @@ import '../../../data/models/online_gallery/danbooru_post.dart';
 import '../../../data/models/online_gallery/quick_tag_cloud_codex.dart';
 import '../../../data/services/danbooru_auth_service.dart';
 import '../../adaptive/adaptive_presenter.dart';
+import '../../providers/grid_columns_provider.dart';
 import '../../providers/online_gallery_output_filter_provider.dart';
 import '../../providers/online_gallery_prompt_tag_settings_provider.dart';
 import '../../providers/online_gallery_provider.dart';
@@ -314,13 +315,15 @@ class _OnlineGalleryContentPresenter {
   /// 构建图片网格；手机上从顶部下拉刷新。
   Widget _buildImageGrid(ThemeData theme, OnlineGalleryState state) {
     return LibraryScrollActions(
-      onRefresh:
-          PlatformCapabilities.current.prefersContinuousLibraryScrolling
+      onRefresh: PlatformCapabilities.current.prefersContinuousLibraryScrolling
           ? () => _refreshFromVisibleDraft(state)
           : null,
       child: OnlineGalleryGrid(
         state: state,
         controller: _controller,
+        preferredColumns: ref.watch(
+          gridColumnsProvider(GridColumnsSurface.onlineGallery),
+        ),
         itemBuilder: (context, index, itemWidth, columnCount) =>
             _buildGridItem(theme, state, index, itemWidth, columnCount),
         footerBuilder: (context, itemWidth, columnCount) =>

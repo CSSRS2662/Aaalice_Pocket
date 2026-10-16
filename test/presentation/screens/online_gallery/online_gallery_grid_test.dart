@@ -9,6 +9,7 @@ import 'package:nai_launcher/presentation/screens/online_gallery/gallery_grid_it
 import 'package:nai_launcher/presentation/screens/online_gallery/online_gallery_grid.dart';
 import 'package:nai_launcher/presentation/screens/online_gallery/online_gallery_masonry_layout.dart';
 import 'package:nai_launcher/presentation/screens/online_gallery/online_gallery_screen_controller.dart';
+import 'package:nai_launcher/presentation/widgets/common/grid_column_count.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 void main() {
@@ -263,8 +264,9 @@ void main() {
         ProviderScope(
           child: MaterialApp(
             home: Scaffold(
+              // Two 200-wide columns: at least two columns always show.
               body: SizedBox(
-                width: 224,
+                width: 430,
                 height: 500,
                 child: OnlineGalleryGrid(
                   state: const OnlineGalleryState(
@@ -786,10 +788,10 @@ void main() {
       expect(builtColumnCount, 2);
 
       await tester.pumpWidget(subject(width: 1180, height: 900));
-      expect(builtColumnCount, 7);
+      expect(builtColumnCount, 5);
 
       await tester.pumpWidget(subject(width: 1600, height: 900));
-      expect(builtColumnCount, 8);
+      expect(builtColumnCount, 7);
     },
   );
 
@@ -833,9 +835,11 @@ void main() {
       double expectedOffset(double width) {
         const spacing = 6.0;
         final availableWidth = width - 24;
-        final columns = ((availableWidth + spacing) / (140 + spacing))
-            .floor()
-            .clamp(1, 8);
+        final columns = MasonryColumnCount.resolve(
+          width: availableWidth,
+          preferred: MasonryColumnCount.fallback,
+          spacing: spacing,
+        );
         final itemWidth = (availableWidth - (columns - 1) * spacing) / columns;
         final layout = OnlineGalleryMasonryLayoutSnapshot(
           aspectRatios: [for (final item in items) item.width / item.height],

@@ -3,18 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 
 import '../../screens/online_gallery/online_gallery_masonry_layout.dart';
+import '../common/grid_column_count.dart';
 
-/// 库页面共用的列数：与本地图库一致，手机宽度为两列，更宽时按最小卡片宽度
-/// 增加列数；卡片带文字叠层，放大文字时同步放宽最小宽度。
+/// 库页面共用的列数：手机宽度严格使用用户选的 [preferred] 列（2–4），
+/// 更宽时保持同样的卡片大小增加列数；卡片带文字叠层，放大文字时可减少列数，
+/// 但不少于两列。
 int libraryMasonryColumns(
   double availableWidth, {
+  required int preferred,
   double spacing = 12,
   double textScale = 1,
-}) {
-  final scale = textScale.clamp(1.0, 3.0);
-  final minimum = (availableWidth < 336 ? 136.0 : 160.0) + (scale - 1) * 44;
-  return ((availableWidth + spacing) / (minimum + spacing)).floor().clamp(1, 8);
-}
+}) => MasonryColumnCount.resolve(
+  width: availableWidth,
+  preferred: preferred,
+  spacing: spacing,
+  minCellWidth: MasonryColumnCount.minCellWidthFor(textScale),
+);
 
 /// [LibraryMasonryGrid] 的 sliver 版本，供带搜索与筛选头部的
 /// [CustomScrollView]（如选择器弹窗）使用；条目数量较少，每次布局重算几何。
@@ -24,11 +28,15 @@ class LibraryMasonrySliverGrid extends StatelessWidget {
     required this.itemCount,
     required this.aspectRatioOf,
     required this.itemBuilder,
+    required this.preferredColumns,
     this.spacing = 8,
     this.scaleWithText = true,
   });
 
   final int itemCount;
+
+  /// 用户为这个瀑布流选的列数，见 [MasonryColumnCount]。
+  final int preferredColumns;
   final double Function(int index) aspectRatioOf;
   final Widget Function(BuildContext context, int index, Size size) itemBuilder;
   final double spacing;
@@ -46,6 +54,7 @@ class LibraryMasonrySliverGrid extends StatelessWidget {
         final available = constraints.crossAxisExtent;
         final columns = libraryMasonryColumns(
           available,
+          preferred: preferredColumns,
           spacing: spacing,
           textScale: textScale,
         );
@@ -84,6 +93,7 @@ class LibraryMasonryGrid extends StatefulWidget {
     required this.itemCount,
     required this.aspectRatioOf,
     required this.itemBuilder,
+    required this.preferredColumns,
     this.padding = const EdgeInsets.all(12),
     this.spacing = 12,
     this.gridKey,
@@ -96,6 +106,9 @@ class LibraryMasonryGrid extends StatefulWidget {
   /// 宽高比（宽 / 高）；未知时返回占位值，得到真实值后由调用方重建。
   final double Function(int index) aspectRatioOf;
   final Widget Function(BuildContext context, int index, Size size) itemBuilder;
+
+  /// 用户为这个瀑布流选的列数，见 [MasonryColumnCount]。
+  final int preferredColumns;
   final EdgeInsets padding;
   final double spacing;
   final Key? gridKey;
@@ -143,6 +156,7 @@ class _LibraryMasonryGridState extends State<LibraryMasonryGrid> {
             .clamp(0.0, double.infinity);
         final columns = libraryMasonryColumns(
           available,
+          preferred: widget.preferredColumns,
           spacing: widget.spacing,
           textScale: MediaQuery.textScalerOf(context).scale(14) / 14,
         );

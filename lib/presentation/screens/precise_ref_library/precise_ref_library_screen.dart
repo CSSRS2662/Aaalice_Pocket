@@ -27,6 +27,7 @@ import '../../../data/models/image/image_params.dart';
 import '../../../data/models/precise_ref/precise_ref_library_entry.dart';
 import '../../../data/services/precise_ref_library_archive_service.dart';
 import '../../../data/services/precise_ref_library_storage_service.dart';
+import '../../providers/grid_columns_provider.dart';
 import '../../providers/image_generation_provider.dart';
 import '../../providers/precise_ref_library_provider.dart';
 import '../../providers/precise_ref_library_selection_provider.dart';
@@ -44,6 +45,7 @@ import '../../widgets/gallery/gallery_library_toolbar.dart';
 import '../../widgets/gallery/gallery_scope_controls.dart';
 import '../../widgets/gallery/library_masonry_grid.dart';
 import '../../widgets/gallery/library_scroll_actions.dart';
+import '../../widgets/gallery/masonry_columns_action.dart';
 import '../../agent_chat/widgets/agent_resource_drop_region.dart';
 import 'widgets/precise_ref_card.dart';
 import 'widgets/precise_ref_entry_edit_dialog.dart';
@@ -783,6 +785,10 @@ class _PreciseRefLibraryScreenState
         onPressed: _importImages,
       ),
       titleActions: [
+        const MasonryColumnsAction(
+          surface: GridColumnsSurface.preciseRefLibrary,
+          iconOnly: true,
+        ),
         IconButton(
           key: const Key('precise-ref-library-select-action'),
           tooltip: l10n.preciseRefLib_enterSelectionMode,
@@ -1060,6 +1066,9 @@ class _PreciseRefLibraryScreenState
           child: CardDragSelect(
             child: LibraryMasonryGrid(
               gridKey: const PageStorageKey('precise_ref_library_grid'),
+              preferredColumns: ref.watch(
+                gridColumnsProvider(GridColumnsSurface.preciseRefLibrary),
+              ),
               itemCount: entries.length,
               aspectRatioOf: (index) =>
                   ratios.ratioOf(entries[index].imagePath) ?? 1.0,

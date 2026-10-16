@@ -10,7 +10,9 @@ import '../../../core/cache/online_gallery_preload_policy.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../data/models/online_gallery/danbooru_post.dart';
 import '../../adaptive/window_size_class.dart';
+import '../../providers/grid_columns_provider.dart';
 import '../../providers/online_gallery_provider.dart';
+import '../../widgets/common/grid_column_count.dart';
 import 'online_gallery_masonry_layout.dart';
 import 'online_gallery_screen_controller.dart';
 import 'online_gallery_utils.dart';
@@ -331,7 +333,13 @@ class OnlineGalleryScrollPrefetchCoordinator {
     );
     final columnCount =
         controller.currentColumnCount ??
-        ((availableWidth + spacing) / (160 + spacing)).floor().clamp(1, 8);
+        MasonryColumnCount.resolve(
+          width: availableWidth,
+          preferred: ref.read(
+            gridColumnsProvider(GridColumnsSurface.onlineGallery),
+          ),
+          spacing: spacing,
+        );
     final itemWidth =
         controller.currentItemWidth ??
         (availableWidth - (columnCount - 1) * spacing) / columnCount;

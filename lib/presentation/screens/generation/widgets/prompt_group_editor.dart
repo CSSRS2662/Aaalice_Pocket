@@ -10,7 +10,6 @@ import 'prompt_group_actions.dart';
 import 'prompt_group_controller.dart';
 import 'prompt_group_edit_sheet.dart';
 import 'prompt_group_grid.dart';
-import 'prompt_group_summary.dart';
 import 'prompt_group_undo_bar.dart';
 import 'prompt_input_controller.dart';
 import 'prompt_input_models.dart';
@@ -80,11 +79,11 @@ class PromptGroupBoard extends ConsumerStatefulWidget {
     this.onComfyuiImport,
     this.modeSessionId,
     this.excludeFixedTags = true,
-    this.summaryLines = PromptGroupSummary.defaultMaxLines,
+    this.minTileWidth = PromptGroupGrid.defaultMinTileWidth,
   });
 
   final PromptGroupCollection groups;
-  final int summaryLines;
+  final double minTileWidth;
   final bool negative;
   final Key gridKey;
   final Key listKey;
@@ -133,7 +132,7 @@ class _PromptGroupBoardState extends ConsumerState<PromptGroupBoard> {
       onToggleEnabled: (id) => _toggle(groups, id, negative),
       onDelete: (id) => _delete(groups, id, negative),
       onReordered: () => widget.onCommit(negative),
-      summaryLines: widget.summaryLines,
+      minTileWidth: widget.minTileWidth,
     );
     final undo = _undo != null && identical(_undo!.groups, groups)
         ? _undo

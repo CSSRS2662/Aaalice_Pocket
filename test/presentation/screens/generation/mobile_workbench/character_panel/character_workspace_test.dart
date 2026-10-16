@@ -320,6 +320,41 @@ void main() {
     expect(find.byType(PromptGroupTile), findsNWidgets(2));
   });
 
+  testWidgets('sections sit two to a line, as tall as the main prompt cards', (
+    tester,
+  ) async {
+    final storage = MemoryLocalStorage();
+    storage.values[StorageKeys.characterPromptGroupState] = jsonEncode({
+      'a': {
+        'positivePrompt': 'girl, red hair',
+        'negativePrompt': '',
+        'positiveSections': [
+          {'id': 's1', 'text': 'girl'},
+          {'id': 's2', 'text': 'red hair'},
+        ],
+        'negativeSections': [
+          {'id': 'n1', 'text': ''},
+        ],
+      },
+    });
+    // A narrow phone with slightly enlarged system text.
+    await _pump(
+      tester,
+      storage: storage,
+      size: const Size(360, 780),
+      textScale: 1.15,
+    );
+    await _expand(tester, 'a');
+    final tiles = find.byType(PromptGroupTile);
+    final first = tester.getRect(tiles.at(0));
+    final second = tester.getRect(tiles.at(1));
+    expect(second.top, first.top);
+    expect(second.left, greaterThan(first.right));
+    final context = tester.element(tiles.at(0));
+    expect(first.height, PromptGroupTileMetrics.of(context).height);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('single mode shows the whole prompt', (tester) async {
     final storage = MemoryLocalStorage()
       ..values[StorageKeys.characterPromptsGrouped] = false;

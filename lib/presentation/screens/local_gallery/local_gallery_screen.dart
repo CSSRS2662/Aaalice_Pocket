@@ -14,6 +14,7 @@ import '../../../core/utils/localization_extension.dart';
 import '../../providers/bulk_operation_provider.dart';
 import '../../providers/gallery_album_provider.dart';
 import '../../providers/gallery_category_provider.dart';
+import '../../providers/grid_columns_provider.dart';
 import '../../providers/local_gallery_provider.dart';
 import '../../providers/selection_mode_provider.dart';
 import '../../widgets/app_branch_visibility.dart';
@@ -101,6 +102,9 @@ class _LocalGalleryScreenState extends ConsumerState<LocalGalleryScreen> {
     });
 
     final selection = ref.watch(localGallerySelectionNotifierProvider);
+    final preferredColumns = ref.watch(
+      gridColumnsProvider(GridColumnsSurface.localGallery),
+    );
     final albumId = ref.watch(
       galleryAlbumNotifierProvider.select((s) => s.selectedAlbumId),
     );
@@ -138,6 +142,7 @@ class _LocalGalleryScreenState extends ConsumerState<LocalGalleryScreen> {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final viewModel = LocalGalleryViewModel.fromStates(
+                        preferredColumns: preferredColumns,
                         gallery: galleryState,
                         bulkOperation: bulkOperation,
                         categories: categoryState,

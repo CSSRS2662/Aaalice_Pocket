@@ -28,13 +28,13 @@ void main() {
   });
   tearDown(() => PlatformCapabilities.debugOverride = null);
 
-  test('library masonry keeps two phone columns and one at narrow 3x text', () {
-    expect(libraryMasonryColumns(320 - 24), 2);
-    expect(libraryMasonryColumns(390 - 24), 2);
-    expect(libraryMasonryColumns(320 - 24, textScale: 3), 1);
+  test('library masonry keeps the chosen phone columns, two at 3x text', () {
+    expect(libraryMasonryColumns(320 - 24, preferred: 2), 2);
+    expect(libraryMasonryColumns(390 - 24, preferred: 4), 4);
+    expect(libraryMasonryColumns(320 - 24, preferred: 4, textScale: 3), 2);
     expect(
-      libraryMasonryColumns(1180 - 24),
-      greaterThan(libraryMasonryColumns(600 - 24)),
+      libraryMasonryColumns(1180 - 24, preferred: 2),
+      greaterThan(libraryMasonryColumns(600 - 24, preferred: 2)),
     );
   });
 

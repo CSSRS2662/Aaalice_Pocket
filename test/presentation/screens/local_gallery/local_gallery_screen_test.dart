@@ -8,8 +8,10 @@ void main() {
   LocalGalleryViewModel buildViewModel(
     double width, {
     bool categoryPanelRequested = true,
+    int preferredColumns = 2,
   }) {
     return LocalGalleryViewModel.fromStates(
+      preferredColumns: preferredColumns,
       gallery: const LocalGalleryState(),
       bulkOperation: const BulkOperationState(),
       categories: const GalleryCategoryState(),
@@ -36,7 +38,7 @@ void main() {
     expect(viewModel.contentWidth, 750);
   });
 
-  test('本地画廊多宽度与分类面板状态保持 HEAD 动态布局公式', () {
+  test('本地画廊默认两列：手机严格两列，更宽时保持卡片大小增加列数', () {
     const cases =
         <
           ({
@@ -84,24 +86,24 @@ void main() {
           ),
           (
             width: 1000,
-            openedColumns: 4,
-            openedItemWidth: 172.5,
-            closedColumns: 5,
-            closedItemWidth: 185.6,
+            openedColumns: 3,
+            openedItemWidth: 234,
+            closedColumns: 4,
+            closedItemWidth: 235,
           ),
           (
             width: 1180,
-            openedColumns: 5,
-            openedItemWidth: 171.6,
-            closedColumns: 6,
-            closedItemWidth: 182.66666666666666,
+            openedColumns: 4,
+            openedItemWidth: 217.5,
+            closedColumns: 5,
+            closedItemWidth: 221.6,
           ),
           (
             width: 1600,
-            openedColumns: 7,
-            openedItemWidth: 179.14285714285714,
-            closedColumns: 8,
-            closedItemWidth: 186.5,
+            openedColumns: 6,
+            openedItemWidth: 211,
+            closedColumns: 7,
+            closedItemWidth: 214.85714285714286,
           ),
         ];
 
@@ -147,5 +149,19 @@ void main() {
         reason: '${testCase.width}px 分类面板关闭可用宽度',
       );
     }
+  });
+
+  test('手机宽度严格使用所选的 2 到 4 列', () {
+    for (final width in [320.0, 360.0, 412.0]) {
+      expect(
+        [
+          for (final n in [2, 3, 4])
+            buildViewModel(width, preferredColumns: n).columns,
+        ],
+        [2, 3, 4],
+        reason: '${width}px',
+      );
+    }
+    expect(buildViewModel(1600, preferredColumns: 4).itemWidth, lessThan(121));
   });
 }

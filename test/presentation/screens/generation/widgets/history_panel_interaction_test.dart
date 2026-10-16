@@ -16,6 +16,7 @@ import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
 import 'package:nai_launcher/presentation/providers/generation/image_card_selection_provider.dart';
 import 'package:nai_launcher/presentation/providers/generation/preview_selection_provider.dart';
+import 'package:nai_launcher/presentation/providers/grid_columns_provider.dart';
 import 'package:nai_launcher/presentation/providers/history_click_behavior_provider.dart';
 import 'package:nai_launcher/presentation/providers/image_generation_provider.dart';
 import 'package:nai_launcher/presentation/providers/shortcuts_provider.dart';
@@ -339,7 +340,7 @@ void main() {
     tester,
   ) async {
     final images = [
-      for (var index = 0; index < 6; index++)
+      for (var index = 0; index < 12; index++)
         _image('hover-$index', kind: GeneratedImageKind.failedStreamSnapshot),
     ];
     final container = _createContainer(images);
@@ -395,7 +396,7 @@ void main() {
   ) async {
     final target = _image('after-placeholder');
     final container = _createContainer(
-      [target],
+      [for (var index = 0; index < 8; index++) _image('before-$index'), target],
       behavior: HistoryClickBehavior.selectPreview,
       currentImages: [_image('completed-current')],
       status: GenerationStatus.generating,
@@ -522,16 +523,25 @@ void main() {
     expect(rects['square']!.left, closeTo(rects['landscape']!.left, 0.5));
     expect(rects['square']!.top, greaterThan(rects['landscape']!.bottom));
 
-    // 桌面侧栏保持单列大图；第三张可能落在视口的预加载区域。
+    // 桌面侧栏同样按所选列数显示，至少两列。
     await tester.pumpWidget(_historyApp(container, width: 320));
     await tester.pump();
-    expect({
+    Set<int> lefts() => {
       for (final id in ['portrait', 'landscape', 'square'])
         tester
             .getRect(find.byKey(ValueKey(id), skipOffstage: false))
             .left
             .round(),
-    }, hasLength(1));
+    };
+    expect(lefts(), hasLength(2));
+
+    container
+        .read(
+          gridColumnsProvider(GridColumnsSurface.generationHistory).notifier,
+        )
+        .set(3);
+    await tester.pump();
+    expect(lefts(), hasLength(3));
     expect(tester.takeException(), isNull);
   });
 
@@ -540,7 +550,8 @@ void main() {
         'full action bar', (tester) async {
       final container = _createContainer([_image('pinned')]);
       addTearDown(container.dispose);
-      await tester.pumpWidget(_cardActionApp(container, width: 200));
+      // Two columns of about 190: the card the narrow layout used to get.
+      await tester.pumpWidget(_cardActionApp(container, width: 400));
       await tester.pump();
 
       final card = find.byKey(const ValueKey('pinned'));

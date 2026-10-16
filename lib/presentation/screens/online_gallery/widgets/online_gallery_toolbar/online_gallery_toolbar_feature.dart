@@ -11,6 +11,7 @@ import '../../../../../data/services/danbooru_auth_service.dart';
 import '../../../../../data/services/gelbooru_auth_service.dart';
 import '../../../../adaptive/interaction_policy.dart';
 import '../../../../adaptive/window_size_class.dart';
+import '../../../../providers/grid_columns_provider.dart';
 import '../../../../providers/online_gallery_blacklist_provider.dart';
 import '../../../../providers/online_gallery_output_filter_provider.dart';
 import '../../../../providers/online_gallery_prompt_tag_settings_provider.dart';
@@ -19,6 +20,8 @@ import '../../../../providers/quick_tag_cloud_gallery_provider.dart';
 import '../../../../providers/selection_mode_provider.dart';
 import '../../../../services/gallery_prompt_projection_service.dart';
 import '../../../../widgets/bulk_action_bar.dart';
+import '../../../../widgets/common/grid_column_count.dart';
+import '../../../../widgets/gallery/masonry_columns_action.dart';
 import '../../../../widgets/gallery/gallery_sidebar.dart';
 import '../../../online_gallery/online_gallery_screen_controller.dart';
 import 'online_gallery_search_reveal.dart';
@@ -39,6 +42,7 @@ enum _MobileGalleryAction {
   random,
   refresh,
   multiSelect,
+  columns,
 }
 
 class OnlineGalleryToolbarFeature extends ConsumerWidget {
@@ -498,6 +502,7 @@ class _OnlineGalleryToolbarPresenter {
     final outputFilterCount = ref.watch(
       onlineGalleryOutputFilterProvider.select((value) => value.tags.length),
     );
+    final columns = _watchColumns();
     return PopupMenuButton<_MobileGalleryAction>(
       key: const ValueKey('online-gallery-mobile-more'),
       tooltip: context.l10n.nav_more,
@@ -513,6 +518,8 @@ class _OnlineGalleryToolbarPresenter {
             _refreshGallery(state);
           case _MobileGalleryAction.multiSelect:
             _selectionNotifier.enter();
+          case _MobileGalleryAction.columns:
+            _cycleColumns();
         }
       },
       itemBuilder: (context) => [
@@ -564,6 +571,14 @@ class _OnlineGalleryToolbarPresenter {
           child: ListTile(
             leading: const Icon(Icons.checklist_rounded),
             title: Text(context.l10n.common_multiSelect),
+          ),
+        ),
+        PopupMenuItem(
+          key: MasonryColumnsAction.buttonKey(GridColumnsSurface.onlineGallery),
+          value: _MobileGalleryAction.columns,
+          child: ListTile(
+            leading: Icon(GridColumnCount.icon(columns)),
+            title: Text(context.l10n.common_columnCountTooltip(columns)),
           ),
         ),
       ],
@@ -833,6 +848,8 @@ class _OnlineGalleryToolbarPresenter {
               ),
             ),
           ),
+        const SizedBox(width: 6),
+        _buildColumnsButton(theme, compact: compact),
         const SizedBox(width: 4),
         _buildUserButton(
           theme,
@@ -842,6 +859,53 @@ class _OnlineGalleryToolbarPresenter {
           compact: compact,
         ),
       ],
+    );
+  }
+
+  int _watchColumns() =>
+      ref.watch(gridColumnsProvider(GridColumnsSurface.onlineGallery));
+
+  void _cycleColumns() => ref
+      .read(gridColumnsProvider(GridColumnsSurface.onlineGallery).notifier)
+      .cycle();
+
+  /// Columns of the image waterfall; narrow toolbars keep the short label.
+  Widget _buildColumnsButton(ThemeData theme, {required bool compact}) {
+    final columns = _watchColumns();
+    final label = Text(context.l10n.common_columnCount(columns));
+    final style = TextButton.styleFrom(
+      foregroundColor: theme.colorScheme.onSurfaceVariant,
+      minimumSize: compact
+          ? Size(0, _galleryToolbarControlHeight(context))
+          : null,
+      padding: compact
+          ? const EdgeInsets.symmetric(horizontal: 8)
+          : const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      visualDensity: context.interactionPolicy.prefersTouchPresentation
+          ? VisualDensity.standard
+          : VisualDensity.compact,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+    );
+    final key = MasonryColumnsAction.buttonKey(
+      GridColumnsSurface.onlineGallery,
+    );
+    final tooltip = context.l10n.common_columnCountTooltip(columns);
+    return Tooltip(
+      message: tooltip,
+      child: compact
+          ? TextButton(
+              key: key,
+              onPressed: _cycleColumns,
+              style: style,
+              child: label,
+            )
+          : TextButton.icon(
+              key: key,
+              icon: Icon(GridColumnCount.icon(columns), size: 18),
+              label: label,
+              onPressed: _cycleColumns,
+              style: style,
+            ),
     );
   }
 

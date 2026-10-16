@@ -13,34 +13,30 @@ import 'prompt_group_summary.dart';
 
 /// Geometry shared by the grid layout and its tiles.
 class PromptGroupTileMetrics {
-  const PromptGroupTileMetrics._(this.textStyle, this.height, this.lines);
+  const PromptGroupTileMetrics._(this.textStyle, this.height);
 
   /// Width of the dot and the cross at the two ends of a tile, and the least
   /// height of their touch targets.
   static const double controlExtent = 44;
   static const double verticalPadding = 9;
 
-  /// A tile is as tall as its summary lines, two unless [lines] says.
-  factory PromptGroupTileMetrics.of(
-    BuildContext context, {
-    int lines = PromptGroupSummary.defaultMaxLines,
-  }) {
+  /// A tile is as tall as its two summary lines.
+  factory PromptGroupTileMetrics.of(BuildContext context) {
     final style = Theme.of(
       context,
     ).textTheme.bodyMedium!.copyWith(fontSize: 13, height: 1.45);
     final lineHeight =
         MediaQuery.textScalerOf(context).scale(style.fontSize!) * style.height!;
-    final textHeight = lines * lineHeight + 2 * verticalPadding;
+    final textHeight =
+        PromptGroupSummary.maxLines * lineHeight + 2 * verticalPadding;
     return PromptGroupTileMetrics._(
       style,
       math.max(controlExtent, textHeight).ceilToDouble(),
-      lines,
     );
   }
 
   final TextStyle textStyle;
   final double height;
-  final int lines;
 }
 
 /// One prompt section in the grid, two summary lines tall: the enable dot at
@@ -118,7 +114,6 @@ class PromptGroupTile extends StatelessWidget {
                       ].join('，'),
                       excludeSemantics: true,
                       child: PromptGroupSummary(
-                        maxLines: metrics.lines,
                         text: section.controller.text,
                         style: metrics.textStyle.copyWith(
                           color: colors.onSurface,

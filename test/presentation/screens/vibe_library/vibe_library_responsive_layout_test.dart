@@ -28,13 +28,22 @@ import 'package:nai_launcher/presentation/widgets/gallery/gallery_scope_controls
 import 'package:nai_launcher/presentation/widgets/gallery/library_masonry_grid.dart';
 
 void main() {
-  test('vibe grid shares the two-column phone masonry rule', () {
-    final normal = libraryMasonryColumns(1160, spacing: 16);
-    final scaled = libraryMasonryColumns(1160, spacing: 16, textScale: 3);
+  test('vibe grid shares the chosen-column masonry rule', () {
+    final normal = libraryMasonryColumns(1160, preferred: 4, spacing: 16);
+    final scaled = libraryMasonryColumns(
+      1160,
+      preferred: 4,
+      spacing: 16,
+      textScale: 3,
+    );
 
     expect(scaled, lessThan(normal));
-    expect(libraryMasonryColumns(288, spacing: 16), 2);
-    expect(libraryMasonryColumns(288, spacing: 16, textScale: 3), 1);
+    expect(libraryMasonryColumns(288, preferred: 2, spacing: 16), 2);
+    expect(libraryMasonryColumns(288, preferred: 3, spacing: 16), 3);
+    expect(
+      libraryMasonryColumns(288, preferred: 4, spacing: 16, textScale: 3),
+      2,
+    );
   });
 
   for (final width in [320.0, 600.0, 840.0, 1180.0, 1600.0]) {

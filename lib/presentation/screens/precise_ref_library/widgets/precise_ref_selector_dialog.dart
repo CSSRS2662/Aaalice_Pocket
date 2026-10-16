@@ -11,9 +11,11 @@ import '../../../../core/extensions/precise_ref_type_extensions.dart';
 import '../../../../data/models/precise_ref/precise_ref_library_entry.dart';
 import '../../../../data/services/precise_ref_library_storage_service.dart';
 import '../../../adaptive/adaptive_presenter.dart';
+import '../../../providers/grid_columns_provider.dart';
 import '../../../providers/precise_ref_library_provider.dart';
 import '../../../widgets/gallery/gallery_scope_controls.dart';
 import '../../../widgets/gallery/library_masonry_grid.dart';
+import '../../../widgets/gallery/masonry_columns_action.dart';
 
 enum PreciseRefSelectorPurpose { add, export }
 
@@ -163,11 +165,15 @@ class _PreciseRefSelectorDialogState
       _initializedExportSelection = true;
     }
 
+    final preferredColumns = ref.watch(
+      gridColumnsProvider(GridColumnsSurface.preciseRefLibrary),
+    );
     return LayoutBuilder(
       key: const Key('precise-ref-selector-dialog'),
       builder: (context, constraints) {
         final columns = libraryMasonryColumns(
           constraints.maxWidth - 32,
+          preferred: preferredColumns,
           spacing: 8,
         );
         final shrinkWrapContent =
@@ -223,16 +229,30 @@ class _PreciseRefSelectorDialogState
                           ),
                           const SizedBox(height: 12),
                         ],
-                        TextField(
-                          key: const Key('precise-ref-selector-search'),
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: InputDecoration(
-                            hintText: l10n.preciseRefLib_searchHint,
-                            prefixIcon: const Icon(Icons.search, size: 20),
-                            isDense: true,
-                            border: const OutlineInputBorder(),
-                          ),
-                          onChanged: _onSearchChanged,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                key: const Key('precise-ref-selector-search'),
+                                textAlignVertical: TextAlignVertical.center,
+                                decoration: InputDecoration(
+                                  hintText: l10n.preciseRefLib_searchHint,
+                                  prefixIcon: const Icon(
+                                    Icons.search,
+                                    size: 20,
+                                  ),
+                                  isDense: true,
+                                  border: const OutlineInputBorder(),
+                                ),
+                                onChanged: _onSearchChanged,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const MasonryColumnsAction(
+                              surface: GridColumnsSurface.preciseRefLibrary,
+                              iconOnly: true,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         GalleryScopeRow(
@@ -352,6 +372,7 @@ class _PreciseRefSelectorDialogState
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       sliver: LibraryMasonrySliverGrid(
                         scaleWithText: false,
+                        preferredColumns: preferredColumns,
                         itemCount: entries.length,
                         aspectRatioOf: (index) =>
                             ratios.ratioOf(entries[index].imagePath) ?? 1.0,

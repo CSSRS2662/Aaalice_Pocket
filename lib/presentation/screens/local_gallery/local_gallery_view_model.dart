@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../providers/bulk_operation_provider.dart';
 import '../../providers/gallery_category_provider.dart';
 import '../../providers/local_gallery_provider.dart';
+import '../../widgets/common/grid_column_count.dart';
 
 /// Immutable snapshot consumed by the local gallery screen shell.
 ///
@@ -32,6 +33,7 @@ class LocalGalleryViewModel {
     required bool categoryPanelRequested,
     required bool isPackingImages,
     required double maxWidth,
+    int preferredColumns = MasonryColumnCount.fallback,
   }) {
     final usePersistentCategories = maxWidth >= 1000;
     final showPersistentCategories =
@@ -39,17 +41,16 @@ class LocalGalleryViewModel {
     final contentWidth = maxWidth - (showPersistentCategories ? 250 : 0);
     const horizontalPadding = 24.0;
     const spacing = 12.0;
-    // 320px 仍保留双列触屏画廊；更宽布局继续使用桌面密度，避免
-    // 为了增加列数而让卡片在常规窗口中过小。
-    final minimumItemWidth = contentWidth < 360 ? 136.0 : 160.0;
     final availableGridWidth = (contentWidth - horizontalPadding).clamp(
       0.0,
       double.infinity,
     );
-    final columns =
-        ((availableGridWidth + spacing) / (minimumItemWidth + spacing))
-            .floor()
-            .clamp(1, 8);
+    // 手机上严格使用所选列数；更宽的布局保持同样的卡片大小增加列数。
+    final columns = MasonryColumnCount.resolve(
+      width: availableGridWidth,
+      preferred: preferredColumns,
+      spacing: spacing,
+    );
     final itemWidth = (availableGridWidth - spacing * (columns - 1)) / columns;
 
     return LocalGalleryViewModel(

@@ -21,6 +21,7 @@ import '../../../../data/models/vibe/vibe_library_category.dart';
 import '../../../../data/models/vibe/vibe_library_entry.dart';
 import '../../../../data/models/vibe/vibe_reference.dart';
 import '../../../../data/services/vibe_library_storage_service.dart';
+import '../../../providers/grid_columns_provider.dart';
 import '../../../providers/generation/generation_params_notifier.dart';
 import '../../../providers/vibe_library_category_provider.dart';
 import '../../../providers/vibe_library_provider.dart';
@@ -166,6 +167,9 @@ class _VibeLibraryContentViewState
           computeVibeGridCacheExtent(widget.itemWidth),
         ),
         addAutomaticKeepAlives: false,
+        preferredColumns: ref.watch(
+          gridColumnsProvider(GridColumnsSurface.vibeLibrary),
+        ),
         itemCount: entries.length,
         aspectRatioOf: (index) => vibeEntryAspectRatio(entries[index]),
         itemBuilder: (context, index, size) {

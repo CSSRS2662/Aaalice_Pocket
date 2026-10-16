@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart'
     show RenderAbstractViewport, ScrollCacheExtent;
 import 'package:visibility_detector/visibility_detector.dart';
 
+import '../../widgets/common/grid_column_count.dart';
 import '../../widgets/common/image_viewport_surface.dart';
 import '../../../core/cache/online_gallery_preload_policy.dart';
 import '../../providers/online_gallery_provider.dart';
@@ -41,9 +42,13 @@ class OnlineGalleryGrid extends StatelessWidget {
     required this.controller,
     required this.itemBuilder,
     this.footerBuilder,
+    this.preferredColumns = MasonryColumnCount.fallback,
   });
 
   final OnlineGalleryState state;
+
+  /// Columns the viewer picked, see [MasonryColumnCount].
+  final int preferredColumns;
   final OnlineGalleryScreenController controller;
   final OnlineGalleryGridItemBuilder itemBuilder;
   final OnlineGalleryGridFooterBuilder? footerBuilder;
@@ -107,11 +112,11 @@ class OnlineGalleryGrid extends StatelessWidget {
           );
           return const SizedBox.shrink();
         }
-        const minimumTileWidth = 140.0;
-        final columnCount =
-            ((availableWidth + spacing) / (minimumTileWidth + spacing))
-                .floor()
-                .clamp(1, 8);
+        final columnCount = MasonryColumnCount.resolve(
+          width: availableWidth,
+          preferred: preferredColumns,
+          spacing: spacing,
+        );
         final itemWidth =
             (availableWidth - (columnCount - 1) * spacing) / columnCount;
         final viewportHeight = controller.scrollController.hasClients

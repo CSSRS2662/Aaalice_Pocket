@@ -2,23 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/prompt_edit_document.dart';
 
-/// Preview of a prompt section in [maxLines] lines: whole tags only, then
-/// `+N` for the tags that did not fit instead of an ellipsis.
+/// Two-line preview of a prompt section: whole tags only, then `+N` for the
+/// tags that did not fit instead of an ellipsis.
 class PromptGroupSummary extends StatelessWidget {
   const PromptGroupSummary({
     super.key,
     required this.text,
     required this.style,
     required this.emptyLabel,
-    this.maxLines = defaultMaxLines,
   });
 
-  static const int defaultMaxLines = 2;
+  static const int maxLines = 2;
 
   final String text;
   final TextStyle style;
   final String emptyLabel;
-  final int maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +39,6 @@ class PromptGroupSummary extends StatelessWidget {
         final shown = fitShownCount(
           itemCount: items.length,
           build: build,
-          maxLines: maxLines,
           maxWidth: constraints.maxWidth,
           textScaler: textScaler,
           textDirection: direction,
@@ -61,7 +58,6 @@ class PromptGroupSummary extends StatelessWidget {
   static int fitShownCount({
     required int itemCount,
     required TextSpan Function(int shown) build,
-    int maxLines = defaultMaxLines,
     required double maxWidth,
     required TextScaler textScaler,
     required TextDirection textDirection,

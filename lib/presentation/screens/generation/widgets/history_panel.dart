@@ -29,6 +29,7 @@ import '../../../providers/tag_library_page_provider.dart';
 import '../../../../data/services/image_metadata_service.dart';
 import '../../../providers/generation/generation_params_selectors.dart';
 import '../../../providers/generation/preview_selection_provider.dart';
+import '../../../providers/grid_columns_provider.dart';
 import '../../../providers/history_click_behavior_provider.dart';
 import '../../../providers/image_favorite_status_provider.dart';
 import '../../../selection/card_drag_select.dart';
@@ -44,6 +45,8 @@ import '../../../widgets/common/image_detail/file_image_detail_data.dart';
 import '../../../widgets/common/image_detail/image_detail_data.dart';
 import '../../../widgets/common/image_detail/image_detail_viewer.dart';
 import '../../../widgets/common/draggable_memory_image.dart';
+import '../../../widgets/common/grid_column_count.dart';
+import '../../../widgets/gallery/masonry_columns_action.dart';
 import '../../../widgets/common/owned_scroll_controller.dart';
 import '../../../widgets/common/selectable_image_card.dart';
 import '../../../widgets/image_editor/image_editor_screen.dart';
@@ -74,15 +77,6 @@ double resolveCurrentHistoryPreviewAspectRatio(
     completedImageAspectRatio ?? batchAspectRatio,
     fallback: resolveHistoryPreviewAspectRatio(batchAspectRatio),
   );
-}
-
-/// 历史瀑布流的列数：嵌入移动端页签时单列不窄于 140，手机竖屏即为两列；
-/// 桌面侧栏单列不窄于 200，保持大图浏览。
-int historyMasonryColumns(double width, {required bool embedded}) {
-  final minimumTileWidth = embedded ? 140.0 : 200.0;
-  return ((width + _historySpacing) / (minimumTileWidth + _historySpacing))
-      .floor()
-      .clamp(1, 4);
 }
 
 const double _historySpacing = 8;
@@ -243,6 +237,12 @@ class _HistoryPanelState extends ConsumerState<HistoryPanel> {
                       ],
                       if (state.history.isNotEmpty ||
                           state.currentImages.isNotEmpty)
+                        const MasonryColumnsAction(
+                          surface: GridColumnsSurface.generationHistory,
+                          iconOnly: true,
+                        ),
+                      if (state.history.isNotEmpty ||
+                          state.currentImages.isNotEmpty)
                         IconButton(
                           onPressed: () {
                             setState(() {
@@ -350,6 +350,12 @@ class _HistoryPanelState extends ConsumerState<HistoryPanel> {
                     ],
                   ),
                   actions: [
+                    if (state.history.isNotEmpty ||
+                        state.currentImages.isNotEmpty)
+                      const MasonryColumnsAction(
+                        surface: GridColumnsSurface.generationHistory,
+                        iconOnly: true,
+                      ),
                     if (state.history.isNotEmpty ||
                         state.currentImages.isNotEmpty)
                       IconButton(
@@ -675,6 +681,9 @@ class _HistoryPanelState extends ConsumerState<HistoryPanel> {
     final previewDimensions = ref.watch(
       generationParamsNotifierProvider.select(selectPreviewDimensionsViewData),
     );
+    final preferredColumns = ref.watch(
+      gridColumnsProvider(GridColumnsSurface.generationHistory),
+    );
     final history = state.history;
     // 使用批次分辨率（点击生成时捕获），fallback 到全局参数
     final batchAspectRatio =
@@ -705,9 +714,10 @@ class _HistoryPanelState extends ConsumerState<HistoryPanel> {
           double.infinity,
         );
         // 瀑布流：已完成图片使用自身比例，流式占位使用本批次分辨率。
-        final columns = historyMasonryColumns(
-          rowWidth,
-          embedded: widget.embedded,
+        final columns = MasonryColumnCount.resolve(
+          width: rowWidth,
+          preferred: preferredColumns,
+          spacing: _historySpacing,
         );
         final itemWidth =
             (rowWidth - _historySpacing * (columns - 1)) / columns;

@@ -8,12 +8,14 @@ import '../../../../data/models/vibe/vibe_library_entry.dart';
 import '../../../../data/models/vibe/vibe_reference.dart';
 import '../../../../data/services/vibe_file_storage_service.dart';
 import '../../../../presentation/providers/vibe_library_provider.dart';
+import '../../../providers/grid_columns_provider.dart';
 import '../../../adaptive/adaptive_presenter.dart';
 import '../../../widgets/common/horizontal_segmented_control.dart';
 import '../../../widgets/common/decoded_memory_image.dart';
 import '../../../widgets/common/translated_tag_text.dart';
 import '../../../widgets/gallery/gallery_scope_controls.dart';
 import '../../../widgets/gallery/library_masonry_grid.dart';
+import '../../../widgets/gallery/masonry_columns_action.dart';
 import 'vibe_card.dart';
 
 const int _topTagEntrySampleLimit = 40;
@@ -720,6 +722,10 @@ class _VibeSelectorDialogState extends ConsumerState<VibeSelectorDialog> {
       style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
     );
     final actions = [
+      const MasonryColumnsAction(
+        surface: GridColumnsSurface.vibeLibrary,
+        iconOnly: true,
+      ),
       TextButton.icon(
         onPressed: _selectAll,
         icon: const Icon(Icons.select_all, size: 18),
@@ -762,6 +768,9 @@ class _VibeSelectorDialogState extends ConsumerState<VibeSelectorDialog> {
   Widget _buildSliverGrid(List<VibeLibraryEntry> entries) {
     return LibraryMasonrySliverGrid(
       scaleWithText: false,
+      preferredColumns: ref.watch(
+        gridColumnsProvider(GridColumnsSurface.vibeLibrary),
+      ),
       spacing: 10,
       itemCount: entries.length,
       aspectRatioOf: (index) => vibeEntryAspectRatio(entries[index]),

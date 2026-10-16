@@ -212,7 +212,8 @@ class _CharacterWorkspaceEditorState
                     : 'character_positive_prompt_groups',
               ),
               numericEmphasisEnabled: numericEmphasis,
-              summaryLines: 1,
+              // Two columns of the main prompt's cards inside the row.
+              minTileWidth: 120,
               onCommit: _commit,
               onOpenAssistantSettings: () =>
                   PromptAssistantQuickSettings.show(context),

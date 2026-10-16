@@ -10,9 +10,12 @@ import '../../../../core/utils/localization_extension.dart';
 import '../../../../data/models/gallery/local_image_record.dart';
 import '../../../../data/services/gallery/local_gallery_service.dart';
 import '../../../adaptive/adaptive_presenter.dart';
+import '../../../providers/grid_columns_provider.dart';
 import '../../../providers/local_gallery_provider.dart';
+import '../../../widgets/common/grid_column_count.dart';
 import '../../../widgets/common/image_viewport_surface.dart';
 import '../../../widgets/gallery/gallery_scope_controls.dart';
+import '../../../widgets/gallery/masonry_columns_action.dart';
 
 typedef ThumbnailGalleryPageLoader =
     Future<LocalGalleryQueryPage> Function({
@@ -208,17 +211,27 @@ class _ThumbnailGalleryPickerDialogState
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: GalleryScopeRow(
-            key: const ValueKey('thumbnail-gallery-source-tabs'),
+          child: Row(
             children: [
-              GalleryScopeToggle(
-                favorites: _favoritesOnly,
-                onShowAll: () => _setFavoritesOnly(false),
-                onShowFavorites: () => _setFavoritesOnly(true),
-                allKey: const ValueKey('thumbnail-gallery-scope-all'),
-                favoritesKey: const ValueKey(
-                  'thumbnail-gallery-scope-favorites',
+              Expanded(
+                child: GalleryScopeRow(
+                  key: const ValueKey('thumbnail-gallery-source-tabs'),
+                  children: [
+                    GalleryScopeToggle(
+                      favorites: _favoritesOnly,
+                      onShowAll: () => _setFavoritesOnly(false),
+                      onShowFavorites: () => _setFavoritesOnly(true),
+                      allKey: const ValueKey('thumbnail-gallery-scope-all'),
+                      favoritesKey: const ValueKey(
+                        'thumbnail-gallery-scope-favorites',
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              const MasonryColumnsAction(
+                surface: GridColumnsSurface.localGallery,
+                iconOnly: true,
               ),
             ],
           ),
@@ -252,11 +265,26 @@ class _ThumbnailGalleryPickerDialogState
       );
     }
 
-    return MasonryGridView.extent(
+    // 沿用本地图库的列数选择：这里显示的就是图库里的图片。
+    final preferredColumns = ref.watch(
+      gridColumnsProvider(GridColumnsSurface.localGallery),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          _buildGrid(preferredColumns, constraints.maxWidth - 32),
+    );
+  }
+
+  Widget _buildGrid(int preferredColumns, double width) {
+    return MasonryGridView.count(
       key: const ValueKey('thumbnail-gallery-grid'),
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      maxCrossAxisExtent: 220,
+      crossAxisCount: MasonryColumnCount.resolve(
+        width: width,
+        preferred: preferredColumns,
+        spacing: 10,
+      ),
       mainAxisSpacing: 10,
       crossAxisSpacing: 10,
       itemCount: _records.length + (_loading || _error != null ? 1 : 0),

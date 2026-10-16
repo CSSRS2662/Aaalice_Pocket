@@ -50,4 +50,54 @@ void main() {
     expect(GridColumnCount.clamp(9), 3);
     expect(GridColumnCount.clamp(0), 1);
   });
+
+  group('瀑布流', () {
+    int masonry(double width, int preferred, {double textScale = 1}) =>
+        MasonryColumnCount.resolve(
+          width: width,
+          preferred: preferred,
+          spacing: 12,
+          minCellWidth: MasonryColumnCount.minCellWidthFor(textScale),
+        );
+
+    test('手机宽度严格使用所选的 2 到 4 列', () {
+      for (final width in [296.0, 366.0, 388.0, 456.0]) {
+        expect(
+          [
+            for (final n in [2, 3, 4]) masonry(width, n),
+          ],
+          [2, 3, 4],
+          reason: '${width}px',
+        );
+      }
+    });
+
+    test('宽面板保持同样的列宽，增加列数', () {
+      for (final n in [2, 3, 4]) {
+        final columns = masonry(1576, n);
+        expect(columns, greaterThan(n));
+        final cell = GridColumnCount.cellWidth(
+          width: 1576,
+          columns: columns,
+          spacing: 12,
+        );
+        expect(cell, lessThanOrEqualTo(480 / n));
+      }
+    });
+
+    test('大字号可以减少列数，但不少于两列', () {
+      expect(masonry(296, 4, textScale: 3), 2);
+      expect(masonry(296, 4, textScale: 1.5), 3);
+      expect(masonry(0, 3), 2);
+      expect(masonry(double.infinity, 3), 2);
+    });
+
+    test('列数在 2 到 4 之间循环', () {
+      expect(MasonryColumnCount.next(2), 3);
+      expect(MasonryColumnCount.next(3), 4);
+      expect(MasonryColumnCount.next(4), 2);
+      expect(MasonryColumnCount.clamp(1), 2);
+      expect(MasonryColumnCount.clamp(9), 4);
+    });
+  });
 }

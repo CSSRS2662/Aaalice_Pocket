@@ -24,10 +24,11 @@ abstract final class GridColumnCount {
 
   static int next(int columns) => columns >= max ? min : clamp(columns + 1);
 
-  static IconData icon(int columns) => switch (clamp(columns)) {
-    1 => Icons.view_agenda_outlined,
+  static IconData icon(int columns) => switch (columns) {
+    <= 1 => Icons.view_agenda_outlined,
     2 => Icons.grid_view_outlined,
-    _ => Icons.apps_rounded,
+    3 => Icons.apps_rounded,
+    _ => Icons.grid_4x4_rounded,
   };
 
   static int resolve({
@@ -51,7 +52,46 @@ abstract final class GridColumnCount {
   }) => (width - spacing * (columns - 1)) / columns;
 }
 
-/// Icon-only switch that cycles 1 → 2 → 3 columns; the icon shows the result.
+/// User-chosen column counts for image waterfalls.
+///
+/// Phones show exactly the chosen count, 2 to 4. Wider panes keep the same
+/// density: each column stays as narrow as the choice makes it on a
+/// [_referenceWidth] phone, so they add columns instead of growing images.
+/// Large text over cards can take columns away, never below [min].
+abstract final class MasonryColumnCount {
+  static const int min = 2;
+  static const int max = 4;
+  static const int fallback = 2;
+  static const double _referenceWidth = 480;
+
+  /// Narrowest column before large text starts taking columns away.
+  static const double minCellWidth = 64;
+
+  static int clamp(int columns) => columns.clamp(min, max);
+
+  static int next(int columns) => columns >= max ? min : clamp(columns + 1);
+
+  static int resolve({
+    required double width,
+    required int preferred,
+    required double spacing,
+    double minCellWidth = MasonryColumnCount.minCellWidth,
+  }) {
+    if (!width.isFinite || width <= 0) return min;
+    final target = clamp(preferred);
+    final maxCellWidth = _referenceWidth / target;
+    final fitting = ((width + spacing) / (minCellWidth + spacing)).floor();
+    final needed = ((width + spacing) / (maxCellWidth + spacing)).ceil();
+    return math.max(min, math.min(math.max(target, needed), fitting));
+  }
+
+  /// [minCellWidth] widened for cards with text over them.
+  static double minCellWidthFor(double textScale) =>
+      minCellWidth + (textScale.clamp(1.0, 3.0) - 1) * 44;
+}
+
+/// Icon-only switch that cycles through the column choices; the icon shows
+/// the result.
 class GridColumnCountButton extends StatelessWidget {
   const GridColumnCountButton({
     super.key,

@@ -313,6 +313,17 @@ class StorageKeys {
 
   /// 词库网格列数（本机偏好，不参与云同步）
   static const String tagLibraryGridColumns = 'tag_library_grid_columns';
+
+  /// 各瀑布流的列数（本机偏好，不参与云同步）
+  static const String localGalleryMasonryColumns =
+      'local_gallery_masonry_columns';
+  static const String historyMasonryColumns = 'history_masonry_columns';
+  static const String onlineGalleryMasonryColumns =
+      'online_gallery_masonry_columns';
+  static const String vibeLibraryMasonryColumns =
+      'vibe_library_masonry_columns';
+  static const String preciseRefLibraryMasonryColumns =
+      'precise_ref_library_masonry_columns';
   static const String tagLibraryPickerCategoryId =
       'tag_library_picker_category_id';
 
