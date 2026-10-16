@@ -199,7 +199,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('依赖源下拉以类别 ID 选中并显示名称，改选后保存的是 ID', (tester) async {
+  testWidgets('依赖配置只在表单标题显示一次名称；依赖源下拉以类别 ID 选中并显示名称，改选后保存的是 ID', (
+    tester,
+  ) async {
     final notifier = _EditablePresetNotifier(_referenceCategories);
     await _pumpReferenceCard(
       tester,
@@ -211,6 +213,7 @@ void main() {
     await _openDiyForm(tester, '依赖配置', groupName: _referenceGroup.name);
 
     final form = _formSurfaces().last;
+    expect(find.descendant(of: form, matching: find.text('依赖配置')), findsOne);
     final dropdown = find.descendant(
       of: form,
       matching: find.byType(DropdownButtonFormField<String>),

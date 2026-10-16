@@ -21063,12 +21063,6 @@ abstract class AppLocalizations {
   /// **'Failed to rebuild the gallery index: {error}'**
   String localGallery_errorRebuildFailed(String error);
 
-  /// No description provided for @diy_dependencyTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Dependency Settings'**
-  String get diy_dependencyTitle;
-
   /// No description provided for @diy_dependencySubtitle.
   ///
   /// In en, this message translates to:
@@ -21272,12 +21266,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Branch {index}'**
   String diy_branchDefaultName(int index);
-
-  /// No description provided for @diy_conditionalTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Conditional Branches'**
-  String get diy_conditionalTitle;
 
   /// No description provided for @diy_conditionalSubtitle.
   ///
@@ -21507,12 +21495,6 @@ abstract class AppLocalizations {
   /// **'Enable This Rule'**
   String get diy_enableRule;
 
-  /// No description provided for @diy_postProcessTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Post-processing Rules'**
-  String get diy_postProcessTitle;
-
   /// No description provided for @diy_postProcessSubtitle.
   ///
   /// In en, this message translates to:
@@ -21711,12 +21693,6 @@ abstract class AppLocalizations {
   /// **'Total Tags'**
   String get diy_totalTagCount;
 
-  /// No description provided for @diy_visibilityTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Visibility Rules'**
-  String get diy_visibilityTitle;
-
   /// No description provided for @diy_visibilitySubtitle.
   ///
   /// In en, this message translates to:
@@ -21818,12 +21794,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time Condition'**
   String get diy_timeDefaultName;
-
-  /// No description provided for @diy_timeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Time Condition'**
-  String get diy_timeTitle;
 
   /// No description provided for @diy_timeSubtitle.
   ///
