@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/localization_extension.dart';
+import '../../../../data/models/fixed_tag/fixed_tag_entry.dart';
+import '../../../providers/fixed_tags_provider.dart';
 import '../../../providers/tag_library_page_provider.dart';
+import '../../../widgets/character/fixed_tag_reference_picker.dart';
 import '../../tag_library_page/widgets/entry_add_dialog.dart';
 import 'prompt_group_actions.dart';
 import 'prompt_group_controller.dart';
 import 'prompt_group_edit_sheet.dart';
+import 'prompt_group_fixed_tags.dart';
 import 'prompt_group_grid.dart';
 import 'prompt_group_undo_bar.dart';
 import 'prompt_input_controller.dart';
@@ -80,10 +84,15 @@ class PromptGroupBoard extends ConsumerStatefulWidget {
     this.modeSessionId,
     this.excludeFixedTags = true,
     this.minTileWidth = PromptGroupGrid.defaultMinTileWidth,
+    this.allowFixedTags = false,
   });
 
   final PromptGroupCollection groups;
   final double minTileWidth;
+
+  /// A character's sections: fixed tags can be placed among them, and the
+  /// tags they take from the main prompt are named below the grid.
+  final bool allowFixedTags;
   final bool negative;
   final Key gridKey;
   final Key listKey;
@@ -120,10 +129,35 @@ class _PromptGroupBoardState extends ConsumerState<PromptGroupBoard> {
     super.dispose();
   }
 
+  Map<String, FixedTagEntry> _fixedTagsById = const {};
+
+  PromptGroupFixedTagInfo? _fixedTagInfo(PromptGroupSection section) {
+    final id = section.fixedTagId;
+    if (id == null) return null;
+    final entry = _fixedTagsById[id];
+    return PromptGroupFixedTagInfo(
+      name: entry?.displayName,
+      claimed:
+          entry != null &&
+          entry.enabled &&
+          section.enabled &&
+          !section.keepInMain,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final negative = widget.negative;
     final groups = widget.groups;
+    final showsFixedTags = widget.allowFixedTags || groups.hasFixedTags;
+    if (showsFixedTags) {
+      _fixedTagsById = {
+        for (final entry in ref.watch(
+          fixedTagsNotifierProvider.select((state) => state.entries),
+        ))
+          entry.id: entry,
+      };
+    }
     final grid = PromptGroupGrid(
       key: widget.gridKey,
       groups: groups,
@@ -133,7 +167,26 @@ class _PromptGroupBoardState extends ConsumerState<PromptGroupBoard> {
       onDelete: (id) => _delete(groups, id, negative),
       onReordered: () => widget.onCommit(negative),
       minTileWidth: widget.minTileWidth,
+      fixedTagInfoOf: showsFixedTags ? _fixedTagInfo : null,
     );
+    final body = widget.allowFixedTags
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              grid,
+              PromptGroupFixedTagBar(
+                claimedNames: [
+                  for (final section in groups.sections)
+                    if (_fixedTagInfo(section) case final info?
+                        when info.claimed)
+                      ?info.name,
+                ],
+                onAdd: () => _addFixedTag(groups, negative),
+              ),
+            ],
+          )
+        : grid;
     final undo = _undo != null && identical(_undo!.groups, groups)
         ? _undo
         : null;
@@ -146,7 +199,7 @@ class _PromptGroupBoardState extends ConsumerState<PromptGroupBoard> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              KeyedSubtree(key: widget.listKey, child: grid),
+              KeyedSubtree(key: widget.listKey, child: body),
               _undoBar(undo, top: 12),
             ],
           );
@@ -161,7 +214,7 @@ class _PromptGroupBoardState extends ConsumerState<PromptGroupBoard> {
                 padding: EdgeInsets.only(
                   bottom: undo == null ? 0 : _undoBarSpace,
                 ),
-                child: grid,
+                child: body,
               ),
             ),
             Positioned(left: 4, right: 4, bottom: 12, child: _undoBar(undo)),
@@ -242,7 +295,54 @@ class _PromptGroupBoardState extends ConsumerState<PromptGroupBoard> {
     widget.onCommit(undo.negative);
   }
 
+  /// Places a fixed tag among the sections, at the start for a prefix tag.
+  Future<void> _addFixedTag(PromptGroupCollection groups, bool negative) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final picked = await showFixedTagReferencePicker(
+      context,
+      entries: ref.read(fixedTagsNotifierProvider).entries,
+      negative: negative,
+      placedIds: {for (final section in groups.sections) ?section.fixedTagId},
+    );
+    if (picked == null || !mounted) return;
+    groups.addFixedTag(
+      picked.id,
+      picked.weightedContent,
+      atStart: picked.position == FixedTagPosition.prefix,
+    );
+    widget.onCommit(negative);
+  }
+
+  Future<void> _openFixedTag(
+    PromptGroupCollection groups,
+    String id,
+    bool negative,
+  ) async {
+    final section = groups.sectionById(id);
+    if (section == null) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    final action = await showFixedTagSectionMenu(
+      context,
+      name: _fixedTagInfo(section)?.name,
+      keepInMain: section.keepInMain,
+    );
+    if (action == null || !mounted) return;
+    switch (action) {
+      case FixedTagSectionAction.toggleKeepInMain:
+        groups.setKeepInMain(id, !section.keepInMain);
+        widget.onCommit(negative);
+      case FixedTagSectionAction.detach:
+        groups.detachFixedTag(id);
+        widget.onCommit(negative);
+      case FixedTagSectionAction.remove:
+        _delete(groups, id, negative);
+    }
+  }
+
   Future<void> _open(PromptGroupCollection groups, String id, bool negative) {
+    if (groups.sectionById(id)?.isFixedTag ?? false) {
+      return _openFixedTag(groups, id, negative);
+    }
     FocusManager.instance.primaryFocus?.unfocus();
     return showPromptGroupEditSheet(
       context,
@@ -283,6 +383,9 @@ class _PromptGroupBoardState extends ConsumerState<PromptGroupBoard> {
     String id,
     bool negative,
   ) async {
+    if (groups.sectionById(id)?.isFixedTag ?? false) {
+      return _openFixedTag(groups, id, negative);
+    }
     final action = await showPromptGroupActions(
       context,
       groups: groups,

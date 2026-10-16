@@ -28131,6 +28131,372 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} characters · {included} included'**
   String characterWorkspace_count(int count, int included);
+
+  /// No description provided for @characterLibrary_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Characters'**
+  String get characterLibrary_title;
+
+  /// No description provided for @characterLibrary_tabEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries'**
+  String get characterLibrary_tabEntries;
+
+  /// No description provided for @characterLibrary_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} characters'**
+  String characterLibrary_count(int count);
+
+  /// No description provided for @characterLibrary_searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, tags or fixed tags'**
+  String get characterLibrary_searchHint;
+
+  /// No description provided for @characterLibrary_sortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently used'**
+  String get characterLibrary_sortRecent;
+
+  /// No description provided for @characterLibrary_sortUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Most used'**
+  String get characterLibrary_sortUsed;
+
+  /// No description provided for @characterLibrary_sortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get characterLibrary_sortName;
+
+  /// No description provided for @characterLibrary_groupFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get characterLibrary_groupFavorites;
+
+  /// No description provided for @characterLibrary_uncategorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncategorized'**
+  String get characterLibrary_uncategorized;
+
+  /// No description provided for @characterLibrary_useCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}×'**
+  String characterLibrary_useCount(int count);
+
+  /// No description provided for @characterLibrary_unused.
+  ///
+  /// In en, this message translates to:
+  /// **'Unused'**
+  String get characterLibrary_unused;
+
+  /// No description provided for @characterLibrary_fixedTagCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} fixed'**
+  String characterLibrary_fixedTagCount(int count);
+
+  /// No description provided for @characterLibrary_positiveSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Positive · {count} sections'**
+  String characterLibrary_positiveSections(int count);
+
+  /// No description provided for @characterLibrary_negativeSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative · {count} sections'**
+  String characterLibrary_negativeSections(int count);
+
+  /// No description provided for @characterLibrary_claimHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange dot: this fixed tag is also on in the main prompt. Once added, it goes to this character only.'**
+  String get characterLibrary_claimHint;
+
+  /// No description provided for @characterLibrary_claimNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{names} are also on in the main prompt. This character takes them for the generation, so the main prompt leaves them out this time; tap a card to keep them in both.'**
+  String characterLibrary_claimNote(String names);
+
+  /// No description provided for @characterLibrary_claimedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Also on in the main prompt'**
+  String get characterLibrary_claimedLabel;
+
+  /// No description provided for @characterLibrary_addToPanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to characters'**
+  String get characterLibrary_addToPanel;
+
+  /// No description provided for @characterLibrary_selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String characterLibrary_selectedCount(int count);
+
+  /// No description provided for @characterLibrary_addSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Add them all'**
+  String get characterLibrary_addSelected;
+
+  /// No description provided for @characterLibrary_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {name}'**
+  String characterLibrary_added(String name);
+
+  /// No description provided for @characterLibrary_addedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count} characters'**
+  String characterLibrary_addedMany(int count);
+
+  /// No description provided for @characterLibrary_limitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'The character bar is full; {count} were not added'**
+  String characterLibrary_limitReached(int count);
+
+  /// No description provided for @characterLibrary_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No characters yet'**
+  String get characterLibrary_empty;
+
+  /// No description provided for @characterLibrary_emptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap “Save to characters” on a character in the generation page, or create one here.'**
+  String get characterLibrary_emptyHint;
+
+  /// No description provided for @characterLibrary_new.
+  ///
+  /// In en, this message translates to:
+  /// **'New character'**
+  String get characterLibrary_new;
+
+  /// No description provided for @characterLibrary_newName.
+  ///
+  /// In en, this message translates to:
+  /// **'New character'**
+  String get characterLibrary_newName;
+
+  /// No description provided for @characterLibrary_noMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No characters match'**
+  String get characterLibrary_noMatch;
+
+  /// No description provided for @characterLibrary_editTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit character'**
+  String get characterLibrary_editTitle;
+
+  /// No description provided for @characterLibrary_nameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get characterLibrary_nameLabel;
+
+  /// No description provided for @characterLibrary_categoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get characterLibrary_categoryLabel;
+
+  /// No description provided for @characterLibrary_categoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: Original, Fan art'**
+  String get characterLibrary_categoryHint;
+
+  /// No description provided for @characterLibrary_duplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get characterLibrary_duplicate;
+
+  /// No description provided for @characterLibrary_copyName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} copy'**
+  String characterLibrary_copyName(String name);
+
+  /// No description provided for @characterLibrary_deleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}? Characters already added to the character bar stay.'**
+  String characterLibrary_deleteConfirm(String name);
+
+  /// No description provided for @characterLibrary_importFixedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring in a fixed tag'**
+  String get characterLibrary_importFixedTag;
+
+  /// No description provided for @characterLibrary_fixedTagLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed tag · {name}'**
+  String characterLibrary_fixedTagLabel(String name);
+
+  /// No description provided for @characterLibrary_fixedTagMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed tag deleted; kept its last content'**
+  String get characterLibrary_fixedTagMissing;
+
+  /// No description provided for @characterLibrary_keepInMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep in both'**
+  String get characterLibrary_keepInMain;
+
+  /// No description provided for @characterLibrary_keepInMainHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The main prompt keeps this fixed tag too'**
+  String get characterLibrary_keepInMainHint;
+
+  /// No description provided for @characterLibrary_detach.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn into a plain section'**
+  String get characterLibrary_detach;
+
+  /// No description provided for @characterLibrary_detachHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the content, no longer follows the fixed tag'**
+  String get characterLibrary_detachHint;
+
+  /// No description provided for @characterLibrary_removeFixedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Take out of this character'**
+  String get characterLibrary_removeFixedTag;
+
+  /// No description provided for @characterLibrary_pickPositiveFixedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Positive fixed tags'**
+  String get characterLibrary_pickPositiveFixedTag;
+
+  /// No description provided for @characterLibrary_pickNegativeFixedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative fixed tags'**
+  String get characterLibrary_pickNegativeFixedTag;
+
+  /// No description provided for @characterLibrary_noFixedTags.
+  ///
+  /// In en, this message translates to:
+  /// **'No fixed tags of this kind yet'**
+  String get characterLibrary_noFixedTags;
+
+  /// No description provided for @characterLibrary_onInMain.
+  ///
+  /// In en, this message translates to:
+  /// **'On in the main prompt'**
+  String get characterLibrary_onInMain;
+
+  /// No description provided for @characterLibrary_alreadyPlaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in'**
+  String get characterLibrary_alreadyPlaced;
+
+  /// No description provided for @characterLibrary_pickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add from characters'**
+  String get characterLibrary_pickerTitle;
+
+  /// No description provided for @characterLibrary_manage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage characters'**
+  String get characterLibrary_manage;
+
+  /// No description provided for @characterLibrary_saveToLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to characters'**
+  String get characterLibrary_saveToLibrary;
+
+  /// No description provided for @characterLibrary_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name} to characters'**
+  String characterLibrary_saved(String name);
+
+  /// No description provided for @characterLibrary_savedAsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as new character {name}'**
+  String characterLibrary_savedAsNew(String name);
+
+  /// No description provided for @characterLibrary_updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {name} in characters'**
+  String characterLibrary_updated(String name);
+
+  /// No description provided for @characterLibrary_upToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Same as in characters'**
+  String get characterLibrary_upToDate;
+
+  /// No description provided for @characterLibrary_updateEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Update {name} in characters'**
+  String characterLibrary_updateEntry(String name);
+
+  /// No description provided for @characterLibrary_updateEntryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Its sections, fixed tags and negative prompt are replaced by these'**
+  String get characterLibrary_updateEntryHint;
+
+  /// No description provided for @characterLibrary_saveAsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as new character'**
+  String get characterLibrary_saveAsNew;
+
+  /// No description provided for @characterLibrary_saveAsNewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} in characters stays as it is'**
+  String characterLibrary_saveAsNewHint(String name);
+
+  /// No description provided for @characterLibrary_fromLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'From characters'**
+  String get characterLibrary_fromLibrary;
+
+  /// No description provided for @characterLibrary_unsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed since saved to characters'**
+  String get characterLibrary_unsaved;
 }
 
 class _AppLocalizationsDelegate

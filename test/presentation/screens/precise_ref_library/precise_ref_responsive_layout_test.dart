@@ -69,6 +69,11 @@ void main() {
             findsNothing,
           );
           // 窄屏由类型条件替代分类侧栏：选中后只剩同类型条目，可一键清除。
+          // 筛选条可横向滚动，先把类型条件滚回可见处。
+          await tester.ensureVisible(
+            find.byKey(const Key('precise-ref-type-chip')),
+          );
+          await tester.pumpAndSettle();
           await tester.tap(find.byKey(const Key('precise-ref-type-chip')));
           await tester.pumpAndSettle();
           await tester.tap(

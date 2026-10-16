@@ -15517,6 +15517,225 @@ class AppLocalizationsZh extends AppLocalizations {
   String characterWorkspace_count(int count, int included) {
     return '$count 个角色 · $included 个参与';
   }
+
+  @override
+  String get characterLibrary_title => '角色库';
+
+  @override
+  String get characterLibrary_tabEntries => '词条';
+
+  @override
+  String characterLibrary_count(int count) {
+    return '$count 个角色';
+  }
+
+  @override
+  String get characterLibrary_searchHint => '名字、标签或固定词';
+
+  @override
+  String get characterLibrary_sortRecent => '最近使用';
+
+  @override
+  String get characterLibrary_sortUsed => '使用次数';
+
+  @override
+  String get characterLibrary_sortName => '名称';
+
+  @override
+  String get characterLibrary_groupFavorites => '收藏';
+
+  @override
+  String get characterLibrary_uncategorized => '未分类';
+
+  @override
+  String characterLibrary_useCount(int count) {
+    return '$count 次';
+  }
+
+  @override
+  String get characterLibrary_unused => '未用';
+
+  @override
+  String characterLibrary_fixedTagCount(int count) {
+    return '固定词 $count';
+  }
+
+  @override
+  String characterLibrary_positiveSections(int count) {
+    return '正面 · $count 分区';
+  }
+
+  @override
+  String characterLibrary_negativeSections(int count) {
+    return '负面 · $count 分区';
+  }
+
+  @override
+  String get characterLibrary_claimHint => '橙点：这个固定词在主提示词也启用。加入后生成时只放进这个角色。';
+
+  @override
+  String characterLibrary_claimNote(String names) {
+    return '$names 在主提示词也启用了。生成时让给这个角色，主提示词这一次不带；点卡片可改为两边都保留。';
+  }
+
+  @override
+  String get characterLibrary_claimedLabel => '主提示词也启用';
+
+  @override
+  String get characterLibrary_addToPanel => '加入当前角色';
+
+  @override
+  String characterLibrary_selectedCount(int count) {
+    return '已选 $count 个';
+  }
+
+  @override
+  String get characterLibrary_addSelected => '一起加入角色栏';
+
+  @override
+  String characterLibrary_added(String name) {
+    return '已加入「$name」';
+  }
+
+  @override
+  String characterLibrary_addedMany(int count) {
+    return '已加入 $count 个角色';
+  }
+
+  @override
+  String characterLibrary_limitReached(int count) {
+    return '角色栏已满，$count 个没有加入';
+  }
+
+  @override
+  String get characterLibrary_empty => '还没有角色';
+
+  @override
+  String get characterLibrary_emptyHint => '在生图页的角色栏里点「存入角色库」，或在这里新建。';
+
+  @override
+  String get characterLibrary_new => '新建角色';
+
+  @override
+  String get characterLibrary_newName => '新角色';
+
+  @override
+  String get characterLibrary_noMatch => '没有符合条件的角色';
+
+  @override
+  String get characterLibrary_editTitle => '编辑角色';
+
+  @override
+  String get characterLibrary_nameLabel => '角色名';
+
+  @override
+  String get characterLibrary_categoryLabel => '分类';
+
+  @override
+  String get characterLibrary_categoryHint => '例如 原创、同人';
+
+  @override
+  String get characterLibrary_duplicate => '复制';
+
+  @override
+  String characterLibrary_copyName(String name) {
+    return '$name 副本';
+  }
+
+  @override
+  String characterLibrary_deleteConfirm(String name) {
+    return '删除「$name」？已加入角色栏的不受影响。';
+  }
+
+  @override
+  String get characterLibrary_importFixedTag => '引入固定词';
+
+  @override
+  String characterLibrary_fixedTagLabel(String name) {
+    return '固定词 · $name';
+  }
+
+  @override
+  String get characterLibrary_fixedTagMissing => '固定词已删除，使用保存时的内容';
+
+  @override
+  String get characterLibrary_keepInMain => '两边都保留';
+
+  @override
+  String get characterLibrary_keepInMainHint => '主提示词也带上这个固定词';
+
+  @override
+  String get characterLibrary_detach => '转为普通分区';
+
+  @override
+  String get characterLibrary_detachHint => '保留现在的内容，不再跟随固定词';
+
+  @override
+  String get characterLibrary_removeFixedTag => '移出这个角色';
+
+  @override
+  String get characterLibrary_pickPositiveFixedTag => '正面固定词';
+
+  @override
+  String get characterLibrary_pickNegativeFixedTag => '负面固定词';
+
+  @override
+  String get characterLibrary_noFixedTags => '还没有这一类固定词';
+
+  @override
+  String get characterLibrary_onInMain => '主提示词启用中';
+
+  @override
+  String get characterLibrary_alreadyPlaced => '已引入';
+
+  @override
+  String get characterLibrary_pickerTitle => '从角色库添加';
+
+  @override
+  String get characterLibrary_manage => '管理角色库';
+
+  @override
+  String get characterLibrary_saveToLibrary => '存入角色库';
+
+  @override
+  String characterLibrary_saved(String name) {
+    return '已把「$name」存入角色库';
+  }
+
+  @override
+  String characterLibrary_savedAsNew(String name) {
+    return '已另存为新角色「$name」';
+  }
+
+  @override
+  String characterLibrary_updated(String name) {
+    return '角色库中的「$name」已更新';
+  }
+
+  @override
+  String get characterLibrary_upToDate => '和角色库里的版本一致';
+
+  @override
+  String characterLibrary_updateEntry(String name) {
+    return '更新角色库中的「$name」';
+  }
+
+  @override
+  String get characterLibrary_updateEntryHint => '用现在的分区、固定词和负面覆盖角色库里的版本';
+
+  @override
+  String get characterLibrary_saveAsNew => '另存为新角色';
+
+  @override
+  String characterLibrary_saveAsNewHint(String name) {
+    return '角色库里原来的「$name」不变';
+  }
+
+  @override
+  String get characterLibrary_fromLibrary => '来自角色库';
+
+  @override
+  String get characterLibrary_unsaved => '有改动未存入角色库';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -31034,4 +31253,223 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String characterWorkspace_count(int count, int included) {
     return '$count 個角色 · $included 個參與';
   }
+
+  @override
+  String get characterLibrary_title => '角色庫';
+
+  @override
+  String get characterLibrary_tabEntries => '詞條';
+
+  @override
+  String characterLibrary_count(int count) {
+    return '$count 個角色';
+  }
+
+  @override
+  String get characterLibrary_searchHint => '名字、標籤或固定詞';
+
+  @override
+  String get characterLibrary_sortRecent => '最近使用';
+
+  @override
+  String get characterLibrary_sortUsed => '使用次數';
+
+  @override
+  String get characterLibrary_sortName => '名稱';
+
+  @override
+  String get characterLibrary_groupFavorites => '收藏';
+
+  @override
+  String get characterLibrary_uncategorized => '未分類';
+
+  @override
+  String characterLibrary_useCount(int count) {
+    return '$count 次';
+  }
+
+  @override
+  String get characterLibrary_unused => '未用';
+
+  @override
+  String characterLibrary_fixedTagCount(int count) {
+    return '固定詞 $count';
+  }
+
+  @override
+  String characterLibrary_positiveSections(int count) {
+    return '正面 · $count 分區';
+  }
+
+  @override
+  String characterLibrary_negativeSections(int count) {
+    return '負面 · $count 分區';
+  }
+
+  @override
+  String get characterLibrary_claimHint => '橙點：這個固定詞在主提示詞也啟用。加入後生成時只放進這個角色。';
+
+  @override
+  String characterLibrary_claimNote(String names) {
+    return '$names 在主提示詞也啟用了。生成時讓給這個角色，主提示詞這一次不帶；點卡片可改為兩邊都保留。';
+  }
+
+  @override
+  String get characterLibrary_claimedLabel => '主提示詞也啟用';
+
+  @override
+  String get characterLibrary_addToPanel => '加入目前角色';
+
+  @override
+  String characterLibrary_selectedCount(int count) {
+    return '已選 $count 個';
+  }
+
+  @override
+  String get characterLibrary_addSelected => '一起加入角色欄';
+
+  @override
+  String characterLibrary_added(String name) {
+    return '已加入「$name」';
+  }
+
+  @override
+  String characterLibrary_addedMany(int count) {
+    return '已加入 $count 個角色';
+  }
+
+  @override
+  String characterLibrary_limitReached(int count) {
+    return '角色欄已滿，$count 個沒有加入';
+  }
+
+  @override
+  String get characterLibrary_empty => '還沒有角色';
+
+  @override
+  String get characterLibrary_emptyHint => '在生圖頁的角色欄裡點「存入角色庫」，或在這裡新建。';
+
+  @override
+  String get characterLibrary_new => '新建角色';
+
+  @override
+  String get characterLibrary_newName => '新角色';
+
+  @override
+  String get characterLibrary_noMatch => '沒有符合條件的角色';
+
+  @override
+  String get characterLibrary_editTitle => '編輯角色';
+
+  @override
+  String get characterLibrary_nameLabel => '角色名';
+
+  @override
+  String get characterLibrary_categoryLabel => '分類';
+
+  @override
+  String get characterLibrary_categoryHint => '例如 原創、同人';
+
+  @override
+  String get characterLibrary_duplicate => '複製';
+
+  @override
+  String characterLibrary_copyName(String name) {
+    return '$name 副本';
+  }
+
+  @override
+  String characterLibrary_deleteConfirm(String name) {
+    return '刪除「$name」？已加入角色欄的不受影響。';
+  }
+
+  @override
+  String get characterLibrary_importFixedTag => '引入固定詞';
+
+  @override
+  String characterLibrary_fixedTagLabel(String name) {
+    return '固定詞 · $name';
+  }
+
+  @override
+  String get characterLibrary_fixedTagMissing => '固定詞已刪除，使用儲存時的內容';
+
+  @override
+  String get characterLibrary_keepInMain => '兩邊都保留';
+
+  @override
+  String get characterLibrary_keepInMainHint => '主提示詞也帶上這個固定詞';
+
+  @override
+  String get characterLibrary_detach => '轉為普通分區';
+
+  @override
+  String get characterLibrary_detachHint => '保留現在的內容，不再跟隨固定詞';
+
+  @override
+  String get characterLibrary_removeFixedTag => '移出這個角色';
+
+  @override
+  String get characterLibrary_pickPositiveFixedTag => '正面固定詞';
+
+  @override
+  String get characterLibrary_pickNegativeFixedTag => '負面固定詞';
+
+  @override
+  String get characterLibrary_noFixedTags => '還沒有這一類固定詞';
+
+  @override
+  String get characterLibrary_onInMain => '主提示詞啟用中';
+
+  @override
+  String get characterLibrary_alreadyPlaced => '已引入';
+
+  @override
+  String get characterLibrary_pickerTitle => '從角色庫新增';
+
+  @override
+  String get characterLibrary_manage => '管理角色庫';
+
+  @override
+  String get characterLibrary_saveToLibrary => '存入角色庫';
+
+  @override
+  String characterLibrary_saved(String name) {
+    return '已把「$name」存入角色庫';
+  }
+
+  @override
+  String characterLibrary_savedAsNew(String name) {
+    return '已另存為新角色「$name」';
+  }
+
+  @override
+  String characterLibrary_updated(String name) {
+    return '角色庫中的「$name」已更新';
+  }
+
+  @override
+  String get characterLibrary_upToDate => '和角色庫裡的版本一致';
+
+  @override
+  String characterLibrary_updateEntry(String name) {
+    return '更新角色庫中的「$name」';
+  }
+
+  @override
+  String get characterLibrary_updateEntryHint => '用現在的分區、固定詞和負面覆蓋角色庫裡的版本';
+
+  @override
+  String get characterLibrary_saveAsNew => '另存為新角色';
+
+  @override
+  String characterLibrary_saveAsNewHint(String name) {
+    return '角色庫裡原來的「$name」不變';
+  }
+
+  @override
+  String get characterLibrary_fromLibrary => '來自角色庫';
+
+  @override
+  String get characterLibrary_unsaved => '有改動未存入角色庫';
 }

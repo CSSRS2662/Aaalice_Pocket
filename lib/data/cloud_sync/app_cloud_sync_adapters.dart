@@ -303,6 +303,8 @@ const portablePromptSettingKeys = <String>{
   StorageKeys.fixedTagsData,
   StorageKeys.fixedTagLinksData,
   StorageKeys.fixedTagCategoriesData,
+  // Characters refer to fixed tags by id, so they travel together.
+  StorageKeys.characterLibraryData,
 };
 
 const portableOnlineGallerySettingKeys = <String>{

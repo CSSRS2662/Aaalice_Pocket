@@ -56,7 +56,10 @@ import 'widgets/grouped_view/grouped_entries_view.dart';
 
 /// 词库页面
 class TagLibraryPageScreen extends ConsumerStatefulWidget {
-  const TagLibraryPageScreen({super.key});
+  const TagLibraryPageScreen({super.key, this.showPageTitle = true});
+
+  /// Off where the 词库 page names it above, see DictionaryScreen.
+  final bool showPageTitle;
 
   @override
   ConsumerState<TagLibraryPageScreen> createState() =>
@@ -181,7 +184,7 @@ class _TagLibraryPageScreenState extends ConsumerState<TagLibraryPageScreen> {
                   return GalleryCollectionWorkspace(
                     sidebarWidthKey: StorageKeys.tagLibrarySidebarWidth,
                     toolbar: TagLibraryToolbar(
-                      showPageTitle: true,
+                      showPageTitle: widget.showPageTitle,
                       showCategoryPanel: showSidebar,
                       onShowCategories: persistentCategories
                           ? () => setState(

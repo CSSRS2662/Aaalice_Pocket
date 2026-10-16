@@ -3,19 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/api_constants.dart';
 import '../../../../../core/storage/local_storage_service.dart';
-import '../../../../../core/utils/character_prompt_block_parser.dart';
 import '../../../../../core/utils/localization_extension.dart';
 import '../../../../../data/models/character/character_prompt.dart';
 import '../../../../prompt_assistant/providers/prompt_assistant_history_provider.dart';
 import '../../../../prompt_assistant/widgets/prompt_assistant_quick_settings.dart';
 import '../../../../providers/character_prompt_provider.dart';
 import '../../../../providers/character_workspace_provider.dart';
+import '../../../../providers/fixed_tags_provider.dart';
 import '../../../../providers/image_generation_provider.dart';
+import '../../../../services/character_library_transfer.dart';
 import '../../../../themes/core/layered_surface_style.dart';
 import '../../../../themes/theme_extension.dart';
-import '../../../../widgets/character/add_to_library_dialog.dart';
 import '../../../../widgets/character/character_marker.dart';
 import '../../../../widgets/character/inline_character_editor.dart';
+import '../../../../widgets/common/app_toast.dart';
+import '../../../character_library/character_library_actions.dart';
 import '../../widgets/prompt_group_edit_sheet.dart';
 import '../../widgets/prompt_group_editor.dart';
 import 'character_prompt_groups.dart';
@@ -53,9 +55,53 @@ class _CharacterWorkspaceEditorState
   );
 
   @override
+  void initState() {
+    super.initState();
+    _groups.resolveFixedTags(_fixedTagContent);
+  }
+
+  @override
   void dispose() {
     _groups.dispose();
     super.dispose();
+  }
+
+  String? _fixedTagContent(String id) {
+    for (final entry in ref.read(fixedTagsNotifierProvider).entries) {
+      if (entry.id == id) return entry.weightedContent;
+    }
+    return null;
+  }
+
+  /// Saves the character into the character library: as a new entry, or
+  /// over the entry it came from or as a new one when it changed since.
+  Future<void> _saveToCharacterLibrary() async {
+    final character = _current;
+    if (character == null) return;
+    final l10n = context.l10n;
+    final transfer = CharacterLibraryTransfer(ref.read);
+    final linkedId = transfer.linkedEntryId(character.id);
+    if (linkedId == null) {
+      final saved = transfer.saveFromPanel(character, asNew: true);
+      AppToast.success(context, l10n.characterLibrary_saved(saved.name));
+      return;
+    }
+    if (!transfer.hasUnsavedChanges(character)) {
+      AppToast.info(context, l10n.characterLibrary_upToDate);
+      return;
+    }
+    final asNew = await CharacterLibraryActions.chooseSaveTarget(
+      context,
+      name: character.name,
+    );
+    if (asNew == null || !mounted) return;
+    final saved = transfer.saveFromPanel(character, asNew: asNew);
+    AppToast.success(
+      context,
+      asNew
+          ? l10n.characterLibrary_savedAsNew(saved.name)
+          : l10n.characterLibrary_updated(saved.name),
+    );
   }
 
   CharacterPrompt? get _current => ref
@@ -172,7 +218,10 @@ class _CharacterWorkspaceEditorState
         (config) => config.findCharacterById(character.id),
       ),
       (_, next) {
-        if (next != null) _groups.align(next);
+        if (next == null) return;
+        // Fixed tags edited meanwhile changed the prompt the same way.
+        _groups.resolveFixedTags(_fixedTagContent);
+        _groups.align(next);
       },
     );
     final grouped = ref.watch(characterPromptsGroupedProvider);
@@ -219,6 +268,7 @@ class _CharacterWorkspaceEditorState
                   PromptAssistantQuickSettings.show(context),
               modeSessionId: _sessionId,
               excludeFixedTags: false,
+              allowFixedTags: true,
             )
           else
             _WholePrompt(
@@ -229,14 +279,7 @@ class _CharacterWorkspaceEditorState
             ),
           const SizedBox(height: 4),
           _Actions(
-            onSaveToLibrary: () => AddToLibraryDialog.show(
-              context,
-              name: character.name,
-              content: CharacterPromptBlockParser.compose(
-                positivePrompt: character.prompt,
-                negativePrompt: character.negativePrompt,
-              ),
-            ),
+            onSaveToLibrary: _saveToCharacterLibrary,
             onDelete: widget.onDelete,
           ),
         ],
@@ -433,8 +476,8 @@ class _Actions extends StatelessWidget {
           key: const ValueKey('character-workspace-save-library'),
           onPressed: onSaveToLibrary,
           style: style,
-          icon: const Icon(Icons.library_add_outlined, size: 18),
-          label: Text(l10n.tagLibrary_addToLibrary),
+          icon: const Icon(Icons.people_outline_rounded, size: 18),
+          label: Text(l10n.characterLibrary_saveToLibrary),
         ),
         TextButton.icon(
           key: const ValueKey('character-workspace-delete'),

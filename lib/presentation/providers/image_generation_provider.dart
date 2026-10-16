@@ -24,6 +24,7 @@ import '../../core/utils/pica_lanczos_resizer.dart';
 import '../../core/utils/prompt_preset_resolution.dart';
 import '../../data/datasources/remote/nai_image_generation_api_service.dart';
 import '../../data/models/character/character_prompt.dart' as ui_character;
+import '../../data/models/fixed_tag/fixed_tag_entry.dart';
 import '../../data/models/fixed_tag/fixed_tag_usage_snapshot.dart';
 import '../../data/models/gallery/character_panel_snapshot.dart';
 import '../../data/models/gallery/nai_image_metadata.dart';
@@ -484,6 +485,16 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     }
     final aliases = ref.read(aliasResolverServiceProvider.notifier);
     final fixedTags = ref.read(fixedTagsNotifierProvider);
+    // Fixed tags the included characters carry stay out of the main prompt.
+    final claimed = preserveCharacterSnapshot
+        ? const <String>{}
+        : ref.read(characterPromptNotifierProvider.notifier).claimedFixedTags();
+    final mainFixedTags = claimed.isEmpty
+        ? fixedTags.entries
+        : [
+            for (final entry in fixedTags.entries)
+              if (!claimed.contains(entry.id)) entry,
+          ];
     return GenerationRequestPreparationService(
       GenerationPreparationDependencies(
         prompt: GenerationPromptPreparation(
@@ -492,15 +503,17 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
           generateAndApplyRandomPrompt: (model) =>
               generateAndApplyRandomPrompt(model: model),
           resolveAliases: aliases.resolveAliases,
-          applyFixedPositiveTags: fixedTags.applyToPrompt,
-          applyFixedNegativeTags: fixedTags.applyToNegativePrompt,
+          applyFixedPositiveTags: mainFixedTags.applyToPrompt,
+          applyFixedNegativeTags: mainFixedTags.applyToNegativePrompt,
           resolvePresets: _resolvePromptPresets,
           fixedTagUsageSnapshot: FixedTagUsageSnapshot.capture(
             fixedTags.entries,
+            claimedIds: claimed,
           ),
         ),
         characters: GenerationCharacterPreparation(
           read: (_) {
+            ref.read(characterPromptNotifierProvider.notifier).syncFixedTags();
             final config = ref.read(characterPromptNotifierProvider);
             final characters = _convertCharactersToApiFormat(config);
             return CharacterPreparationSnapshot(

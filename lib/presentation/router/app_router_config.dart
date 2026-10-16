@@ -18,7 +18,7 @@ import '../screens/settings/settings_screen.dart';
 import '../screens/settings/settings_section.dart';
 import '../screens/slideshow_screen.dart';
 import '../screens/statistics/statistics_screen.dart';
-import '../screens/tag_library_page/tag_library_page_screen.dart';
+import '../screens/dictionary/dictionary_screen.dart';
 import '../screens/vibe_library/vibe_library_screen.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
@@ -231,7 +231,7 @@ GoRouter appRouter(Ref ref) {
               GoRoute(
                 path: AppRoutes.tagLibraryPage,
                 name: AppRouteNames.tagLibraryPage,
-                builder: (context, state) => const TagLibraryPageScreen(),
+                builder: (context, state) => const DictionaryScreen(),
               ),
             ],
           ),

@@ -9,6 +9,7 @@ import '../../../themes/core/layered_surface_style.dart';
 import '../../../themes/theme_extension.dart';
 import '../../../widgets/common/reorderable_tile_grid.dart';
 import 'prompt_group_controller.dart';
+import 'prompt_group_fixed_tags.dart';
 import 'prompt_group_summary.dart';
 
 /// Geometry shared by the grid layout and its tiles.
@@ -54,9 +55,13 @@ class PromptGroupTile extends StatelessWidget {
     required this.onDeleteTap,
     required this.onDisarmDelete,
     required this.onShowActions,
+    this.fixedTag,
   });
 
   final PromptGroupSection section;
+
+  /// For a section showing a fixed tag: what to say about the tag.
+  final PromptGroupFixedTagInfo? fixedTag;
   final int index;
   final PromptGroupTileMetrics metrics;
   final bool deleteArmed;
@@ -75,9 +80,20 @@ class PromptGroupTile extends StatelessWidget {
     final plainText = PromptEditDocument.parse(
       section.controller.text,
     ).map((item) => item.text).join(', ');
+    final fixedTag = section.isFixedTag ? this.fixedTag : null;
+    final fixedName = fixedTag == null
+        ? null
+        : fixedTag.name == null
+        ? l10n.characterLibrary_fixedTagMissing
+        : l10n.characterLibrary_fixedTagLabel(fixedTag.name!);
 
     return Material(
-      color: sectionSurfaceColor(colors),
+      color: fixedTag == null
+          ? sectionSurfaceColor(colors)
+          : Color.alphaBlend(
+              colors.primaryContainer.withValues(alpha: 0.42),
+              sectionSurfaceColor(colors),
+            ),
       borderRadius: BorderRadius.circular(
         Theme.of(context).appTheme.cardRadius,
       ),
@@ -109,17 +125,25 @@ class PromptGroupTile extends StatelessWidget {
                     child: Semantics(
                       label: [
                         label,
+                        ?fixedName,
                         if (!enabled) l10n.prompt_groupOff,
                         plainText.isEmpty ? l10n.prompt_emptyGroup : plainText,
                       ].join('，'),
                       excludeSemantics: true,
-                      child: PromptGroupSummary(
-                        text: section.controller.text,
-                        style: metrics.textStyle.copyWith(
-                          color: colors.onSurface,
-                        ),
-                        emptyLabel: l10n.prompt_groupEmptyHint,
-                      ),
+                      child: fixedTag == null
+                          ? PromptGroupSummary(
+                              text: section.controller.text,
+                              style: metrics.textStyle.copyWith(
+                                color: colors.onSurface,
+                              ),
+                              emptyLabel: l10n.prompt_groupEmptyHint,
+                            )
+                          : PromptGroupFixedTagTileBody(
+                              info: fixedTag,
+                              content: plainText,
+                              keepInMain: section.keepInMain,
+                              textStyle: metrics.textStyle,
+                            ),
                     ),
                   ),
                 ),

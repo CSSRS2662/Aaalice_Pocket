@@ -25,9 +25,17 @@ class CharacterWorkspaceRow extends StatelessWidget {
     required this.onToggleExpanded,
     required this.onToggleEnabled,
     required this.onDelete,
+    this.fromLibrary = false,
+    this.unsavedLibraryChanges = false,
   });
 
   final int index;
+
+  /// Added from or saved to the character library.
+  final bool fromLibrary;
+
+  /// Changed since it last matched its library entry.
+  final bool unsavedLibraryChanges;
   final CharacterPrompt character;
   final CharacterMarkerColors colors;
   final bool expanded;
@@ -92,6 +100,36 @@ class CharacterWorkspaceRow extends StatelessWidget {
                   ),
                 ),
               ),
+              if (fromLibrary) ...[
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: l10n.characterLibrary_fromLibrary,
+                  child: Icon(
+                    Icons.people_outline_rounded,
+                    key: ValueKey('character_workspace_linked_${character.id}'),
+                    size: 16,
+                    color: scheme.primary,
+                    semanticLabel: l10n.characterLibrary_fromLibrary,
+                  ),
+                ),
+              ],
+              if (unsavedLibraryChanges) ...[
+                const SizedBox(width: 4),
+                Semantics(
+                  label: l10n.characterLibrary_unsaved,
+                  child: Container(
+                    key: ValueKey(
+                      'character_workspace_unsaved_${character.id}',
+                    ),
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFC77700),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(width: 8),
               Expanded(
                 child: AnimatedOpacity(

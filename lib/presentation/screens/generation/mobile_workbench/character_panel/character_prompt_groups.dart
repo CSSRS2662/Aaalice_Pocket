@@ -48,6 +48,13 @@ class CharacterPromptGroups {
   PromptGroupCollection groupsFor(bool negative) =>
       negative ? this.negative : positive;
 
+  /// Brings fixed-tag sections up to the tags' content, see
+  /// [PromptGroupCollection.resolveFixedTags].
+  void resolveFixedTags(String? Function(String fixedTagId) contentOf) {
+    positive.resolveFixedTags(contentOf);
+    negative.resolveFixedTags(contentOf);
+  }
+
   /// Sections that no longer add up to the character's prompt, because it
   /// was changed elsewhere, become one section holding it.
   void align(CharacterPrompt character) {

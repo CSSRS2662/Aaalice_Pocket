@@ -1,12 +1,17 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show protected;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/constants/model_capabilities.dart';
+import '../../core/storage/local_storage_service.dart';
 import '../../core/utils/app_logger.dart';
 import '../../data/models/character/character_prompt.dart';
 import '../../data/repositories/character_prompt_repository.dart';
+import '../../data/services/prompt_group/character_fixed_tags.dart';
+import '../../data/services/prompt_group/character_section_store.dart';
+import 'fixed_tags_provider.dart';
 import 'generation/generation_params_notifier.dart';
 
 part 'character_prompt_provider.g.dart';
@@ -36,6 +41,7 @@ class CharacterPromptNotifier extends _$CharacterPromptNotifier {
   @override
   CharacterPromptConfig build() {
     _repository = ref.read(characterPromptRepositoryProvider);
+    watchFixedTags();
     // 同步加载配置（应用启动时 Hive box 已打开）
     final loaded = _repository.load();
     final normalized = loaded.normalizeCustomPositions();
@@ -165,6 +171,41 @@ class CharacterPromptNotifier extends _$CharacterPromptNotifier {
     );
     unawaited(_saveConfig());
   }
+
+  /// Keeps fixed tags placed among character sections following the tags;
+  /// called from [build].
+  @protected
+  void watchFixedTags() => ref.listen(
+    fixedTagsNotifierProvider.select((state) => state.entries),
+    (_, __) => syncFixedTags(),
+  );
+
+  /// Rewrites the fixed-tag sections of every character with the tags'
+  /// current content, so prompts and saved sections follow edits to the tags.
+  void syncFixedTags() {
+    final storage = ref.read(localStorageServiceProvider);
+    final entries = CharacterSectionStore.readAll(storage);
+    if (entries.isEmpty) return;
+    final byId = {
+      for (final entry in ref.read(fixedTagsNotifierProvider).entries)
+        entry.id: entry,
+    };
+    final next = CharacterFixedTags.resolveAll(
+      state,
+      entries,
+      (id) => byId[id]?.weightedContent,
+    );
+    if (next == null) return;
+    CharacterSectionStore.writeAll(storage, entries);
+    restoreConfig(next);
+  }
+
+  /// Ids of the fixed tags the included characters claim from the main
+  /// prompt, see [CharacterFixedTags.claimed].
+  Set<String> claimedFixedTags() => CharacterFixedTags.claimed(
+    state,
+    CharacterSectionStore.readAll(ref.read(localStorageServiceProvider)),
+  );
 
   /// 当前模型的官方角色数量上限。
   int get characterLimit {

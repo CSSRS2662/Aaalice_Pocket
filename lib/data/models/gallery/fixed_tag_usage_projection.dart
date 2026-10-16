@@ -106,7 +106,8 @@ List<String> _renderedContents(
         ..sort((a, b) => a.order.compareTo(b.order));
   return [
     for (final entry in entries)
-      if (entry.renderedContent.trim().isNotEmpty) entry.renderedContent.trim(),
+      if (!entry.claimed && entry.renderedContent.trim().isNotEmpty)
+        entry.renderedContent.trim(),
   ];
 }
 

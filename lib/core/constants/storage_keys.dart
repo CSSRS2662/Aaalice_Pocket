@@ -295,6 +295,12 @@ class StorageKeys {
   static const String fixedTagsBox = 'fixed_tags';
   static const String fixedTagsData = 'fixed_tags_data';
   static const String fixedTagLinksData = 'fixed_tag_links_data';
+
+  /// 角色库（随“提示词与标签”同步，与它引用的固定词一起走）
+  static const String characterLibraryData = 'character_library_v1';
+
+  /// 角色栏角色与角色库条目的对应及存入时的内容指纹（本机状态，不同步）
+  static const String characterLibraryLinks = 'character_library_links_v1';
   static const String fixedTagsNegativePanelExpanded =
       'fixed_tags_negative_panel_expanded';
   static const String fixedTagCategoriesData = 'fixed_tag_categories_data';

@@ -6,7 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/core/constants/storage_keys.dart';
 import 'package:nai_launcher/core/storage/local_storage_service.dart';
+import 'package:nai_launcher/data/models/character/character_library_entry.dart';
 import 'package:nai_launcher/data/models/character/character_prompt.dart';
+import 'package:nai_launcher/data/models/gallery/prompt_group_snapshot.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
 import 'package:nai_launcher/presentation/providers/character_place_options_provider.dart';
@@ -217,6 +219,51 @@ void main() {
       characters.last.id,
     );
     expect(find.byType(CharacterWorkspaceEditor), findsOneWidget);
+  });
+
+  testWidgets('a character comes from the character library, linked', (
+    tester,
+  ) async {
+    final now = DateTime(2026, 10, 16);
+    final storage = MemoryLocalStorage()
+      ..values[StorageKeys.characterLibraryData] = jsonEncode([
+        CharacterLibraryEntry(
+          id: 'lib-dora',
+          name: 'Dora',
+          positiveSections: const [
+            PromptGroupSectionSnapshot(id: 'd1', text: 'girl, witch hat'),
+            PromptGroupSectionSnapshot(id: 'd2', text: 'broom'),
+          ],
+          createdAt: now,
+          updatedAt: now,
+        ).toJson(),
+      ]);
+    final container = await _pump(tester, storage: storage);
+    await tester.tap(find.byKey(const ValueKey('character-workspace-add')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('character-workspace-add-character-library')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('character_library_pick_lib-dora')),
+    );
+    await tester.pumpAndSettle();
+
+    final dora = container
+        .read(characterPromptNotifierProvider)
+        .characters
+        .last;
+    expect(dora.name, 'Dora');
+    expect(dora.prompt, 'girl, witch hat, broom');
+    // It opens with both sections, and the row says where it came from.
+    expect(container.read(characterWorkspaceExpandedProvider), dora.id);
+    expect(find.byType(PromptGroupTile), findsNWidgets(2));
+    expect(
+      find.byKey(ValueKey('character_workspace_linked_${dora.id}')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('deleting a character can be undone in place', (tester) async {

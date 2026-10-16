@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../data/models/gallery/prompt_group_snapshot.dart';
+import '../../../../data/services/prompt_group/character_section_store.dart';
 import '../../../widgets/prompt/nai_syntax_controller.dart';
 
 enum PromptEditorMode { single, grouped }
@@ -12,14 +13,31 @@ typedef RemovedPromptGroup = ({int index, PromptGroupSectionSnapshot snapshot});
 ///
 /// Partitions deliberately have no title or category: their meaning belongs to
 /// the user, while the editor only owns ordering and inclusion in the request.
+///
+/// A section can instead show a fixed tag ([fixedTagId]): its text then
+/// follows the tag, see [PromptGroupCollection.resolveFixedTags].
 class PromptGroupSection {
   PromptGroupSection({
     required this.id,
     required String text,
     this.enabled = true,
     this.collapsed = false,
+    this.fixedTagId,
+    this.keepInMain = false,
   }) : controller = NaiSyntaxController(text: text),
        focusNode = FocusNode();
+
+  PromptGroupSection.fromSnapshot(
+    PromptGroupSectionSnapshot snapshot, {
+    String? id,
+  }) : this(
+         id: id ?? snapshot.id,
+         text: snapshot.text,
+         enabled: snapshot.enabled,
+         collapsed: snapshot.collapsed,
+         fixedTagId: snapshot.fixedTagId,
+         keepInMain: snapshot.keepInMain,
+       );
 
   final String id;
   final NaiSyntaxController controller;
@@ -27,18 +45,23 @@ class PromptGroupSection {
   bool enabled;
   bool collapsed;
 
-  Map<String, Object?> toJson() => {
-    'id': id,
-    'text': controller.text,
-    'enabled': enabled,
-    'collapsed': collapsed,
-  };
+  /// The fixed tag this section shows, or null for a section of its own text.
+  String? fixedTagId;
+
+  /// See [PromptGroupSectionSnapshot.keepInMain].
+  bool keepInMain;
+
+  bool get isFixedTag => fixedTagId != null;
+
+  Map<String, Object?> toJson() => toSnapshot().toJson();
 
   PromptGroupSectionSnapshot toSnapshot() => PromptGroupSectionSnapshot(
     id: id,
     text: controller.text,
     enabled: enabled,
     collapsed: collapsed,
+    fixedTagId: fixedTagId,
+    keepInMain: keepInMain,
   );
 
   void dispose() {
@@ -55,21 +78,12 @@ class PromptGroupCollection extends ChangeNotifier {
   PromptGroupCollection.fromJson(Object? raw, {required String fallbackText}) {
     if (raw is List) {
       for (final value in raw.take(64)) {
-        if (value is! Map) continue;
-        final text = value['text'];
-        if (text is! String) continue;
-        final rawId = value['id'];
-        final id = rawId is String && rawId.trim().isNotEmpty
-            ? rawId
-            : _newId();
+        final snapshot = PromptGroupSectionSnapshot.fromJson(value);
+        if (snapshot == null) continue;
         _insert(
-          PromptGroupSection(
-            id: id,
-            text: text,
-            enabled: value['enabled'] is bool ? value['enabled'] as bool : true,
-            collapsed: value['collapsed'] is bool
-                ? value['collapsed'] as bool
-                : false,
+          PromptGroupSection.fromSnapshot(
+            snapshot,
+            id: snapshot.id.trim().isEmpty ? _newId() : snapshot.id,
           ),
         );
       }
@@ -97,6 +111,60 @@ class PromptGroupCollection extends ChangeNotifier {
   /// separators at its ends that joining drops.
   bool matchesPrompt(String prompt) =>
       effectiveText == joinPromptSections([prompt]);
+
+  bool get hasFixedTags => _sections.any((section) => section.isFixedTag);
+
+  /// Brings fixed-tag sections up to date: [contentOf] gives a tag's content
+  /// as it goes into a prompt, or null when the tag is gone, which keeps the
+  /// last content. Returns whether any text changed.
+  bool resolveFixedTags(String? Function(String fixedTagId) contentOf) {
+    var changed = false;
+    for (final section in _sections) {
+      final id = section.fixedTagId;
+      if (id == null) continue;
+      final content = contentOf(id);
+      if (content == null || content == section.controller.text) continue;
+      section.controller.text = content;
+      changed = true;
+    }
+    if (changed) notifyListeners();
+    return changed;
+  }
+
+  /// Adds a section showing a fixed tag, at the start where prefix tags go
+  /// or at the end, and returns it.
+  PromptGroupSection addFixedTag(
+    String fixedTagId,
+    String content, {
+    bool atStart = true,
+  }) {
+    final section = PromptGroupSection(
+      id: _newId(),
+      text: content,
+      fixedTagId: fixedTagId,
+    );
+    _insert(section, atStart ? 0 : null);
+    notifyListeners();
+    return section;
+  }
+
+  /// Makes a fixed-tag section an ordinary one holding its current text.
+  void detachFixedTag(String id) {
+    final section = _find(id);
+    if (section == null || !section.isFixedTag) return;
+    section.fixedTagId = null;
+    section.keepInMain = false;
+    notifyListeners();
+  }
+
+  void setKeepInMain(String id, bool keep) {
+    final section = _find(id);
+    if (section == null || !section.isFixedTag || section.keepInMain == keep) {
+      return;
+    }
+    section.keepInMain = keep;
+    notifyListeners();
+  }
 
   void _insert(PromptGroupSection section, [int? index]) {
     if (index == null) {
@@ -144,14 +212,8 @@ class PromptGroupCollection extends ChangeNotifier {
   /// Undoes [remove], keeping the section's id and position.
   void restoreRemoved(RemovedPromptGroup removed) {
     if (_find(removed.snapshot.id) != null) return;
-    final snapshot = removed.snapshot;
     _insert(
-      PromptGroupSection(
-        id: snapshot.id,
-        text: snapshot.text,
-        enabled: snapshot.enabled,
-        collapsed: snapshot.collapsed,
-      ),
+      PromptGroupSection.fromSnapshot(removed.snapshot),
       removed.index.clamp(0, _sections.length).toInt(),
     );
     notifyListeners();
@@ -166,6 +228,8 @@ class PromptGroupCollection extends ChangeNotifier {
       id: _newId(),
       text: source.controller.text,
       enabled: source.enabled,
+      fixedTagId: source.fixedTagId,
+      keepInMain: source.keepInMain,
     );
     _insert(copy, index + 1);
     notifyListeners();
@@ -223,11 +287,9 @@ class PromptGroupCollection extends ChangeNotifier {
     _sections.clear();
     for (final snapshot in snapshots.take(64)) {
       _insert(
-        PromptGroupSection(
+        PromptGroupSection.fromSnapshot(
+          snapshot,
           id: snapshot.id.trim().isEmpty ? _newId() : snapshot.id,
-          text: snapshot.text,
-          enabled: snapshot.enabled,
-          collapsed: snapshot.collapsed,
         ),
       );
     }
@@ -273,14 +335,5 @@ class PromptGroupCollection extends ChangeNotifier {
 }
 
 @visibleForTesting
-String joinPromptSections(Iterable<String> values) {
-  final parts = <String>[];
-  for (final value in values) {
-    final normalized = value
-        .trim()
-        .replaceFirst(RegExp(r'^[,，\s]+'), '')
-        .replaceFirst(RegExp(r'[,，\s]+$'), '');
-    if (normalized.isNotEmpty) parts.add(normalized);
-  }
-  return parts.join(', ');
-}
+String joinPromptSections(Iterable<String> values) =>
+    CharacterSectionStore.join(values);

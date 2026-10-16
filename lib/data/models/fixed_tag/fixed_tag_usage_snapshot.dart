@@ -9,13 +9,22 @@ import 'fixed_tag_prompt_type.dart';
 class FixedTagUsageSnapshot {
   const FixedTagUsageSnapshot({this.version = 1, this.entries = const []});
 
-  factory FixedTagUsageSnapshot.capture(Iterable<FixedTagEntry> entries) {
+  /// The enabled [entries]; those in [claimedIds] were left to characters
+  /// and are recorded as [FixedTagUsageEntry.claimed].
+  factory FixedTagUsageSnapshot.capture(
+    Iterable<FixedTagEntry> entries, {
+    Set<String> claimedIds = const {},
+  }) {
     final enabled = entries.where((entry) => entry.enabled).toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     return FixedTagUsageSnapshot(
       entries: [
         for (var index = 0; index < enabled.length; index++)
-          FixedTagUsageEntry.fromFixedTag(enabled[index], order: index),
+          FixedTagUsageEntry.fromFixedTag(
+            enabled[index],
+            order: index,
+            claimed: claimedIds.contains(enabled[index].id),
+          ),
       ],
     );
   }
@@ -68,11 +77,13 @@ class FixedTagUsageEntry {
     required this.position,
     required this.promptType,
     required this.order,
+    this.claimed = false,
   });
 
   factory FixedTagUsageEntry.fromFixedTag(
     FixedTagEntry entry, {
     required int order,
+    bool claimed = false,
   }) => FixedTagUsageEntry(
     fixedTagId: entry.id,
     name: entry.name,
@@ -82,6 +93,7 @@ class FixedTagUsageEntry {
     position: entry.position,
     promptType: entry.promptType,
     order: order,
+    claimed: claimed,
   );
 
   factory FixedTagUsageEntry.legacy({
@@ -121,6 +133,7 @@ class FixedTagUsageEntry {
       position: position,
       promptType: promptType,
       order: (json['order'] as num?)?.toInt() ?? 0,
+      claimed: json['claimed'] == true,
     );
   }
 
@@ -133,6 +146,11 @@ class FixedTagUsageEntry {
   final FixedTagPromptType promptType;
   final int order;
 
+  /// Enabled, but a character in that generation included it, so the main
+  /// prompt did not. Restoring enables it as usual; it is not part of the
+  /// main prompt's text.
+  final bool claimed;
+
   Map<String, dynamic> toJson() => {
     if (fixedTagId != null) 'fixed_tag_id': fixedTagId,
     'name': name,
@@ -142,6 +160,7 @@ class FixedTagUsageEntry {
     'position': position.name,
     'prompt_type': promptType.name,
     'order': order,
+    if (claimed) 'claimed': true,
   };
 }
 

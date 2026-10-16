@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/utils/localization_extension.dart';
 import '../../../../../data/models/character/character_prompt.dart';
+import '../../../../providers/character_library_provider.dart';
 import '../../../../providers/character_prompt_provider.dart';
 import '../../../../providers/character_workspace_provider.dart';
 import '../../../../providers/generation/generation_params_selectors.dart';
@@ -12,7 +13,9 @@ import '../../../../providers/image_generation_provider.dart';
 import '../../../../themes/core/layered_surface_style.dart';
 import '../../../../themes/theme_extension.dart';
 import '../../../../widgets/character/character_library_import.dart';
+import '../../../../services/character_library_transfer.dart';
 import '../../../../widgets/character/character_marker.dart';
+import '../../../character_library/character_library_picker.dart';
 import '../../widgets/prompt_group_undo_bar.dart';
 import 'character_placement_sheet.dart';
 import 'character_workspace_row.dart';
@@ -98,6 +101,14 @@ class _CharacterWorkspaceState extends ConsumerState<CharacterWorkspace> {
     if (id != null && mounted) _added(id);
   }
 
+  Future<void> _addFromCharacterLibrary() async {
+    final before = ref.read(characterPromptNotifierProvider).characters.length;
+    await showCharacterLibraryPicker(context, ref);
+    if (!mounted) return;
+    final characters = ref.read(characterPromptNotifierProvider).characters;
+    if (characters.length > before) _added(characters.last.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final config = ref.watch(characterPromptNotifierProvider);
@@ -110,6 +121,9 @@ class _CharacterWorkspaceState extends ConsumerState<CharacterWorkspace> {
     final characters = config.characters;
     final manual = !config.globalAiChoice;
     final removed = _removed;
+    // Rows mark characters from the library, and edits not saved back.
+    ref.watch(characterLibraryProvider);
+    final library = CharacterLibraryTransfer(ref.read);
 
     final list = ReorderableListView.builder(
       key: const ValueKey('character-workspace'),
@@ -135,6 +149,7 @@ class _CharacterWorkspaceState extends ConsumerState<CharacterWorkspace> {
             ref.read(characterWorkspaceAddingProvider.notifier).state = false,
         onGender: _add,
         onLibrary: _addFromLibrary,
+        onCharacterLibrary: _addFromCharacterLibrary,
       ),
       proxyDecorator: (child, index, animation) => Material(
         elevation: 6,
@@ -164,6 +179,8 @@ class _CharacterWorkspaceState extends ConsumerState<CharacterWorkspace> {
               ? Offset(position.column, position.row)
               : null,
           aspectRatio: dimensions.width / dimensions.height,
+          fromLibrary: library.linkedEntryId(character.id) != null,
+          unsavedLibraryChanges: library.hasUnsavedChanges(character),
           onToggleExpanded: () =>
               ref.read(characterWorkspaceExpandedProvider.notifier).state =
                   character.id == expandedId ? null : character.id,
@@ -312,6 +329,7 @@ class _AddCharacter extends StatelessWidget {
     required this.onCancel,
     required this.onGender,
     required this.onLibrary,
+    required this.onCharacterLibrary,
   });
 
   final bool adding;
@@ -321,6 +339,7 @@ class _AddCharacter extends StatelessWidget {
   final VoidCallback onCancel;
   final ValueChanged<CharacterGender> onGender;
   final VoidCallback onLibrary;
+  final VoidCallback onCharacterLibrary;
 
   @override
   Widget build(BuildContext context) {
@@ -394,6 +413,28 @@ class _AddCharacter extends StatelessWidget {
         runSpacing: 6,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
+          option(
+            key: const ValueKey('character-workspace-add-character-library'),
+            onTap: onCharacterLibrary,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.people_outline_rounded,
+                  size: 20,
+                  color: colors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.characterLibrary_title,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
           for (final (gender, label) in options)
             option(
               key: ValueKey('character-workspace-add-${gender.name}'),

@@ -6,6 +6,7 @@ import '../../../themes/core/layered_surface_style.dart';
 import '../../../themes/theme_extension.dart';
 import '../../../widgets/common/reorderable_tile_grid.dart';
 import 'prompt_group_controller.dart';
+import 'prompt_group_fixed_tags.dart';
 import 'prompt_group_tile.dart';
 
 /// Prompt sections as a grid of fixed-height tiles.
@@ -23,9 +24,14 @@ class PromptGroupGrid extends StatefulWidget {
     required this.onDelete,
     required this.onReordered,
     this.minTileWidth = defaultMinTileWidth,
+    this.fixedTagInfoOf,
   });
 
   final PromptGroupCollection groups;
+
+  /// What fixed-tag tiles say about their tags.
+  final PromptGroupFixedTagInfo? Function(PromptGroupSection section)?
+  fixedTagInfoOf;
 
   /// Narrowest tile at normal text size; large text widens it. Hosts with
   /// less width, such as an open character row, pass less to keep two
@@ -125,6 +131,7 @@ class _PromptGroupGridState extends State<PromptGroupGrid> {
           onDeleteTap: controls.onDeleteTap,
           onDisarmDelete: controls.onDisarmDelete,
           onShowActions: () => widget.onShowActions(id),
+          fixedTag: widget.fixedTagInfoOf?.call(section),
         );
       },
     );

@@ -23,6 +23,34 @@ Map<String, dynamic> _snapshot(List<Map<String, dynamic>> entries) => {
 };
 
 void main() {
+  test('a tag a character claimed is not looked for in the main prompt', () {
+    final projected = projectFixedTagUsageSnapshot(
+      NaiImageMetadata(
+        prompt: 'masterpiece, best quality, 1girl',
+        fixedTagUsageData: _snapshot([
+          _entry(
+            content: 'masterpiece, best quality',
+            position: 'prefix',
+            promptType: 'positive',
+            order: 0,
+          ),
+          {
+            ..._entry(
+              content: 'red eyes',
+              position: 'prefix',
+              promptType: 'positive',
+              order: 1,
+            ),
+            'claimed': true,
+          },
+        ]),
+      ),
+    );
+
+    expect(projected.fixedPrefixTags, ['masterpiece, best quality']);
+    expect(projected.mainPrompt, '1girl');
+  });
+
   test('positive prefix and suffix are projected out of the main prompt', () {
     final projected = projectFixedTagUsageSnapshot(
       NaiImageMetadata(

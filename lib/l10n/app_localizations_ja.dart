@@ -15798,4 +15798,225 @@ class AppLocalizationsJa extends AppLocalizations {
   String characterWorkspace_count(int count, int included) {
     return '$count 人 · 参加 $included 人';
   }
+
+  @override
+  String get characterLibrary_title => 'キャラクター';
+
+  @override
+  String get characterLibrary_tabEntries => 'エントリ';
+
+  @override
+  String characterLibrary_count(int count) {
+    return '$count 人';
+  }
+
+  @override
+  String get characterLibrary_searchHint => '名前・タグ・固定タグ';
+
+  @override
+  String get characterLibrary_sortRecent => '最近使った順';
+
+  @override
+  String get characterLibrary_sortUsed => '使用回数';
+
+  @override
+  String get characterLibrary_sortName => '名前';
+
+  @override
+  String get characterLibrary_groupFavorites => 'お気に入り';
+
+  @override
+  String get characterLibrary_uncategorized => '未分類';
+
+  @override
+  String characterLibrary_useCount(int count) {
+    return '$count 回';
+  }
+
+  @override
+  String get characterLibrary_unused => '未使用';
+
+  @override
+  String characterLibrary_fixedTagCount(int count) {
+    return '固定 $count';
+  }
+
+  @override
+  String characterLibrary_positiveSections(int count) {
+    return 'ポジティブ · $count 区分';
+  }
+
+  @override
+  String characterLibrary_negativeSections(int count) {
+    return 'ネガティブ · $count 区分';
+  }
+
+  @override
+  String get characterLibrary_claimHint =>
+      'オレンジの点：この固定タグはメインプロンプトでも有効です。追加すると生成時はこのキャラクターだけに入ります。';
+
+  @override
+  String characterLibrary_claimNote(String names) {
+    return '$names はメインプロンプトでも有効です。生成時はこのキャラクターが使い、メインプロンプトには今回入りません。カードをタップすると両方に残せます。';
+  }
+
+  @override
+  String get characterLibrary_claimedLabel => 'メインプロンプトでも有効';
+
+  @override
+  String get characterLibrary_addToPanel => 'キャラクターに追加';
+
+  @override
+  String characterLibrary_selectedCount(int count) {
+    return '$count 件選択';
+  }
+
+  @override
+  String get characterLibrary_addSelected => 'まとめて追加';
+
+  @override
+  String characterLibrary_added(String name) {
+    return '「$name」を追加しました';
+  }
+
+  @override
+  String characterLibrary_addedMany(int count) {
+    return '$count 人を追加しました';
+  }
+
+  @override
+  String characterLibrary_limitReached(int count) {
+    return 'キャラクター欄がいっぱいのため $count 人は追加されませんでした';
+  }
+
+  @override
+  String get characterLibrary_empty => 'キャラクターはまだありません';
+
+  @override
+  String get characterLibrary_emptyHint =>
+      '生成画面のキャラクター欄で「キャラクターに保存」をタップするか、ここで作成してください。';
+
+  @override
+  String get characterLibrary_new => '新しいキャラクター';
+
+  @override
+  String get characterLibrary_newName => '新しいキャラクター';
+
+  @override
+  String get characterLibrary_noMatch => '該当するキャラクターはありません';
+
+  @override
+  String get characterLibrary_editTitle => 'キャラクターを編集';
+
+  @override
+  String get characterLibrary_nameLabel => '名前';
+
+  @override
+  String get characterLibrary_categoryLabel => '分類';
+
+  @override
+  String get characterLibrary_categoryHint => '例：オリジナル、二次創作';
+
+  @override
+  String get characterLibrary_duplicate => '複製';
+
+  @override
+  String characterLibrary_copyName(String name) {
+    return '$name のコピー';
+  }
+
+  @override
+  String characterLibrary_deleteConfirm(String name) {
+    return '「$name」を削除しますか？キャラクター欄に追加済みのものは残ります。';
+  }
+
+  @override
+  String get characterLibrary_importFixedTag => '固定タグを入れる';
+
+  @override
+  String characterLibrary_fixedTagLabel(String name) {
+    return '固定タグ · $name';
+  }
+
+  @override
+  String get characterLibrary_fixedTagMissing => '固定タグは削除済み（保存時の内容を使用）';
+
+  @override
+  String get characterLibrary_keepInMain => '両方に残す';
+
+  @override
+  String get characterLibrary_keepInMainHint => 'メインプロンプトにもこの固定タグを入れる';
+
+  @override
+  String get characterLibrary_detach => '通常の区分にする';
+
+  @override
+  String get characterLibrary_detachHint => '内容はそのまま、固定タグには追従しない';
+
+  @override
+  String get characterLibrary_removeFixedTag => 'このキャラクターから外す';
+
+  @override
+  String get characterLibrary_pickPositiveFixedTag => 'ポジティブ固定タグ';
+
+  @override
+  String get characterLibrary_pickNegativeFixedTag => 'ネガティブ固定タグ';
+
+  @override
+  String get characterLibrary_noFixedTags => 'この種類の固定タグはまだありません';
+
+  @override
+  String get characterLibrary_onInMain => 'メインで有効';
+
+  @override
+  String get characterLibrary_alreadyPlaced => '追加済み';
+
+  @override
+  String get characterLibrary_pickerTitle => 'キャラクターから追加';
+
+  @override
+  String get characterLibrary_manage => 'キャラクターを管理';
+
+  @override
+  String get characterLibrary_saveToLibrary => 'キャラクターに保存';
+
+  @override
+  String characterLibrary_saved(String name) {
+    return '「$name」をキャラクターに保存しました';
+  }
+
+  @override
+  String characterLibrary_savedAsNew(String name) {
+    return '新しいキャラクター「$name」として保存しました';
+  }
+
+  @override
+  String characterLibrary_updated(String name) {
+    return 'キャラクターの「$name」を更新しました';
+  }
+
+  @override
+  String get characterLibrary_upToDate => 'キャラクターと同じ内容です';
+
+  @override
+  String characterLibrary_updateEntry(String name) {
+    return 'キャラクターの「$name」を更新';
+  }
+
+  @override
+  String get characterLibrary_updateEntryHint => '今の区分・固定タグ・ネガティブで上書きします';
+
+  @override
+  String get characterLibrary_saveAsNew => '新しいキャラクターとして保存';
+
+  @override
+  String characterLibrary_saveAsNewHint(String name) {
+    return 'キャラクターの「$name」はそのまま';
+  }
+
+  @override
+  String get characterLibrary_fromLibrary => 'キャラクターから追加';
+
+  @override
+  String get characterLibrary_unsaved => 'キャラクターに未保存の変更あり';
 }

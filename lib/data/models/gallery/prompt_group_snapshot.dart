@@ -6,6 +6,8 @@ class PromptGroupSectionSnapshot {
     required this.text,
     this.enabled = true,
     this.collapsed = false,
+    this.fixedTagId,
+    this.keepInMain = false,
   });
 
   final String id;
@@ -13,11 +15,21 @@ class PromptGroupSectionSnapshot {
   final bool enabled;
   final bool collapsed;
 
+  /// Set when the section shows a fixed tag; [text] is then the tag's
+  /// content as last resolved, kept for when the tag is gone.
+  final String? fixedTagId;
+
+  /// For a fixed-tag section of a character: the main prompt keeps the tag
+  /// too, instead of leaving it to the character.
+  final bool keepInMain;
+
   Map<String, Object?> toJson() => {
     'id': id,
     'text': text,
     'enabled': enabled,
     'collapsed': collapsed,
+    if (fixedTagId != null) 'fixedTagId': fixedTagId,
+    if (keepInMain) 'keepInMain': true,
   };
 
   static PromptGroupSectionSnapshot? fromJson(Object? raw) {
@@ -30,6 +42,11 @@ class PromptGroupSectionSnapshot {
       text: text,
       enabled: raw['enabled'] is bool ? raw['enabled'] as bool : true,
       collapsed: raw['collapsed'] is bool ? raw['collapsed'] as bool : false,
+      fixedTagId: switch (raw['fixedTagId']) {
+        final String id when id.isNotEmpty => id,
+        _ => null,
+      },
+      keepInMain: raw['keepInMain'] == true,
     );
   }
 }

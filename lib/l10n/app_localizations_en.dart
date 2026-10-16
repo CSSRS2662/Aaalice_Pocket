@@ -16231,4 +16231,229 @@ class AppLocalizationsEn extends AppLocalizations {
   String characterWorkspace_count(int count, int included) {
     return '$count characters · $included included';
   }
+
+  @override
+  String get characterLibrary_title => 'Characters';
+
+  @override
+  String get characterLibrary_tabEntries => 'Entries';
+
+  @override
+  String characterLibrary_count(int count) {
+    return '$count characters';
+  }
+
+  @override
+  String get characterLibrary_searchHint => 'Name, tags or fixed tags';
+
+  @override
+  String get characterLibrary_sortRecent => 'Recently used';
+
+  @override
+  String get characterLibrary_sortUsed => 'Most used';
+
+  @override
+  String get characterLibrary_sortName => 'Name';
+
+  @override
+  String get characterLibrary_groupFavorites => 'Favorites';
+
+  @override
+  String get characterLibrary_uncategorized => 'Uncategorized';
+
+  @override
+  String characterLibrary_useCount(int count) {
+    return '$count×';
+  }
+
+  @override
+  String get characterLibrary_unused => 'Unused';
+
+  @override
+  String characterLibrary_fixedTagCount(int count) {
+    return '$count fixed';
+  }
+
+  @override
+  String characterLibrary_positiveSections(int count) {
+    return 'Positive · $count sections';
+  }
+
+  @override
+  String characterLibrary_negativeSections(int count) {
+    return 'Negative · $count sections';
+  }
+
+  @override
+  String get characterLibrary_claimHint =>
+      'Orange dot: this fixed tag is also on in the main prompt. Once added, it goes to this character only.';
+
+  @override
+  String characterLibrary_claimNote(String names) {
+    return '$names are also on in the main prompt. This character takes them for the generation, so the main prompt leaves them out this time; tap a card to keep them in both.';
+  }
+
+  @override
+  String get characterLibrary_claimedLabel => 'Also on in the main prompt';
+
+  @override
+  String get characterLibrary_addToPanel => 'Add to characters';
+
+  @override
+  String characterLibrary_selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get characterLibrary_addSelected => 'Add them all';
+
+  @override
+  String characterLibrary_added(String name) {
+    return 'Added $name';
+  }
+
+  @override
+  String characterLibrary_addedMany(int count) {
+    return 'Added $count characters';
+  }
+
+  @override
+  String characterLibrary_limitReached(int count) {
+    return 'The character bar is full; $count were not added';
+  }
+
+  @override
+  String get characterLibrary_empty => 'No characters yet';
+
+  @override
+  String get characterLibrary_emptyHint =>
+      'Tap “Save to characters” on a character in the generation page, or create one here.';
+
+  @override
+  String get characterLibrary_new => 'New character';
+
+  @override
+  String get characterLibrary_newName => 'New character';
+
+  @override
+  String get characterLibrary_noMatch => 'No characters match';
+
+  @override
+  String get characterLibrary_editTitle => 'Edit character';
+
+  @override
+  String get characterLibrary_nameLabel => 'Name';
+
+  @override
+  String get characterLibrary_categoryLabel => 'Category';
+
+  @override
+  String get characterLibrary_categoryHint => 'For example: Original, Fan art';
+
+  @override
+  String get characterLibrary_duplicate => 'Duplicate';
+
+  @override
+  String characterLibrary_copyName(String name) {
+    return '$name copy';
+  }
+
+  @override
+  String characterLibrary_deleteConfirm(String name) {
+    return 'Delete $name? Characters already added to the character bar stay.';
+  }
+
+  @override
+  String get characterLibrary_importFixedTag => 'Bring in a fixed tag';
+
+  @override
+  String characterLibrary_fixedTagLabel(String name) {
+    return 'Fixed tag · $name';
+  }
+
+  @override
+  String get characterLibrary_fixedTagMissing =>
+      'Fixed tag deleted; kept its last content';
+
+  @override
+  String get characterLibrary_keepInMain => 'Keep in both';
+
+  @override
+  String get characterLibrary_keepInMainHint =>
+      'The main prompt keeps this fixed tag too';
+
+  @override
+  String get characterLibrary_detach => 'Turn into a plain section';
+
+  @override
+  String get characterLibrary_detachHint =>
+      'Keeps the content, no longer follows the fixed tag';
+
+  @override
+  String get characterLibrary_removeFixedTag => 'Take out of this character';
+
+  @override
+  String get characterLibrary_pickPositiveFixedTag => 'Positive fixed tags';
+
+  @override
+  String get characterLibrary_pickNegativeFixedTag => 'Negative fixed tags';
+
+  @override
+  String get characterLibrary_noFixedTags => 'No fixed tags of this kind yet';
+
+  @override
+  String get characterLibrary_onInMain => 'On in the main prompt';
+
+  @override
+  String get characterLibrary_alreadyPlaced => 'Already in';
+
+  @override
+  String get characterLibrary_pickerTitle => 'Add from characters';
+
+  @override
+  String get characterLibrary_manage => 'Manage characters';
+
+  @override
+  String get characterLibrary_saveToLibrary => 'Save to characters';
+
+  @override
+  String characterLibrary_saved(String name) {
+    return 'Saved $name to characters';
+  }
+
+  @override
+  String characterLibrary_savedAsNew(String name) {
+    return 'Saved as new character $name';
+  }
+
+  @override
+  String characterLibrary_updated(String name) {
+    return 'Updated $name in characters';
+  }
+
+  @override
+  String get characterLibrary_upToDate => 'Same as in characters';
+
+  @override
+  String characterLibrary_updateEntry(String name) {
+    return 'Update $name in characters';
+  }
+
+  @override
+  String get characterLibrary_updateEntryHint =>
+      'Its sections, fixed tags and negative prompt are replaced by these';
+
+  @override
+  String get characterLibrary_saveAsNew => 'Save as new character';
+
+  @override
+  String characterLibrary_saveAsNewHint(String name) {
+    return '$name in characters stays as it is';
+  }
+
+  @override
+  String get characterLibrary_fromLibrary => 'From characters';
+
+  @override
+  String get characterLibrary_unsaved => 'Changed since saved to characters';
 }

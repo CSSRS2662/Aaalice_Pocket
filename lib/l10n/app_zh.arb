@@ -7645,5 +7645,192 @@
         "type": "int"
       }
     }
-  }
+  },
+  "characterLibrary_title": "角色库",
+  "characterLibrary_tabEntries": "词条",
+  "characterLibrary_count": "{count} 个角色",
+  "@characterLibrary_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "characterLibrary_searchHint": "名字、标签或固定词",
+  "characterLibrary_sortRecent": "最近使用",
+  "characterLibrary_sortUsed": "使用次数",
+  "characterLibrary_sortName": "名称",
+  "characterLibrary_groupFavorites": "收藏",
+  "characterLibrary_uncategorized": "未分类",
+  "characterLibrary_useCount": "{count} 次",
+  "@characterLibrary_useCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "characterLibrary_unused": "未用",
+  "characterLibrary_fixedTagCount": "固定词 {count}",
+  "@characterLibrary_fixedTagCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "characterLibrary_positiveSections": "正面 · {count} 分区",
+  "@characterLibrary_positiveSections": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "characterLibrary_negativeSections": "负面 · {count} 分区",
+  "@characterLibrary_negativeSections": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "characterLibrary_claimHint": "橙点：这个固定词在主提示词也启用。加入后生成时只放进这个角色。",
+  "characterLibrary_claimNote": "{names} 在主提示词也启用了。生成时让给这个角色，主提示词这一次不带；点卡片可改为两边都保留。",
+  "@characterLibrary_claimNote": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "characterLibrary_claimedLabel": "主提示词也启用",
+  "characterLibrary_addToPanel": "加入当前角色",
+  "characterLibrary_selectedCount": "已选 {count} 个",
+  "@characterLibrary_selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "characterLibrary_addSelected": "一起加入角色栏",
+  "characterLibrary_added": "已加入「{name}」",
+  "@characterLibrary_added": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterLibrary_addedMany": "已加入 {count} 个角色",
+  "@characterLibrary_addedMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "characterLibrary_limitReached": "角色栏已满，{count} 个没有加入",
+  "@characterLibrary_limitReached": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "characterLibrary_empty": "还没有角色",
+  "characterLibrary_emptyHint": "在生图页的角色栏里点「存入角色库」，或在这里新建。",
+  "characterLibrary_new": "新建角色",
+  "characterLibrary_newName": "新角色",
+  "characterLibrary_noMatch": "没有符合条件的角色",
+  "characterLibrary_editTitle": "编辑角色",
+  "characterLibrary_nameLabel": "角色名",
+  "characterLibrary_categoryLabel": "分类",
+  "characterLibrary_categoryHint": "例如 原创、同人",
+  "characterLibrary_duplicate": "复制",
+  "characterLibrary_copyName": "{name} 副本",
+  "@characterLibrary_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterLibrary_deleteConfirm": "删除「{name}」？已加入角色栏的不受影响。",
+  "@characterLibrary_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterLibrary_importFixedTag": "引入固定词",
+  "characterLibrary_fixedTagLabel": "固定词 · {name}",
+  "@characterLibrary_fixedTagLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterLibrary_fixedTagMissing": "固定词已删除，使用保存时的内容",
+  "characterLibrary_keepInMain": "两边都保留",
+  "characterLibrary_keepInMainHint": "主提示词也带上这个固定词",
+  "characterLibrary_detach": "转为普通分区",
+  "characterLibrary_detachHint": "保留现在的内容，不再跟随固定词",
+  "characterLibrary_removeFixedTag": "移出这个角色",
+  "characterLibrary_pickPositiveFixedTag": "正面固定词",
+  "characterLibrary_pickNegativeFixedTag": "负面固定词",
+  "characterLibrary_noFixedTags": "还没有这一类固定词",
+  "characterLibrary_onInMain": "主提示词启用中",
+  "characterLibrary_alreadyPlaced": "已引入",
+  "characterLibrary_pickerTitle": "从角色库添加",
+  "characterLibrary_manage": "管理角色库",
+  "characterLibrary_saveToLibrary": "存入角色库",
+  "characterLibrary_saved": "已把「{name}」存入角色库",
+  "@characterLibrary_saved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterLibrary_savedAsNew": "已另存为新角色「{name}」",
+  "@characterLibrary_savedAsNew": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterLibrary_updated": "角色库中的「{name}」已更新",
+  "@characterLibrary_updated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterLibrary_upToDate": "和角色库里的版本一致",
+  "characterLibrary_updateEntry": "更新角色库中的「{name}」",
+  "@characterLibrary_updateEntry": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterLibrary_updateEntryHint": "用现在的分区、固定词和负面覆盖角色库里的版本",
+  "characterLibrary_saveAsNew": "另存为新角色",
+  "characterLibrary_saveAsNewHint": "角色库里原来的「{name}」不变",
+  "@characterLibrary_saveAsNewHint": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterLibrary_fromLibrary": "来自角色库",
+  "characterLibrary_unsaved": "有改动未存入角色库"
 }

@@ -45,6 +45,20 @@ abstract final class CharacterSectionStore {
     };
   }
 
+  /// 分区文字合成提示词：去掉各段首尾的分隔符后用 ", " 连接，跳过空段。
+  /// 与分区编辑器的合成规则一致。
+  static String join(Iterable<String> values) {
+    final parts = <String>[];
+    for (final value in values) {
+      final normalized = value
+          .trim()
+          .replaceFirst(RegExp(r'^[,，\s]+'), '')
+          .replaceFirst(RegExp(r'[,，\s]+$'), '');
+      if (normalized.isNotEmpty) parts.add(normalized);
+    }
+    return parts.join(', ');
+  }
+
   /// 放回 [entries]，其他角色的分区保持不变。
   static void restore(
     LocalStorageService storage,
