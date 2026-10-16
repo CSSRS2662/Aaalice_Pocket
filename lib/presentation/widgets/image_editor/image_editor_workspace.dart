@@ -1510,6 +1510,7 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
 
     ui.Codec? codec;
     ui.Image? sourceImage;
+    ui.Picture? picture;
     ui.Image? targetImage;
     try {
       codec = await ui.instantiateImageCodec(imageBytes);
@@ -1550,10 +1551,8 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
         Rect.fromLTWH(0, 0, targetWidth.toDouble(), targetHeight.toDouble()),
         Paint()..filterQuality = FilterQuality.high,
       );
-      targetImage = await recorder.endRecording().toImage(
-        targetWidth,
-        targetHeight,
-      );
+      picture = recorder.endRecording();
+      targetImage = await picture.toImage(targetWidth, targetHeight);
       final byteData = await targetImage.toByteData(
         format: ui.ImageByteFormat.png,
       );
@@ -1563,6 +1562,7 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
       return byteData.buffer.asUint8List();
     } finally {
       targetImage?.dispose();
+      picture?.dispose();
       sourceImage?.dispose();
       codec?.dispose();
     }
