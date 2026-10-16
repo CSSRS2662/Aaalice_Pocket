@@ -87,7 +87,6 @@ class _LibrarySearchField extends StatelessWidget {
       focusNode: focusNode,
       onChanged: onChanged,
       hintText: searchLabel,
-      semanticLabel: searchLabel,
       decoration: const InputDecoration(
         prefixIcon: Icon(Icons.search_rounded, size: 20),
       ),
