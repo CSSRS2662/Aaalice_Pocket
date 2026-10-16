@@ -325,6 +325,10 @@ class _Toolbar extends StatelessWidget {
         ),
       ),
       titleActions: [
+        const MasonryColumnsAction(
+          surface: GridColumnsSurface.vibeLibrary,
+          iconOnly: true,
+        ),
         IconButton(
           key: const Key('vibe-library-select-action'),
           tooltip: l10n.vibeLibrary_enterSelectionMode,
@@ -384,10 +388,6 @@ class _Toolbar extends StatelessWidget {
                 ),
             ],
             onSelected: (order) => onCommand(ChangeSortCommand(order)),
-          ),
-          const MasonryColumnsAction(
-            surface: GridColumnsSurface.vibeLibrary,
-            chip: true,
           ),
         ],
       ),

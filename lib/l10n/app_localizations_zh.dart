@@ -8469,7 +8469,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get drop_addedToCharacterRef => '已添加到精准参考';
 
   @override
-  String get drop_extractMetadata => '发送到文生图';
+  String get drop_extractMetadata => '复用参数';
 
   @override
   String get drop_extractMetadataSubtitle => '选择要套用的提示词、固定词和生成参数';
@@ -24203,7 +24203,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get drop_addedToCharacterRef => '已新增到精準參考';
 
   @override
-  String get drop_extractMetadata => '傳送到文生圖';
+  String get drop_extractMetadata => '複用參數';
 
   @override
   String get drop_extractMetadataSubtitle => '選擇要套用的提示詞、固定詞和生成引數';

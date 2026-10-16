@@ -207,6 +207,16 @@ class GenerationResultLifecycleService {
     var systemGalleryExportFailureCount = 0;
     for (final image in images) {
       try {
+        // 批量生成途中先收藏过的图已经写过文件：沿用它，不再存第二份。
+        final existingPath = image.filePath;
+        if (existingPath != null && await File(existingPath).exists()) {
+          paths.add(existingPath);
+          updated.add(image);
+          if (!await _publishToSystemGallery(existingPath)) {
+            systemGalleryExportFailureCount++;
+          }
+          continue;
+        }
         final hasMetadata = ImageSaveUtils.hasEmbeddedNovelAiMetadata(
           image.bytes,
         );
@@ -240,14 +250,8 @@ class GenerationResultLifecycleService {
         final path = saved.path;
         paths.add(path);
         updated.add(image.copyWithFilePath(path));
-        final publishToSystemGallery = dependencies.publishToSystemGallery;
-        if (publishToSystemGallery != null) {
-          try {
-            await publishToSystemGallery(path, p.basename(path));
-          } catch (error, stackTrace) {
-            systemGalleryExportFailureCount++;
-            AppLogger.e('自动保存到系统相册失败', error, stackTrace);
-          }
+        if (!await _publishToSystemGallery(path)) {
+          systemGalleryExportFailureCount++;
         }
       } catch (error, stackTrace) {
         AppLogger.e('自动保存图像失败', error, stackTrace);
@@ -279,6 +283,19 @@ class GenerationResultLifecycleService {
       paths,
       systemGalleryExportFailureCount: systemGalleryExportFailureCount,
     );
+  }
+
+  /// 没有系统相册或发布成功时返回 true；失败只记日志，不影响应用图库里的文件。
+  Future<bool> _publishToSystemGallery(String path) async {
+    final publish = dependencies.publishToSystemGallery;
+    if (publish == null) return true;
+    try {
+      await publish(path, p.basename(path));
+      return true;
+    } catch (error, stackTrace) {
+      AppLogger.e('自动保存到系统相册失败', error, stackTrace);
+      return false;
+    }
   }
 
   /// 单个文件失败不阻断其余文件；只把真正删掉的路径移出图库索引。

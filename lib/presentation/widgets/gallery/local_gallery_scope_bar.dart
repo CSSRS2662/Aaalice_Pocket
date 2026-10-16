@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/utils/localization_extension.dart';
-import '../../providers/grid_columns_provider.dart';
 import '../../providers/local_gallery_provider.dart';
 import 'gallery_scope_controls.dart';
-import 'masonry_columns_action.dart';
 
 /// 本地图库的快捷范围栏：全部 / 收藏一键切换，日期与分类以可清除的条件
 /// 显示当前取值。只负责呈现与转发，真实的过滤逻辑由调用方提供。
@@ -83,10 +81,6 @@ class LocalGalleryScopeBar extends ConsumerWidget {
           onPressed: onOpenCollections,
           onClear: collection != null ? onClearCollection : null,
           clearTooltip: l10n.common_clear,
-        ),
-        const MasonryColumnsAction(
-          surface: GridColumnsSurface.localGallery,
-          chip: true,
         ),
       ],
     );

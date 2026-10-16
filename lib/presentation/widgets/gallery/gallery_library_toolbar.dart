@@ -101,9 +101,17 @@ class GalleryLibraryToolbar extends StatelessWidget {
       children: [
         Row(
           children: [
-            Flexible(child: title),
-            if (count != null) ...[const SizedBox(width: 8), count!],
-            if (titleActions.isNotEmpty) ...[const Spacer(), ...titleActions],
+            // 标题与计数占满图标按钮以外的宽度；Flexible 与 Spacer 平分会把
+            // 窄屏大字号下的标题挤到放不下图标。
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(child: title),
+                  if (count != null) ...[const SizedBox(width: 8), count!],
+                ],
+              ),
+            ),
+            ...titleActions,
           ],
         ),
         const SizedBox(height: 8),

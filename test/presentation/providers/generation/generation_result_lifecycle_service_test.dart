@@ -122,6 +122,66 @@ void main() {
     expect(result.images.single.filePath, result.savedPaths.single);
   });
 
+  test('批量途中已收藏存过的图沿用原文件，不再存第二份', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'nai_generation_already_saved_',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+
+    final bytes = Uint8List.fromList(
+      image_lib.encodePng(image_lib.Image(width: 2, height: 2)),
+    );
+    final favoritePath = p.join(directory.path, 'favorite.png');
+    await File(favoritePath).writeAsBytes(bytes);
+    final published = <String>[];
+    var statisticsCount = 0;
+    final service = GenerationResultLifecycleService(
+      GenerationResultLifecycleDependencies(
+        historyStorage: GenerationHistoryStorageService(enabled: false),
+        resolveGalleryRootPath: () async => directory.path,
+        addGalleryImages: (_) async => GalleryIndexAdmission.alreadyIndexed,
+        refreshGallery: () async {},
+        removeGalleryImages: _unexpectedGalleryRemoval,
+        deleteGalleryFile: _unexpectedFileDeletion,
+        incrementStatistics: (count) async => statisticsCount += count,
+        publishToSystemGallery: (sourcePath, _) async {
+          published.add(sourcePath);
+        },
+      ),
+    );
+
+    final result = await service.saveImages(
+      [
+        GeneratedImage.create(
+          bytes,
+          width: 2,
+          height: 2,
+          preserveOriginalBytesOnSave: true,
+        ).copyWithFilePath(favoritePath),
+        GeneratedImage.create(
+          bytes,
+          width: 2,
+          height: 2,
+          preserveOriginalBytesOnSave: true,
+        ),
+      ],
+      const ImageParams(seed: 789),
+      snapshot: const GenerationSaveSnapshot(),
+    );
+
+    expect(result.savedPaths, hasLength(2));
+    expect(result.savedPaths.first, favoritePath);
+    expect(result.images.first.filePath, favoritePath);
+    expect(result.savedPaths.last, isNot(favoritePath));
+    expect(published, result.savedPaths);
+    expect(statisticsCount, 2);
+    final files = directory
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((file) => file.path.endsWith('.png'));
+    expect(files, hasLength(2));
+  });
+
   group('固定词使用记录', () {
     late Directory hiveDirectory;
 

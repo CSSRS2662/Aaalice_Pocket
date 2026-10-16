@@ -6,8 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/app_logger.dart';
 import '../../core/utils/localization_extension.dart';
+import '../utils/dropped_file_reader.dart';
 import '../widgets/common/app_toast.dart';
-import 'image_metadata_import_workflow.dart';
+import '../widgets/drop/global_drop_action_coordinator.dart';
 
 class PickedImageData {
   const PickedImageData({required this.fileName, required this.bytes});
@@ -24,19 +25,15 @@ typedef PickedImageProcessor =
       PickedImageData image,
     );
 
-/// Reads the parameters of a system-picked image.
-///
-/// Uses the same flow as "reuse parameters" in favorites and history: choose
-/// the parameters to apply, apply them, then return to generation.
+/// Opens a system-picked image in the same dialog as dropped and shared
+/// images: its prompts and parameters are shown first, and reusing the
+/// parameters is one of the actions offered there.
 class MobileImageMetadataImporter {
   MobileImageMetadataImporter({
     ImageBytesPicker? imageBytesPicker,
     PickedImageProcessor? imageProcessor,
-    ImageMetadataImportWorkflow? workflow,
   }) : _imageBytesPicker = imageBytesPicker ?? _pickImageBytes,
-       _imageProcessor =
-           imageProcessor ??
-           _workflowProcessor(workflow ?? ImageMetadataImportWorkflow.shared);
+       _imageProcessor = imageProcessor ?? _processImage;
 
   static final MobileImageMetadataImporter shared =
       MobileImageMetadataImporter();
@@ -103,10 +100,18 @@ class MobileImageMetadataImporter {
     return PickedImageData(fileName: file.name, bytes: bytes);
   }
 
-  static PickedImageProcessor _workflowProcessor(
-    ImageMetadataImportWorkflow workflow,
+  static Future<void> _processImage(
+    BuildContext context,
+    WidgetRef ref,
+    PickedImageData image,
   ) {
-    return (context, ref, image) =>
-        workflow.run(context: context, read: ref.read, bytes: image.bytes);
+    return GlobalDropActionCoordinator(
+      context: context,
+      ref: ref,
+      openGenerationAfterAction: true,
+      respectCurrentRouteDropTarget: false,
+    ).processDroppedFile(
+      DroppedFileData(fileName: image.fileName, bytes: image.bytes),
+    );
   }
 }

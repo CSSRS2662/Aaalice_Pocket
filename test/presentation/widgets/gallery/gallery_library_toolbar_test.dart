@@ -63,6 +63,42 @@ void main() {
     });
   }
 
+  for (final textScale in [1.0, 3.0]) {
+    testWidgets('title icons fit beside the title at 320px, ${textScale}x', (
+      tester,
+    ) async {
+      await _pumpToolbar(
+        tester,
+        width: 320,
+        textScale: textScale,
+        titleActions: [
+          for (final icon in [Icons.grid_view, Icons.checklist, Icons.menu])
+            IconButton(
+              key: ValueKey('title-action-${icon.codePoint}'),
+              onPressed: () {},
+              icon: Icon(icon),
+            ),
+        ],
+      );
+
+      expect(tester.takeException(), isNull);
+      final last = tester.getRect(
+        find.byKey(ValueKey('title-action-${Icons.menu.codePoint}')),
+      );
+      expect(last.right, lessThanOrEqualTo(320));
+      final title = tester.getRect(find.byType(GalleryCollectionPageTitle));
+      expect(title.width, greaterThan(28));
+      if (textScale > 1) {
+        // A long title keeps every pixel the buttons leave, not half of it.
+        final count = tester.getRect(find.byType(GalleryLibraryCountBadge));
+        final first = tester.getRect(
+          find.byKey(ValueKey('title-action-${Icons.grid_view.codePoint}')),
+        );
+        expect(first.left - title.right, lessThanOrEqualTo(count.width + 9));
+      }
+    });
+  }
+
   testWidgets('touch controls preserve 44px hit targets', (tester) async {
     PlatformCapabilities.debugOverride = PlatformCapabilities.forPlatform(
       TargetPlatform.android,
@@ -85,6 +121,7 @@ Future<void> _pumpToolbar(
   required double width,
   double textScale = 1,
   bool touch = false,
+  List<Widget> titleActions = const [],
 }) async {
   await tester.binding.setSurfaceSize(Size(width, 900));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -128,6 +165,7 @@ Future<void> _pumpToolbar(
                   icon: Icons.add,
                   label: '添加',
                 ),
+                titleActions: titleActions,
               ),
             ),
           ),

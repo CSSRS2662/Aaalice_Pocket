@@ -42,6 +42,7 @@ import '../../data/services/auth_provider.dart';
 import 'dlss_provider.dart';
 import 'character_prompt_provider.dart';
 import 'fixed_tags_provider.dart';
+import 'generation/generated_image_save_queue.dart';
 import 'generation/generation_command.dart';
 import 'generation/generation_cooldown_provider.dart';
 import 'generation/generation_models.dart';
@@ -93,6 +94,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
 
   // 清空历史或超出上限只移出记录、保留文件；只有用户删过的结果，晚到的保存要连文件一起清掉。
   final Set<String> _deletedImageIds = <String>{};
+  final GeneratedImageSaveQueue _saveQueue = GeneratedImageSaveQueue();
   final StreamPreviewSnapshotStore _streamPreviews =
       StreamPreviewSnapshotStore();
   final Set<String> _failedSnapshotKeys = {};
@@ -1067,16 +1069,49 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     return null;
   }
 
+  /// Runs [save] once no other save of [imageId] is still writing its file.
+  Future<T> queueImageSave<T>(String imageId, Future<T> Function() save) =>
+      _saveQueue.run([imageId], save);
+
+  GeneratedImage? findImageById(String imageId) => state.findImageById(imageId);
+
   Future<GenerationSaveResult> _saveImages(
     List<GeneratedImage> images,
     ImageParams params, {
     required int epoch,
     String? directoryPath,
     bool syncToGalleryIndex = true,
+  }) => _saveQueue.run(
+    [for (final image in images) image.id],
+    () => _writeImages(
+      images,
+      params,
+      epoch: epoch,
+      directoryPath: directoryPath,
+      syncToGalleryIndex: syncToGalleryIndex,
+    ),
+  );
+
+  Future<GenerationSaveResult> _writeImages(
+    List<GeneratedImage> queuedImages,
+    ImageParams params, {
+    required int epoch,
+    String? directoryPath,
+    required bool syncToGalleryIndex,
   }) async {
     if (!_isCurrentLifecycle(epoch)) {
-      return GenerationSaveResult(images, const []);
+      return GenerationSaveResult(queuedImages, const []);
     }
+    // 排队期间收藏可能已先存过其中几张，带上那时记下的文件。
+    final images = [
+      for (final image in queuedImages)
+        switch (state.findImageById(image.id)?.filePath) {
+          final path? when image.filePath == null => image.copyWithFilePath(
+            path,
+          ),
+          _ => image,
+        },
+    ];
     final fixedTagUsageSnapshot =
         (images.isEmpty ? null : images.first.fixedTagUsageSnapshot) ??
         FixedTagUsageSnapshot.capture(

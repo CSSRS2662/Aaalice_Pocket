@@ -4088,7 +4088,7 @@
     }
   },
   "drop_addedToCharacterRef": "Added to Precise Reference",
-  "drop_extractMetadata": "Send to Text to Image",
+  "drop_extractMetadata": "Reuse Parameters",
   "drop_extractMetadataSubtitle": "Choose prompts, fixed tags, and generation parameters to apply",
   "drop_addToQueue": "Add to Queue",
   "drop_addToQueueSubtitle": "Extract prompt and add to generation queue",

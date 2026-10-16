@@ -4036,7 +4036,7 @@
     }
   },
   "drop_addedToCharacterRef": "精密参照に追加しました",
-  "drop_extractMetadata": "テキストから画像へ送信",
+  "drop_extractMetadata": "パラメータを再利用",
   "drop_extractMetadataSubtitle": "適用するプロンプト、固定タグ、生成パラメータを選択します",
   "drop_addToQueue": "キューに追加",
   "drop_addToQueueSubtitle": "プロンプトを抽出して生成キューに追加します",

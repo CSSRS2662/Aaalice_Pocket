@@ -287,7 +287,7 @@ void main() {
 
     expect(find.text('Metadata could not be parsed'), findsOneWidget);
     expect(find.text('View error details'), findsOneWidget);
-    expect(find.text('Send to Text to Image'), findsNothing);
+    expect(find.text('Reuse Parameters'), findsNothing);
     expect(find.text('Image2Image'), findsOneWidget);
   });
 
@@ -443,10 +443,10 @@ void main() {
           findsOne,
         );
         expect(find.text('Actions'), findsOneWidget);
-        expect(find.text('Send to Text to Image'), findsOneWidget);
+        expect(find.text('Reuse Parameters'), findsOneWidget);
         expect(find.text('Reverse Prompt'), findsOneWidget);
         expect(
-          tester.getTopLeft(find.text('Send to Text to Image')).dy,
+          tester.getTopLeft(find.text('Reuse Parameters')).dy,
           lessThan(tester.getTopLeft(find.text('Reverse Prompt')).dy),
         );
         expect(tester.takeException(), isNull, reason: 'width=$width');
@@ -507,7 +507,7 @@ void main() {
       onResult: (result) => selected = result,
     );
 
-    final extract = find.text('Send to Text to Image');
+    final extract = find.text('Reuse Parameters');
     await tester.ensureVisible(extract);
     await tester.tap(extract);
     await tester.pumpAndSettle();

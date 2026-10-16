@@ -103,46 +103,58 @@ class GalleryCollectionPageTitle extends StatelessWidget {
     final theme = Theme.of(context);
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxWidth),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      child: LayoutBuilder(
+        builder: (context, constraints) => _buildRow(
+          theme,
+          // 窄屏大字号下标题行只剩几十像素时，图标让给文字，不撑破这一行。
+          showIcon: constraints.maxWidth >= 56,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRow(ThemeData theme, {required bool showIcon}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showIcon) ...[
           Icon(icon, size: 20, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          Flexible(
-            child: subtitle == null
-                ? Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  )
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        subtitle!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
         ],
-      ),
+        Flexible(
+          child: subtitle == null
+              ? Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ],
     );
   }
 }

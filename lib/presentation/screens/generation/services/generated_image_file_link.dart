@@ -21,14 +21,25 @@ class GeneratedImageFileLink {
     WidgetRef ref,
     GeneratedImage image,
     AppLocalizations l10n,
-  ) async {
+  ) {
     // 保存期间卡片可能被卸载，句柄必须在第一个 await 之前取好。
     final generation = ref.read(imageGenerationNotifierProvider.notifier);
     final gallery = ref.read(localGalleryNotifierProvider.notifier);
+    // 自动保存还在写这张图时先等它写完，再沿用它的文件。
+    return generation.queueImageSave(
+      image.id,
+      () => _linkOrSave(generation, gallery, image, l10n),
+    );
+  }
+
+  static Future<LinkedGeneratedImageFile> _linkOrSave(
+    ImageGenerationNotifier generation,
+    LocalGalleryNotifier gallery,
+    GeneratedImage image,
+    AppLocalizations l10n,
+  ) async {
     // 卡片持有的是构建时的快照，自动保存可能已在之后写入路径。
-    final current =
-        ref.read(imageGenerationNotifierProvider).findImageById(image.id) ??
-        image;
+    final current = generation.findImageById(image.id) ?? image;
     final existingPath = current.filePath;
     if (existingPath != null &&
         existingPath.isNotEmpty &&
@@ -41,14 +52,20 @@ class GeneratedImageFileLink {
       throw StateError(l10n.localGallery_saveDirectoryNotSet);
     }
 
-    final filePath = await ImageSaveUtils.saveBytesToDatedPath(
+    // 这份文件之后就是这张图唯一的副本，与自动保存一样记下固定词使用记录。
+    final saved = await ImageSaveUtils.saveResultImage(
       rootPath: rootPath,
-      bytes: current.bytes,
+      imageBytes: current.bytes,
+      preserveOriginalBytes: current.preserveOriginalBytesOnSave,
+      fixedTagUsageSnapshot: current.fixedTagUsageSnapshot,
+      // 这里拿不到生成参数，缺元数据的字节只能原样保存。
+      rebuild: () async => current.bytes,
       seed: await ImageSaveUtils.resolveSeed(
         metadata: current.metadata,
         bytes: current.bytes,
       ),
     );
+    final filePath = saved.path;
     generation.updateImageFilePath(current.id, filePath);
     await gallery.addNewlySavedImages([filePath]);
     return (path: filePath, newlySavedRoot: rootPath);

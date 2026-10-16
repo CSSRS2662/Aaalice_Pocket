@@ -8600,7 +8600,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get drop_addedToCharacterRef => '精密参照に追加しました';
 
   @override
-  String get drop_extractMetadata => 'テキストから画像へ送信';
+  String get drop_extractMetadata => 'パラメータを再利用';
 
   @override
   String get drop_extractMetadataSubtitle => '適用するプロンプト、固定タグ、生成パラメータを選択します';

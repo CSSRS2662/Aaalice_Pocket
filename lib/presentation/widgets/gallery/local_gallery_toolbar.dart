@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/utils/localization_extension.dart';
+import '../../providers/grid_columns_provider.dart';
 import '../../providers/local_gallery_provider.dart';
 import '../../providers/selection_mode_provider.dart';
 import '../../themes/core/layered_surface_style.dart';
@@ -16,6 +17,7 @@ import '../gallery_filter_panel.dart';
 import 'gallery_sidebar.dart';
 import 'gallery_library_toolbar.dart';
 import 'local_gallery_scope_bar.dart';
+import 'masonry_columns_action.dart';
 
 import '../autocomplete/autocomplete_config.dart';
 import '../autocomplete/autocomplete_wrapper.dart';
@@ -263,6 +265,10 @@ class _LocalGalleryToolbarState extends ConsumerState<LocalGalleryToolbar> {
         onPressed: () => showGalleryFilterPanel(context),
       ),
       titleActions: [
+        const MasonryColumnsAction(
+          surface: GridColumnsSurface.localGallery,
+          iconOnly: true,
+        ),
         IconButton(
           key: const ValueKey('local-gallery-select-action'),
           tooltip: l10n.localGallery_enterSelectionMode,

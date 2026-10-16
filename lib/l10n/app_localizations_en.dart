@@ -8811,7 +8811,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drop_addedToCharacterRef => 'Added to Precise Reference';
 
   @override
-  String get drop_extractMetadata => 'Send to Text to Image';
+  String get drop_extractMetadata => 'Reuse Parameters';
 
   @override
   String get drop_extractMetadataSubtitle =>

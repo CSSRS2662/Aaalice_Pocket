@@ -2080,7 +2080,7 @@
     }
   },
   "drop_addedToCharacterRef": "已新增到精準參考",
-  "drop_extractMetadata": "傳送到文生圖",
+  "drop_extractMetadata": "複用參數",
   "drop_extractMetadataSubtitle": "選擇要套用的提示詞、固定詞和生成引數",
   "drop_addToQueue": "加入佇列",
   "drop_addToQueueSubtitle": "提取正面提示詞並加入生成佇列",

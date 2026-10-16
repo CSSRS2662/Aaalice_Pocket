@@ -785,6 +785,10 @@ class _PreciseRefLibraryScreenState
         onPressed: _importImages,
       ),
       titleActions: [
+        const MasonryColumnsAction(
+          surface: GridColumnsSurface.preciseRefLibrary,
+          iconOnly: true,
+        ),
         IconButton(
           key: const Key('precise-ref-library-select-action'),
           tooltip: l10n.preciseRefLib_enterSelectionMode,
@@ -859,10 +863,6 @@ class _PreciseRefLibraryScreenState
               setState(() => _currentPage = 0);
               notifier.setSortOrder(order);
             },
-          ),
-          const MasonryColumnsAction(
-            surface: GridColumnsSurface.preciseRefLibrary,
-            chip: true,
           ),
         ],
       ),

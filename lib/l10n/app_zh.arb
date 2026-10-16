@@ -2051,7 +2051,7 @@
     }
   },
   "drop_addedToCharacterRef": "已添加到精准参考",
-  "drop_extractMetadata": "发送到文生图",
+  "drop_extractMetadata": "复用参数",
   "drop_extractMetadataSubtitle": "选择要套用的提示词、固定词和生成参数",
   "drop_addToQueue": "加入队列",
   "drop_addToQueueSubtitle": "提取正面提示词并加入生成队列",

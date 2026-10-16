@@ -15627,7 +15627,7 @@ abstract class AppLocalizations {
   /// No description provided for @drop_extractMetadata.
   ///
   /// In en, this message translates to:
-  /// **'Send to Text to Image'**
+  /// **'Reuse Parameters'**
   String get drop_extractMetadata;
 
   /// No description provided for @drop_extractMetadataSubtitle.
