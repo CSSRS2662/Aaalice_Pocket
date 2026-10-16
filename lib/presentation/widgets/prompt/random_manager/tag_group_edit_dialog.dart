@@ -4,6 +4,7 @@ import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/localization_extension.dart';
+import '../../../adaptive/adaptive_form_footer.dart';
 import '../../../adaptive/adaptive_presenter.dart';
 import '../../../adaptive/content_sized_adaptive_form.dart';
 import '../../../providers/random_preset_provider.dart';
@@ -192,6 +193,7 @@ class _TagGroupEditDialogState extends ConsumerState<TagGroupEditDialog>
             constraints.maxHeight < _minBodyHeightForFixedChrome;
         // 两种排布下标签栏都是首个 sliver，正文滚动偏移与输入状态不因切换而变
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: TabSwipeDetector(
@@ -329,33 +331,17 @@ class _TagGroupEditDialogState extends ConsumerState<TagGroupEditDialog>
     final l10n = AppLocalizations.of(context)!;
     return KeyedSubtree(
       key: _actionsKey,
-      child: SafeArea(
-        top: false,
-        child: Container(
-          color: sectionSurfaceColor(Theme.of(context).colorScheme),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-          child: Wrap(
-            alignment: WrapAlignment.end,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  widget.isPresetDefault
-                      ? l10n.common_close
-                      : l10n.common_cancel,
-                ),
+      child: AdaptiveFormFooter(
+        cancelLabel: widget.isPresetDefault
+            ? l10n.common_close
+            : l10n.common_cancel,
+        primary: widget.isPresetDefault
+            ? null
+            : FilledButton.icon(
+                onPressed: _saveChanges,
+                icon: const Icon(Icons.check_rounded, size: 18),
+                label: Text(l10n.common_save),
               ),
-              if (!widget.isPresetDefault)
-                FilledButton.icon(
-                  onPressed: _saveChanges,
-                  icon: const Icon(Icons.check_rounded, size: 18),
-                  label: Text(l10n.common_save),
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }
