@@ -31,6 +31,16 @@ are distributed under the SIL Open Font License 1.1. The exact license texts
 are retained next to the website font files under `docs/assets/fonts/`. The
 website does not contact Google Fonts at runtime.
 
+## Bundled Interface Font
+
+Latin letters and digits throughout the app use
+[Manrope](https://github.com/googlefonts/manrope), by Mikhail Sharanda,
+bundled under the SIL Open Font License 1.1. Other scripts fall back to the
+font chosen in the app's settings. The six static weights (300–800) are the
+files Google Fonts serves for the family; they are stored under
+`fonts/manrope/`, and their source, checksums and the complete license text are
+retained under `licenses/fonts/manrope/`. The font is not downloaded at runtime.
+
 ## Bundled Watermark Fonts
 
 The watermark editor uses a curated, platform-independent font set so previews

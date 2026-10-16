@@ -1,7 +1,7 @@
 name: nai_launcher
 description: NovelAI Universal Launcher - 跨平台第三方客户端
 publish_to: "none"
-version: 4.2.1-custom.22.5+88
+version: 4.2.1-custom.22.6+89
 
 environment:
   sdk: ">=3.10.7 <4.0.0"
@@ -187,6 +187,21 @@ flutter:
     - family: LXGW ZhenKai GB
       fonts:
         - asset: fonts/LXGWZhenKaiGB-Regular.ttf
+    # Latin letters and digits of the whole interface; see THIRD_PARTY_NOTICES.
+    - family: Manrope
+      fonts:
+        - asset: fonts/manrope/Manrope-Light.ttf
+          weight: 300
+        - asset: fonts/manrope/Manrope-Regular.ttf
+          weight: 400
+        - asset: fonts/manrope/Manrope-Medium.ttf
+          weight: 500
+        - asset: fonts/manrope/Manrope-SemiBold.ttf
+          weight: 600
+        - asset: fonts/manrope/Manrope-Bold.ttf
+          weight: 700
+        - asset: fonts/manrope/Manrope-ExtraBold.ttf
+          weight: 800
     - family: Great Vibes
       fonts:
         - asset: fonts/watermark/GreatVibes-Regular.ttf

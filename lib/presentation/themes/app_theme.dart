@@ -34,6 +34,47 @@ class AppTheme {
   static final Map<(Brightness, PocketAccent), ThemeData> _cache = {};
   static const int _cacheLimit = 8;
 
+  /// 西文与数字的字体：随应用打包，所有界面统一使用。
+  ///
+  /// 用户在设置里选的字体排在它的回退列表首位，所以中文等 Manrope 没有
+  /// 的字形仍然用用户选的字体，再往后才是系统字体。
+  static const String latinFontFamily = 'Manrope';
+
+  /// [style] 改为西文优先：字体族为 Manrope，[fallbackFamily] 排在回退首位。
+  static TextStyle? latinFirst(TextStyle? style, String? fallbackFamily) {
+    if (style == null) return null;
+    return style.copyWith(
+      fontFamily: latinFontFamily,
+      fontFamilyFallback: [
+        if (fallbackFamily != null && fallbackFamily != latinFontFamily)
+          fallbackFamily,
+        for (final family in style.fontFamilyFallback ?? const <String>[])
+          if (family != fallbackFamily && family != latinFontFamily) family,
+      ],
+    );
+  }
+
+  static TextTheme _latinFirstTheme(TextTheme theme, String? fallbackFamily) {
+    TextStyle? apply(TextStyle? style) => latinFirst(style, fallbackFamily);
+    return theme.copyWith(
+      displayLarge: apply(theme.displayLarge),
+      displayMedium: apply(theme.displayMedium),
+      displaySmall: apply(theme.displaySmall),
+      headlineLarge: apply(theme.headlineLarge),
+      headlineMedium: apply(theme.headlineMedium),
+      headlineSmall: apply(theme.headlineSmall),
+      titleLarge: apply(theme.titleLarge),
+      titleMedium: apply(theme.titleMedium),
+      titleSmall: apply(theme.titleSmall),
+      bodyLarge: apply(theme.bodyLarge),
+      bodyMedium: apply(theme.bodyMedium),
+      bodySmall: apply(theme.bodySmall),
+      labelLarge: apply(theme.labelLarge),
+      labelMedium: apply(theme.labelMedium),
+      labelSmall: apply(theme.labelSmall),
+    );
+  }
+
   /// 获取指定明暗的主题
   ///
   /// [fontConfig] 为 null 或系统默认时，保留主题原生字体；
@@ -85,12 +126,18 @@ class AppTheme {
       );
     }
 
-    final (textTheme, primaryTextTheme, tooltipFontFamily) = result;
+    // 用户字体退到回退列表首位，西文与数字统一用 Manrope。
+    final (userTextTheme, userPrimaryTextTheme, userFontFamily) = result;
+    final textTheme = _latinFirstTheme(userTextTheme, userFontFamily);
+    final primaryTextTheme = _latinFirstTheme(
+      userPrimaryTextTheme,
+      userFontFamily,
+    );
 
     return baseTheme.copyWith(
       textTheme: textTheme,
       primaryTextTheme: primaryTextTheme,
-      tooltipTheme: _buildTooltipTheme(baseTheme, tooltipFontFamily),
+      tooltipTheme: _buildTooltipTheme(baseTheme, userFontFamily),
       chipTheme: _applyFontToChipTheme(baseTheme.chipTheme, textTheme),
     );
   }
@@ -104,12 +151,17 @@ class AppTheme {
     ChipThemeData chipTheme,
     TextTheme textTheme,
   ) {
-    final fontFamily = textTheme.labelLarge?.fontFamily;
+    final label = textTheme.labelLarge;
+    final fontFamily = label?.fontFamily;
     if (fontFamily == null) return chipTheme;
     return chipTheme.copyWith(
-      labelStyle: chipTheme.labelStyle?.copyWith(fontFamily: fontFamily),
+      labelStyle: chipTheme.labelStyle?.copyWith(
+        fontFamily: fontFamily,
+        fontFamilyFallback: label?.fontFamilyFallback,
+      ),
       secondaryLabelStyle: chipTheme.secondaryLabelStyle?.copyWith(
         fontFamily: fontFamily,
+        fontFamilyFallback: label?.fontFamilyFallback,
       ),
     );
   }
@@ -161,9 +213,9 @@ class AppTheme {
     String? fontFamily,
   ) {
     final tooltipTheme = baseTheme.tooltipTheme;
+    final style = tooltipTheme.textStyle ?? baseTheme.textTheme.bodySmall;
     return tooltipTheme.copyWith(
-      textStyle: (tooltipTheme.textStyle ?? baseTheme.textTheme.bodySmall)
-          ?.copyWith(fontFamily: fontFamily),
+      textStyle: fontFamily == null ? style : latinFirst(style, fontFamily),
       padding:
           tooltipTheme.padding ??
           const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:nai_launcher/presentation/providers/font_provider.dart';
 import 'package:nai_launcher/presentation/themes/app_theme.dart';
 import 'package:nai_launcher/presentation/themes/core/input_surface_style.dart';
 import 'package:nai_launcher/presentation/themes/core/layered_surface_style.dart';
@@ -10,6 +11,28 @@ import 'package:nai_launcher/presentation/themes/prompt_semantic_colors.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = false;
+
+  test('Latin text uses the bundled Manrope, the chosen font backs it up', () {
+    final native = AppTheme.getTheme(Brightness.light);
+    expect(native.textTheme.bodyMedium?.fontFamily, AppTheme.latinFontFamily);
+
+    const kai = FontConfig(
+      displayName: 'LXGW ZhenKai GB',
+      fontFamily: 'LXGW ZhenKai GB',
+      source: FontSource.system,
+    );
+    final chosen = AppTheme.getTheme(Brightness.dark, fontConfig: kai);
+    for (final style in [
+      chosen.textTheme.bodyMedium,
+      chosen.textTheme.titleLarge,
+      chosen.primaryTextTheme.labelLarge,
+      chosen.tooltipTheme.textStyle,
+      chosen.chipTheme.labelStyle,
+    ]) {
+      expect(style?.fontFamily, AppTheme.latinFontFamily);
+      expect(style?.fontFamilyFallback?.first, kai.fontFamily);
+    }
+  });
 
   for (final brightness in Brightness.values) {
     {

@@ -2,10 +2,10 @@
 ///
 /// 标题靠字重与略收的字距建立层级；正文与标签不额外加字距，
 /// 中文字形回退到系统字体，保持中西文混排的节奏一致。
+/// Manrope 随应用打包（fonts/manrope），不在运行时下载。
 library;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:nai_launcher/presentation/themes/core/theme_modules.dart';
 
 class PocketTypography implements TypographyModule {
@@ -19,7 +19,7 @@ class PocketTypography implements TypographyModule {
 
   @override
   TextTheme get textTheme {
-    final base = GoogleFonts.getFont(bodyFontFamily);
+    final base = TextStyle(fontFamily: bodyFontFamily);
     TextStyle style(double size, FontWeight weight, [double spacing = 0]) =>
         base.copyWith(
           fontSize: size,

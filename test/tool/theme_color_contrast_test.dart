@@ -38,11 +38,7 @@ void main() {
           final theme = AppTheme.getTheme(brightness);
           final extension = theme.extension<AppThemeExtension>();
 
-          expect(
-            extension,
-            isNotNull,
-            reason: brightness.name,
-          );
+          expect(extension, isNotNull, reason: brightness.name);
           expect(extension!.controlRadius, greaterThanOrEqualTo(0));
           expect(extension.cardRadius, greaterThanOrEqualTo(0));
           expect(extension.dialogRadius, greaterThanOrEqualTo(0));
@@ -171,10 +167,7 @@ void main() {
 
       for (final accent in _accentsUnderTest) {
         for (final brightness in Brightness.values) {
-          final cs = AppTheme.getTheme(
-            brightness,
-            accent: accent,
-          ).colorScheme;
+          final cs = AppTheme.getTheme(brightness, accent: accent).colorScheme;
           final pairs = <String, (Color, Color)>{
             'primary/onPrimary': (cs.primary, cs.onPrimary),
             'primaryContainer/on': (cs.primaryContainer, cs.onPrimaryContainer),
@@ -272,8 +265,13 @@ void main() {
       final theme = AppTheme.getTheme(Brightness.dark, fontConfig: fontConfig);
       expect(
         theme.textTheme.labelLarge?.fontFamily,
+        AppTheme.latinFontFamily,
+        reason: '前置条件：西文统一用 Manrope',
+      );
+      expect(
+        theme.textTheme.labelLarge?.fontFamilyFallback?.first,
         fontConfig.fontFamily,
-        reason: '前置条件：字体应已进入 textTheme',
+        reason: '前置条件：用户字体应排在回退首位',
       );
 
       final offenders = await _findFontMismatches(tester, theme);
@@ -307,6 +305,7 @@ void main() {
       );
       final theme = AppTheme.getTheme(Brightness.dark, fontConfig: fontConfig);
       final expected = theme.textTheme.labelLarge?.fontFamily;
+      final expectedFallback = theme.textTheme.labelLarge?.fontFamilyFallback;
 
       final offenders = <String>[];
       for (final platform in [
@@ -336,13 +335,21 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final fonts = tester
+        final styles = tester
             .widgetList<RichText>(find.byType(RichText))
-            .map((rt) => rt.text.style?.fontFamily)
-            .where((f) => f != 'MaterialIcons')
-            .toSet();
+            .map((rt) => rt.text.style)
+            .where((style) => style?.fontFamily != 'MaterialIcons');
+        final fonts = styles.map((style) => style?.fontFamily).toSet();
         if (fonts.any((f) => f != expected)) {
           offenders.add('  ${platform.name}: 期望 $expected，实际 $fonts');
+        }
+        for (final style in styles) {
+          if (!listEquals(style?.fontFamilyFallback, expectedFallback)) {
+            offenders.add(
+              '  ${platform.name}: 回退应为 $expectedFallback，'
+              '实际 ${style?.fontFamilyFallback}',
+            );
+          }
         }
       }
       debugDefaultTargetPlatformOverride = null;
@@ -452,6 +459,7 @@ Future<List<String>> _findFontMismatches(
   ThemeData theme,
 ) async {
   final expected = theme.textTheme.labelLarge?.fontFamily;
+  final expectedFallback = theme.textTheme.labelLarge?.fontFamilyFallback;
   final offenders = <String>[];
 
   for (final probe in _componentProbes.entries) {
@@ -470,6 +478,14 @@ Future<List<String>> _findFontMismatches(
     final actual = texts.first.text.style?.fontFamily;
     if (actual != expected) {
       offenders.add('  ${probe.key}: 期望 $expected，实际 $actual');
+    }
+    // 中文落在回退字体上，回退列表不一致就会掉回系统字体。
+    final actualFallback = texts.first.text.style?.fontFamilyFallback;
+    if (expectedFallback != null &&
+        !listEquals(actualFallback, expectedFallback)) {
+      offenders.add(
+        '  ${probe.key}: 回退应为 $expectedFallback，实际 $actualFallback',
+      );
     }
   }
   return offenders;

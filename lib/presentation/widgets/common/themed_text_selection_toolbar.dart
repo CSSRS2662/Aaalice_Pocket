@@ -42,11 +42,13 @@ Widget _themedToolbarButton(
   final label = AdaptiveTextSelectionToolbar.getButtonLabel(context, item);
   // 只覆盖 fontFamily：颜色、字号、字重仍由各平台按钮自己决定，
   // 这样观感不变，只把字体拉回主题。
+  final themeLabel = Theme.of(context).textTheme.labelLarge;
   final child = Text(
     label,
     overflow: TextOverflow.ellipsis,
     style: TextStyle(
-      fontFamily: Theme.of(context).textTheme.labelLarge?.fontFamily,
+      fontFamily: themeLabel?.fontFamily,
+      fontFamilyFallback: themeLabel?.fontFamilyFallback,
     ),
   );
 
