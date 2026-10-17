@@ -644,11 +644,7 @@ void main() {
       (events.last as GenerationFailed).error.toString(),
       contains('persistent fallback failure'),
     );
-    expect(delays, const [
-      Duration(seconds: 1),
-      Duration(seconds: 2),
-      Duration(seconds: 4),
-    ]);
+    expect(delays, ImageGenerationCoordinator.defaultRetryDelays);
     verify(
       () => apiService.generateImage(
         any(),
@@ -657,7 +653,7 @@ void main() {
         minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
         focusedSelectionRect: any(named: 'focusedSelectionRect'),
       ),
-    ).called(4);
+    ).called(6);
     verify(
       () => apiService.generateImageStream(
         any(),
@@ -904,4 +900,145 @@ void main() {
       expect(completed.indexedVibeEncodings, isEmpty);
     },
   );
+
+  group('fixed retries', () {
+    late _MockNAIImageGenerationApiService apiService;
+    late List<Duration> delays;
+    late List<ImageStreamChunk> Function(int call) streamReplies;
+    var streamCalls = 0;
+
+    setUp(() {
+      apiService = _MockNAIImageGenerationApiService();
+      delays = [];
+      streamCalls = 0;
+      when(
+        () => apiService.generateImageStream(
+          any(),
+          focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+          minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+          focusedSelectionRect: any(named: 'focusedSelectionRect'),
+        ),
+      ).thenAnswer((_) => Stream.fromIterable(streamReplies(++streamCalls)));
+    });
+
+    Future<List<GenerationEvent>> generateOne() {
+      final coordinator = ImageGenerationCoordinator(
+        apiService: apiService,
+        delay: (duration) async => delays.add(duration),
+      );
+      final command = GenerationCommand(
+        runId: 1,
+        params: const ImageParams(prompt: 'test'),
+        batchCount: 1,
+        batchSize: 1,
+        prepareBatch: (_, params) async => params,
+      );
+      return coordinator.execute(command, coordinator.start(command)).toList();
+    }
+
+    test('a single-image stream failure is retried five times', () async {
+      streamReplies = (_) => [ImageStreamChunk.error('API_ERROR_500|down')];
+
+      final events = await generateOne();
+
+      expect(events.last, isA<GenerationFailed>());
+      expect(
+        (events.last as GenerationFailed).error.toString(),
+        contains('down'),
+      );
+      expect(streamCalls, 6);
+      expect(delays, ImageGenerationCoordinator.defaultRetryDelays);
+    });
+
+    test('a later attempt that succeeds completes the image', () async {
+      final image = Uint8List.fromList([7]);
+      streamReplies = (call) => call < 3
+          ? [ImageStreamChunk.error('API_ERROR_NETWORK|connection reset')]
+          : [ImageStreamChunk.complete(image)];
+
+      final events = await generateOne();
+
+      expect(events.last, isA<GenerationCompleted>());
+      expect(
+        events.whereType<GenerationRequestCompleted>().single.images.single,
+        same(image),
+      );
+      expect(streamCalls, 3);
+      expect(delays, const [Duration(seconds: 1), Duration(seconds: 2)]);
+    });
+
+    test('errors that would fail again are not retried', () async {
+      for (final error in [
+        'API_ERROR_400|invalid size',
+        'API_ERROR_401|Unauthorized',
+        'API_ERROR_402|Payment required',
+      ]) {
+        streamCalls = 0;
+        delays.clear();
+        streamReplies = (_) => [ImageStreamChunk.error(error)];
+
+        final events = await generateOne();
+
+        expect(events.last, isA<GenerationFailed>(), reason: error);
+        expect(streamCalls, 1, reason: error);
+        expect(delays, isEmpty, reason: error);
+      }
+    });
+
+    test('a rejected non-stream request is not retried', () async {
+      streamReplies = (_) => [
+        ImageStreamChunk.error('Streaming is not allowed'),
+      ];
+      when(
+        () => apiService.generateImage(
+          any(),
+          onProgress: any(named: 'onProgress'),
+          focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+          minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+          focusedSelectionRect: any(named: 'focusedSelectionRect'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/generate-image'),
+          response: Response<void>(
+            requestOptions: RequestOptions(path: '/generate-image'),
+            statusCode: 402,
+          ),
+        ),
+      );
+
+      final events = await generateOne();
+
+      expect(events.last, isA<GenerationFailed>());
+      expect(delays, isEmpty);
+      verify(
+        () => apiService.generateImage(
+          any(),
+          onProgress: any(named: 'onProgress'),
+          focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+          minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+          focusedSelectionRect: any(named: 'focusedSelectionRect'),
+        ),
+      ).called(1);
+    });
+
+    test('429 concurrency waits do not use up the retries', () async {
+      final image = Uint8List.fromList([8]);
+      streamReplies = (call) => switch (call) {
+        1 || 2 => [ImageStreamChunk.error('API_ERROR_429|busy')],
+        <= 7 => [ImageStreamChunk.error('API_ERROR_503|unavailable')],
+        _ => [ImageStreamChunk.complete(image)],
+      };
+
+      final events = await generateOne();
+
+      expect(events.last, isA<GenerationCompleted>());
+      expect(streamCalls, 8);
+      expect(delays, [
+        const Duration(seconds: 3),
+        const Duration(seconds: 3),
+        ...ImageGenerationCoordinator.defaultRetryDelays,
+      ]);
+    });
+  });
 }

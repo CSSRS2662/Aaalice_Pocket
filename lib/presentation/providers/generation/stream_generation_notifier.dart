@@ -6,6 +6,7 @@ import '../../../core/utils/app_logger.dart';
 import '../../../data/datasources/remote/nai_image_generation_api_service.dart';
 import '../../../data/models/image/image_params.dart';
 import 'generation_models.dart';
+import 'generation_retry_wait_provider.dart';
 import 'generation_settings_notifiers.dart';
 import 'image_generation_service.dart';
 import '../dlss_provider.dart';
@@ -115,6 +116,7 @@ class StreamGenerationNotifier extends _$StreamGenerationNotifier {
     final dlss = ref.read(dlssProvider);
     final service = ImageGenerationService(
       apiService: ref.read(naiImageGenerationApiServiceProvider),
+      delay: ref.read(generationRetryWaitProvider),
       postprocess: dlss.automaticSnapshot(),
       onPostprocessError: dlss.reportEnhancementError,
       streamPreviewEnabled: ref.read(generationStreamPreviewSettingsProvider),

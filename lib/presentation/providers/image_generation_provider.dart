@@ -49,6 +49,7 @@ import 'generation/generation_models.dart';
 import 'generation/generation_params_notifier.dart';
 import 'generation/generation_request_preparation_service.dart';
 import 'generation/generation_result_lifecycle_service.dart';
+import 'generation/generation_retry_wait_provider.dart';
 import 'generation/generation_settings_notifiers.dart';
 import 'generation/image_generation_coordinator.dart';
 import 'generation/image_workflow_controller.dart';
@@ -64,6 +65,7 @@ import 'uc_preset_provider.dart';
 
 export 'generation/generation_models.dart';
 export 'generation/generation_cooldown_provider.dart';
+export 'generation/generation_retry_wait_provider.dart';
 export 'generation/generation_params_notifier.dart';
 export 'generation/generation_auxiliary_notifiers.dart';
 export 'generation/generation_settings_notifiers.dart';
@@ -411,6 +413,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
       final dlss = ref.read(dlssProvider);
       final coordinator = ImageGenerationCoordinator(
         apiService: ref.read(naiImageGenerationApiServiceProvider),
+        delay: ref.read(generationRetryWaitProvider),
         postprocess: dlss.automaticSnapshot(),
         onPostprocessError: dlss.reportEnhancementError,
       );

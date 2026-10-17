@@ -1,3 +1,25 @@
+import 'package:dio/dio.dart';
+
+/// Whether retrying a failed generation request can succeed.
+///
+/// Client errors such as bad parameters, a lost sign-in, missing Anlas or a
+/// denied permission fail the same way again, so only request timeouts and
+/// rate limits among them are retried. Network failures, server errors and
+/// broken responses are retried.
+bool isRetryableGenerationError(Object error) {
+  final status = _httpStatus(error);
+  if (status == null || status == 408 || status == 429) return true;
+  return status < 400 || status >= 500;
+}
+
+final _apiErrorStatus = RegExp(r'API_ERROR_(?:HTTP_)?(\d{3})');
+
+int? _httpStatus(Object error) {
+  if (error is DioException) return error.response?.statusCode;
+  final match = _apiErrorStatus.firstMatch(error.toString());
+  return match == null ? null : int.parse(match.group(1)!);
+}
+
 /// Whether a generation error says the endpoint cannot serve streaming output.
 bool isStreamingGenerationUnsupportedError(Object? error) {
   if (error == null) return false;

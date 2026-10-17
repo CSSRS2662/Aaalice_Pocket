@@ -17,11 +17,7 @@ import 'generation_error_classifier.dart';
 class ImageGenerationCoordinator {
   ImageGenerationCoordinator({
     required NAIImageGenerationApiService apiService,
-    List<Duration> retryDelays = const [
-      Duration(seconds: 1),
-      Duration(seconds: 2),
-      Duration(seconds: 4),
-    ],
+    List<Duration> retryDelays = defaultRetryDelays,
     this.concurrencyRetryInterval = const Duration(seconds: 3),
     this.concurrencyRetryBudget = const Duration(seconds: 90),
     Future<void> Function(Duration) delay = Future<void>.delayed,
@@ -34,6 +30,17 @@ class ImageGenerationCoordinator {
        _random = random ?? Random();
 
   static const int randomSeedExclusiveUpperBound = 4294967295;
+
+  /// A failed request is retried five times, waiting twice as long before
+  /// each retry. Errors that would fail again are not retried, and 429
+  /// concurrency waits on the stream endpoint do not count.
+  static const List<Duration> defaultRetryDelays = [
+    Duration(seconds: 1),
+    Duration(seconds: 2),
+    Duration(seconds: 4),
+    Duration(seconds: 8),
+    Duration(seconds: 16),
+  ];
 
   final NAIImageGenerationApiService _apiService;
   final List<Duration> _retryDelays;
@@ -151,7 +158,6 @@ class ImageGenerationCoordinator {
                 params: requestParams,
                 startImage: startImage,
                 nonStreamOnly: false,
-                retryStreamFailures: command.totalImages > 1,
               )) {
                 if (signal.event != null) yield signal.event!;
                 if (signal.result != null) result = signal.result!;
@@ -185,7 +191,6 @@ class ImageGenerationCoordinator {
                   params: requestParams,
                   startImage: imageNumber,
                   nonStreamOnly: nonStreamOnly,
-                  retryStreamFailures: command.totalImages > 1,
                 )) {
                   if (signal.event != null) yield signal.event!;
                   if (signal.result != null) result = signal.result!;
@@ -358,14 +363,14 @@ class ImageGenerationCoordinator {
     required ImageParams params,
     required int startImage,
     required bool nonStreamOnly,
-    required bool retryStreamFailures,
   }) async* {
     DateTime? concurrencyDeadline;
     final startWithFallback = nonStreamOnly || !command.streamPreviewEnabled;
     var mode = startWithFallback ? _RequestMode.fallback : _RequestMode.stream;
     var persistFallbackMode = startWithFallback;
+    var failures = 0;
 
-    for (var attempt = 0; ; attempt++) {
+    while (true) {
       if (_aborted(handle) || _skipCurrentRequest) return;
       try {
         if (mode == _RequestMode.fallback) {
@@ -459,12 +464,16 @@ class ImageGenerationCoordinator {
           persistFallbackMode = true;
           continue;
         }
-        if (!retryStreamFailures || attempt >= _retryDelays.length) rethrow;
+        if (!isRetryableGenerationError(error) ||
+            failures >= _retryDelays.length) {
+          rethrow;
+        }
+        final wait = _retryDelays[failures++];
         AppLogger.w(
-          '生成失败，${_retryDelays[attempt].inMilliseconds}ms 后重试 '
-          '(${attempt + 1}/${_retryDelays.length}): $error',
+          '生成失败，${wait.inMilliseconds}ms 后重试 '
+          '($failures/${_retryDelays.length}): $error',
         );
-        if (!await _waitForRetry(handle, _retryDelays[attempt])) return;
+        if (!await _waitForRetry(handle, wait)) return;
       }
     }
   }
@@ -495,7 +504,9 @@ class ImageGenerationCoordinator {
         if (_aborted(handle) || _skipCurrentRequest) {
           return const _RequestResult();
         }
-        if (_isRemoteCancelled(error) || attempt >= _retryDelays.length) {
+        if (_isRemoteCancelled(error) ||
+            !isRetryableGenerationError(error) ||
+            attempt >= _retryDelays.length) {
           rethrow;
         }
         AppLogger.w(

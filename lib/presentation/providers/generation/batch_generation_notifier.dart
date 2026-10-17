@@ -7,6 +7,7 @@ import '../../../core/utils/app_logger.dart';
 import '../../../data/datasources/remote/nai_image_generation_api_service.dart';
 import '../../../data/models/image/image_params.dart';
 import 'generation_models.dart';
+import 'generation_retry_wait_provider.dart';
 import 'generation_settings_notifiers.dart';
 import 'image_generation_service.dart';
 import '../dlss_provider.dart';
@@ -310,9 +311,11 @@ class BatchGenerationNotifier extends _$BatchGenerationNotifier {
     final processor = dlss.automaticSnapshot();
     final api = ref.read(naiImageGenerationApiServiceProvider);
     final streamPreview = ref.read(generationStreamPreviewSettingsProvider);
+    final retryWait = ref.read(generationRetryWaitProvider);
     var reported = false;
     return () => ImageGenerationService(
       apiService: api,
+      delay: retryWait,
       postprocess: processor,
       onPostprocessError: (error) {
         if (!reported) {

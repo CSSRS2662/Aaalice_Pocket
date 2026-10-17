@@ -8,6 +8,7 @@ import 'package:nai_launcher/data/datasources/remote/nai_image_generation_api_se
 import 'package:nai_launcher/data/models/image/image_params.dart';
 import 'package:nai_launcher/data/models/image/image_stream_chunk.dart';
 import 'package:nai_launcher/presentation/providers/generation/batch_generation_notifier.dart';
+import 'package:nai_launcher/presentation/providers/generation/generation_retry_wait_provider.dart';
 
 class MockNAIImageGenerationApiService extends Mock
     implements NAIImageGenerationApiService {}
@@ -28,6 +29,7 @@ void main() {
           naiImageGenerationApiServiceProvider.overrideWithValue(
             mockApiService,
           ),
+          generationRetryWaitProvider.overrideWithValue((_) async {}),
         ],
       );
     });
@@ -254,7 +256,10 @@ void main() {
         when(() => mockApiService.generateImageStream(any())).thenAnswer((_) {
           callCount++;
           if (callCount == 1) {
-            return Stream.value(ImageStreamChunk.error('API error'));
+            // 参数错误不会自动重试，这一张保持失败。
+            return Stream.value(
+              ImageStreamChunk.error('API_ERROR_400|bad request'),
+            );
           }
           return Stream.value(ImageStreamChunk.complete(imageBytes));
         });
@@ -455,7 +460,10 @@ void main() {
         when(() => mockApiService.generateImageStream(any())).thenAnswer((_) {
           callCount++;
           if (callCount == 1) {
-            return Stream.value(ImageStreamChunk.error('API error'));
+            // 参数错误不会自动重试，这一张保持失败。
+            return Stream.value(
+              ImageStreamChunk.error('API_ERROR_400|bad request'),
+            );
           }
           return Stream.value(ImageStreamChunk.complete(imageBytes));
         });

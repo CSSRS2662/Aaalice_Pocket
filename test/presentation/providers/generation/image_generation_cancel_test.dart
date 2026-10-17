@@ -34,12 +34,17 @@ class _AuthenticatedAuthNotifier extends AuthNotifier {
   AuthState build() => const AuthState(status: AuthStatus.authenticated);
 }
 
+Future<void> _retryAtOnce(Duration _) async {}
+
 ProviderContainer _createAuthenticatedContainer({
   List<Override> overrides = const [],
+  // 默认立即重试；需要停在等待期内的用例传入真实等待。
+  Future<void> Function(Duration) retryWait = _retryAtOnce,
 }) {
   return ProviderContainer(
     overrides: [
       authNotifierProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+      generationRetryWaitProvider.overrideWithValue(retryWait),
       ...overrides,
     ],
   );
@@ -1433,6 +1438,7 @@ void main() {
       overrides: [
         naiImageGenerationApiServiceProvider.overrideWithValue(mockApiService),
       ],
+      retryWait: Future<void>.delayed,
     );
     addTearDown(container.dispose);
     await container

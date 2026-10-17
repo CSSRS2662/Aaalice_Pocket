@@ -213,6 +213,7 @@ Future<ProviderContainer> _createContainer(_MockApiService api) async {
     overrides: [
       authNotifierProvider.overrideWith(_AuthenticatedAuthNotifier.new),
       naiImageGenerationApiServiceProvider.overrideWithValue(api),
+      generationRetryWaitProvider.overrideWithValue((_) async {}),
     ],
   );
   addTearDown(container.dispose);

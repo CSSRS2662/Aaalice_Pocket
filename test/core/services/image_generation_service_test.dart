@@ -26,7 +26,10 @@ void main() {
 
     setUp(() {
       mockApiService = MockNAIImageGenerationApiService();
-      service = ImageGenerationService(apiService: mockApiService);
+      service = ImageGenerationService(
+        apiService: mockApiService,
+        delay: (_) async {},
+      );
     });
 
     tearDown(() {
@@ -561,7 +564,10 @@ void main() {
               ),
             ).thenAnswer((_) async => ([imageBytes], <int, String>{}));
 
-            final service = ImageGenerationService(apiService: mockApiService);
+            final service = ImageGenerationService(
+              apiService: mockApiService,
+              delay: (_) async {},
+            );
             final result = await service.generateSingle(params);
 
             expect(

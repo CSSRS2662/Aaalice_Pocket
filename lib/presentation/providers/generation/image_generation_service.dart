@@ -48,11 +48,7 @@ typedef GenerationStepProgressCallback =
 class ImageGenerationService {
   ImageGenerationService({
     required NAIImageGenerationApiService apiService,
-    List<Duration> retryDelays = const [
-      Duration(seconds: 1),
-      Duration(seconds: 2),
-      Duration(seconds: 4),
-    ],
+    List<Duration> retryDelays = ImageGenerationCoordinator.defaultRetryDelays,
     Future<void> Function(Duration) delay = Future<void>.delayed,
     this.streamPreviewEnabled = true,
     ImagePostprocessor? postprocess,
