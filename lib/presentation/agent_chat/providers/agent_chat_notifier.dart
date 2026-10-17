@@ -41,6 +41,7 @@ import '../../providers/vibe_library_provider.dart';
 import '../../router/app_router_config.dart';
 import '../services/agent_api_client.dart';
 import '../services/agent_chat_draft_controller.dart';
+import '../services/agent_chat_session_instructions.dart';
 import '../services/agent_chat_event_controller.dart';
 import '../services/agent_chat_session_controller.dart';
 import '../services/agent_chat_session_recovery.dart';
@@ -268,7 +269,8 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
       draftController: _draftController,
       workspaceDir: _workspaceDir.path,
       buildAgent: _buildAgent,
-      buildSystemPrompt: _buildSystemPrompt,
+      buildSystemPrompt: (sessionId) =>
+          _buildSystemPrompt(sessionId: sessionId),
       readState: () => state,
       writeState: (next) => state = next,
       isMounted: () => mounted,
@@ -785,7 +787,10 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
       .chat
       .contextWindowOverrideFor(route.$1.id, route.$2);
 
+  /// [sessionId] picks whose conversation instructions to add; it defaults to
+  /// the active session.
   Future<String> _buildSystemPrompt({
+    String? sessionId,
     String? customInstructionsOverride,
     AgentSystemPromptMode? modeOverride,
     Iterable<HarnessSkill>? skillsOverride,
@@ -795,6 +800,9 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
     // owning container may be disposed while secure storage is responding.
     final agentSettings =
         settingsOverride ?? _ref.read(agentSettingsProvider).settings;
+    final sessionInstructions = AgentChatSessionInstructions(
+      _local,
+    ).read(sessionId ?? state.activeSessionId);
     // 路由缓存 + API Key 解析（短期 token 每次运行刷新）。
     final route = _activeRoute ?? _routeCache ?? _resolveRoute();
     if (route != null) {
@@ -819,6 +827,7 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
         customPromptOverride: customInstructionsOverride,
         modeOverride: modeOverride,
       ),
+      sessionInstructions: sessionInstructions,
       mode: modeOverride ?? agentSettings.chat.systemPromptMode,
     );
   }
@@ -833,6 +842,8 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
         ? _skills.values
         : (await _scanCurrentSkills()).enabledSkillMap().values;
     return _buildSystemPrompt(
+      // 设置页预览全局组装，不带某个对话自己的提示词。
+      sessionId: '',
       customInstructionsOverride: customInstructions,
       modeOverride: mode,
       skillsOverride: previewSkills,
@@ -881,6 +892,25 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
       availableThinkingLevels: capability.levels,
       thinkingLevel: currentLevel,
     );
+  }
+
+  /// Sets the active conversation's own instructions; empty text clears
+  /// them. A running turn keeps its prompt and the next one uses the new
+  /// instructions.
+  Future<void> setSessionInstructions(String text) async {
+    if (!canManageAgentChatSessions(state)) return;
+    final sessionId = state.activeSessionId;
+    if (sessionId.isEmpty) return;
+    final store = AgentChatSessionInstructions(_local);
+    await store.write(sessionId, text);
+    if (!mounted || state.activeSessionId != sessionId) return;
+    state = state.copyWith(sessionInstructions: store.read(sessionId));
+    if (_runActive) {
+      _queueSettingsRefresh();
+      return;
+    }
+    final agent = _sessionControllerValue?.agent;
+    if (agent != null) agent.setSystemPrompt(await _buildSystemPrompt());
   }
 
   Future<void> setThinkingLevel(ThinkingLevel level) async {

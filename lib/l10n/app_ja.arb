@@ -543,6 +543,17 @@
   "agentChat_noModel": "モデル未設定",
   "agentChat_untitled": "新しいチャット",
   "agentChat_renameHint": "チャット名",
+  "agentChat_sessionInstructions": "この会話の指示",
+  "agentChat_sessionInstructionsActive": "この会話の指示（設定済み）",
+  "agentChat_sessionInstructionsHint": "この会話にだけ適用され、全体の指示と一緒にエージェントへ送られます。空にすると消去します。",
+  "agentChat_sessionInstructionsTooLong": "この会話の指示は {maxLength} 文字までです",
+  "@agentChat_sessionInstructionsTooLong": {
+    "placeholders": {
+      "maxLength": {
+        "type": "int"
+      }
+    }
+  },
   "agentChat_suggestion1": "現在の生成設定を確認",
   "agentChat_suggestion2": "ギャラリーからプロンプトを整理",
   "agentChat_suggestion3": "キャラクタータグを改善",
@@ -868,6 +879,16 @@
       "error": {}
     }
   },
+  "image_duplicateNotSaved": "この画像はすでにギャラリーにあるため、保存しませんでした",
+  "image_duplicatesNotSaved": "{count} 枚はすでにギャラリーにあるため、保存しませんでした",
+  "@image_duplicatesNotSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "image_saveAnyway": "それでも保存",
   "image_copiedToClipboard": "クリップボードにコピーされました",
   "image_copyFailed": "コピーに失敗しました: {error}",
   "@image_copyFailed": {

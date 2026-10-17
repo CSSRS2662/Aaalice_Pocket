@@ -15,6 +15,7 @@ import '../../../providers/image_generation_provider.dart';
 import '../../../providers/local_gallery_provider.dart';
 import '../../../utils/zip_export_progress.dart';
 import '../../../widgets/common/app_toast.dart';
+import '../../../widgets/common/duplicate_save_notice.dart';
 import '../../../widgets/common/image_card_action.dart';
 import 'generation_image_deletion.dart';
 
@@ -57,40 +58,48 @@ class GenerationImageBatchActions {
       invoke: () => deletion.confirmAndDelete(images),
     ),
   ];
-  Future<void> _saveSelectedImages() async {
-    if (images.isEmpty) return;
+  Future<void> _saveSelectedImages() => _saveImages(images);
+
+  /// 图库里已有的图不保存，底部通知提供“依然保存”，只重存这些图。
+  Future<void> _saveImages(
+    List<GeneratedImage> targets, {
+    bool allowDuplicate = false,
+  }) async {
+    if (targets.isEmpty) return;
 
     try {
       final saveDirPath = await GalleryFolderRepository.instance.getRootPath();
       if (saveDirPath == null) return;
 
-      final selectedImages = images;
-
       Object? systemGalleryError;
+      final duplicates = <GeneratedImage>[];
       // 原子保存：日期分类路径 + 独占防冲突 + 失败清理，全部在工具内完成
-      for (int i = 0; i < selectedImages.length; i++) {
-        final image = selectedImages[i];
+      for (final image in targets) {
+        final seed = await ImageSaveUtils.resolveSeed(
+          metadata: image.metadata,
+          bytes: image.bytes,
+        );
         final saved = await GeneratedImageSaves.saveOnce(
           rootPath: saveDirPath,
           sourceBytes: image.bytes,
           source: 'batch-save',
-          write: () async => ImageSaveUtils.saveBytesToDatedPath(
+          seed: seed,
+          allowDuplicate: allowDuplicate,
+          write: () => ImageSaveUtils.saveBytesToDatedPath(
             rootPath: saveDirPath,
             bytes: image.bytes,
-            seed: await ImageSaveUtils.resolveSeed(
-              metadata: image.metadata,
-              bytes: image.bytes,
-            ),
+            seed: seed,
           ),
         );
-        final filePath = saved.path;
-        // 沿用的文件当初保存时已导出过系统相册。
-        if (!saved.reused &&
-            PlatformCapabilities.current.supportsSystemGalleryExport) {
+        if (saved.reused) {
+          duplicates.add(image);
+          continue;
+        }
+        if (PlatformCapabilities.current.supportsSystemGalleryExport) {
           try {
             await AndroidMediaStoreService.savePng(
               bytes: image.bytes,
-              fileName: p.basename(filePath),
+              fileName: p.basename(saved.path),
             );
           } catch (error) {
             systemGalleryError ??= error;
@@ -98,7 +107,8 @@ class GenerationImageBatchActions {
         }
       }
 
-      await gallery.refresh();
+      final savedCount = targets.length - duplicates.length;
+      if (savedCount > 0) await gallery.refresh();
 
       if (context.mounted) {
         if (systemGalleryError != null) {
@@ -106,7 +116,7 @@ class GenerationImageBatchActions {
             context,
             context.l10n.image_savedAppOnly(systemGalleryError.toString()),
           );
-        } else {
+        } else if (savedCount > 0) {
           AppToast.success(
             context,
             PlatformCapabilities.current.supportsSystemGalleryExport
@@ -114,7 +124,14 @@ class GenerationImageBatchActions {
                 : context.l10n.image_imageSaved(saveDirPath),
           );
         }
-        selection.deselectAll(images.map((image) => image.id));
+        if (duplicates.isNotEmpty) {
+          showDuplicateSaveNotice(
+            context,
+            count: duplicates.length,
+            onSaveAnyway: () => _saveImages(duplicates, allowDuplicate: true),
+          );
+        }
+        selection.deselectAll(targets.map((image) => image.id));
       }
     } catch (e) {
       if (context.mounted) {

@@ -1465,6 +1465,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentChat_renameHint => 'Session name';
 
   @override
+  String get agentChat_sessionInstructions => 'Conversation instructions';
+
+  @override
+  String get agentChat_sessionInstructionsActive =>
+      'Conversation instructions (set)';
+
+  @override
+  String get agentChat_sessionInstructionsHint =>
+      'Applies to this conversation only and is sent with your general instructions. Leave empty to clear.';
+
+  @override
+  String agentChat_sessionInstructionsTooLong(int maxLength) {
+    return 'Conversation instructions can be at most $maxLength characters';
+  }
+
+  @override
   String get agentChat_suggestion1 => 'Review current generation settings';
 
   @override
@@ -2066,6 +2082,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String image_saveFailed(Object error) {
     return 'Save failed: $error';
   }
+
+  @override
+  String get image_duplicateNotSaved =>
+      'This image is already in the gallery, so it wasn\'t saved';
+
+  @override
+  String image_duplicatesNotSaved(int count) {
+    return '$count images are already in the gallery and weren\'t saved';
+  }
+
+  @override
+  String get image_saveAnyway => 'Save anyway';
 
   @override
   String get image_copiedToClipboard => 'Copied to clipboard';

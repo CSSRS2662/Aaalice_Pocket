@@ -22,10 +22,15 @@ void main() {
         l10n: l10n,
         sessionActionsEnabled: true,
       );
-      expect(
-        commands.map((command) => command.name).toList(),
-        ['alpha', 'zebra', 'new', 'compact', 'rename', 'delete'],
-      );
+      expect(commands.map((command) => command.name).toList(), [
+        'alpha',
+        'zebra',
+        'new',
+        'compact',
+        'rename',
+        'instructions',
+        'delete',
+      ]);
       expect(commands.first.kind, AgentChatSlashCommandKind.skill);
       expect(commands.last.sessionAction, AgentChatMoreAction.delete);
     });

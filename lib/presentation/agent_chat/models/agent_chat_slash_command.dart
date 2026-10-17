@@ -36,6 +36,7 @@ const Map<String, AgentChatMoreAction> agentChatSessionCommands = {
   'new': AgentChatMoreAction.newSession,
   'compact': AgentChatMoreAction.compact,
   'rename': AgentChatMoreAction.rename,
+  'instructions': AgentChatMoreAction.instructions,
   'delete': AgentChatMoreAction.delete,
 };
 
@@ -69,6 +70,7 @@ String sessionCommandDescription(
   AgentChatMoreAction.newSession => l10n.agentChat_newChat,
   AgentChatMoreAction.compact => l10n.agentChat_compact,
   AgentChatMoreAction.rename => l10n.common_rename,
+  AgentChatMoreAction.instructions => l10n.agentChat_sessionInstructions,
   AgentChatMoreAction.delete => l10n.common_delete,
 };
 

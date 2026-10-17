@@ -59,6 +59,7 @@ import '../../../services/image_workflow_launcher.dart';
 import '../../../services/image_metadata_import_workflow.dart';
 import '../../../widgets/character/character_position_canvas.dart';
 import '../../../widgets/common/app_toast.dart';
+import '../../../widgets/common/duplicate_save_notice.dart';
 import '../../../widgets/common/draggable_memory_image.dart';
 import '../../../widgets/common/image_detail/file_image_detail_data.dart';
 import '../../../widgets/common/image_detail/image_detail_data.dart';
@@ -1216,8 +1217,12 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
     return dir;
   }
 
-  /// 保存图像
-  Future<void> _saveImage(BuildContext context, ImageDetailData image) async {
+  /// 保存图像；图库里已有同一张图时不保存，底部通知提供“依然保存”。
+  Future<void> _saveImage(
+    BuildContext context,
+    ImageDetailData image, {
+    bool allowDuplicate = false,
+  }) async {
     try {
       final imageBytes = await image.getImageBytes();
       final saveDir = await _getSaveDirectory();
@@ -1323,6 +1328,7 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
         imageBytes: imageBytes,
         preserveOriginalBytes: image.preserveOriginalBytesOnSave,
         source: 'preview-save',
+        allowDuplicate: allowDuplicate,
         fixedTagUsageSnapshot: capturedFixedTags,
         rebuiltFixedTagUsageSnapshot:
             capturedFixedTags ??
@@ -1332,11 +1338,24 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
       );
       final finalBytes = saved.bytes;
       final filePath = saved.path;
+      if (saved.reused) {
+        // 图库里那份就是这张图：记下它，收藏与定位直接用它。
+        _linkDisplayImage(image.identifier, filePath);
+        if (context.mounted) {
+          showDuplicateSaveNotice(
+            context,
+            onSaveAnyway: () {
+              if (mounted) {
+                unawaited(_saveImage(context, image, allowDuplicate: true));
+              }
+            },
+          );
+        }
+        return;
+      }
 
       Object? systemGalleryError;
-      // 沿用的文件当初保存时已导出过系统相册。
-      if (!saved.reused &&
-          PlatformCapabilities.current.supportsSystemGalleryExport) {
+      if (PlatformCapabilities.current.supportsSystemGalleryExport) {
         try {
           await AndroidMediaStoreService.savePng(
             bytes: finalBytes,
@@ -1362,20 +1381,7 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
             }),
       );
 
-      // 更新保存图像的文件路径到状态
-      final currentState = ref.read(imageGenerationNotifierProvider);
-      final updatedImages = currentState.displayImages.map((img) {
-        if (img.id == image.identifier) {
-          return img.copyWithFilePath(filePath);
-        }
-        return img;
-      }).toList();
-
-      if (updatedImages.isNotEmpty) {
-        ref
-            .read(imageGenerationNotifierProvider.notifier)
-            .updateDisplayImages(updatedImages);
-      }
+      _linkDisplayImage(image.identifier, filePath);
 
       ref.read(localGalleryNotifierProvider.notifier).refresh();
 
@@ -1398,6 +1404,23 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
       if (context.mounted) {
         AppToast.error(context, context.l10n.image_saveFailed(e.toString()));
       }
+    }
+  }
+
+  /// 把保存（或图库里已有）的文件路径记到预览中的这张图上。
+  void _linkDisplayImage(String imageId, String filePath) {
+    final currentState = ref.read(imageGenerationNotifierProvider);
+    final updatedImages = currentState.displayImages.map((img) {
+      if (img.id == imageId) {
+        return img.copyWithFilePath(filePath);
+      }
+      return img;
+    }).toList();
+
+    if (updatedImages.isNotEmpty) {
+      ref
+          .read(imageGenerationNotifierProvider.notifier)
+          .updateDisplayImages(updatedImages);
     }
   }
 }

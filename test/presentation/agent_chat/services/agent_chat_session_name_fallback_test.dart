@@ -160,7 +160,7 @@ void main() {
       ),
       workspaceDir: tmp.path,
       buildAgent: () => throw UnimplementedError(),
-      buildSystemPrompt: () async => '',
+      buildSystemPrompt: (_) async => '',
       readState: () => state,
       writeState: (next) => state = next,
       isMounted: () => true,

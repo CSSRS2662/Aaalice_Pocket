@@ -260,6 +260,7 @@ class _AgentChatSlashMenuState extends State<AgentChatSlashMenu> {
         AgentChatMoreAction.newSession => Icons.add_comment_outlined,
         AgentChatMoreAction.compact => Icons.compress_rounded,
         AgentChatMoreAction.rename => Icons.edit_outlined,
+        AgentChatMoreAction.instructions => Icons.sticky_note_2_outlined,
         AgentChatMoreAction.delete => Icons.delete_outline_rounded,
         null => Icons.auto_awesome_outlined,
       };

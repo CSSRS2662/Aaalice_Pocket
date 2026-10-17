@@ -44,6 +44,9 @@ class ThemedInputDialog extends StatefulWidget {
   /// 是否多行输入
   final bool multiline;
 
+  /// Lets an empty value submit, for fields where empty clears a setting.
+  final bool allowEmpty;
+
   /// 多行输入时的最大行数
   final int maxLines;
 
@@ -60,6 +63,7 @@ class ThemedInputDialog extends StatefulWidget {
     this.confirmText,
     this.cancelText,
     this.multiline = false,
+    this.allowEmpty = false,
     this.maxLines = 5,
     this.presentationManaged = false,
     this.scrollController,
@@ -78,6 +82,7 @@ class ThemedInputDialog extends StatefulWidget {
     String? confirmText,
     String? cancelText,
     bool multiline = false,
+    bool allowEmpty = false,
     int maxLines = 5,
   }) {
     return AdaptivePresenter.showForm<String>(
@@ -93,6 +98,7 @@ class ThemedInputDialog extends StatefulWidget {
         confirmText: confirmText,
         cancelText: cancelText,
         multiline: multiline,
+        allowEmpty: allowEmpty,
         maxLines: maxLines,
         presentationManaged: true,
         scrollController: scrollController,
@@ -135,7 +141,7 @@ class _ThemedInputDialogState extends State<ThemedInputDialog> {
 
   bool get _canSubmit {
     final text = _controller.text.trim();
-    if (text.isEmpty) return false;
+    if (text.isEmpty) return widget.allowEmpty;
     if (widget.validator != null && widget.validator!(text) != null) {
       return false;
     }

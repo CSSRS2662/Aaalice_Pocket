@@ -22,6 +22,7 @@ import '../providers/agent_chat_session_view.dart';
 import '../providers/agent_chat_state.dart';
 import '../models/agent_chat_turn_timeline.dart';
 import 'agent_chat_draft_controller.dart';
+import 'agent_chat_session_instructions.dart';
 import 'agent_chat_session_naming.dart';
 import 'agent_chat_session_recovery.dart';
 import 'agent_chat_session_summary_cache.dart';
@@ -54,7 +55,7 @@ class AgentChatSessionController {
     required AgentChatDraftController draftController,
     required String workspaceDir,
     required Future<Agent> Function() buildAgent,
-    required Future<String> Function() buildSystemPrompt,
+    required Future<String> Function(String sessionId) buildSystemPrompt,
     required AgentChatState Function() readState,
     required void Function(AgentChatState state) writeState,
     required bool Function() isMounted,
@@ -75,7 +76,9 @@ class AgentChatSessionController {
   final AgentChatDraftController _draftController;
   final String _workspaceDir;
   final Future<Agent> Function() _buildAgent;
-  final Future<String> Function() _buildSystemPrompt;
+
+  /// Builds the prompt for a session, which carries its own instructions.
+  final Future<String> Function(String sessionId) _buildSystemPrompt;
   final AgentChatState Function() _readState;
   final void Function(AgentChatState) _writeState;
   final bool Function() _isMounted;
@@ -172,7 +175,7 @@ class AgentChatSessionController {
       (level) => level.name == context.thinkingLevel,
       orElse: () => ThinkingLevel.off,
     );
-    nextAgent.setSystemPrompt(await _buildSystemPrompt());
+    nextAgent.setSystemPrompt(await _buildSystemPrompt(sessionId));
 
     final recentEntries = (await nextSession.findEntriesOnBranch(
       const session_types.EntryQuery(
@@ -244,6 +247,9 @@ class AgentChatSessionController {
         thinkingLevel: nextAgent.state.thinkingLevel,
         pendingResources: draft.resources,
         composerText: draft.composerText,
+        sessionInstructions: AgentChatSessionInstructions(
+          _localStorage,
+        ).read(sessionId),
       ),
     );
     await _draftController.refreshPendingResourceAvailability();
@@ -819,6 +825,7 @@ class AgentChatSessionController {
     return _runTransition(() async {
       _repository.deleteById(sessionId);
       await _draftController.deleteSession(sessionId);
+      await AgentChatSessionInstructions(_localStorage).delete(sessionId);
       if (!deletesActive) {
         _writeState(_readState().copyWith(sessions: await listSessions()));
         return;

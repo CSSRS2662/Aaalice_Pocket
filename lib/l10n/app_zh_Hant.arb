@@ -536,6 +536,17 @@
   "agentChat_noModel": "未配置模型",
   "agentChat_untitled": "新會話",
   "agentChat_renameHint": "會話名稱",
+  "agentChat_sessionInstructions": "對話提示詞",
+  "agentChat_sessionInstructionsActive": "對話提示詞（已設定）",
+  "agentChat_sessionInstructionsHint": "只對這個對話生效，會與全域要求一起送給智慧體；留空即清除",
+  "agentChat_sessionInstructionsTooLong": "對話提示詞不能超過 {maxLength} 個字元",
+  "@agentChat_sessionInstructionsTooLong": {
+    "placeholders": {
+      "maxLength": {
+        "type": "int"
+      }
+    }
+  },
   "agentChat_suggestion1": "檢查目前生成設定",
   "agentChat_suggestion2": "從畫廊整理提示詞",
   "agentChat_suggestion3": "幫我最佳化角色標籤",
@@ -816,6 +827,16 @@
   "image_saveToLibrary": "儲存到詞庫",
   "image_imageSaved": "圖片已儲存到: {path}",
   "image_saveFailed": "儲存失敗: {error}",
+  "image_duplicateNotSaved": "圖庫裡已有這張圖，本次未儲存",
+  "image_duplicatesNotSaved": "{count} 張圖庫裡已有，本次未儲存",
+  "@image_duplicatesNotSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "image_saveAnyway": "依然儲存",
   "image_copiedToClipboard": "已複製到剪貼簿",
   "image_copyFailed": "複製失敗: {error}",
   "config_newPreset": "新建預設",

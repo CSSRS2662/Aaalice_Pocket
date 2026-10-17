@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
+import 'package:path/path.dart' as p;
 import 'package:nai_launcher/core/utils/generated_image_saves.dart';
 import 'package:nai_launcher/core/utils/image_save_utils.dart';
 
@@ -16,15 +17,30 @@ void main() {
   Uint8List png(int width) =>
       Uint8List.fromList(img.encodePng(img.Image(width: width, height: 2)));
 
-  Future<SavedResultImage> save(String root, Uint8List bytes, String source) =>
-      ImageSaveUtils.saveResultImage(
-        rootPath: root,
-        imageBytes: bytes,
-        preserveOriginalBytes: true,
-        rebuild: () async => fail('preserved bytes must not be rebuilt'),
-        source: source,
-        seed: 433141965,
-      );
+  Future<SavedResultImage> save(
+    String root,
+    Uint8List bytes,
+    String source, {
+    int seed = 433141965,
+    bool allowDuplicate = false,
+  }) => ImageSaveUtils.saveResultImage(
+    rootPath: root,
+    imageBytes: bytes,
+    preserveOriginalBytes: true,
+    rebuild: () async => fail('preserved bytes must not be rebuilt'),
+    source: source,
+    seed: seed,
+    allowDuplicate: allowDuplicate,
+  );
+
+  /// A file a dated save wrote before this run, which no registry knows.
+  Future<String> earlierSave(Directory root, Uint8List bytes, int seed) async {
+    final folder = Directory(p.join(root.path, '2026-10-01'));
+    await folder.create(recursive: true);
+    final file = File(p.join(folder.path, '08-30-00-$seed.png'));
+    await file.writeAsBytes(bytes);
+    return file.path;
+  }
 
   Future<List<String>> savedFiles(Directory root) async => [
     await for (final entity in root.list(recursive: true))
@@ -93,5 +109,44 @@ void main() {
 
     expect(saved.reused, isFalse);
     expect(await savedFiles(root), [saved.path]);
+  });
+
+  test('a copy saved before this run is found by its seed', () async {
+    final root = await createRoot();
+    final bytes = png(8);
+    final earlier = await earlierSave(root, bytes, 7001);
+
+    final saved = await save(root.path, bytes, 'detail-save', seed: 7001);
+
+    expect(saved.reused, isTrue);
+    expect(saved.path, earlier);
+    expect(await savedFiles(root), [earlier]);
+  });
+
+  test('a file with the same seed but other bytes is not a copy', () async {
+    final root = await createRoot();
+    final earlier = await earlierSave(root, png(9), 7002);
+
+    final saved = await save(root.path, png(10), 'detail-save', seed: 7002);
+
+    expect(saved.reused, isFalse);
+    expect(await savedFiles(root), unorderedEquals([earlier, saved.path]));
+  });
+
+  test('saving anyway writes a second copy', () async {
+    final root = await createRoot();
+    final bytes = png(11);
+    final first = await save(root.path, bytes, 'card-save');
+
+    final again = await save(
+      root.path,
+      bytes,
+      'card-save',
+      allowDuplicate: true,
+    );
+
+    expect(again.reused, isFalse);
+    expect(again.path, isNot(first.path));
+    expect(await savedFiles(root), unorderedEquals([first.path, again.path]));
   });
 }

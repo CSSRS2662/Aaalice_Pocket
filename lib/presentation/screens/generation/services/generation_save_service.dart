@@ -16,6 +16,7 @@ import '../../../providers/image_generation_provider.dart';
 import '../../../providers/local_gallery_provider.dart';
 import '../../../utils/image_detail_opener.dart';
 import '../../../widgets/common/app_toast.dart';
+import '../../../widgets/common/duplicate_save_notice.dart';
 import '../../../widgets/common/image_detail/file_image_detail_data.dart';
 import '../../../widgets/common/image_detail/image_detail_data.dart';
 import '../../../widgets/common/image_detail/image_detail_viewer.dart';
@@ -111,12 +112,26 @@ class GenerationSaveService {
 
   /// 从详情页保存图像
   ///
-  /// 使用 [ImageSaveUtils] 确保元数据完整嵌入
+  /// 使用 [ImageSaveUtils] 确保元数据完整嵌入。图库里已有同一张图时不保存，
+  /// 底部通知提供“依然保存”。
   static Future<void> saveImageFromDetail(
     BuildContext context,
     WidgetRef ref,
     ImageDetailData image,
-  ) async {
+  ) => _saveFromDetail(
+    context,
+    // 详情页可能在保存期间关闭，句柄在第一个 await 之前取好。
+    ref.read(localGalleryNotifierProvider.notifier),
+    image,
+    allowDuplicate: false,
+  );
+
+  static Future<void> _saveFromDetail(
+    BuildContext context,
+    LocalGalleryNotifier gallery,
+    ImageDetailData image, {
+    required bool allowDuplicate,
+  }) async {
     try {
       final imageBytes = await image.getImageBytes();
       final saveDirPath = await GalleryFolderRepository.instance.getRootPath();
@@ -133,6 +148,7 @@ class GenerationSaveService {
         imageBytes: imageBytes,
         preserveOriginalBytes: image.preserveOriginalBytesOnSave,
         source: 'detail-save',
+        allowDuplicate: allowDuplicate,
         fixedTagUsageSnapshot: fixedTagUsageSnapshot,
         seed: await ImageSaveUtils.resolveSeed(
           metadata: existingMetadata,
@@ -152,13 +168,21 @@ class GenerationSaveService {
                 },
               ),
       );
+      if (saved.reused) {
+        if (context.mounted) {
+          showDuplicateSaveNotice(
+            context,
+            onSaveAnyway: () =>
+                _saveFromDetail(context, gallery, image, allowDuplicate: true),
+          );
+        }
+        return;
+      }
       final finalBytes = saved.bytes;
       final filePath = saved.path;
 
       Object? systemGalleryError;
-      // 沿用的文件当初保存时已导出过系统相册。
-      if (!saved.reused &&
-          PlatformCapabilities.current.supportsSystemGalleryExport) {
+      if (PlatformCapabilities.current.supportsSystemGalleryExport) {
         try {
           await AndroidMediaStoreService.savePng(
             bytes: finalBytes,
@@ -169,7 +193,7 @@ class GenerationSaveService {
         }
       }
 
-      ref.read(localGalleryNotifierProvider.notifier).refresh();
+      gallery.refresh();
 
       if (context.mounted) {
         if (systemGalleryError != null) {

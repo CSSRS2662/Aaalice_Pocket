@@ -66,4 +66,47 @@ void main() {
     await tester.pump();
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('an empty value submits only where empty clears a setting', (
+    tester,
+  ) async {
+    for (final allowEmpty in const [false, true]) {
+      String? result = 'unset';
+      await tester.pumpWidget(
+        MaterialApp(
+          // A fresh navigator each round, so the last dialog is gone.
+          key: ValueKey(allowEmpty),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('en'),
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () async {
+                result = await ThemedInputDialog.show(
+                  context: context,
+                  title: 'Instructions',
+                  initialValue: 'old text',
+                  multiline: true,
+                  allowEmpty: allowEmpty,
+                );
+              },
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '   ');
+      await tester.pump();
+
+      final confirm = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(confirm.onPressed != null, allowEmpty);
+      if (allowEmpty) {
+        await tester.tap(find.byType(FilledButton));
+        await tester.pumpAndSettle();
+        expect(result, isEmpty);
+      }
+    }
+  });
 }

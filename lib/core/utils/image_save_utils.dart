@@ -623,7 +623,8 @@ class ImageSaveUtils {
   /// 固定词快照只进旁路记录库。
   ///
   /// 同一张图已存进 [rootPath] 时直接沿用那个文件（[SavedResultImage.reused]），
-  /// 不再写第二份；[source] 写进日志，用来定位是哪个入口保存的。
+  /// 不再写第二份；按 [seed] 命名的旧文件也会比对。[allowDuplicate] 无视重复
+  /// 再存一份。[source] 写进日志，用来定位是哪个入口保存的。
   static Future<SavedResultImage> saveResultImage({
     required String rootPath,
     required Uint8List imageBytes,
@@ -635,6 +636,7 @@ class ImageSaveUtils {
     int? seed,
     String? preferredFileName,
     DateTime? now,
+    bool allowDuplicate = false,
   }) async {
     final rebuilt =
         !preserveOriginalBytes && !hasEmbeddedNovelAiMetadata(imageBytes);
@@ -643,6 +645,8 @@ class ImageSaveUtils {
       rootPath: rootPath,
       sourceBytes: imageBytes,
       source: source,
+      seed: preferredFileName == null ? seed : null,
+      allowDuplicate: allowDuplicate,
       write: () async {
         bytes = rebuilt ? await rebuild() : imageBytes;
         return saveBytesToDatedPath(

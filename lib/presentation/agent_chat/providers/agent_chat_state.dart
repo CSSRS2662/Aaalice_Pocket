@@ -39,6 +39,7 @@ class AgentChatState {
     this.pendingResources = const [],
     this.unavailableResourceKeys = const {},
     this.composerText = '',
+    this.sessionInstructions = '',
     this.turns = const [],
     this.hasEarlierTurns = false,
     this.historyLoading = false,
@@ -79,6 +80,9 @@ class AgentChatState {
   final List<AgentChatResourceReference> pendingResources;
   final Set<String> unavailableResourceKeys;
   final String composerText;
+
+  /// Instructions the user set for the active conversation only.
+  final String sessionInstructions;
   final List<AgentChatTurnTimeline> turns;
   final bool hasEarlierTurns;
   final bool historyLoading;
@@ -117,6 +121,7 @@ class AgentChatState {
     List<AgentChatResourceReference>? pendingResources,
     Set<String>? unavailableResourceKeys,
     String? composerText,
+    String? sessionInstructions,
     List<AgentChatTurnTimeline>? turns,
     bool? hasEarlierTurns,
     bool? historyLoading,
@@ -164,6 +169,7 @@ class AgentChatState {
       unavailableResourceKeys:
           unavailableResourceKeys ?? this.unavailableResourceKeys,
       composerText: composerText ?? this.composerText,
+      sessionInstructions: sessionInstructions ?? this.sessionInstructions,
       turns: turns ?? this.turns,
       hasEarlierTurns: hasEarlierTurns ?? this.hasEarlierTurns,
       historyLoading: historyLoading ?? this.historyLoading,

@@ -1414,6 +1414,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentChat_renameHint => '会话名称';
 
   @override
+  String get agentChat_sessionInstructions => '对话提示词';
+
+  @override
+  String get agentChat_sessionInstructionsActive => '对话提示词（已设置）';
+
+  @override
+  String get agentChat_sessionInstructionsHint =>
+      '只对这个对话生效，会和全局要求一起发给智能体；留空即清除';
+
+  @override
+  String agentChat_sessionInstructionsTooLong(int maxLength) {
+    return '对话提示词不能超过 $maxLength 个字符';
+  }
+
+  @override
   String get agentChat_suggestion1 => '检查当前生成设置';
 
   @override
@@ -1988,6 +2003,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String image_saveFailed(Object error) {
     return '保存失败: $error';
   }
+
+  @override
+  String get image_duplicateNotSaved => '图库里已有这张图，本次未保存';
+
+  @override
+  String image_duplicatesNotSaved(int count) {
+    return '$count 张图库里已有，本次未保存';
+  }
+
+  @override
+  String get image_saveAnyway => '依然保存';
 
   @override
   String get image_copiedToClipboard => '已复制到剪贴板';
@@ -17168,6 +17194,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentChat_renameHint => '會話名稱';
 
   @override
+  String get agentChat_sessionInstructions => '對話提示詞';
+
+  @override
+  String get agentChat_sessionInstructionsActive => '對話提示詞（已設定）';
+
+  @override
+  String get agentChat_sessionInstructionsHint =>
+      '只對這個對話生效，會與全域要求一起送給智慧體；留空即清除';
+
+  @override
+  String agentChat_sessionInstructionsTooLong(int maxLength) {
+    return '對話提示詞不能超過 $maxLength 個字元';
+  }
+
+  @override
   String get agentChat_suggestion1 => '檢查目前生成設定';
 
   @override
@@ -17742,6 +17783,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String image_saveFailed(Object error) {
     return '儲存失敗: $error';
   }
+
+  @override
+  String get image_duplicateNotSaved => '圖庫裡已有這張圖，本次未儲存';
+
+  @override
+  String image_duplicatesNotSaved(int count) {
+    return '$count 張圖庫裡已有，本次未儲存';
+  }
+
+  @override
+  String get image_saveAnyway => '依然儲存';
 
   @override
   String get image_copiedToClipboard => '已複製到剪貼簿';

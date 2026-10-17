@@ -146,6 +146,10 @@ class StorageKeys {
 
   static const String agentChatActiveSession = 'agent_chat_active_session';
 
+  /// 每个对话自己的提示词，键后接会话 id；会话本身不同步，这些也只存本机。
+  static const String agentChatSessionInstructionsPrefix =
+      'agent_chat_session_instructions:';
+
   /// ChatGPT（Codex）登录的快速模式，只存本机，不参与云同步。
   static const String agentChatFastMode = 'agent_chat_fast_mode';
   static const String defaultModel = 'default_model';

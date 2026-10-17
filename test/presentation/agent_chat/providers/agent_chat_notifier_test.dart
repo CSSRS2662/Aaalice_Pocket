@@ -17,6 +17,7 @@ import 'package:nai_launcher/data/models/interaction/user_question.dart';
 import '../../../fixtures/user_questions.dart';
 import 'package:nai_launcher/presentation/agent_chat/models/agent_chat_compaction_outcome.dart';
 import 'package:nai_launcher/presentation/agent_chat/providers/agent_chat_notifier.dart';
+import 'package:nai_launcher/presentation/agent_chat/services/agent_chat_session_instructions.dart';
 import 'package:nai_launcher/presentation/agent_settings/providers/agent_settings_provider.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/models/agent_protocol.dart';
 import 'package:nai_launcher/data/models/prompt_assistant/prompt_assistant_models.dart';
@@ -1292,6 +1293,40 @@ User instructions.
       expect(usage.available, isTrue);
     });
 
+    test('conversation instructions stay with their own session', () async {
+      await _selectChatModel(container);
+      final notifier = container.read(provider.notifier);
+      final firstId = container.read(provider).activeSessionId;
+
+      await notifier.setSessionInstructions('  ONLY_FIRST  ');
+      expect(container.read(provider).sessionInstructions, 'ONLY_FIRST');
+      await notifier.send('first');
+      await notifier.newSession();
+      expect(container.read(provider).sessionInstructions, isEmpty);
+      await notifier.send('second');
+      await notifier.switchSession(firstId);
+      expect(container.read(provider).sessionInstructions, 'ONLY_FIRST');
+      await notifier.send('again');
+
+      expect(
+        [for (final request in requests) request.systemPrompt],
+        [
+          contains('<conversation_instructions>'),
+          isNot(contains('ONLY_FIRST')),
+          contains('ONLY_FIRST'),
+        ],
+      );
+
+      await notifier.setSessionInstructions('');
+      await notifier.send('cleared');
+      expect(container.read(provider).sessionInstructions, isEmpty);
+      expect(requests.last.systemPrompt, isNot(contains('ONLY_FIRST')));
+
+      await notifier.setSessionInstructions('GONE');
+      await notifier.deleteSession(firstId);
+      expect(AgentChatSessionInstructions(storage).read(firstId), isEmpty);
+    });
+
     test('serializes concurrent session creation', () async {
       final notifier = container.read(provider.notifier);
       final before = container.read(provider).sessions.length;
@@ -1442,6 +1477,11 @@ Future<void> _waitForSkill(
 
 class _MemoryLocalStorage extends LocalStorageService {
   final Map<String, Object?> _values = {};
+
+  @override
+  Future<void> deleteSetting(String key) async {
+    _values.remove(key);
+  }
 
   @override
   T? getSetting<T>(String key, {T? defaultValue}) {

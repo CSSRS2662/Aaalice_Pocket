@@ -2771,6 +2771,30 @@ abstract class AppLocalizations {
   /// **'Session name'**
   String get agentChat_renameHint;
 
+  /// No description provided for @agentChat_sessionInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation instructions'**
+  String get agentChat_sessionInstructions;
+
+  /// No description provided for @agentChat_sessionInstructionsActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation instructions (set)'**
+  String get agentChat_sessionInstructionsActive;
+
+  /// No description provided for @agentChat_sessionInstructionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to this conversation only and is sent with your general instructions. Leave empty to clear.'**
+  String get agentChat_sessionInstructionsHint;
+
+  /// No description provided for @agentChat_sessionInstructionsTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation instructions can be at most {maxLength} characters'**
+  String agentChat_sessionInstructionsTooLong(int maxLength);
+
   /// No description provided for @agentChat_suggestion1.
   ///
   /// In en, this message translates to:
@@ -3799,6 +3823,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save failed: {error}'**
   String image_saveFailed(Object error);
+
+  /// No description provided for @image_duplicateNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'This image is already in the gallery, so it wasn\'t saved'**
+  String get image_duplicateNotSaved;
+
+  /// No description provided for @image_duplicatesNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} images are already in the gallery and weren\'t saved'**
+  String image_duplicatesNotSaved(int count);
+
+  /// No description provided for @image_saveAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Save anyway'**
+  String get image_saveAnyway;
 
   /// No description provided for @image_copiedToClipboard.
   ///

@@ -83,4 +83,34 @@ void main() {
       '$custom\n\nCURRENT_CONTEXT',
     );
   });
+
+  test('conversation instructions follow the general ones in both modes', () {
+    for (final mode in AgentSystemPromptMode.values) {
+      final prompt = composeAgentSystemPrompt(
+        builtInPrompt: 'BUILT_IN',
+        customInstructions: 'CUSTOM',
+        mode: mode,
+        runtimeContext: '<runtime/>',
+        sessionInstructions: '  ONLY_HERE  ',
+      );
+
+      expect(prompt, contains('<conversation_instructions>'), reason: '$mode');
+      expect(prompt, contains('ONLY_HERE\n</conversation_instructions>'));
+      expect(prompt.indexOf('CUSTOM'), lessThan(prompt.indexOf('ONLY_HERE')));
+      expect(
+        prompt.indexOf('ONLY_HERE'),
+        lessThan(prompt.indexOf('<runtime/>')),
+      );
+    }
+    expect(
+      composeAgentSystemPrompt(
+        builtInPrompt: 'BUILT_IN',
+        customInstructions: '',
+        mode: AgentSystemPromptMode.append,
+        runtimeContext: '',
+        sessionInstructions: '   ',
+      ),
+      'BUILT_IN',
+    );
+  });
 }

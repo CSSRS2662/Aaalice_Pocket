@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/localization_extension.dart';
+import '../../../widgets/common/inverse_action_bar.dart';
 
 /// Dark floating capsule offering to undo a section deletion.
 ///
@@ -18,44 +19,11 @@ class PromptGroupUndoBar extends StatelessWidget {
   final VoidCallback onUndo;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return Material(
-      key: const ValueKey('prompt_group_undo_bar'),
-      color: colors.inverseSurface,
-      elevation: 6,
-      shape: const StadiumBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48),
-        child: Padding(
-          padding: const EdgeInsetsDirectional.only(start: 20, end: 6),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  message,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colors.onInverseSurface,
-                  ),
-                ),
-              ),
-              TextButton(
-                key: const ValueKey('prompt_group_undo_action'),
-                onPressed: onUndo,
-                style: TextButton.styleFrom(
-                  foregroundColor: colors.inversePrimary,
-                  shape: const StadiumBorder(),
-                ),
-                child: Text(context.l10n.common_undo),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => InverseActionBar(
+    key: const ValueKey('prompt_group_undo_bar'),
+    message: message,
+    actionLabel: context.l10n.common_undo,
+    actionKey: const ValueKey('prompt_group_undo_action'),
+    onAction: onUndo,
+  );
 }

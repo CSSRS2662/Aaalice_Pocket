@@ -23,6 +23,7 @@ import '../models/agent_chat_prompt_envelope.dart';
 import '../models/agent_chat_slash_command.dart';
 import '../providers/agent_chat_fast_mode_provider.dart';
 import '../providers/agent_chat_notifier.dart';
+import '../services/agent_chat_session_instructions.dart';
 import '../services/agent_chat_session_controller.dart';
 import 'agent_chat_panel_controller.dart';
 import 'agent_chat_panel_view_data.dart';
@@ -437,6 +438,33 @@ class AgentChatPanelCoordinator {
     await _notifier.renameSession(sessionId, name);
   }
 
+  Future<void> _editSessionInstructions(
+    BuildContext context,
+    AgentChatState state,
+  ) async {
+    final l10n = context.l10n;
+    final text = await ThemedInputDialog.show(
+      context: context,
+      title: l10n.agentChat_sessionInstructions,
+      hintText: l10n.agentChat_sessionInstructionsHint,
+      initialValue: state.sessionInstructions.isEmpty
+          ? null
+          : state.sessionInstructions,
+      validator: (value) =>
+          value.trim().length > AgentChatSessionInstructions.maxLength
+          ? l10n.agentChat_sessionInstructionsTooLong(
+              AgentChatSessionInstructions.maxLength,
+            )
+          : null,
+      confirmText: l10n.common_save,
+      multiline: true,
+      maxLines: 10,
+      allowEmpty: true,
+    );
+    if (text == null || !_isMounted()) return;
+    await _notifier.setSessionInstructions(text);
+  }
+
   Future<void> _deleteSession(BuildContext context, String sessionId) async {
     final l10n = context.l10n;
     final summary = _ref
@@ -464,6 +492,8 @@ class AgentChatPanelCoordinator {
         await _notifier.newSession();
       case AgentChatMoreAction.rename:
         await _renameSession(context, state.activeSessionId);
+      case AgentChatMoreAction.instructions:
+        await _editSessionInstructions(context, state);
       case AgentChatMoreAction.compact:
         final outcome = await _notifier.compactNow();
         if (!_isMounted() || !context.mounted) return;

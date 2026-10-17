@@ -551,6 +551,17 @@
   "agentChat_noModel": "No model",
   "agentChat_untitled": "New chat",
   "agentChat_renameHint": "Session name",
+  "agentChat_sessionInstructions": "Conversation instructions",
+  "agentChat_sessionInstructionsActive": "Conversation instructions (set)",
+  "agentChat_sessionInstructionsHint": "Applies to this conversation only and is sent with your general instructions. Leave empty to clear.",
+  "agentChat_sessionInstructionsTooLong": "Conversation instructions can be at most {maxLength} characters",
+  "@agentChat_sessionInstructionsTooLong": {
+    "placeholders": {
+      "maxLength": {
+        "type": "int"
+      }
+    }
+  },
   "agentChat_suggestion1": "Review current generation settings",
   "agentChat_suggestion2": "Organize prompts from the gallery",
   "agentChat_suggestion3": "Help me improve character tags",
@@ -877,6 +888,16 @@
       "error": {}
     }
   },
+  "image_duplicateNotSaved": "This image is already in the gallery, so it wasn't saved",
+  "image_duplicatesNotSaved": "{count} images are already in the gallery and weren't saved",
+  "@image_duplicatesNotSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "image_saveAnyway": "Save anyway",
   "image_copiedToClipboard": "Copied to clipboard",
   "image_copyFailed": "Copy failed: {error}",
   "@image_copyFailed": {

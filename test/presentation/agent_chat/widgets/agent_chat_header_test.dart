@@ -111,7 +111,9 @@ void main() {
         if (width >= 600) expect(find.text('5h'), findsOneWidget);
         expect(
           tester
-              .getSize(find.byKey(const ValueKey('agent-chat-session-selector')))
+              .getSize(
+                find.byKey(const ValueKey('agent-chat-session-selector')),
+              )
               .width,
           greaterThanOrEqualTo(56),
           reason: 'width=$width mobile=$mobile',
@@ -265,6 +267,30 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('更多菜单可编辑对话提示词，并标出已设置', (tester) async {
+    for (final instructions in const ['', '只画夜景']) {
+      final actions = <AgentChatMoreAction>[];
+      await tester.pumpWidget(
+        _app(
+          width: 840,
+          mobile: false,
+          onMoreAction: actions.add,
+          sessionInstructions: instructions,
+        ),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('agent-chat-desktop-more')),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pumpAndSettle();
+      final label = instructions.isEmpty ? '对话提示词' : '对话提示词（已设置）';
+      expect(find.text(label), findsOneWidget);
+      await tester.tap(find.text(label), kind: PointerDeviceKind.mouse);
+      await tester.pumpAndSettle();
+      expect(actions, [AgentChatMoreAction.instructions]);
+    }
+  });
+
   testWidgets('弹出为浮窗按钮宽度充足时在头部，窄栏收进更多菜单且不溢出', (tester) async {
     var popOuts = 0;
     const pointer = InteractionPolicy(
@@ -404,6 +430,7 @@ Widget _app({
   InteractionPolicy? interactionPolicy,
   Locale locale = const Locale('zh'),
   bool chatGptCodex = false,
+  String sessionInstructions = '',
 }) {
   final codex = ProviderPreset.chatgptCodex.createConfig();
   final state = AgentChatState(
@@ -421,6 +448,7 @@ Widget _app({
       ),
     ],
     activeSessionId: 'current',
+    sessionInstructions: sessionInstructions,
   );
   final viewData = AgentChatPanelViewData(
     state: state,

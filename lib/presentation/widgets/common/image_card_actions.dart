@@ -27,6 +27,7 @@ import '../../screens/dlss/dlss_error_view.dart';
 import '../../screens/watermark/watermark_editor_launcher.dart';
 import '../../utils/clipboard_image.dart';
 import 'app_toast.dart';
+import 'duplicate_save_notice.dart';
 import 'image_card_controller.dart';
 import 'image_card_action.dart';
 export 'image_card_action.dart';
@@ -380,7 +381,8 @@ class ImageCardActionCoordinator {
     );
   }
 
-  Future<void> saveImage() async {
+  /// 图库里已有同一张图时不保存，底部通知提供“依然保存”。
+  Future<void> saveImage({bool allowDuplicate = false}) async {
     final l10n = context.l10n;
     final bytes = _data.imageBytes;
     if (bytes == null) return;
@@ -390,19 +392,29 @@ class ImageCardActionCoordinator {
         if (context.mounted) AppToast.error(context, l10n.toast_saveDirNotSet);
         return;
       }
+      final seed = await ImageSaveUtils.resolveSeed(bytes: bytes);
       final saved = await GeneratedImageSaves.saveOnce(
         rootPath: rootPath,
         sourceBytes: bytes,
         source: 'card-save',
-        write: () async => ImageSaveUtils.saveBytesToDatedPath(
+        seed: seed,
+        allowDuplicate: allowDuplicate,
+        write: () => ImageSaveUtils.saveBytesToDatedPath(
           rootPath: rootPath,
           bytes: bytes,
-          seed: await ImageSaveUtils.resolveSeed(bytes: bytes),
+          seed: seed,
         ),
       );
-      // 沿用的文件当初保存时已导出过系统相册。
-      if (!saved.reused &&
-          PlatformCapabilities.current.supportsSystemGalleryExport) {
+      if (saved.reused) {
+        if (context.mounted) {
+          showDuplicateSaveNotice(
+            context,
+            onSaveAnyway: () => saveImage(allowDuplicate: true),
+          );
+        }
+        return;
+      }
+      if (PlatformCapabilities.current.supportsSystemGalleryExport) {
         try {
           await AndroidMediaStoreService.savePng(
             bytes: bytes,

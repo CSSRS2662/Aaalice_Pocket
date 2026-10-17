@@ -1434,6 +1434,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get agentChat_renameHint => 'チャット名';
 
   @override
+  String get agentChat_sessionInstructions => 'この会話の指示';
+
+  @override
+  String get agentChat_sessionInstructionsActive => 'この会話の指示（設定済み）';
+
+  @override
+  String get agentChat_sessionInstructionsHint =>
+      'この会話にだけ適用され、全体の指示と一緒にエージェントへ送られます。空にすると消去します。';
+
+  @override
+  String agentChat_sessionInstructionsTooLong(int maxLength) {
+    return 'この会話の指示は $maxLength 文字までです';
+  }
+
+  @override
   String get agentChat_suggestion1 => '現在の生成設定を確認';
 
   @override
@@ -2015,6 +2030,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String image_saveFailed(Object error) {
     return '保存に失敗しました: $error';
   }
+
+  @override
+  String get image_duplicateNotSaved => 'この画像はすでにギャラリーにあるため、保存しませんでした';
+
+  @override
+  String image_duplicatesNotSaved(int count) {
+    return '$count 枚はすでにギャラリーにあるため、保存しませんでした';
+  }
+
+  @override
+  String get image_saveAnyway => 'それでも保存';
 
   @override
   String get image_copiedToClipboard => 'クリップボードにコピーされました';

@@ -202,6 +202,9 @@ class AgentChatHeader extends StatelessWidget {
           case 'rename':
             await commands.moreAction(AgentChatMoreAction.rename);
             return;
+          case 'instructions':
+            await commands.moreAction(AgentChatMoreAction.instructions);
+            return;
           case 'compact':
             await commands.moreAction(AgentChatMoreAction.compact);
             return;
@@ -219,6 +222,19 @@ class AgentChatHeader extends StatelessWidget {
       itemBuilder: (_) => [
         if (hasActiveSession && viewData.sessionActionsEnabled) ...[
           _menuItem('rename', Icons.edit_outlined, l10n.common_rename),
+          if (viewData.state.sessionInstructions.isEmpty)
+            _menuItem(
+              'instructions',
+              Icons.sticky_note_2_outlined,
+              l10n.agentChat_sessionInstructions,
+            )
+          else
+            _menuItem(
+              'instructions',
+              Icons.sticky_note_2_rounded,
+              l10n.agentChat_sessionInstructionsActive,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           _menuItem('compact', Icons.compress_rounded, l10n.agentChat_compact),
           _menuItem(
             'delete',

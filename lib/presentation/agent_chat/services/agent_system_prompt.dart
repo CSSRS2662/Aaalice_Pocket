@@ -259,10 +259,12 @@ String buildAgentSystemPrompt({
   required bool webAccessEnabled,
   required String skillBlock,
   String customInstructions = '',
+  String sessionInstructions = '',
   AgentSystemPromptMode mode = AgentSystemPromptMode.append,
 }) => composeAgentSystemPrompt(
   builtInPrompt: buildAgentSystemPromptBody(webAccessEnabled: webAccessEnabled),
   customInstructions: customInstructions,
+  sessionInstructions: sessionInstructions,
   mode: mode,
   runtimeContext: _buildRuntimeContext(
     workspacePath: workspacePath,

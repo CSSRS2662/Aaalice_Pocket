@@ -76,7 +76,7 @@ class AgentChatPanelViewData {
           state.activities.isNotEmpty);
 }
 
-enum AgentChatMoreAction { newSession, rename, compact, delete }
+enum AgentChatMoreAction { newSession, rename, instructions, compact, delete }
 
 enum AgentChatAttachmentAction {
   images,
