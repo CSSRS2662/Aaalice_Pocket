@@ -47,7 +47,10 @@ class PromptToolbox {
             'positive/negative prompts, enabled state, per-character saved '
             'position mode and continuous x/y centers, global AI/custom '
             'layout mode, current model, and its effective character limit. '
-            'positive_prompt / negative_prompt are what NovelAI receives. '
+            'positive_prompt / negative_prompt are the prompts as edited; on '
+            'generation the app adds enabled fixed tags (list_fixed_tags), '
+            'quality tags and the negative preset, and expands <name> tag '
+            'library references. '
             'prompt_editor_mode is single or grouped; in grouped mode the '
             'user split the prompt into sections, returned as '
             'positive_sections / negative_sections (id, text, enabled), and '
@@ -109,9 +112,11 @@ class PromptToolbox {
         description:
             'Write the main positive prompt. mode: "replace" '
             '(default), "append" (add at the end), or "prepend" (add at the '
-            'beginning). Content should be English danbooru-style tags '
-            'separated by commas. Use NovelAI emphasis syntax — {tag} / '
-            '[tag] on every model, 1.3::tag :: numeric on V4+ — never '
+            'beginning). Content should be English danbooru tags separated '
+            'by commas, looked up with search_tags, with short English '
+            'phrases only where no tag fits. Weights: x.x::tags:: on V4+ '
+            '(range -3 to 3; a negative weight such as -1::hat:: keeps that '
+            'concept out on V4.5+), {tag} / [tag] on every model — never '
             '(tag:1.2) which is Stable Diffusion syntax. '
             '$promptSectionGroupedWriteNote',
         parameters: const {
@@ -136,8 +141,11 @@ class PromptToolbox {
         name: 'set_negative_prompt',
         label: 'Set Negative Prompt',
         description:
-            'Write the negative prompt (Undesired Content). mode: '
-            '"replace" (default), "append", or "prepend". '
+            'Write the negative prompt (Undesired Content). Keep it '
+            'generic, limited to general quality and anatomy problems, and '
+            'only change it when the user asks; exclude something from one '
+            'picture with a negative weight in the positive prompt instead. '
+            'mode: "replace" (default), "append", or "prepend". '
             '$promptSectionGroupedWriteNote',
         parameters: const {
           'type': 'object',

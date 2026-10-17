@@ -159,7 +159,9 @@ class GenerationToolDefinitions {
             'Important: "count" generates N variations of the SAME prompt '
             '(e.g. count=3 -> three versions of one prompt). For several '
             'DIFFERENT prompts, call this tool once per prompt instead. '
-            '"prompt" is required; write English danbooru-style tags. '
+            '"prompt" is required; write English danbooru tags looked up '
+            'with search_tags, with short English phrases only where no tag '
+            'fits. '
             '(2) "count" = how many variations of the SAME prompt; minimum '
             '1, maximum $generationToolMaxGenerateCount. It maps 1:1 to the app '
             '"generation count" setting and runs on the app-native batch '
@@ -207,7 +209,8 @@ class GenerationToolDefinitions {
               'type': 'string',
               'description':
                   'Omit to reuse the generation page negative '
-                  'prompt.',
+                  'prompt, which is usually right; exclude something from '
+                  'this picture with a negative weight in prompt instead.',
             },
             'width': {
               'type': 'integer',
@@ -313,13 +316,16 @@ class GenerationToolDefinitions {
           'properties': {
             'prompt': {
               'type': 'string',
-              'description': 'Positive prompt; English danbooru-style tags.',
+              'description':
+                  'Positive prompt; English danbooru tags looked up with '
+                  'search_tags.',
             },
             'negative_prompt': {
               'type': 'string',
               'description':
                   'Omit to reuse the generation page negative '
-                  'prompt.',
+                  'prompt, which is usually right; exclude something from '
+                  'this picture with a negative weight in prompt instead.',
             },
             'count': {
               'type': 'integer',

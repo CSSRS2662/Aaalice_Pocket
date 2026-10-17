@@ -29,7 +29,7 @@ class PromptTag with _$PromptTag {
     /// 标签原始文本（保留下划线格式）
     required String text,
 
-    /// 权重值 (1.0 为标准，>1.0 增强，<1.0 减弱)
+    /// 权重值 (1.0 为标准，>1.0 增强，<1.0 减弱，<0 为负权重)
     @Default(1.0) double weight,
 
     /// 标签分类
@@ -81,11 +81,14 @@ class PromptTag with _$PromptTag {
   /// NAI 权重步进值（每层括号 5%）
   static const double weightStep = 0.05;
 
-  /// 最小权重
-  static const double minWeight = 0.1;
+  /// 最小权重：V4.5 起的负权重可到 -3，效果相当于写进负面提示词。
+  static const double minWeight = -3.0;
 
   /// 最大权重
   static const double maxWeight = 3.0;
+
+  /// 括号只能逐层减弱，表示不了 0 及以下的权重。
+  static const double minBracketWeight = 0.1;
 
   /// 计算需要的括号层数
   /// 正数 = {} 大括号层数，负数 = [] 方括号层数
@@ -112,8 +115,9 @@ class PromptTag with _$PromptTag {
     // 权重为 1.0 时，直接返回文本
     if ((weight - 1.0).abs() < 0.001) return text;
 
-    // 根据语法类型选择输出格式
-    switch (syntaxType) {
+    // 括号写不出 0 及以下的权重，负权重一律用数值语法。
+    final type = weight <= 0 ? WeightSyntaxType.numeric : syntaxType;
+    switch (type) {
       case WeightSyntaxType.numeric:
         // 数值语法: weight::content::
         final weightStr = weight == weight.truncateToDouble()

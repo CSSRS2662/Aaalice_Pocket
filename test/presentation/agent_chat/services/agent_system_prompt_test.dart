@@ -181,4 +181,23 @@ void main() {
     expect(prompt, contains('clear_generation_source_image'));
     expect(prompt, contains('update_generation_source_settings'));
   });
+
+  test('prompt conventions put tags and negative weights first', () {
+    final prompt = buildAgentSystemPrompt(
+      workspacePath: 'C:/exports',
+      webAccessEnabled: false,
+      skillBlock: '',
+    );
+
+    expect(prompt, contains('Weights on V4, V4.5 and V5: write x.x::tags::'));
+    expect(prompt, contains('The range is -3 to 3'));
+    expect(prompt, contains('write it as a negative-weight tag in the'));
+    expect(prompt, contains('stay as generic as possible'));
+    expect(prompt, contains('look up a fitting tag with search_tags'));
+    expect(prompt, contains('Check list_fixed_tags before writing'));
+    expect(prompt, contains('<name> in a prompt refers to the tag library'));
+    expect(prompt, contains('retries a failed generation request five times'));
+    expect(prompt, isNot(contains('1.3::tag ::')));
+    expect(prompt, isNot(contains('prefer describing the picture in English')));
+  });
 }

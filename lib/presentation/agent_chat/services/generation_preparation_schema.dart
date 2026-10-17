@@ -11,14 +11,15 @@ Map<String, dynamic> generationPreparationProperties({
   'prompt': {
     'type': 'string',
     'description':
-        'Positive prompt for this request only, English danbooru-style tags; '
-        'does not change the launcher page.',
+        'Positive prompt for this request only, English danbooru tags '
+        'looked up with search_tags; does not change the launcher page.',
   },
   'negative_prompt': {
     'type': 'string',
     'description':
         'Undesired content for this request only; omit to inherit the page '
-        'value.',
+        'value, which is usually right. Exclude something from this picture '
+        'with a negative weight in prompt instead.',
   },
   'width': {
     'type': 'integer',

@@ -255,7 +255,7 @@ class NaiPromptParser {
 
     return _WeightResult(
       processedText.trim(),
-      weight.clamp(PromptTag.minWeight, PromptTag.maxWeight),
+      weight.clamp(PromptTag.minBracketWeight, PromptTag.maxWeight),
       syntaxType,
     );
   }

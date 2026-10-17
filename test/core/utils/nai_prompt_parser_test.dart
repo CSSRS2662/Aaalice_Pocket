@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/core/utils/nai_prompt_parser.dart';
+import 'package:nai_launcher/data/models/prompt/prompt_tag.dart';
 
 void main() {
   group('NaiPromptParser.splitSegments', () {
@@ -65,6 +66,31 @@ void main() {
         isFalse,
       );
       expect(NaiPromptParser.containsFragment('a, middle, b', 'a, b'), isFalse);
+    });
+  });
+
+  group('weights', () {
+    test('negative weights parse and round-trip as numeric syntax', () {
+      final tags = NaiPromptParser.parse('1.3::red hair::, -1::hat::, -3::x::');
+
+      expect([for (final tag in tags) tag.weight], [1.3, -1.0, -3.0]);
+      expect(
+        NaiPromptParser.toPromptString(tags),
+        '1.3::red hair::, -1::hat::, -3::x::',
+      );
+    });
+
+    test('a weight below zero is written numerically even from brackets', () {
+      final tag = NaiPromptParser.parse('[hat]').single;
+
+      expect(tag.copyWith(weight: -0.5).toSyntaxString(), '-0.5::hat::');
+      expect(tag.toSyntaxString(), '[hat]');
+    });
+
+    test('stacked brackets keep a positive floor', () {
+      final tag = NaiPromptParser.parse('${'[' * 30}hat${']' * 30}').single;
+
+      expect(tag.weight, PromptTag.minBracketWeight);
     });
   });
 }

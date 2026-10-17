@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/utils/character_prompt_block_parser.dart';
 import '../../../core/utils/prompt_edit_document.dart';
+import '../../../data/models/prompt/prompt_tag.dart';
 import 'nai_syntax_controller.dart';
 
 /// 权重解析结果
@@ -15,8 +16,8 @@ class PromptWeightValue {
 }
 
 class PromptWeightEditing {
-  static const double minimumWeight = -3;
-  static const double maximumWeight = 3;
+  static const double minimumWeight = PromptTag.minWeight;
+  static const double maximumWeight = PromptTag.maxWeight;
   static final RegExp _naiWeightPattern = RegExp(
     r'^(-?\d+\.?\d*)::(.+?)(?:::$|$)',
     // Selections can span paragraphs; subsequent edits must replace this shell.

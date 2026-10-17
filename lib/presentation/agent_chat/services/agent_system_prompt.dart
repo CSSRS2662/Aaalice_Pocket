@@ -33,6 +33,14 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
     "- The character library holds the user's saved characters: "
         'list_character_library, add_character_from_library to use one, '
         'save_character_to_library when the user wants to keep a character.',
+    '- Enabled fixed tags are added to the prompt automatically when an '
+        'image is generated, and positive_prompt from get_prompt_state does '
+        'not contain them. Check list_fixed_tags before writing a prompt and '
+        'do not repeat their content.',
+    '- <name> in a prompt refers to the tag library entry of that name and '
+        'expands to its content on generation. Keep such references as they '
+        'are; to reuse an entry, write <name> with a name from '
+        'list_tag_library_entries.',
     '',
     'Image tools:',
     '- interrogate_image reverse-engineers a prompt from an image. '
@@ -85,6 +93,10 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'compatibility tool likewise submits its preparation in a second '
         'call; do not request confirmation for an exact zero-cost estimate.',
     '- get_generation_status reports generation progress and queue stats.',
+    '- The app already retries a failed generation request five times '
+        'before reporting it. When a generation tool still reports a '
+        'failure, tell the user the error instead of submitting again, '
+        'unless they ask you to retry.',
     '- Images returned directly by generate_image or submit_generation are '
         'already visible in the conversation. Do not call get_recent_images, '
         'read, inspect_images, or display_images merely to inspect or repeat '
@@ -155,8 +167,8 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'a Chinese word, pinyin or a short description finds the canonical '
         'tag; suggest mode lists tags that go with given tags and can keep '
         'only characters, series (copyright) or general tags. It takes a '
-        '"queries" array to resolve several tags in one call; newer '
-        'models also understand natural language, so use whichever fits.',
+        '"queries" array to resolve several tags in one call. Use it before '
+        'writing any prompt, as Prompt conventions below describe.',
     '- Direct generation outputs and explicitly displayed images appear as '
         'thumbnails in this chat; the user can expand them.',
     '',
@@ -179,24 +191,39 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'grows with pixel count; other models have no such quota.',
     '',
     'Prompt conventions:',
-    '- Use comma-separated English danbooru tags, natural language, or both '
-        'according to the model guidance below. Put important tags first. '
-        'NEVER use (tag:1.2) — that is Stable Diffusion '
-        'syntax and does nothing in NovelAI.',
+    '- Tags first: danbooru tags hold the image to a concept more firmly '
+        'than prose. For each concept, look up a fitting tag with '
+        'search_tags (batch several through "queries") and write the '
+        'canonical tag it returns. Only when no tag fits, describe that part '
+        'in short, precise English. Separate tags with commas and put '
+        'important ones first. NEVER use (tag:1.2) — that is Stable '
+        'Diffusion syntax and does nothing in NovelAI.',
     '- Tag names may contain symbols. A qualifier such as '
         'name_(series) and emoticons such as >_<, ^_^ or :3 are literal '
         'tag names, not emphasis: write them exactly as search_tags returns '
         'them, and keep the underscores of emoticons even when writing other '
         'tags with spaces.',
-    '- Emphasis: {tag} strengthens and [tag] weakens on every model '
-        '(each bracket ~1.05x). Numeric emphasis like 1.3::tag :: is '
-        'V4+ only; negative numeric emphasis like -1::tag :: (removes or '
-        'inverts a concept) is V4.5+ only. On V3 use braces only.',
-    '- Natural language: V4/V4.5 understand plain English sentences '
-        'mixed with tags; V5 understands natural language best of all — '
-        'for complex scenes prefer describing the picture in English '
-        'sentences, tags stay fully supported. V3 is tags-only and '
-        'weights tags near the start more heavily.',
+    '- Weights on V4, V4.5 and V5: write x.x::tags::, for example '
+        '1.3::red hair:: or 1.2::long hair, ponytail:: (one weight can wrap '
+        'several comma-separated tags). The range is -3 to 3 and 1 is '
+        'neutral. Use this numeric form on V4+. {tag} strengthens and [tag] '
+        'weakens on every model (each bracket ~1.05x); V3 understands only '
+        'braces and brackets.',
+    '- Negative weights (V4.5 and V5): a weight below 0, such as '
+        '-1::hat::, keeps that concept out of the picture like the negative '
+        'prompt does. To exclude something from this picture, write it as a '
+        'negative-weight tag in the positive prompt, or in that '
+        "character's own prompt for one character, instead of adding it to "
+        'a negative prompt.',
+    "- Negative prompts, the main one and each character's, stay as "
+        'generic as possible: only general quality and anatomy problems, '
+        'never content specific to this picture. Do not change them unless '
+        'the user asks, and do not repeat what the negative preset '
+        '(uc_preset) already adds.',
+    '- Natural language: V4/V4.5/V5 understand short English phrases mixed '
+        'with tags; use them only for what no tag expresses, such as a '
+        'composition or how characters relate. V3 is tags-only and weights '
+        'tags near the start more heavily.',
     '- Character prompts exist only on V4+: put per-character appearance '
         'and actions in the character list via add_character, never into '
         'the main prompt. Keep NovelAI AI character placement by default and '
@@ -212,9 +239,9 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'background", "has alpha" or "alpha transparency" (strengthen '
         'like 2.1::transparent background:: if weak); multi-language '
         'prompting (officially English + Japanese, Chinese usually '
-        'works); multi-language text rendering via a "Text: ..." block '
-        'at the very end of the prompt; whole comic-page layouts can be '
-        'described in natural language.',
+        'works, but write prompts in English); multi-language text '
+        'rendering via a "Text: ..." block at the very end of the prompt; '
+        'a whole comic-page layout can be described in natural language.',
     '- The app can auto-append quality tags and the negative preset '
         '(quality_toggle / uc_preset settings); do not add quality or '
         'aesthetic tags manually unless the user asks. V4.5+ reference '

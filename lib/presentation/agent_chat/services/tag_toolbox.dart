@@ -57,7 +57,8 @@ class TagToolbox {
             'evidence for verifying canonical spellings, aliases and category. '
             'For a named character, use this after researching its identity '
             'and before inspecting gallery tags. Do not guess canonical tags '
-            'from model memory. Natural-language prompts remain supported.',
+            'from model memory. Look tags up here before writing a prompt; '
+            'use short English phrases only for what no tag expresses.',
         parameters: const {
           'type': 'object',
           'properties': {
