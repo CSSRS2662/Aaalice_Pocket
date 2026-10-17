@@ -71,6 +71,7 @@ class AgentChatRequest {
     this.modelMaxOutputTokens,
     this.reasoning,
     this.reasoningRequest,
+    this.serviceTier,
   });
 
   final String sessionId;
@@ -97,6 +98,10 @@ class AgentChatRequest {
 
   /// Provider-native request resolved from Pi's model registry contract.
   final AgentReasoningRequest? reasoningRequest;
+
+  /// Responses `service_tier`, sent by adapters that support it. Null keeps
+  /// the account default.
+  final String? serviceTier;
 }
 
 /// 适配器流式输出的线事件。非流式适配器把完整结果拆成

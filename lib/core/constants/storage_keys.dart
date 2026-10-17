@@ -145,6 +145,9 @@ class StorageKeys {
   static const String agentChatFloatingRect = 'agent_chat_floating_rect';
 
   static const String agentChatActiveSession = 'agent_chat_active_session';
+
+  /// ChatGPT（Codex）登录的快速模式，只存本机，不参与云同步。
+  static const String agentChatFastMode = 'agent_chat_fast_mode';
   static const String defaultModel = 'default_model';
   static const String defaultSampler = 'default_sampler';
   static const String defaultSteps = 'default_steps';

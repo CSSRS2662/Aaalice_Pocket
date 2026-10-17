@@ -22,10 +22,12 @@ import '../../../core/storage/local_storage_service.dart';
 import '../../../core/services/android_foreground_task_service.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../data/models/agent/agent_settings.dart';
+import '../../../data/services/chatgpt_codex/chatgpt_codex_fast_mode.dart';
 import '../../../data/models/interaction/user_question.dart';
 import '../../../data/models/inpaint/inpaint_draft.dart';
 import '../../agent_settings/providers/agent_settings_provider.dart';
 import '../models/agent_chat_compaction_outcome.dart';
+import 'agent_chat_fast_mode_provider.dart';
 import '../models/agent_chat_slash_syntax.dart';
 import '../../../data/models/prompt_assistant/prompt_assistant_models.dart';
 import '../../prompt_assistant/models/agent_protocol.dart';
@@ -675,6 +677,11 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
         reasoning: options?.reasoning,
         reasoningRequest: capability.resolveReasoningRequest(
           options?.reasoning,
+        ),
+        serviceTier: ChatGptCodexFastMode.serviceTierFor(
+          route.$1,
+          route.$2,
+          enabled: _ref.read(agentChatFastModeProvider),
         ),
       );
       final wireEvents =

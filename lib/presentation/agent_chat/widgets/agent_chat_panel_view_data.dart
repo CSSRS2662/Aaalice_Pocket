@@ -26,6 +26,7 @@ class AgentChatPanelViewData {
     this.onPopOut,
     this.onDock,
     this.currentCanvasReference,
+    this.fastModeEnabled = false,
   });
 
   final AgentChatState state;
@@ -49,6 +50,9 @@ class AgentChatPanelViewData {
   /// from it.
   final VoidCallback? onDock;
   final AgentChatResourceReference? currentCanvasReference;
+
+  /// Whether ChatGPT (Codex) logins run in Fast mode.
+  final bool fastModeEnabled;
 
   bool get floating => onDock != null;
   bool get running => state.status == AgentChatRunStatus.running;
@@ -116,6 +120,7 @@ class AgentChatPanelCommands {
     required this.addPendingResource,
     required this.removePendingResource,
     this.loadEarlierHistory,
+    this.setFastModeEnabled,
   });
 
   final VoidCallback collapse;
@@ -155,4 +160,5 @@ class AgentChatPanelCommands {
   addPendingResource;
   final Future<void> Function(int index) removePendingResource;
   final Future<void> Function()? loadEarlierHistory;
+  final Future<void> Function(bool enabled)? setFastModeEnabled;
 }

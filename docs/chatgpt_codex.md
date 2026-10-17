@@ -24,6 +24,13 @@
 
 与 OpenAI Responses 相比：端点为 `<base>/codex/responses`；请求头带 `chatgpt-account-id`（取自令牌声明）、`originator`、`OpenAI-Beta: responses=experimental`、`session-id`；请求体固定 `store:false`、`stream:true`，不发 `max_output_tokens`，始终包含 `reasoning.encrypted_content`，工具的 `strict` 为 null。后端只流式返回，提示词助手的一次性任务读取流并使用用户设定的等待时长。用量超限时错误信息给出套餐与本地重置时间。
 
+## 快速模式
+
+- 对应 Codex 的 Fast 服务档：请求体带 `service_tier: "priority"`，官方说明为约 1.5 倍速度、额度消耗更多（Pi 按 2 倍、GPT-5.5 按 2.5 倍计价）。Codex CLI 0.144 的模型目录里完整模型都有这一档，mini 与 spark 没有；`ChatGptCodexFastMode` 按此判断，其他服务商不发送该字段。
+- 开关在智能体输入框的模型 / 推理强度入口里（推理强度下方的「速度」分组），开启后模型胶囊显示闪电图标；只对智能体对话（含压缩）生效，提示词助手的一次性任务不受影响。
+- 选择保存在本机设置 `agent_chat_fast_mode`，不参与云同步：它决定这台设备消耗订阅额度的速度，由每台设备自己选；同步白名单也会让旧版本拒绝不认识的键。
+- 由 `AgentChatNotifier` 组请求时经 `ChatGptCodexFastMode.serviceTierFor` 写入 `AgentChatRequest.serviceTier`，在 Harness 之外完成，不改 Pi 的会话协议。
+
 ## 额度
 
 - 每次 Codex 响应（含错误响应）的 `x-codex-primary-*`、`x-codex-secondary-*` 头由拦截器记录，按账号保存在内存，不持久化、不同步。
@@ -41,5 +48,6 @@
 
 - `test/data/services/chatgpt_codex/`：设备码轮询、兑换、刷新、浏览器授权参数、回调服务器、额度解析与拦截器。
 - `test/presentation/prompt_assistant/providers/chatgpt_codex_account_provider_test.dart`：刷新时机、并发共用、吊销与登出。
-- `test/presentation/prompt_assistant/services/provider_adapters/openai_codex_responses_adapter_test.dart`：端点、请求头、请求体、超限错误、一次性任务。
+- `test/presentation/prompt_assistant/services/provider_adapters/openai_codex_responses_adapter_test.dart`：端点、请求头、请求体、快速模式的 `service_tier`、超限错误、一次性任务。
+- `test/data/services/chatgpt_codex/chatgpt_codex_fast_mode_test.dart`、`test/presentation/agent_chat/providers/agent_chat_fast_mode_provider_test.dart`、`test/presentation/agent_chat/widgets/agent_chat_fast_mode_control_test.dart`：快速档的适用范围、本机保存与输入框开关。
 - `test/presentation/agent_chat/widgets/chatgpt_codex_quota_pill_test.dart`、`agent_chat_header_test.dart`、`test/presentation/screens/settings/widgets/chatgpt_codex_login_sheet_test.dart`：额度胶囊、详情、顶栏宽度与登录面板。

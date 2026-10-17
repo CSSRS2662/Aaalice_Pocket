@@ -1065,6 +1065,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentChat_reasoningLevel => '推理强度';
 
   @override
+  String get agentChat_speedLabel => '速度';
+
+  @override
+  String get agentChat_fastMode => '快速模式';
+
+  @override
+  String get agentChat_fastModeDescription => '约 1.5 倍速度，订阅额度消耗更快';
+
+  @override
   String get agentChat_reasoningOff => '关闭';
 
   @override
@@ -16808,6 +16817,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get agentChat_reasoningLevel => '推理強度';
+
+  @override
+  String get agentChat_speedLabel => '速度';
+
+  @override
+  String get agentChat_fastMode => '快速模式';
+
+  @override
+  String get agentChat_fastModeDescription => '約 1.5 倍速度，訂閱額度消耗更快';
 
   @override
   String get agentChat_reasoningOff => '關閉';

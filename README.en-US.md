@@ -60,7 +60,7 @@ Aaalice Pocket keeps the upstream capabilities that work on phones:
 - **Share to import**: share an image or a direct image link from Discord or other apps to Aaalice Pocket to extract metadata or use it as an img2img source or reference.
 - **Online galleries**: Danbooru, Safebooru, Gelbooru, AI TAG, and the QuickTagCloud codex, with original prompts you can send back to the generation page.
 - **Queue and agent**: pause, resume, reorder, and retry batch tasks. The agent can look up tags, tidy prompts, and prepare tasks; paid and destructive actions still need your confirmation.
-- **ChatGPT subscription sign-in**: the agent and the prompt assistant can sign in with a ChatGPT account (Plus, Pro and others); usage counts toward that account's Codex limits. The agent header shows how much of the 5-hour and weekly limits is left, and tapping it shows the reset times in your device's time zone.
+- **ChatGPT subscription sign-in**: the agent and the prompt assistant can sign in with a ChatGPT account (Plus, Pro and others); usage counts toward that account's Codex limits. The agent header shows how much of the 5-hour and weekly limits is left, and tapping it shows the reset times in your device's time zone. The agent can switch on Fast mode from the model and reasoning control in the input box: about 1.5x speed, using the limits faster.
 - **Backup and restore**: cloud backup to GitHub and WebDAV; you start every push, pull, and restore. OneDrive and Google Drive need OAuth settings at build time, which this branch's release packages do not include.
 
 ## 🖼️ Screenshots

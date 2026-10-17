@@ -129,6 +129,7 @@ class OpenAiCodexResponsesAdapter extends OpenAiResponsesAdapter {
       'prompt_cache_key': request.sessionId,
       'tool_choice': 'auto',
       'parallel_tool_calls': true,
+      if (request.serviceTier case final tier?) 'service_tier': tier,
       // Pi leaves strict validation off for Codex tools.
       if (tools is List)
         'tools': [

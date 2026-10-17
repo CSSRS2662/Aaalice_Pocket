@@ -2129,6 +2129,24 @@ abstract class AppLocalizations {
   /// **'Reasoning effort'**
   String get agentChat_reasoningLevel;
 
+  /// No description provided for @agentChat_speedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get agentChat_speedLabel;
+
+  /// No description provided for @agentChat_fastMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast mode'**
+  String get agentChat_fastMode;
+
+  /// No description provided for @agentChat_fastModeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'About 1.5x speed; uses your subscription quota faster'**
+  String get agentChat_fastModeDescription;
+
   /// No description provided for @agentChat_reasoningOff.
   ///
   /// In en, this message translates to:

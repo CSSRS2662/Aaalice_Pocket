@@ -21,6 +21,7 @@ import '../../widgets/common/themed_input_dialog.dart';
 import '../models/agent_chat_compaction_outcome.dart';
 import '../models/agent_chat_prompt_envelope.dart';
 import '../models/agent_chat_slash_command.dart';
+import '../providers/agent_chat_fast_mode_provider.dart';
 import '../providers/agent_chat_notifier.dart';
 import '../services/agent_chat_session_controller.dart';
 import 'agent_chat_panel_controller.dart';
@@ -71,6 +72,8 @@ class AgentChatPanelCoordinator {
       setWebAccessEnabled: (enabled) => _ref
           .read(agentSettingsProvider.notifier)
           .setWebAccessEnabled(enabled),
+      setFastModeEnabled: (enabled) =>
+          _ref.read(agentChatFastModeProvider.notifier).setEnabled(enabled),
       pickImages: () => _pickImages(context),
       attachCurrentCanvas: () =>
           _attachCurrentCanvas(context, _currentCanvasReference),

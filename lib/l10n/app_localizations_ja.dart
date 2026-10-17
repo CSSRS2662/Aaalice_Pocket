@@ -1084,6 +1084,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get agentChat_reasoningLevel => '推論の強度';
 
   @override
+  String get agentChat_speedLabel => '速度';
+
+  @override
+  String get agentChat_fastMode => '高速モード';
+
+  @override
+  String get agentChat_fastModeDescription => '約1.5倍の速度。サブスクリプションの使用量を多く消費します';
+
+  @override
   String get agentChat_reasoningOff => 'オフ';
 
   @override

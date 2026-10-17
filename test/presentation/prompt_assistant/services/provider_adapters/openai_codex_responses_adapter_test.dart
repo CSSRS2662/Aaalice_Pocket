@@ -25,25 +25,48 @@ List<Map<String, Object?>> _reply(String text) => [
   },
 ];
 
-AgentChatRequest _request({String? apiKey, int? maxOutputTokens}) =>
-    AgentChatRequest(
-      sessionId: 'session-1',
-      provider: _provider,
-      model: 'gpt-5.5',
-      systemPrompt: 'Be brief.',
-      messages: [UserMessage.text('hello')],
-      tools: const [
-        Tool(
-          name: 'get_prompt_state',
-          description: 'Read the prompt.',
-          parameters: {'type': 'object', 'properties': <String, Object>{}},
-        ),
-      ],
-      apiKey: apiKey,
-      maxOutputTokens: maxOutputTokens,
-    );
+AgentChatRequest _request({
+  String? apiKey,
+  int? maxOutputTokens,
+  String? serviceTier,
+}) => AgentChatRequest(
+  sessionId: 'session-1',
+  provider: _provider,
+  model: 'gpt-5.5',
+  systemPrompt: 'Be brief.',
+  messages: [UserMessage.text('hello')],
+  tools: const [
+    Tool(
+      name: 'get_prompt_state',
+      description: 'Read the prompt.',
+      parameters: {'type': 'object', 'properties': <String, Object>{}},
+    ),
+  ],
+  apiKey: apiKey,
+  maxOutputTokens: maxOutputTokens,
+  serviceTier: serviceTier,
+);
 
 void main() {
+  test('Fast mode asks for the priority service tier', () async {
+    for (final tier in const [null, 'priority']) {
+      final http = RoutedHttpAdapter({
+        _responses: (_) => sseBody(_reply('Hi')),
+      });
+      await const OpenAiCodexResponsesAdapter()
+          .completeAgent(
+            dio: Dio()..httpClientAdapter = http,
+            request: _request(apiKey: fakeChatGptToken(), serviceTier: tier),
+            cancelToken: CancelToken(),
+          )
+          .toList();
+
+      final body = http.requests.single.data! as Map<String, dynamic>;
+      expect(body.containsKey('service_tier'), tier != null);
+      expect(body['service_tier'], tier);
+    }
+  });
+
   test('agent requests use the Codex endpoint, headers and body', () async {
     final http = RoutedHttpAdapter({_responses: (_) => sseBody(_reply('Hi'))});
     final events = await const OpenAiCodexResponsesAdapter()

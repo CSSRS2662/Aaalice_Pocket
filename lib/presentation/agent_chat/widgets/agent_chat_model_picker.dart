@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../../core/agent/agent_types.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../../data/models/agent/agent_settings.dart';
+import '../../../data/services/chatgpt_codex/chatgpt_codex_fast_mode.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../agent_settings/providers/agent_settings_provider.dart';
 import '../../adaptive/adaptive_presenter.dart';
@@ -21,7 +22,7 @@ double _agentChatControlExtent(BuildContext context) => math.max(
   MediaQuery.textScalerOf(context).scale(16) + 12,
 );
 
-/// 将模型与思考强度收进同一个分级入口，避免高频输入区被两个选择器占满。
+/// 将模型、思考强度与快速模式收进同一个分级入口，避免高频输入区被多个选择器占满。
 class AgentChatConfigurationControl extends StatelessWidget {
   const AgentChatConfigurationControl({
     super.key,
@@ -36,6 +37,8 @@ class AgentChatConfigurationControl extends StatelessWidget {
     required this.onThinkingSelected,
     this.restoreFocusNode,
     this.showModelName = true,
+    this.fastModeEnabled = false,
+    this.onFastModeChanged,
   });
 
   final PromptAssistantConfigState config;
@@ -50,11 +53,21 @@ class AgentChatConfigurationControl extends StatelessWidget {
   final FocusNode? restoreFocusNode;
   final bool showModelName;
 
+  /// Codex 快速模式的开关状态；只有 ChatGPT 登录且模型带快速档时才显示。
+  final bool fastModeEnabled;
+  final Future<void> Function(bool enabled)? onFastModeChanged;
+
+  bool _fastModeAvailable(_AgentChatModelOption? current) =>
+      onFastModeChanged != null &&
+      current != null &&
+      ChatGptCodexFastMode.availableFor(current.provider, current.model.name);
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final options = _modelOptions(config);
     final current = _currentModelOption(options, agentSettings);
+    final fastActive = fastModeEnabled && _fastModeAvailable(current);
     final modelName = _modelDisplayName(
       current: current,
       reference: agentSettings.settings.chat.modelReference,
@@ -67,7 +80,8 @@ class AgentChatConfigurationControl extends StatelessWidget {
     final tooltip = routeError.isNotEmpty
         ? routeError
         : '${l10n.agentChat_modelLabel}: $modelName · '
-              '${l10n.agentChat_reasoningLevel}: $thinkingName';
+              '${l10n.agentChat_reasoningLevel}: $thinkingName'
+              '${fastActive ? ' · ${l10n.agentChat_fastMode}' : ''}';
     final theme = Theme.of(context);
 
     return Tooltip(
@@ -129,6 +143,15 @@ class AgentChatConfigurationControl extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (fastActive) ...[
+                      const SizedBox(width: 2),
+                      Icon(
+                        Icons.bolt_rounded,
+                        key: const ValueKey('agent-chat-fast-mode-indicator'),
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
                     const SizedBox(width: 2),
                     const Icon(Icons.expand_more_rounded, size: 17),
                   ],
@@ -161,6 +184,8 @@ class AgentChatConfigurationControl extends StatelessWidget {
             selectedModel: current,
             thinkingLevel: thinkingLevel,
             availableThinkingLevels: availableThinkingLevels,
+            fastModeAvailable: _fastModeAvailable(current),
+            fastModeEnabled: fastModeEnabled,
             scrollController: scrollController,
           ),
         );
@@ -168,6 +193,8 @@ class AgentChatConfigurationControl extends StatelessWidget {
       await onModelSelected(model.provider.id, model.model.name);
     } else if (selection?.thinkingLevel case final level?) {
       await onThinkingSelected(level);
+    } else if (selection?.fastMode case final enabled?) {
+      await onFastModeChanged?.call(enabled);
     }
     if (context.mounted &&
         restoreFocus &&
@@ -179,13 +206,20 @@ class AgentChatConfigurationControl extends StatelessWidget {
 
 class _AgentChatConfigurationSelection {
   const _AgentChatConfigurationSelection.model(this.model)
-    : thinkingLevel = null;
+    : thinkingLevel = null,
+      fastMode = null;
 
   const _AgentChatConfigurationSelection.thinking(this.thinkingLevel)
-    : model = null;
+    : model = null,
+      fastMode = null;
+
+  const _AgentChatConfigurationSelection.fastMode(bool this.fastMode)
+    : model = null,
+      thinkingLevel = null;
 
   final _AgentChatModelOption? model;
   final ThinkingLevel? thinkingLevel;
+  final bool? fastMode;
 }
 
 class _AgentChatConfigurationPickerBody extends StatefulWidget {
@@ -194,6 +228,8 @@ class _AgentChatConfigurationPickerBody extends StatefulWidget {
     required this.selectedModel,
     required this.thinkingLevel,
     required this.availableThinkingLevels,
+    required this.fastModeAvailable,
+    required this.fastModeEnabled,
     required this.scrollController,
   });
 
@@ -201,6 +237,8 @@ class _AgentChatConfigurationPickerBody extends StatefulWidget {
   final _AgentChatModelOption? selectedModel;
   final ThinkingLevel thinkingLevel;
   final List<ThinkingLevel> availableThinkingLevels;
+  final bool fastModeAvailable;
+  final bool fastModeEnabled;
   final ScrollController scrollController;
 
   @override
@@ -278,16 +316,7 @@ class _AgentChatConfigurationPickerBodyState
                   onTap: () => setState(() => _showModels = true),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 18, 12, 4),
-                child: Text(
-                  l10n.agentChat_reasoningLevel,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              _sectionLabel(theme, l10n.agentChat_reasoningLevel),
               for (final option in widget.availableThinkingLevels)
                 ListTile(
                   key: ValueKey('agent-chat-thinking-option-${option.name}'),
@@ -308,10 +337,58 @@ class _AgentChatConfigurationPickerBodyState
                     _AgentChatConfigurationSelection.thinking(option),
                   ),
                 ),
+              if (widget.fastModeAvailable) ...[
+                _sectionLabel(theme, l10n.agentChat_speedLabel),
+                _fastModeTile(context, theme, l10n),
+              ],
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _sectionLabel(ThemeData theme, String label) => Padding(
+    padding: const EdgeInsets.fromLTRB(12, 18, 12, 4),
+    child: Text(
+      label,
+      style: theme.textTheme.labelMedium?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
+
+  Widget _fastModeTile(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    final enabled = widget.fastModeEnabled;
+    void toggle() => Navigator.pop(
+      context,
+      _AgentChatConfigurationSelection.fastMode(!enabled),
+    );
+    return MergeSemantics(
+      child: ListTile(
+        key: const ValueKey('agent-chat-fast-mode-option'),
+        minTileHeight: math.max(56, _agentChatControlExtent(context)),
+        leading: Icon(
+          enabled ? Icons.bolt_rounded : Icons.bolt_outlined,
+          color: enabled
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant,
+        ),
+        title: Text(l10n.agentChat_fastMode),
+        subtitle: Text(
+          l10n.agentChat_fastModeDescription,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: Switch(value: enabled, onChanged: (_) => toggle()),
+        onTap: toggle,
+      ),
     );
   }
 }

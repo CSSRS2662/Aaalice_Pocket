@@ -1218,6 +1218,8 @@ class _AgentChatComposerState extends State<AgentChatComposer> {
         onThinkingSelected: commands.selectThinkingLevel,
         restoreFocusNode: controller.inputFocus,
         showModelName: showModelName,
+        fastModeEnabled: viewData.fastModeEnabled,
+        onFastModeChanged: commands.setFastModeEnabled,
       );
 
   bool get _agentSettingsInteractive =>

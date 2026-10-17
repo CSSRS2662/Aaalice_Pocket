@@ -1104,6 +1104,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentChat_reasoningLevel => 'Reasoning effort';
 
   @override
+  String get agentChat_speedLabel => 'Speed';
+
+  @override
+  String get agentChat_fastMode => 'Fast mode';
+
+  @override
+  String get agentChat_fastModeDescription =>
+      'About 1.5x speed; uses your subscription quota faster';
+
+  @override
   String get agentChat_reasoningOff => 'Off';
 
   @override

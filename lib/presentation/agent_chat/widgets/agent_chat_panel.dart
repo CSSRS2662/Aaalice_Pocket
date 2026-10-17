@@ -9,6 +9,7 @@ import '../../agent_settings/providers/agent_settings_provider.dart';
 import '../../providers/generation/image_generation_selectors.dart';
 import '../../providers/image_generation_provider.dart';
 import '../../../core/agent/resources/agent_chat_resource_reference.dart';
+import '../providers/agent_chat_fast_mode_provider.dart';
 import '../providers/agent_chat_notifier.dart';
 import '../providers/agent_chat_surface_registry.dart';
 import 'agent_chat_composer.dart';
@@ -137,6 +138,7 @@ class _AgentChatPanelState extends ConsumerState<AgentChatPanel> {
     final config = ref.watch(promptAssistantConfigProvider);
     final agentSettings = ref.watch(agentSettingsProvider);
     final webAccess = ref.watch(webAccessConfigProvider);
+    final fastModeEnabled = ref.watch(agentChatFastModeProvider);
     final currentCanvasId = ref.watch(
       imageGenerationNotifierProvider.select(selectCurrentCanvasImageId),
     );
@@ -172,6 +174,7 @@ class _AgentChatPanelState extends ConsumerState<AgentChatPanel> {
           onPopOut: widget.onPopOut,
           onDock: widget.onDock,
           currentCanvasReference: currentCanvasReference,
+          fastModeEnabled: fastModeEnabled,
         );
         final useStackedLayout =
             widget.fullScreen ||
