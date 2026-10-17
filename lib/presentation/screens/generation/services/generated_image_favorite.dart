@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../providers/image_generation_provider.dart';
 import '../../../providers/local_gallery_provider.dart';
@@ -21,8 +22,17 @@ Future<void> toggleGeneratedImageFavorite(
   final gallery = ref.read(localGalleryNotifierProvider.notifier);
   final l10n = context.l10n;
   try {
-    final linked = await GeneratedImageFileLink.ensureSaved(ref, image, l10n);
-    await gallery.toggleFavorite(linked.path);
+    final linked = await GeneratedImageFileLink.ensureSaved(
+      ref.read,
+      image,
+      l10n,
+    );
+    final favorite = await gallery.toggleFavorite(linked.path);
+    AppLogger.i(
+      '[GeneratedSave] favorite=$favorite for result ${image.id} at '
+          '${linked.path}',
+      'GeneratedImageFavorite',
+    );
   } catch (error) {
     if (context.mounted) {
       AppToast.error(context, l10n.toast_favoriteUpdateFailed('$error'));

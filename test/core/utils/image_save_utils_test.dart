@@ -512,6 +512,7 @@ void main() {
         rootPath: root.path,
         imageBytes: base,
         preserveOriginalBytes: false,
+        source: 'test',
         fixedTagUsageSnapshot: snapshot,
         seed: 777,
         rebuild: () async => fail('NovelAI bytes must not be rebuilt'),

@@ -15,6 +15,7 @@ import '../../data/services/metadata/unified_metadata_parser.dart';
 import '../constants/api_constants.dart';
 import '../enums/precise_ref_type.dart';
 import 'app_logger.dart';
+import 'generated_image_saves.dart';
 import 'isolate_pool.dart';
 import 'prompt_semantics_utils.dart';
 
@@ -618,13 +619,17 @@ class ImageSaveUtils {
     return candidate;
   }
 
-  /// 三条保存入口共用。已有 NovelAI 元数据的图原字节落盘不重写，
+  /// 生成结果的保存入口共用。已有 NovelAI 元数据的图原字节落盘不重写，
   /// 固定词快照只进旁路记录库。
+  ///
+  /// 同一张图已存进 [rootPath] 时直接沿用那个文件（[SavedResultImage.reused]），
+  /// 不再写第二份；[source] 写进日志，用来定位是哪个入口保存的。
   static Future<SavedResultImage> saveResultImage({
     required String rootPath,
     required Uint8List imageBytes,
     required bool preserveOriginalBytes,
     required Future<Uint8List> Function() rebuild,
+    required String source,
     FixedTagUsageSnapshot? fixedTagUsageSnapshot,
     FixedTagUsageSnapshot? rebuiltFixedTagUsageSnapshot,
     int? seed,
@@ -633,14 +638,34 @@ class ImageSaveUtils {
   }) async {
     final rebuilt =
         !preserveOriginalBytes && !hasEmbeddedNovelAiMetadata(imageBytes);
-    final bytes = rebuilt ? await rebuild() : imageBytes;
-    final path = await saveBytesToDatedPath(
+    late Uint8List bytes;
+    final saved = await GeneratedImageSaves.saveOnce(
       rootPath: rootPath,
-      bytes: bytes,
-      seed: seed,
-      preferredFileName: preferredFileName,
-      now: now,
+      sourceBytes: imageBytes,
+      source: source,
+      write: () async {
+        bytes = rebuilt ? await rebuild() : imageBytes;
+        return saveBytesToDatedPath(
+          rootPath: rootPath,
+          bytes: bytes,
+          seed: seed,
+          preferredFileName: preferredFileName,
+          now: now,
+        );
+      },
     );
+    final path = saved.path;
+    if (saved.reused) {
+      final existing = await File(path).readAsBytes();
+      return SavedResultImage(
+        path: path,
+        bytes: existing,
+        contentHash: await FileHashCalculator().calculateFromBytesAsync(
+          existing,
+        ),
+        reused: true,
+      );
+    }
     final contentHash = await FileHashCalculator().calculateFromBytesAsync(
       bytes,
     );
@@ -714,11 +739,15 @@ class SavedResultImage {
     required this.path,
     required this.bytes,
     required this.contentHash,
+    this.reused = false,
   });
 
   final String path;
   final Uint8List bytes;
   final String contentHash;
+
+  /// 这张图之前已存过，[path] 是那个文件，本次没有写入，也不必再导出系统相册。
+  final bool reused;
 }
 
 class _MetadataWriteRequest {

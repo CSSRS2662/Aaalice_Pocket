@@ -1015,7 +1015,7 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
   ) async {
     try {
       final linked = await GeneratedImageFileLink.ensureSaved(
-        ref,
+        ref.read,
         image,
         context.l10n,
       );
@@ -1322,6 +1322,7 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
         rootPath: saveDir.path,
         imageBytes: imageBytes,
         preserveOriginalBytes: image.preserveOriginalBytesOnSave,
+        source: 'preview-save',
         fixedTagUsageSnapshot: capturedFixedTags,
         rebuiltFixedTagUsageSnapshot:
             capturedFixedTags ??
@@ -1333,7 +1334,9 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
       final filePath = saved.path;
 
       Object? systemGalleryError;
-      if (PlatformCapabilities.current.supportsSystemGalleryExport) {
+      // 沿用的文件当初保存时已导出过系统相册。
+      if (!saved.reused &&
+          PlatformCapabilities.current.supportsSystemGalleryExport) {
         try {
           await AndroidMediaStoreService.savePng(
             bytes: finalBytes,

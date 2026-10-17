@@ -132,6 +132,7 @@ class GenerationSaveService {
         rootPath: saveDirPath,
         imageBytes: imageBytes,
         preserveOriginalBytes: image.preserveOriginalBytesOnSave,
+        source: 'detail-save',
         fixedTagUsageSnapshot: fixedTagUsageSnapshot,
         seed: await ImageSaveUtils.resolveSeed(
           metadata: existingMetadata,
@@ -155,7 +156,9 @@ class GenerationSaveService {
       final filePath = saved.path;
 
       Object? systemGalleryError;
-      if (PlatformCapabilities.current.supportsSystemGalleryExport) {
+      // 沿用的文件当初保存时已导出过系统相册。
+      if (!saved.reused &&
+          PlatformCapabilities.current.supportsSystemGalleryExport) {
         try {
           await AndroidMediaStoreService.savePng(
             bytes: finalBytes,

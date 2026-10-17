@@ -234,6 +234,7 @@ class GenerationResultLifecycleService {
           rootPath: rootPath,
           imageBytes: image.bytes,
           preserveOriginalBytes: image.preserveOriginalBytesOnSave,
+          source: 'auto-save',
           fixedTagUsageSnapshot:
               image.fixedTagUsageSnapshot ?? snapshot.fixedTagUsageSnapshot,
           seed: actualSeed,

@@ -1,12 +1,11 @@
 import 'dart:io';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../../core/utils/image_save_utils.dart';
 import '../../../../data/repositories/gallery_folder_repository.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../providers/image_generation_provider.dart';
 import '../../../providers/local_gallery_provider.dart';
+import '../../../utils/prompt_preset_import_utils.dart' show ProviderReader;
 
 /// [newlySavedRoot] 仅在本次新写入文件时给出图库根目录。
 typedef LinkedGeneratedImageFile = ({String path, String? newlySavedRoot});
@@ -18,13 +17,13 @@ class GeneratedImageFileLink {
   const GeneratedImageFileLink._();
 
   static Future<LinkedGeneratedImageFile> ensureSaved(
-    WidgetRef ref,
+    ProviderReader read,
     GeneratedImage image,
     AppLocalizations l10n,
   ) {
     // 保存期间卡片可能被卸载，句柄必须在第一个 await 之前取好。
-    final generation = ref.read(imageGenerationNotifierProvider.notifier);
-    final gallery = ref.read(localGalleryNotifierProvider.notifier);
+    final generation = read(imageGenerationNotifierProvider.notifier);
+    final gallery = read(localGalleryNotifierProvider.notifier);
     // 自动保存还在写这张图时先等它写完，再沿用它的文件。
     return generation.queueImageSave(
       image.id,
@@ -57,6 +56,7 @@ class GeneratedImageFileLink {
       rootPath: rootPath,
       imageBytes: current.bytes,
       preserveOriginalBytes: current.preserveOriginalBytesOnSave,
+      source: 'file-link',
       fixedTagUsageSnapshot: current.fixedTagUsageSnapshot,
       // 这里拿不到生成参数，缺元数据的字节只能原样保存。
       rebuild: () async => current.bytes,

@@ -16,6 +16,8 @@ import 'package:nai_launcher/core/services/character_conversion_service.dart';
 import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/data/models/character/character_prompt.dart' as ui;
 import 'package:nai_launcher/presentation/providers/character_prompt_provider.dart';
+import 'package:nai_launcher/l10n/app_localizations.dart';
+import 'package:nai_launcher/presentation/screens/generation/services/generated_image_file_link.dart';
 import 'package:nai_launcher/data/datasources/remote/nai_image_enhancement_api_service.dart';
 import 'package:nai_launcher/data/datasources/remote/nai_image_generation_api_service.dart';
 import 'package:nai_launcher/data/models/fixed_tag/fixed_tag_entry.dart';
@@ -93,6 +95,9 @@ class TestLocalGalleryNotifier extends LocalGalleryNotifier {
   Future<GalleryIndexAdmission> addNewlySavedImages(
     List<String> filePaths,
   ) async => GalleryIndexAdmission.added;
+
+  @override
+  Future<bool> toggleFavorite(String filePath) async => true;
 }
 
 void main() {
@@ -510,6 +515,110 @@ void main() {
           expect(
             capturedParams!.prompt,
             panelSent ? 'backlighting, 1girl' : 'red eyes, backlighting, 1girl',
+          );
+        },
+      );
+    }
+
+    for (final (autoSave, moment) in [
+      (false, 'after'),
+      (true, 'during'),
+      (true, 'after'),
+    ]) {
+      test(
+        'favoriting a result saves one file (auto-save $autoSave, $moment)',
+        () async {
+          final mockApiService = MockNAIImageGenerationApiService();
+          when(
+            () => mockApiService.generateImage(
+              any(),
+              onProgress: any(named: 'onProgress'),
+              focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+              minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+              focusedSelectionRect: any(named: 'focusedSelectionRect'),
+            ),
+          ).thenAnswer(
+            (_) async =>
+                ([_validImageBytes(width: 512, height: 768)], <int, String>{}),
+          );
+          when(
+            () => mockApiService.generateImageStream(
+              any(),
+              focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+              minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+              focusedSelectionRect: any(named: 'focusedSelectionRect'),
+            ),
+          ).thenAnswer((_) => const Stream.empty());
+          container.dispose();
+          container = _createAuthenticatedContainer(
+            overrides: [
+              naiImageGenerationApiServiceProvider.overrideWithValue(
+                mockApiService,
+              ),
+              subscriptionNotifierProvider.overrideWith(
+                TestSubscriptionNotifier.new,
+              ),
+              localGalleryNotifierProvider.overrideWith(
+                TestLocalGalleryNotifier.new,
+              ),
+            ],
+          );
+          await container
+              .read(notificationSettingsNotifierProvider.notifier)
+              .setSoundEnabled(false);
+          container.read(subscriptionNotifierProvider);
+          final gallery = await Directory.systemTemp.createTemp(
+            'nai_launcher_favorite_save_',
+          );
+          addTearDown(() => gallery.delete(recursive: true));
+          final saveSettings = container.read(
+            imageSaveSettingsNotifierProvider.notifier,
+          );
+          await saveSettings.setCustomPath(gallery.path);
+          await saveSettings.setAutoSave(autoSave);
+          final l10n = lookupAppLocalizations(const Locale('zh'));
+          final notifier = container.read(
+            imageGenerationNotifierProvider.notifier,
+          );
+
+          Future<void>? favorite;
+          final subscription = container.listen(
+            imageGenerationNotifierProvider,
+            (_, next) {
+              if (moment != 'during' ||
+                  favorite != null ||
+                  next.currentImages.isEmpty) {
+                return;
+              }
+              favorite = GeneratedImageFileLink.ensureSaved(
+                container.read,
+                next.currentImages.single,
+                l10n,
+              );
+            },
+          );
+          await notifier.generate(
+            container.read(generationParamsNotifierProvider),
+          );
+          subscription.close();
+          await favorite;
+          final image = container
+              .read(imageGenerationNotifierProvider)
+              .currentImages
+              .single;
+          await GeneratedImageFileLink.ensureSaved(container.read, image, l10n);
+          // A second tap, for example unfavoriting, reuses the file too.
+          await GeneratedImageFileLink.ensureSaved(container.read, image, l10n);
+
+          final files = gallery
+              .listSync(recursive: true)
+              .whereType<File>()
+              .where((file) => file.path.endsWith('.png'))
+              .toList();
+          expect(
+            files,
+            hasLength(1),
+            reason: files.map((file) => file.path).join(', '),
           );
         },
       );

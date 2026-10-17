@@ -10,6 +10,7 @@ import '../../../core/mosaic/mosaic_derivative_registry.dart';
 import '../../../core/platform/platform_capabilities.dart';
 import '../../../core/storage/local_storage_service.dart';
 import '../../../core/services/android_media_store_service.dart';
+import '../../../core/utils/generated_image_saves.dart';
 import '../../../core/utils/image_save_utils.dart';
 import '../../../core/utils/image_share_sanitizer.dart';
 import '../../../core/utils/localization_extension.dart';
@@ -389,16 +390,23 @@ class ImageCardActionCoordinator {
         if (context.mounted) AppToast.error(context, l10n.toast_saveDirNotSet);
         return;
       }
-      final filePath = await ImageSaveUtils.saveBytesToDatedPath(
+      final saved = await GeneratedImageSaves.saveOnce(
         rootPath: rootPath,
-        bytes: bytes,
-        seed: await ImageSaveUtils.resolveSeed(bytes: bytes),
+        sourceBytes: bytes,
+        source: 'card-save',
+        write: () async => ImageSaveUtils.saveBytesToDatedPath(
+          rootPath: rootPath,
+          bytes: bytes,
+          seed: await ImageSaveUtils.resolveSeed(bytes: bytes),
+        ),
       );
-      if (PlatformCapabilities.current.supportsSystemGalleryExport) {
+      // 沿用的文件当初保存时已导出过系统相册。
+      if (!saved.reused &&
+          PlatformCapabilities.current.supportsSystemGalleryExport) {
         try {
           await AndroidMediaStoreService.savePng(
             bytes: bytes,
-            fileName: p.basename(filePath),
+            fileName: p.basename(saved.path),
           );
         } catch (error) {
           if (context.mounted) {

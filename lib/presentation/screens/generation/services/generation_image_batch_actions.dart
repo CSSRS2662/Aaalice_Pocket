@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import '../../../../core/platform/platform_capabilities.dart';
 import '../../../../core/services/android_media_store_service.dart';
 import '../../../../core/services/file_export_service.dart';
+import '../../../../core/utils/generated_image_saves.dart';
 import '../../../../core/utils/image_save_utils.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../../core/utils/zip_utils.dart';
@@ -69,15 +70,23 @@ class GenerationImageBatchActions {
       // 原子保存：日期分类路径 + 独占防冲突 + 失败清理，全部在工具内完成
       for (int i = 0; i < selectedImages.length; i++) {
         final image = selectedImages[i];
-        final filePath = await ImageSaveUtils.saveBytesToDatedPath(
+        final saved = await GeneratedImageSaves.saveOnce(
           rootPath: saveDirPath,
-          bytes: image.bytes,
-          seed: await ImageSaveUtils.resolveSeed(
-            metadata: image.metadata,
+          sourceBytes: image.bytes,
+          source: 'batch-save',
+          write: () async => ImageSaveUtils.saveBytesToDatedPath(
+            rootPath: saveDirPath,
             bytes: image.bytes,
+            seed: await ImageSaveUtils.resolveSeed(
+              metadata: image.metadata,
+              bytes: image.bytes,
+            ),
           ),
         );
-        if (PlatformCapabilities.current.supportsSystemGalleryExport) {
+        final filePath = saved.path;
+        // 沿用的文件当初保存时已导出过系统相册。
+        if (!saved.reused &&
+            PlatformCapabilities.current.supportsSystemGalleryExport) {
           try {
             await AndroidMediaStoreService.savePng(
               bytes: image.bytes,

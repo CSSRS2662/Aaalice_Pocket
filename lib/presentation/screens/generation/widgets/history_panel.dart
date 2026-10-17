@@ -1504,7 +1504,7 @@ class _HistoryPanelState extends ConsumerState<HistoryPanel> {
   ) async {
     try {
       final linked = await GeneratedImageFileLink.ensureSaved(
-        ref,
+        ref.read,
         image,
         context.l10n,
       );
