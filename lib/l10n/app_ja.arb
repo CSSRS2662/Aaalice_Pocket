@@ -466,6 +466,16 @@
   "agentChat_toolSetPositivePrompt": "ポジティブプロンプトを設定",
   "agentChat_toolSetNegativePrompt": "ネガティブプロンプトを設定",
   "agentChat_toolEditPromptSections": "プロンプトのセクションを編集",
+  "agentChat_toolCharacterLibrary": "キャラクターライブラリ",
+  "agentChat_approvalNotificationTitle": "エージェントが承認を待っています",
+  "agentChat_approvalNotificationMessage": "「{tool}」を実行するには、タップしてアプリに戻り承認してください",
+  "@agentChat_approvalNotificationMessage": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
   "agentChat_toolRemovePromptSection": "プロンプトのセクションを削除",
   "agentChat_toolAddCharacter": "キャラクターを追加",
   "agentChat_toolUpdateCharacter": "キャラクターを更新",

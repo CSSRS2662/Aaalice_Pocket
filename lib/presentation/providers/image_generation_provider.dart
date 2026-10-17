@@ -368,8 +368,14 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         return;
       }
 
+      // A request that brings its own characters (agent, queue snapshot)
+      // still sends the panel's when their prompts match; only then do the
+      // panel's fixed-tag claims and record apply to it.
+      final panelSent =
+          !preserveCharacterSnapshot || _panelSends(effectiveParams);
       final preparation = _preparationService(
         preserveCharacterSnapshot: preserveCharacterSnapshot,
+        panelSent: panelSent,
         focusedOverride: focusedOverride,
       );
       late final GenerationPreparationResult prepared;
@@ -398,9 +404,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
       _activeFixedTagUsageSnapshot = prepared.fixedTagUsageSnapshot;
       _activePromptGroupSnapshot = PromptGroupSnapshot.withCharacters(
         promptGroupSnapshot,
-        preserveCharacterSnapshot
-            ? null
-            : _characterPanelSnapshot(prepared.params),
+        panelSent ? _characterPanelSnapshot(prepared.params) : null,
       );
       _streamPreviews.clear();
       _failedSnapshotKeys.clear();
@@ -476,6 +480,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
 
   GenerationRequestPreparationService _preparationService({
     bool preserveCharacterSnapshot = false,
+    bool panelSent = true,
     GenerationFocusedSnapshot? focusedOverride,
   }) {
     var queueExecuting = false;
@@ -488,9 +493,9 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     final aliases = ref.read(aliasResolverServiceProvider.notifier);
     final fixedTags = ref.read(fixedTagsNotifierProvider);
     // Fixed tags the included characters carry stay out of the main prompt.
-    final claimed = preserveCharacterSnapshot
-        ? const <String>{}
-        : ref.read(characterPromptNotifierProvider.notifier).claimedFixedTags();
+    final claimed = panelSent
+        ? ref.read(characterPromptNotifierProvider.notifier).claimedFixedTags()
+        : const <String>{};
     final mainFixedTags = claimed.isEmpty
         ? fixedTags.entries
         : [
@@ -1400,6 +1405,25 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
 
   /// 请求里的角色取自面板时连同整个面板一起记下：角色名、未启用的角色与
   /// 分区不在图片元数据里，复用参数时靠它原样恢复。
+  /// Whether the characters [params] carries are the ones the panel sends
+  /// now: same prompts in the same order.
+  bool _panelSends(ImageParams params) {
+    final notifier = ref.read(characterPromptNotifierProvider.notifier);
+    notifier.syncFixedTags();
+    final panel = _convertCharactersToApiFormat(
+      ref.read(characterPromptNotifierProvider),
+    );
+    final carried = params.characters;
+    if (panel.length != carried.length) return false;
+    for (var index = 0; index < panel.length; index++) {
+      if (panel[index].prompt != carried[index].prompt ||
+          panel[index].negativePrompt != carried[index].negativePrompt) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   CharacterPanelSnapshot? _characterPanelSnapshot(ImageParams params) {
     final config = ref.read(characterPromptNotifierProvider);
     if (config.characters.isEmpty) return null;

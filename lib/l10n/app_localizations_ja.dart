@@ -1226,6 +1226,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get agentChat_toolEditPromptSections => 'プロンプトのセクションを編集';
 
   @override
+  String get agentChat_toolCharacterLibrary => 'キャラクターライブラリ';
+
+  @override
+  String get agentChat_approvalNotificationTitle => 'エージェントが承認を待っています';
+
+  @override
+  String agentChat_approvalNotificationMessage(String tool) {
+    return '「$tool」を実行するには、タップしてアプリに戻り承認してください';
+  }
+
+  @override
   String get agentChat_toolRemovePromptSection => 'プロンプトのセクションを削除';
 
   @override

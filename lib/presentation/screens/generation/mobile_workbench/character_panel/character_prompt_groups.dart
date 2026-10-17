@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import '../../../../../core/storage/local_storage_service.dart';
 import '../../../../../data/models/character/character_prompt.dart';
+import '../../../../../data/models/gallery/prompt_group_snapshot.dart';
 import '../../../../../data/services/prompt_group/character_section_store.dart';
 import '../../widgets/prompt_group_controller.dart';
 
@@ -64,6 +67,52 @@ class CharacterPromptGroups {
     if (!negative.matchesPrompt(character.negativePrompt)) {
       negative.replaceWith(character.negativePrompt);
     }
+  }
+
+  /// After a change made elsewhere: takes the stored sections of a side
+  /// when they add up to the new prompt (a writer such as the agent saved
+  /// them first), and otherwise [align]s. Sections that still add up to the
+  /// prompt are this editor's latest unless [preferStored], which a writer
+  /// that just stored sections asks for.
+  void adopt(CharacterPrompt character, {bool preferStored = false}) {
+    final entry = CharacterSectionStore.readAll(_storage)[characterId];
+    final saved = entry is Map ? entry : null;
+    void side(
+      PromptGroupCollection groups,
+      String prompt, {
+      required String promptKey,
+      required String sectionsKey,
+    }) {
+      final matches = groups.matchesPrompt(prompt);
+      final raw = saved?[sectionsKey];
+      if ((preferStored || !matches) &&
+          saved?[promptKey] == prompt &&
+          raw is List) {
+        final stored = [
+          for (final item in raw) ?PromptGroupSectionSnapshot.fromJson(item),
+        ];
+        if (stored.isNotEmpty &&
+            jsonEncode([for (final s in stored) s.toJson()]) !=
+                jsonEncode(groups.toJson())) {
+          groups.restore(stored);
+        }
+        return;
+      }
+      if (!matches) groups.replaceWith(prompt);
+    }
+
+    side(
+      positive,
+      character.prompt,
+      promptKey: 'positivePrompt',
+      sectionsKey: 'positiveSections',
+    );
+    side(
+      negative,
+      character.negativePrompt,
+      promptKey: 'negativePrompt',
+      sectionsKey: 'negativeSections',
+    );
   }
 
   /// Stores the sections for [character], dropping the entries of

@@ -170,6 +170,10 @@ AgentToolPermissionDescriptor describeAgentToolPermission(String toolName) {
     'navigate_application' ||
     'select_generated_image' => AgentPermissionDomain.appNavigation,
     'set_generated_image_favorite' => AgentPermissionDomain.localGallery,
+    'list_character_library' ||
+    'get_character_library_entry' ||
+    'add_character_from_library' ||
+    'save_character_to_library' => AgentPermissionDomain.prompt,
     'save_generated_image' => AgentPermissionDomain.file,
     'copy_generated_image_to_clipboard' ||
     'send_generated_image_to_krita' => AgentPermissionDomain.externalActions,

@@ -118,6 +118,7 @@ const mcpToolDescriptionSuffixes = <String, String>{
   'edit_prompt_sections': _pageEditSuffix,
   'remove_prompt_section': _pageEditSuffix,
   'add_character': _pageEditSuffix,
+  'add_character_from_library': _pageEditSuffix,
   'update_character': _pageEditSuffix,
   'remove_character': _pageEditSuffix,
   'clear_characters': _pageEditSuffix,

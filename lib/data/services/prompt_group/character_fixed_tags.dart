@@ -14,8 +14,15 @@ abstract final class CharacterFixedTags {
   static Set<String> claimed(
     CharacterPromptConfig config,
     Map<String, Object?> entries,
+  ) => claimants(config, entries).keys.toSet();
+
+  /// [claimed] with, for each tag id, the ids of the characters claiming it
+  /// in panel order.
+  static Map<String, List<String>> claimants(
+    CharacterPromptConfig config,
+    Map<String, Object?> entries,
   ) {
-    final ids = <String>{};
+    final result = <String, List<String>>{};
     for (final character in config.characters) {
       if (!character.enabled) continue;
       final entry = entries[character.id];
@@ -28,12 +35,13 @@ abstract final class CharacterFixedTags {
               id.isNotEmpty &&
               section['enabled'] != false &&
               section['keepInMain'] != true) {
-            ids.add(id);
+            final ids = result.putIfAbsent(id, () => []);
+            if (!ids.contains(character.id)) ids.add(character.id);
           }
         }
       }
     }
-    return ids;
+    return result;
   }
 
   /// Rewrites the fixed-tag sections of [entry], the saved sections of

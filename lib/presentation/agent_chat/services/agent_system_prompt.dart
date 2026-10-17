@@ -24,6 +24,15 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'specific section with edit_prompt_sections; set_positive_prompt '
         'append / prepend add a section, and replace swaps only the enabled '
         'sections. Disabled sections are kept for later and are not sent.',
+    '- Characters can be split into sections too: when get_prompt_state '
+        'reports character_editor_mode "grouped", give new characters '
+        'prompt_sections and change existing ones with edit_prompt_sections '
+        'and character_id instead of writing one long prompt. A character '
+        'section can show a fixed tag (fixed_tag_id); the character then '
+        'takes that tag out of the main prompt while it is enabled.',
+    "- The character library holds the user's saved characters: "
+        'list_character_library, add_character_from_library to use one, '
+        'save_character_to_library when the user wants to keep a character.',
     '',
     'Image tools:',
     '- interrogate_image reverse-engineers a prompt from an image. '

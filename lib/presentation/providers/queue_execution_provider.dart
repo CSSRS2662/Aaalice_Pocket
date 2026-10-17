@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/constants/storage_keys.dart';
 import '../../core/platform/platform_capabilities.dart';
+import '../../core/services/android_foreground_task_service.dart';
 import '../../core/storage/local_storage_service.dart';
 import '../../core/storage/queue_state_storage.dart';
 import '../../core/utils/app_logger.dart';
@@ -187,9 +188,72 @@ class QueueExecutionNotifier extends _$QueueExecutionNotifier {
     ) {
       _onGenerationStateChanged(previous, next);
     });
+    listenSelf((_, next) => _syncForegroundHold(next));
+    ref.onDispose(() {
+      _disposed = true;
+      _releaseForegroundHold();
+    });
 
     // 同步加载持久化状态（Hive Box 已在 main.dart 中预先打开）
     return _loadFromStorageSync();
+  }
+
+  /// Android 前台服务在整段队列执行中一直保持，任务之间不释放：应用在后台时
+  /// 系统不允许重新启动前台服务，释放后下一张图就失去保活。
+  Future<void> Function()? _releaseForeground;
+  bool _acquiringForeground = false;
+  bool _disposed = false;
+
+  /// Taken when a task runs and kept through the ready step to the next
+  /// task; a queue only prepared for the user's tap never takes it.
+  static bool _keepsForeground(QueueExecutionState state) =>
+      state.isRunning || state.isReady;
+
+  void _syncForegroundHold(QueueExecutionState next) {
+    if (!_keepsForeground(next)) {
+      _releaseForegroundHold();
+      return;
+    }
+    if (!next.isRunning || _releaseForeground != null || _acquiringForeground) {
+      return;
+    }
+    _acquiringForeground = true;
+    final service = ref.read(androidForegroundTaskServiceProvider);
+    unawaited(() async {
+      try {
+        final release = await service.acquire();
+        if (!_disposed && _keepsForeground(state)) {
+          _releaseForeground = release;
+        } else {
+          await release();
+        }
+      } catch (error, stackTrace) {
+        AppLogger.e(
+          'Unable to keep the queue in the foreground service',
+          error,
+          stackTrace,
+          'QueueExecution',
+        );
+      } finally {
+        _acquiringForeground = false;
+      }
+    }());
+  }
+
+  void _releaseForegroundHold() {
+    final release = _releaseForeground;
+    _releaseForeground = null;
+    if (release == null) return;
+    unawaited(
+      release().catchError((Object error, StackTrace stackTrace) {
+        AppLogger.e(
+          'Unable to release the queue foreground service',
+          error,
+          stackTrace,
+          'QueueExecution',
+        );
+      }),
+    );
   }
 
   /// 同步加载状态

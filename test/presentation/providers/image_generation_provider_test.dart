@@ -12,6 +12,10 @@ import 'package:mocktail/mocktail.dart';
 import 'package:nai_launcher/core/constants/api_constants.dart';
 import 'package:nai_launcher/core/utils/image_save_utils.dart';
 import 'package:nai_launcher/core/constants/storage_keys.dart';
+import 'package:nai_launcher/core/services/character_conversion_service.dart';
+import 'package:nai_launcher/core/storage/local_storage_service.dart';
+import 'package:nai_launcher/data/models/character/character_prompt.dart' as ui;
+import 'package:nai_launcher/presentation/providers/character_prompt_provider.dart';
 import 'package:nai_launcher/data/datasources/remote/nai_image_enhancement_api_service.dart';
 import 'package:nai_launcher/data/datasources/remote/nai_image_generation_api_service.dart';
 import 'package:nai_launcher/data/models/fixed_tag/fixed_tag_entry.dart';
@@ -393,6 +397,123 @@ void main() {
         expect(subscriptionNotifier.refreshBalanceCallCount, 1);
       },
     );
+
+    for (final panelSent in [true, false]) {
+      test(
+        'a request carrying ${panelSent ? 'the panel' : 'other'} characters '
+        '${panelSent ? 'leaves claimed fixed tags to them' : 'keeps every fixed tag'}',
+        () async {
+          final mockApiService = MockNAIImageGenerationApiService();
+          ImageParams? capturedParams;
+          when(
+            () => mockApiService.generateImage(
+              any(),
+              onProgress: any(named: 'onProgress'),
+              focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+              minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+              focusedSelectionRect: any(named: 'focusedSelectionRect'),
+            ),
+          ).thenAnswer((invocation) async {
+            capturedParams =
+                invocation.positionalArguments.first as ImageParams;
+            return (
+              [_validImageBytes(width: 512, height: 768)],
+              <int, String>{},
+            );
+          });
+          when(
+            () => mockApiService.generateImageStream(
+              any(),
+              focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+              minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+              focusedSelectionRect: any(named: 'focusedSelectionRect'),
+            ),
+          ).thenAnswer((_) => const Stream.empty());
+
+          final eyes = FixedTagEntry.create(
+            name: 'eyes',
+            content: 'red eyes',
+            position: FixedTagPosition.prefix,
+            sortOrder: 0,
+          );
+          final light = FixedTagEntry.create(
+            name: 'light',
+            content: 'backlighting',
+            position: FixedTagPosition.prefix,
+            sortOrder: 1,
+          );
+          await Hive.box(StorageKeys.settingsBox).put(
+            StorageKeys.fixedTagsData,
+            jsonEncode([eyes.toJson(), light.toJson()]),
+          );
+          container.dispose();
+          container = _createAuthenticatedContainer(
+            overrides: [
+              naiImageGenerationApiServiceProvider.overrideWithValue(
+                mockApiService,
+              ),
+              subscriptionNotifierProvider.overrideWith(
+                TestSubscriptionNotifier.new,
+              ),
+            ],
+          );
+          await container
+              .read(notificationSettingsNotifierProvider.notifier)
+              .setSoundEnabled(false);
+          container.read(subscriptionNotifierProvider);
+
+          // Alice includes the "eyes" fixed tag as one of her sections.
+          const alice = ui.CharacterPrompt(
+            id: 'alice',
+            name: 'Alice',
+            prompt: 'girl, red eyes',
+            negativePrompt: '',
+          );
+          container.read(characterPromptNotifierProvider.notifier).replaceAll([
+            alice,
+          ]);
+          await container
+              .read(localStorageServiceProvider)
+              .setSetting(
+                StorageKeys.characterPromptGroupState,
+                jsonEncode({
+                  'alice': {
+                    'version': 1,
+                    'positivePrompt': alice.prompt,
+                    'negativePrompt': '',
+                    'positiveSections': [
+                      {'id': 's1', 'text': 'girl'},
+                      {'id': 's2', 'text': 'red eyes', 'fixedTagId': eyes.id},
+                    ],
+                    'negativeSections': [
+                      {'id': 'n1', 'text': ''},
+                    ],
+                  },
+                }),
+              );
+          final carried = CharacterConversionService()
+              .convert(container.read(characterPromptNotifierProvider))
+              .characters;
+          final params = container
+              .read(generationParamsNotifierProvider)
+              .copyWith(
+                prompt: '1girl',
+                negativePrompt: '',
+                characters: panelSent
+                    ? carried
+                    : [carried.single.copyWith(prompt: 'boy')],
+              );
+          await container
+              .read(imageGenerationNotifierProvider.notifier)
+              .generate(params, preserveCharacterSnapshot: true);
+
+          expect(
+            capturedParams!.prompt,
+            panelSent ? 'backlighting, 1girl' : 'red eyes, backlighting, 1girl',
+          );
+        },
+      );
+    }
 
     test(
       'imagesPerRequest sends multi-sample requests without comparison sources',

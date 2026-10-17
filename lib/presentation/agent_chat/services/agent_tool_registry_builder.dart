@@ -31,6 +31,7 @@ import 'image_resource_action_service.dart';
 import 'image_resource_action_toolbox.dart';
 import 'image_presentation_toolbox.dart';
 import 'manual_inpaint_toolbox.dart';
+import 'character_library_toolbox.dart';
 import 'prompt_section_toolbox.dart';
 import 'prompt_toolbox.dart';
 import 'queue_toolbox.dart';
@@ -219,6 +220,7 @@ class AgentToolRegistryBuilder {
         reloadSkills: _reloadSkills,
       ).tools(),
       ...PromptSectionToolbox(_ref).tools(),
+      ...CharacterLibraryToolbox(_ref).tools(),
       ...ExecutionToolbox(
         _workspaceDir,
         allowOutsideWorkspace: fullAccess,

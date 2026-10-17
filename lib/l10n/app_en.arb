@@ -474,6 +474,16 @@
   "agentChat_toolSetPositivePrompt": "Set positive prompt",
   "agentChat_toolSetNegativePrompt": "Set negative prompt",
   "agentChat_toolEditPromptSections": "Edit prompt sections",
+  "agentChat_toolCharacterLibrary": "Character library",
+  "agentChat_approvalNotificationTitle": "The agent is waiting for your approval",
+  "agentChat_approvalNotificationMessage": "Tap to return and approve “{tool}”.",
+  "@agentChat_approvalNotificationMessage": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
   "agentChat_toolRemovePromptSection": "Remove prompt section",
   "agentChat_toolAddCharacter": "Add character",
   "agentChat_toolUpdateCharacter": "Update character",

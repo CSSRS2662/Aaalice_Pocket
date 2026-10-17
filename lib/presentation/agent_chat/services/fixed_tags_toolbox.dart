@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/agent/agent_types.dart';
 import '../../../data/models/fixed_tag/fixed_tag_entry.dart';
 import '../../../data/models/fixed_tag/fixed_tag_prompt_type.dart';
+import '../../../core/storage/local_storage_service.dart';
+import '../../../data/services/prompt_group/character_fixed_tags.dart';
+import '../../../data/services/prompt_group/character_section_store.dart';
+import '../../providers/character_prompt_provider.dart';
 import '../../providers/fixed_tags_provider.dart';
 import '../../providers/tag_library_page_provider.dart';
 import 'defined_agent_tool.dart';
@@ -28,7 +32,11 @@ class FixedTagsToolbox {
     name: 'list_fixed_tags',
     label: 'List Fixed Tags',
     description:
-        'List ordered positive or negative fixed prompt fragments and their current applied projection.',
+        'List ordered positive or negative fixed prompt fragments and their '
+        'current applied projection. claimed_by lists the enabled characters '
+        'whose sections include an entry: for the next generation that entry '
+        'goes with those characters and is left out of the main prompt, so '
+        'the projection of the main prompt does not contain it.',
     parameters: toolboxObject(
       properties: {
         'prompt_type': {
@@ -44,6 +52,14 @@ class FixedTagsToolbox {
       final promptType = params['prompt_type'] as String? ?? 'all';
       final categoryId = params['category_id'] as String?;
       final enabledOnly = params['enabled_only'] as bool? ?? false;
+      final config = _ref.read(characterPromptNotifierProvider);
+      final claimants = CharacterFixedTags.claimants(
+        config,
+        CharacterSectionStore.readAll(_ref.read(localStorageServiceProvider)),
+      );
+      final names = {
+        for (final character in config.characters) character.id: character.name,
+      };
       final entries = state.entries.where((entry) {
         return (promptType == 'all' || entry.promptType.name == promptType) &&
             (categoryId == null || entry.categoryId == categoryId) &&
@@ -51,7 +67,16 @@ class FixedTagsToolbox {
       });
       return agentToolJsonResult({
         'ok': true,
-        'entries': [for (final entry in entries) _entryJson(entry)],
+        'entries': [
+          for (final entry in entries)
+            {
+              ..._entryJson(entry),
+              if (claimants[entry.id] case final ids?)
+                'claimed_by': [
+                  for (final id in ids) {'id': id, 'name': names[id]},
+                ],
+            },
+        ],
         'links': [
           for (final link in state.links)
             {
@@ -61,12 +86,7 @@ class FixedTagsToolbox {
               'mismatched': state.isMismatched(link),
             },
         ],
-        'projection': {
-          'positive_prefixes': state.enabledPrefixes,
-          'positive_suffixes': state.enabledSuffixes,
-          'negative_prefixes': state.negativeEnabledPrefixes,
-          'negative_suffixes': state.negativeEnabledSuffixes,
-        },
+        'projection': _projection(state, claimants.keys.toSet()),
         'can_undo': state.canUndo,
         'can_redo': state.canRedo,
       });
@@ -297,6 +317,21 @@ const _mutationProperties = <String, dynamic>{
 
 FixedTagPosition _position(String? value) =>
     value == 'suffix' ? FixedTagPosition.suffix : FixedTagPosition.prefix;
+
+/// The enabled fixed tags the main prompt receives, leaving out the ones
+/// characters take with them ([claimed]).
+Map<String, Object?> _projection(FixedTagsState state, Set<String> claimed) {
+  List<FixedTagEntry> main(List<FixedTagEntry> entries) => [
+    for (final entry in entries)
+      if (!claimed.contains(entry.id)) entry,
+  ];
+  return {
+    'positive_prefixes': main(state.enabledPrefixes),
+    'positive_suffixes': main(state.enabledSuffixes),
+    'negative_prefixes': main(state.negativeEnabledPrefixes),
+    'negative_suffixes': main(state.negativeEnabledSuffixes),
+  };
+}
 
 FixedTagPromptType _promptType(String? value) => value == 'negative'
     ? FixedTagPromptType.negative

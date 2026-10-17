@@ -17,6 +17,10 @@ final characterWorkspaceExpandedProvider = StateProvider<String?>(
 /// The inline gender/library choice for a new character is showing.
 final characterWorkspaceAddingProvider = StateProvider<bool>((ref) => false);
 
+/// Bumped when something other than the character editor stores character
+/// sections, such as the agent, so an open editor reloads them.
+final characterSectionsRevisionProvider = StateProvider<int>((ref) => 0);
+
 /// Character prompts are edited as sections, like the grouped main prompt.
 /// An editing preference of this device, so it is not cloud-synced.
 final characterPromptsGroupedProvider =

@@ -25,6 +25,8 @@
 
 分区模式下，`get_prompt_state` 返回各分区的 id、文本与启用状态；`edit_prompt_sections` 新增、改写、启停或移动分区，`remove_prompt_section` 删除分区并按删除类操作确认。`set_positive_prompt` / `set_negative_prompt` 在分区模式下不合并分区：追加和前置新增一个分区，替换只换掉启用的分区，停用分区原样保留。写入由 `PromptSectionState` 依次发出分区恢复请求、写入编辑器存档、更新生成提示词；生成页不在屏幕上时，打开后同样恢复。
 
+角色提示词的分区由全局开关 `characterPromptsGroupedProvider` 决定，`get_prompt_state` 以 `character_editor_mode` 报告，分区模式下每个角色带自己的 `positive_sections` / `negative_sections`。`edit_prompt_sections` / `remove_prompt_section` 传 `character_id` 时改该角色的分区；`add_character` / `update_character` 可用 `prompt_sections` / `negative_prompt_sections` 按顺序给出全部分区，`update_character` 的 `prompt` 只替换启用的文字分区，停用分区与固定词分区保留。角色分区可以引用固定词（`fixed_tag_id`，文字跟随固定词，不能在此改写）；启用的角色引用启用的固定词时，这次生成主提示词不再带它，除非该分区 `keep_in_main`，`list_fixed_tags` 用 `claimed_by` 列出这些角色。写入由 `CharacterSectionState` 先存分区、再写角色提示词，并递增 `characterSectionsRevisionProvider`，已打开的角色编辑器据此改为显示新分区。角色库工具 `list_character_library`、`get_character_library_entry`、`add_character_from_library`、`save_character_to_library` 复用 `CharacterLibraryTransfer`，归入提示词权限域。
+
 ## 结构化提问
 
 `ask_user_question` 接收非空 `questions` 数组，每题包含：

@@ -65,6 +65,10 @@ String agentToolLabel(BuildContext context, String toolName) {
     'add_character' => l10n.agentChat_toolAddCharacter,
     'update_character' => l10n.agentChat_toolUpdateCharacter,
     'remove_character' => l10n.agentChat_toolRemoveCharacter,
+    'list_character_library' ||
+    'get_character_library_entry' ||
+    'add_character_from_library' ||
+    'save_character_to_library' => l10n.agentChat_toolCharacterLibrary,
     'read_skill' => l10n.agentChat_toolReadSkill,
     'read_skill_resource' => l10n.agentChat_toolReadSkillResource,
     'get_skill_diagnostics' => l10n.agentChat_toolSkillDiagnostics,
@@ -125,6 +129,10 @@ IconData agentToolIcon(String toolName) => switch (toolName) {
   'add_character' ||
   'update_character' ||
   'remove_character' => Icons.manage_accounts_outlined,
+  'list_character_library' ||
+  'get_character_library_entry' ||
+  'add_character_from_library' ||
+  'save_character_to_library' => Icons.recent_actors_outlined,
   'read_skill' ||
   'read_skill_resource' ||
   'get_skill_diagnostics' ||

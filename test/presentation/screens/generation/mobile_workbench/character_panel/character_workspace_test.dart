@@ -11,6 +11,7 @@ import 'package:nai_launcher/data/models/character/character_prompt.dart';
 import 'package:nai_launcher/data/models/gallery/prompt_group_snapshot.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
+import 'package:nai_launcher/presentation/agent_chat/services/character_section_state.dart';
 import 'package:nai_launcher/presentation/providers/character_place_options_provider.dart';
 import 'package:nai_launcher/presentation/providers/character_prompt_provider.dart';
 import 'package:nai_launcher/presentation/providers/character_workspace_provider.dart';
@@ -78,6 +79,8 @@ class _Characters extends CharacterPromptNotifier {
     state = value ? next : next.normalizeCustomPositions();
   }
 }
+
+final _refProvider = Provider<Ref>((ref) => ref);
 
 const _girl = CharacterPrompt(id: 'a', name: 'Alice', prompt: 'girl, red hair');
 const _boy = CharacterPrompt(id: 'b', name: 'Bob', prompt: 'boy, glasses');
@@ -335,6 +338,40 @@ void main() {
     await tester.tap(dot);
     await tester.pumpAndSettle();
     expect(_character(container, 'a').prompt, '');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sections stored from outside show in the open editor', (
+    tester,
+  ) async {
+    final container = await _pump(tester);
+    await _expand(tester, 'a');
+    expect(find.byType(PromptGroupTile), findsOneWidget);
+
+    final sections = CharacterSectionState(container.read(_refProvider));
+    sections.write(
+      _character(container, 'a'),
+      positive: const [
+        PromptGroupSectionSnapshot(id: 'x1', text: 'girl'),
+        PromptGroupSectionSnapshot(id: 'x2', text: 'red hair'),
+        PromptGroupSectionSnapshot(id: 'x3', text: 'smile', enabled: false),
+      ],
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(PromptGroupTile), findsNWidgets(3));
+    expect(_character(container, 'a').prompt, 'girl, red hair');
+
+    // Rewriting a left-out section leaves the prompt alone and still shows.
+    sections.write(
+      _character(container, 'a'),
+      positive: const [
+        PromptGroupSectionSnapshot(id: 'x1', text: 'girl'),
+        PromptGroupSectionSnapshot(id: 'x2', text: 'red hair'),
+        PromptGroupSectionSnapshot(id: 'x3', text: 'grin', enabled: false),
+      ],
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('grin', findRichText: true), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

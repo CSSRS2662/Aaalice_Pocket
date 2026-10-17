@@ -110,7 +110,11 @@ class _AppBootstrapEffectsState extends ConsumerState<AppBootstrapEffects>
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.detached) {
-      unawaited(_persistAndPauseForBackground());
+      // 进入后台时队列照常执行（Android 由前台服务保活），只在引擎即将
+      // 分离时暂停，下次启动从暂停处恢复。
+      unawaited(
+        _persistForBackground(pauseQueue: state == AppLifecycleState.detached),
+      );
     }
   }
 
@@ -191,9 +195,10 @@ class _AppBootstrapEffectsState extends ConsumerState<AppBootstrapEffects>
     }
   }
 
-  Future<void> _persistAndPauseForBackground() async {
+  Future<void> _persistForBackground({required bool pauseQueue}) async {
     final queueState = ref.read(queueExecutionNotifierProvider);
-    if (!_queuePausedForBackground &&
+    if (pauseQueue &&
+        !_queuePausedForBackground &&
         (queueState.isRunning || queueState.isReady)) {
       _queuePausedForBackground = true;
       await ref.read(queueExecutionNotifierProvider.notifier).pause();

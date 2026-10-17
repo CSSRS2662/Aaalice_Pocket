@@ -212,7 +212,8 @@ class _CharacterWorkspaceEditorState
   Widget build(BuildContext context) {
     final character = widget.character;
     final negative = widget.negative;
-    // A prompt changed elsewhere (agent, import) regroups into one section.
+    // A prompt changed elsewhere shows the sections its writer stored (the
+    // agent does), or regroups into one section (an import).
     ref.listen(
       characterPromptNotifierProvider.select(
         (config) => config.findCharacterById(character.id),
@@ -221,9 +222,13 @@ class _CharacterWorkspaceEditorState
         if (next == null) return;
         // Fixed tags edited meanwhile changed the prompt the same way.
         _groups.resolveFixedTags(_fixedTagContent);
-        _groups.align(next);
+        _groups.adopt(next);
       },
     );
+    ref.listen(characterSectionsRevisionProvider, (_, __) {
+      final current = _current;
+      if (current != null) _groups.adopt(current, preferStored: true);
+    });
     final grouped = ref.watch(characterPromptsGroupedProvider);
     final highlight = ref.watch(highlightEmphasisSettingsProvider);
     final numericEmphasis = ImageModels.isV4Model(

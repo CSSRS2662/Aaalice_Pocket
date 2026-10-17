@@ -470,21 +470,14 @@ User instructions.
                   model: 'deepseek-chat',
                 ),
               );
+          // Without the foreground service the run still goes ahead; the
+          // service only keeps it alive in the background.
           if (outcome == 'start_failure') {
             TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
                 .setMockMethodCallHandler(foregroundChannel, (call) async {
                   foregroundCalls.add(call.method);
                   throw PlatformException(code: 'foreground_start_failed');
                 });
-            await container.read(provider.notifier).send('start task');
-            expect(foregroundCalls, ['start']);
-            expect(requests, isEmpty);
-            expect(
-              container.read(provider).error,
-              contains('foreground_start_failed'),
-            );
-            expect(container.read(provider).status, AgentChatRunStatus.idle);
-            return;
           }
           final entered = Completer<void>();
           final response = Completer<void>();
@@ -507,7 +500,10 @@ User instructions.
           response.complete();
           await cancellation;
           await send;
-          expect(foregroundCalls, ['start', 'stop']);
+          expect(
+            foregroundCalls,
+            outcome == 'start_failure' ? ['start'] : ['start', 'stop'],
+          );
           final messages = container
               .read(provider)
               .messages
@@ -517,7 +513,8 @@ User instructions.
               container.read(provider).error,
               contains('test network failure'),
             );
-          } else if (outcome == 'success') {
+          } else if (outcome == 'success' || outcome == 'start_failure') {
+            expect(container.read(provider).error, isEmpty);
             expect(
               messages.last.content
                   .whereType<AssistantTextContent>()

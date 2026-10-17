@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/core/constants/storage_keys.dart';
+import 'package:nai_launcher/core/services/android_foreground_task_service.dart';
 import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/core/storage/queue_state_storage.dart';
 import 'package:nai_launcher/core/storage/replication_queue_storage.dart';
@@ -149,6 +150,52 @@ void main() {
     expect(execution.completedCount, 3);
     expect(execution.failedCount, 0);
     expect(container.read(replicationQueueNotifierProvider).tasks, isEmpty);
+  });
+
+  test('队列执行全程持有前台服务，任务之间不释放', () async {
+    final tasks = [
+      ReplicationTask.create(prompt: 'first'),
+      ReplicationTask.create(prompt: 'second'),
+    ];
+    final generation = _ControlledImageGenerationNotifier();
+    final foreground = _CountingForegroundService();
+    final container = _buildControlledQueueContainer(
+      tasks,
+      generation,
+      foreground: foreground,
+    );
+    addTearDown(container.dispose);
+    final queue = container.read(queueExecutionNotifierProvider.notifier);
+
+    // Prepared but not running: waiting for the user takes no service.
+    queue.prepareNextTask();
+    await pumpEventQueue();
+    expect(foreground.acquired, 0);
+
+    expect(await queue.startQueue(), QueueStartResult.started);
+    await generation.waitForStart(0);
+    await pumpEventQueue();
+    expect(foreground.acquired, 1);
+    expect(foreground.active, 1);
+
+    // The step to the next task keeps the same hold.
+    generation.complete(0);
+    await _waitForCurrentTask(container, tasks[1].id);
+    generation.settle(0);
+    await generation.waitForStart(1);
+    await pumpEventQueue();
+    expect(foreground.acquired, 1);
+    expect(foreground.active, 1);
+
+    generation.complete(1);
+    await _waitForExecutionStatus(container, QueueExecutionStatus.completed);
+    generation.settle(1);
+    await pumpEventQueue();
+    expect(foreground.active, 0);
+    for (var index = 0; index < tasks.length; index++) {
+      generation.finishCleanup(index);
+      await generation.waitForCleanup(index);
+    }
   });
 
   test('失败结算在旧调用释放后继续下一任务', () async {
@@ -459,9 +506,12 @@ ProviderContainer _buildControlledQueueContainer(
   List<ReplicationTask> tasks,
   _ControlledImageGenerationNotifier generation, {
   LocalStorageService? localStorage,
+  AndroidForegroundTaskService? foreground,
 }) {
   return ProviderContainer(
     overrides: [
+      if (foreground != null)
+        androidForegroundTaskServiceProvider.overrideWithValue(foreground),
       replicationQueueStorageProvider.overrideWithValue(
         _MemoryReplicationQueueStorage(),
       ),
@@ -817,4 +867,24 @@ class _MemoryQueueStateStorage extends QueueStateStorage {
 
   @override
   Future<void> saveFailedTasks(List<ReplicationTask> tasks) async {}
+}
+
+/// Counts holds of the Android foreground service.
+class _CountingForegroundService extends AndroidForegroundTaskService {
+  _CountingForegroundService() : super(supported: false);
+
+  int acquired = 0;
+  int active = 0;
+
+  @override
+  Future<Future<void> Function()> acquire() async {
+    acquired++;
+    active++;
+    var released = false;
+    return () async {
+      if (released) return;
+      released = true;
+      active--;
+    };
+  }
 }

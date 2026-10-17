@@ -1,18 +1,27 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/agent/agent_types.dart';
+import '../../../data/models/character/character_prompt.dart';
 import '../../../data/models/gallery/prompt_group_snapshot.dart';
+import '../../providers/character_prompt_provider.dart';
+import 'character_section_state.dart';
 import 'defined_agent_tool.dart';
 import 'prompt_section_state.dart';
 import 'toolbox_json.dart';
 
-/// Tools for the prompt editor's grouped mode, where the user splits a prompt
-/// into untitled sections. NovelAI receives the enabled sections joined with
+/// Tools for the prompt editors' grouped mode, where the user splits a
+/// prompt into untitled sections: the main prompt and, with character_id,
+/// a character's prompts. NovelAI receives the enabled sections joined with
 /// ", "; disabled sections stay in the editor but are not sent.
 class PromptSectionToolbox {
-  PromptSectionToolbox(Ref ref) : _state = PromptSectionState(ref);
+  PromptSectionToolbox(Ref ref)
+    : _ref = ref,
+      _state = PromptSectionState(ref),
+      _characters = CharacterSectionState(ref);
 
+  final Ref _ref;
   final PromptSectionState _state;
+  final CharacterSectionState _characters;
 
   static const int maxOperations = 20;
 
@@ -65,19 +74,30 @@ class PromptSectionToolbox {
         'Add, rewrite, enable/disable or move sections of the positive or '
         'negative prompt while the editor is in grouped mode '
         '(get_prompt_state reports prompt_editor_mode and section ids). '
-        'NovelAI receives the enabled sections joined with ", "; disabled '
-        'sections stay in the editor for later but are not sent. Operations '
-        'apply in order and all-or-nothing; sections you do not mention are '
-        'left untouched. Keep the user\'s own division into sections instead '
-        'of merging them. To delete a section use remove_prompt_section. In '
-        'single mode this tool fails unless enable_grouped_mode is true, '
-        'which switches the editor to grouped mode; do that only when the '
+        'Pass character_id to edit that character\'s sections instead of '
+        'the main prompt (get_prompt_state reports character_editor_mode '
+        'and each character\'s sections). NovelAI receives the enabled '
+        'sections joined with ", "; disabled sections stay in the editor for '
+        'later but are not sent. Operations apply in order and '
+        'all-or-nothing; sections you do not mention are left untouched. '
+        'Keep the user\'s own division into sections instead of merging '
+        'them. Character sections may show a fixed tag: add one with '
+        'fixed_tag_id instead of text; its text follows the tag and cannot be '
+        'rewritten here. A character that includes an enabled fixed tag '
+        'takes it from the main prompt for that generation unless '
+        'keep_in_main is true. To delete a section use remove_prompt_section. '
+        'In single mode this tool fails unless enable_grouped_mode is true, '
+        'which switches that editor to grouped mode; do that only when the '
         'user asks for sections.',
     parameters: toolboxObject(
       properties: {
         'prompt_type': {
           'type': 'string',
           'enum': ['positive', 'negative'],
+        },
+        'character_id': {
+          'type': 'string',
+          'description': 'Stable character id; omit to edit the main prompt.',
         },
         'operations': {
           'type': 'array',
@@ -97,7 +117,20 @@ class PromptSectionToolbox {
               'text': {
                 'type': 'string',
                 'description':
-                    'Section text: required for add, optional for update.',
+                    'Section text: add needs text or fixed_tag_id; optional '
+                    'for update.',
+              },
+              'fixed_tag_id': {
+                'type': 'string',
+                'description':
+                    'add only, characters only: a section showing this fixed '
+                    'tag (list_fixed_tags) of the same prompt type.',
+              },
+              'keep_in_main': {
+                'type': 'boolean',
+                'description':
+                    'Fixed-tag sections only: true keeps the tag in the main '
+                    'prompt as well. Default false.',
               },
               'enabled': {
                 'type': 'boolean',
@@ -127,27 +160,44 @@ class PromptSectionToolbox {
     label: 'Remove Prompt Section',
     description:
         'Delete one section of the positive or negative prompt in grouped '
-        'mode, including its text. Prefer disabling it with '
-        'edit_prompt_sections when the user may want it back.',
+        'mode, including its text; pass character_id for a character\'s '
+        'section. Prefer disabling it with edit_prompt_sections when the user '
+        'may want it back.',
     parameters: toolboxObject(
       properties: {
         'prompt_type': {
           'type': 'string',
           'enum': ['positive', 'negative'],
         },
+        'character_id': {'type': 'string'},
         'id': {'type': 'string', 'minLength': 1},
       },
       required: const ['prompt_type', 'id'],
     ),
     executeFn: (_, params) async {
       final negative = params['prompt_type'] == 'negative';
+      final id = params['id'] as String;
+      if (params['character_id'] case final String characterId) {
+        final character = _findCharacter(characterId);
+        if (character == null) return _characterNotFound(characterId);
+        if (!_characters.groupedMode) return _charactersNotGrouped();
+        try {
+          final sections = PromptSectionEdits.remove(
+            _characters.read(character, negative: negative),
+            id,
+          );
+          return _commitCharacter(character, sections, negative: negative);
+        } on PromptSectionEditException catch (error) {
+          return agentToolError(error.code, error.message);
+        }
+      }
       final snapshot = _state.read();
       if (!snapshot.groupedMode) return _notGrouped();
       final List<PromptGroupSectionSnapshot> sections;
       try {
         sections = PromptSectionEdits.remove(
           _sectionsOf(snapshot, negative: negative),
-          params['id'] as String,
+          id,
         );
       } on PromptSectionEditException catch (error) {
         return agentToolError(error.code, error.message);
@@ -158,9 +208,7 @@ class PromptSectionToolbox {
 
   Future<AgentToolResult> _executeEdit(Map<String, dynamic> params) async {
     final negative = params['prompt_type'] == 'negative';
-    final snapshot = _state.read();
     final enableGrouped = params['enable_grouped_mode'] == true;
-    if (!snapshot.groupedMode && !enableGrouped) return _notGrouped();
     final operations = params['operations'];
     if (operations is! List || operations.isEmpty) {
       return agentToolError(
@@ -174,45 +222,45 @@ class PromptSectionToolbox {
         'At most $maxOperations operations per call.',
       );
     }
-    var sections = _sectionsOf(snapshot, negative: negative);
-    final added = <String>[];
-    try {
-      for (final (index, raw) in operations.indexed) {
-        if (raw is! Map) {
-          throw PromptSectionEditException(
-            'invalid_operations',
-            'Operation ${index + 1} must be an object.',
-          );
-        }
-        final operation = _Operation.parse(raw, index);
-        switch (operation.action) {
-          case 'add':
-            final id = PromptSectionEdits.newId();
-            sections = PromptSectionEdits.add(
-              sections,
-              section: PromptGroupSectionSnapshot(
-                id: id,
-                text: operation.text!,
-                enabled: operation.enabled ?? true,
-              ),
-              index: operation.index,
-            );
-            added.add(id);
-          case 'update':
-            sections = PromptSectionEdits.update(
-              sections,
-              operation.id!,
-              text: operation.text,
-              enabled: operation.enabled,
-            );
-          case 'move':
-            sections = PromptSectionEdits.move(
-              sections,
-              operation.id!,
-              operation.index!,
-            );
-        }
+    if (params['character_id'] case final String characterId) {
+      final character = _findCharacter(characterId);
+      if (character == null) return _characterNotFound(characterId);
+      if (!_characters.groupedMode && !enableGrouped) {
+        return _charactersNotGrouped();
       }
+      try {
+        final (sections, added) = _apply(
+          _characters.read(character, negative: negative),
+          operations,
+          fixedTagSection: (id, {required enabled, required keepInMain}) =>
+              _characters.fixedTagSection(
+                id,
+                negative: negative,
+                enabled: enabled,
+                keepInMain: keepInMain,
+              ),
+        );
+        if (!_characters.groupedMode) _characters.enableGroupedMode();
+        return _commitCharacter(
+          character,
+          sections,
+          negative: negative,
+          extra: {if (added.isNotEmpty) 'added_section_ids': added},
+        );
+      } on PromptSectionEditException catch (error) {
+        return agentToolError(error.code, error.message);
+      }
+    }
+
+    final snapshot = _state.read();
+    if (!snapshot.groupedMode && !enableGrouped) return _notGrouped();
+    final List<PromptGroupSectionSnapshot> sections;
+    final List<String> added;
+    try {
+      (sections, added) = _apply(
+        _sectionsOf(snapshot, negative: negative),
+        operations,
+      );
     } on PromptSectionEditException catch (error) {
       return agentToolError(error.code, error.message);
     }
@@ -223,6 +271,94 @@ class PromptSectionToolbox {
       groupedMode: true,
       extra: {if (added.isNotEmpty) 'added_section_ids': added},
     );
+  }
+
+  /// Applies [operations] in order; [fixedTagSection] makes the sections of
+  /// fixed-tag adds and is null where fixed-tag sections do not exist.
+  (List<PromptGroupSectionSnapshot>, List<String>) _apply(
+    List<PromptGroupSectionSnapshot> initial,
+    List<Object?> operations, {
+    PromptGroupSectionSnapshot Function(
+      String fixedTagId, {
+      required bool enabled,
+      required bool keepInMain,
+    })?
+    fixedTagSection,
+  }) {
+    var sections = initial;
+    final added = <String>[];
+    for (final (index, raw) in operations.indexed) {
+      if (raw is! Map) {
+        throw PromptSectionEditException(
+          'invalid_operations',
+          'Operation ${index + 1} must be an object.',
+        );
+      }
+      final operation = _Operation.parse(raw, index);
+      if ((operation.fixedTagId != null || operation.keepInMain != null) &&
+          fixedTagSection == null) {
+        throw PromptSectionEditException(
+          'invalid_operations',
+          'Operation ${index + 1}: fixed-tag sections exist only in '
+              'characters. Enabled fixed tags reach the main prompt on their '
+              'own; manage them with the fixed tag tools.',
+        );
+      }
+      switch (operation.action) {
+        case 'add':
+          final PromptGroupSectionSnapshot section;
+          if (operation.fixedTagId case final fixedTagId?) {
+            section = _uniqueFixedTag(
+              sections,
+              fixedTagSection!(
+                fixedTagId,
+                enabled: operation.enabled ?? true,
+                keepInMain: operation.keepInMain ?? false,
+              ),
+            );
+          } else {
+            section = PromptGroupSectionSnapshot(
+              id: PromptSectionEdits.newId(),
+              text: operation.text!,
+              enabled: operation.enabled ?? true,
+            );
+          }
+          sections = PromptSectionEdits.add(
+            sections,
+            section: section,
+            index: operation.index,
+          );
+          added.add(section.id);
+        case 'update':
+          sections = PromptSectionEdits.update(
+            sections,
+            operation.id!,
+            text: operation.text,
+            enabled: operation.enabled,
+            keepInMain: operation.keepInMain,
+          );
+        case 'move':
+          sections = PromptSectionEdits.move(
+            sections,
+            operation.id!,
+            operation.index!,
+          );
+      }
+    }
+    return (sections, added);
+  }
+
+  static PromptGroupSectionSnapshot _uniqueFixedTag(
+    List<PromptGroupSectionSnapshot> sections,
+    PromptGroupSectionSnapshot section,
+  ) {
+    if (sections.any((s) => s.fixedTagId == section.fixedTagId)) {
+      throw PromptSectionEditException(
+        'duplicate_fixed_tag',
+        'Fixed tag ${section.fixedTagId} is already one of these sections.',
+      );
+    }
+    return section;
   }
 
   Future<AgentToolResult> _commit(
@@ -248,6 +384,31 @@ class PromptSectionToolbox {
     });
   }
 
+  AgentToolResult _commitCharacter(
+    CharacterPrompt character,
+    List<PromptGroupSectionSnapshot> sections, {
+    required bool negative,
+    Map<String, Object?> extra = const {},
+  }) {
+    final updated = _characters.write(
+      character,
+      positive: negative ? null : sections,
+      negative: negative ? sections : null,
+    );
+    return agentToolJsonResult({
+      'ok': true,
+      'character_id': updated.id,
+      'prompt_type': negative ? 'negative' : 'positive',
+      'character_editor_mode': 'grouped',
+      'prompt': negative ? updated.negativePrompt : updated.prompt,
+      'sections': promptSectionsJson(
+        sections,
+        fixedTagName: (id) => _characters.fixedTag(id)?.name,
+      ),
+      ...extra,
+    });
+  }
+
   Future<PromptGroupSnapshot> _write(
     PromptGroupSnapshot snapshot,
     List<PromptGroupSectionSnapshot> sections, {
@@ -263,6 +424,9 @@ class PromptSectionToolbox {
     return next;
   }
 
+  CharacterPrompt? _findCharacter(String id) =>
+      _ref.read(characterPromptNotifierProvider).findCharacterById(id);
+
   static List<PromptGroupSectionSnapshot> _sectionsOf(
     PromptGroupSnapshot snapshot, {
     required bool negative,
@@ -275,6 +439,18 @@ class PromptSectionToolbox {
         'enable_grouped_mode=true to edit_prompt_sections when the user wants '
         'sections.',
   );
+
+  static AgentToolResult _charactersNotGrouped() => agentToolError(
+    'character_prompts_not_grouped',
+    'Character prompts are edited in single mode, so they have no sections. '
+        'Use update_character, or pass enable_grouped_mode=true to '
+        'edit_prompt_sections when the user wants sections.',
+  );
+
+  static AgentToolResult _characterNotFound(String id) => agentToolError(
+    'character_not_found',
+    'No character has id "$id". Call get_prompt_state for character ids.',
+  );
 }
 
 /// Appended to the set_positive_prompt / set_negative_prompt descriptions.
@@ -284,19 +460,13 @@ const promptSectionGroupedWriteNote =
     'for one new section and keeps disabled ones. Use edit_prompt_sections '
     'to change a specific section.';
 
-/// The section fields the agent sees; collapse state belongs to the editor.
-List<Map<String, Object?>> promptSectionsJson(
-  Iterable<PromptGroupSectionSnapshot> sections,
-) => [
-  for (final section in sections)
-    {'id': section.id, 'text': section.text, 'enabled': section.enabled},
-];
-
 class _Operation {
   const _Operation({
     required this.action,
     this.id,
     this.text,
+    this.fixedTagId,
+    this.keepInMain,
     this.enabled,
     this.index,
   });
@@ -304,6 +474,8 @@ class _Operation {
   final String action;
   final String? id;
   final String? text;
+  final String? fixedTagId;
+  final bool? keepInMain;
   final bool? enabled;
   final int? index;
 
@@ -316,11 +488,19 @@ class _Operation {
     final action = raw['action'];
     final id = raw['id'];
     final text = raw['text'];
+    final fixedTagId = raw['fixed_tag_id'];
+    final keepInMain = raw['keep_in_main'];
     final enabled = raw['enabled'];
     final index = raw['index'];
     if (id != null && id is! String) throw invalid('id must be a string.');
     if (text != null && text is! String) {
       throw invalid('text must be a string.');
+    }
+    if (fixedTagId != null && (fixedTagId is! String || fixedTagId.isEmpty)) {
+      throw invalid('fixed_tag_id must be a non-empty string.');
+    }
+    if (keepInMain != null && keepInMain is! bool) {
+      throw invalid('keep_in_main must be a boolean.');
     }
     if (enabled != null && enabled is! bool) {
       throw invalid('enabled must be a boolean.');
@@ -330,13 +510,25 @@ class _Operation {
     }
     switch (action) {
       case 'add':
-        if (text is! String || text.trim().isEmpty) {
-          throw invalid('add needs non-empty text.');
+        if (fixedTagId != null) {
+          if (text != null) {
+            throw invalid('add takes text or fixed_tag_id, not both.');
+          }
+        } else {
+          if (text is! String || text.trim().isEmpty) {
+            throw invalid('add needs non-empty text or a fixed_tag_id.');
+          }
+          if (keepInMain != null) {
+            throw invalid('keep_in_main needs fixed_tag_id.');
+          }
         }
       case 'update':
         if (id is! String || id.isEmpty) throw invalid('update needs id.');
-        if (text == null && enabled == null) {
-          throw invalid('update needs text or enabled.');
+        if (fixedTagId != null) {
+          throw invalid('fixed_tag_id can only be set when adding.');
+        }
+        if (text == null && enabled == null && keepInMain == null) {
+          throw invalid('update needs text, enabled or keep_in_main.');
         }
       case 'move':
         if (id is! String || id.isEmpty) throw invalid('move needs id.');
@@ -348,6 +540,8 @@ class _Operation {
       action: action as String,
       id: id as String?,
       text: (text as String?)?.trim(),
+      fixedTagId: fixedTagId as String?,
+      keepInMain: keepInMain as bool?,
       enabled: enabled as bool?,
       index: index as int?,
     );

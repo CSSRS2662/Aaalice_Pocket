@@ -420,7 +420,9 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
 
   Future<Directory?> _resolveCurrentImageProjectDirectory() {
     final resolver = _imageProjectDirectoryResolver;
-    return resolver != null ? resolver() : resolveCurrentImageProjectDirectory();
+    return resolver != null
+        ? resolver()
+        : resolveCurrentImageProjectDirectory();
   }
 
   Future<int> reloadSkills() async {
@@ -1210,9 +1212,19 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
       _activeAgentSettings = agentSettings;
       _activePermissionMode = permissionMode;
       _activeRoute = _routeCache;
-      releaseForeground = await _ref
-          .read(androidForegroundTaskServiceProvider)
-          .acquire();
+      // 前台服务只负责后台保活；系统不允许启动时照常运行，不让整轮失败。
+      try {
+        releaseForeground = await _ref
+            .read(androidForegroundTaskServiceProvider)
+            .acquire();
+      } catch (error, stackTrace) {
+        AppLogger.e(
+          'Unable to start the Agent foreground service',
+          error,
+          stackTrace,
+          'AgentChat',
+        );
+      }
       final capability = _modelCapability(_activeRoute);
       agent.state.model = capability.model;
       if (!capability.levels.contains(agent.state.thinkingLevel)) {

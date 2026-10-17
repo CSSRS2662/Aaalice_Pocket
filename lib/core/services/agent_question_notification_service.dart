@@ -40,21 +40,24 @@ class AgentQuestionNotificationService {
     }
   }
 
+  /// [expiresAt] removes the notification when a question times out; tool
+  /// approvals wait without a deadline and pass null.
   Future<void> show({
     required String requestId,
     required String title,
     required String message,
-    required DateTime expiresAt,
+    DateTime? expiresAt,
   }) => _serialize(() async {
     if (!await _permissionGranted()) {
       throw StateError('Android notification permission is denied.');
     }
-    if (_disposed || !DateTime.now().isBefore(expiresAt)) return;
+    if (_disposed) return;
+    if (expiresAt != null && !DateTime.now().isBefore(expiresAt)) return;
     await _channel.invokeMethod<void>('show', {
       'requestId': requestId,
       'title': title,
       'message': message,
-      'expiresAt': expiresAt.millisecondsSinceEpoch,
+      'expiresAt': expiresAt?.millisecondsSinceEpoch ?? 0,
     });
   });
 

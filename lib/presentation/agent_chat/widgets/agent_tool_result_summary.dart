@@ -96,11 +96,12 @@ String? _outcome(AppLocalizations l10n, Map decoded, String toolName) {
     case 'search_tags':
       // 批量查询按组返回，逐组累加而不是读计数字段，避免把请求上限当成结果数。
       final total = switch (decoded) {
-        {'groups': final List groups} => groups
-            .whereType<Map>()
-            .map((group) => group['results'])
-            .whereType<List>()
-            .fold<int>(0, (sum, results) => sum + results.length),
+        {'groups': final List groups} =>
+          groups
+              .whereType<Map>()
+              .map((group) => group['results'])
+              .whereType<List>()
+              .fold<int>(0, (sum, results) => sum + results.length),
         {'results': final List results} => results.length,
         _ => null,
       };
@@ -119,6 +120,7 @@ String? _outcome(AppLocalizations l10n, Map decoded, String toolName) {
       final collection = switch (toolName) {
         'list_tag_library_entries' ||
         'list_fixed_tags' ||
+        'list_character_library' ||
         'list_vibe_library' ||
         'list_precise_reference_library' => ('entries', 'entries'),
         'list_tag_library_categories' => ('categories', 'categories'),

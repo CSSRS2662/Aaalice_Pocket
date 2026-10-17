@@ -1207,6 +1207,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentChat_toolEditPromptSections => '编辑提示词分区';
 
   @override
+  String get agentChat_toolCharacterLibrary => '角色库';
+
+  @override
+  String get agentChat_approvalNotificationTitle => '智能体在等你确认';
+
+  @override
+  String agentChat_approvalNotificationMessage(String tool) {
+    return '要执行「$tool」，点按返回应用确认';
+  }
+
+  @override
   String get agentChat_toolRemovePromptSection => '删除提示词分区';
 
   @override
@@ -16939,6 +16950,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get agentChat_toolEditPromptSections => '編輯提示詞分區';
+
+  @override
+  String get agentChat_toolCharacterLibrary => '角色庫';
+
+  @override
+  String get agentChat_approvalNotificationTitle => '智慧體在等你確認';
+
+  @override
+  String agentChat_approvalNotificationMessage(String tool) {
+    return '要執行「$tool」，點按返回應用程式確認';
+  }
 
   @override
   String get agentChat_toolRemovePromptSection => '刪除提示詞分區';

@@ -464,6 +464,16 @@
   "agentChat_toolSetPositivePrompt": "设置正向提示词",
   "agentChat_toolSetNegativePrompt": "设置负向提示词",
   "agentChat_toolEditPromptSections": "编辑提示词分区",
+  "agentChat_toolCharacterLibrary": "角色库",
+  "agentChat_approvalNotificationTitle": "智能体在等你确认",
+  "agentChat_approvalNotificationMessage": "要执行「{tool}」，点按返回应用确认",
+  "@agentChat_approvalNotificationMessage": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
   "agentChat_toolRemovePromptSection": "删除提示词分区",
   "agentChat_toolAddCharacter": "添加角色",
   "agentChat_toolUpdateCharacter": "更新角色",

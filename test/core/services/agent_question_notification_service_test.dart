@@ -61,6 +61,16 @@ void main() {
     },
   );
 
+  test('approvals post without a deadline', () async {
+    await service.show(
+      requestId: 'approval-1',
+      title: '智能体在等你确认',
+      message: '要执行「生成图片」，点按返回应用确认',
+    );
+    expect(calls.single.method, 'show');
+    expect((calls.single.arguments as Map)['expiresAt'], 0);
+  });
+
   test('permission denial is explicit and does not prevent cleanup', () async {
     service.dispose();
     service = AgentQuestionNotificationService(

@@ -59,9 +59,13 @@ class AgentQuestionNotifications(
             activity, NOTIFICATION_ID, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+        // expiresAt 为 0 表示没有期限（工具确认一直等到用户处理）。
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(activity, CHANNEL_ID)
-                .setTimeoutAfter((expiresAt - System.currentTimeMillis()).coerceAtLeast(1))
+            Notification.Builder(activity, CHANNEL_ID).apply {
+                if (expiresAt > 0) {
+                    setTimeoutAfter((expiresAt - System.currentTimeMillis()).coerceAtLeast(1))
+                }
+            }
         } else {
             @Suppress("DEPRECATION")
             Notification.Builder(activity).setPriority(Notification.PRIORITY_HIGH)

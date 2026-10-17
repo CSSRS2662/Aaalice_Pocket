@@ -66,12 +66,13 @@ class PromptSectionState {
     // The request goes first: a change that keeps the same tags, such as
     // editing a disabled partition, is applied by the editor right away and
     // never changes the generation prompt.
-    _ref.read(promptGroupRestoreRequestProvider.notifier).state =
-        PromptGroupRestoreRequest(
-          snapshot: next,
-          restorePositive: positive,
-          restoreNegative: negative,
-        );
+    _ref
+        .read(promptGroupRestoreRequestProvider.notifier)
+        .state = PromptGroupRestoreRequest(
+      snapshot: next,
+      restorePositive: positive,
+      restoreNegative: negative,
+    );
     await _ref
         .read(localStorageServiceProvider)
         .setSetting(
@@ -116,17 +117,7 @@ class PromptSectionState {
   static List<PromptGroupSectionSnapshot> _withIds(
     List<PromptGroupSectionSnapshot> sections,
     String prefix,
-  ) => [
-    for (var index = 0; index < sections.length; index++)
-      sections[index].id.trim().isNotEmpty
-          ? sections[index]
-          : PromptGroupSectionSnapshot(
-              id: '$prefix-${index + 1}',
-              text: sections[index].text,
-              enabled: sections[index].enabled,
-              collapsed: sections[index].collapsed,
-            ),
-  ];
+  ) => PromptSectionEdits.withIds(sections, prefix);
 }
 
 class _StoredState {
@@ -144,6 +135,25 @@ class _StoredState {
   final Object? negativePrompt;
 }
 
+/// The section fields the agent sees; collapse state belongs to the editor.
+List<Map<String, Object?>> promptSectionsJson(
+  Iterable<PromptGroupSectionSnapshot> sections, {
+  String? Function(String fixedTagId)? fixedTagName,
+}) => [
+  for (final section in sections)
+    {
+      'id': section.id,
+      'text': section.text,
+      'enabled': section.enabled,
+      if (section.fixedTagId case final fixedTagId?) ...{
+        'fixed_tag_id': fixedTagId,
+        if (fixedTagName?.call(fixedTagId) case final name?)
+          'fixed_tag_name': name,
+        'keep_in_main': section.keepInMain,
+      },
+    },
+];
+
 /// Pure edits on one side's partitions. Each returns a new list or throws
 /// [PromptSectionEditException].
 abstract final class PromptSectionEdits {
@@ -158,6 +168,25 @@ abstract final class PromptSectionEdits {
 
   static int indexOf(List<PromptGroupSectionSnapshot> sections, String id) =>
       sections.indexWhere((section) => section.id == id);
+
+  /// Sections read back from older states may lack ids; positional ids keep
+  /// them addressable until the editor adopts them.
+  static List<PromptGroupSectionSnapshot> withIds(
+    List<PromptGroupSectionSnapshot> sections,
+    String prefix,
+  ) => [
+    for (var index = 0; index < sections.length; index++)
+      sections[index].id.trim().isNotEmpty
+          ? sections[index]
+          : PromptGroupSectionSnapshot(
+              id: '$prefix-${index + 1}',
+              text: sections[index].text,
+              enabled: sections[index].enabled,
+              collapsed: sections[index].collapsed,
+              fixedTagId: sections[index].fixedTagId,
+              keepInMain: sections[index].keepInMain,
+            ),
+  ];
 
   static List<PromptGroupSectionSnapshot> add(
     List<PromptGroupSectionSnapshot> sections, {
@@ -174,20 +203,40 @@ abstract final class PromptSectionEdits {
     return [...sections]..insert(target, section);
   }
 
+  /// A fixed-tag section follows its tag, so its text cannot be rewritten;
+  /// [keepInMain] applies to fixed-tag sections only.
   static List<PromptGroupSectionSnapshot> update(
     List<PromptGroupSectionSnapshot> sections,
     String id, {
     String? text,
     bool? enabled,
+    bool? keepInMain,
   }) {
     final index = _require(sections, id);
     final current = sections[index];
+    final fixedTagId = current.fixedTagId;
+    if (fixedTagId != null && text != null && text != current.text) {
+      throw PromptSectionEditException(
+        'fixed_tag_section',
+        'Section "$id" shows fixed tag $fixedTagId and follows its content. '
+            'Change the tag with update_fixed_tag, or remove this section and '
+            'add a text section instead.',
+      );
+    }
+    if (fixedTagId == null && keepInMain != null) {
+      throw PromptSectionEditException(
+        'invalid_operations',
+        'keep_in_main applies only to fixed-tag sections; "$id" is text.',
+      );
+    }
     return [...sections]
       ..[index] = PromptGroupSectionSnapshot(
         id: current.id,
         text: text ?? current.text,
         enabled: enabled ?? current.enabled,
         collapsed: current.collapsed,
+        fixedTagId: fixedTagId,
+        keepInMain: keepInMain ?? current.keepInMain,
       );
   }
 
@@ -215,20 +264,23 @@ abstract final class PromptSectionEdits {
         : next;
   }
 
-  /// Replaces every enabled partition with one holding [text]; disabled
-  /// partitions are not part of the prompt and stay where they are.
+  /// Replaces every enabled text partition with one holding [text]; disabled
+  /// partitions are not part of the prompt and stay where they are, and so
+  /// do fixed-tag sections, which reference a tag rather than hold text.
   static List<PromptGroupSectionSnapshot> replaceEnabled(
     List<PromptGroupSectionSnapshot> sections,
     String text,
   ) {
-    final firstEnabled = sections.indexWhere((section) => section.enabled);
+    bool replaced(PromptGroupSectionSnapshot section) =>
+        section.enabled && section.fixedTagId == null;
+    final firstReplaced = sections.indexWhere(replaced);
     final kept = [
       for (final section in sections)
-        if (!section.enabled) section,
+        if (!replaced(section)) section,
     ];
-    final insertAt = firstEnabled < 0
+    final insertAt = firstReplaced < 0
         ? kept.length
-        : sections.take(firstEnabled).where((s) => !s.enabled).length;
+        : sections.take(firstReplaced).where((s) => !replaced(s)).length;
     return kept
       ..insert(insertAt, PromptGroupSectionSnapshot(id: newId(), text: text));
   }

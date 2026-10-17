@@ -37,6 +37,12 @@ class GenerationForegroundService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    // Android 15 limits dataSync services to about six hours a day; a service
+    // still running when the limit is reached must stop, or the app crashes.
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        stopSelf()
+    }
+
     private fun acquireWakeLock() {
         if (wakeLock?.isHeld == true) return
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager

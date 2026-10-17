@@ -1251,6 +1251,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentChat_toolEditPromptSections => 'Edit prompt sections';
 
   @override
+  String get agentChat_toolCharacterLibrary => 'Character library';
+
+  @override
+  String get agentChat_approvalNotificationTitle =>
+      'The agent is waiting for your approval';
+
+  @override
+  String agentChat_approvalNotificationMessage(String tool) {
+    return 'Tap to return and approve “$tool”.';
+  }
+
+  @override
   String get agentChat_toolRemovePromptSection => 'Remove prompt section';
 
   @override

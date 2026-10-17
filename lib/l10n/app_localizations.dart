@@ -2381,6 +2381,24 @@ abstract class AppLocalizations {
   /// **'Edit prompt sections'**
   String get agentChat_toolEditPromptSections;
 
+  /// No description provided for @agentChat_toolCharacterLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Character library'**
+  String get agentChat_toolCharacterLibrary;
+
+  /// No description provided for @agentChat_approvalNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent is waiting for your approval'**
+  String get agentChat_approvalNotificationTitle;
+
+  /// No description provided for @agentChat_approvalNotificationMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to return and approve “{tool}”.'**
+  String agentChat_approvalNotificationMessage(String tool);
+
   /// No description provided for @agentChat_toolRemovePromptSection.
   ///
   /// In en, this message translates to:
