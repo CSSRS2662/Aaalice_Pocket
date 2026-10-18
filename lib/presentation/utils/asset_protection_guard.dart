@@ -73,22 +73,15 @@ class AssetProtectionGuard {
     required BuildContext context,
     required WidgetRef ref,
     int? cost,
-  }) async {
+  }) {
     final settings = ref.read(shareImageSettingsProvider);
     if (!settings.effectiveWarnHighAnlasCost) {
-      return true;
+      return Future.value(true);
     }
 
-    final estimatedCost =
-        cost ??
-        await readSettledEstimatedCost(
-          ProviderScope.containerOf(context, listen: false),
-        );
+    final estimatedCost = cost ?? ref.read(estimatedCostProvider) ?? 0;
     if (estimatedCost < settings.highAnlasCostThreshold) {
-      return true;
-    }
-    if (!context.mounted) {
-      return false;
+      return Future.value(true);
     }
 
     final l10n = context.l10n;
