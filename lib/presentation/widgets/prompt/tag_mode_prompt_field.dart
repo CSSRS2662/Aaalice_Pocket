@@ -27,6 +27,7 @@ class TagModePromptField extends ConsumerStatefulWidget {
     this.surfaceColor,
     this.enabled = true,
     this.onModeChanged,
+    this.onChanged,
     this.onSearch,
     this.enableAutocomplete = true,
     this.tagFocusNode,
@@ -59,6 +60,7 @@ class TagModePromptField extends ConsumerStatefulWidget {
   final bool enabled;
   final bool enableAutocomplete;
   final ValueChanged<bool>? onModeChanged;
+  final ValueChanged<String>? onChanged;
   final ValueChanged<bool>? onSearch;
   @override
   ConsumerState<TagModePromptField> createState() => _TagModePromptFieldState();
@@ -66,6 +68,7 @@ class TagModePromptField extends ConsumerStatefulWidget {
 
 class _TagModePromptFieldState extends ConsumerState<TagModePromptField> {
   late TagEditorSession _session;
+  String _lastText = '';
   Object get _modeId => widget.sessionId ?? widget.controller;
   @override
   void initState() {
@@ -74,8 +77,24 @@ class _TagModePromptFieldState extends ConsumerState<TagModePromptField> {
   }
 
   void _attach() {
-    _session = TagEditorSession(widget.controller)
-      ..tagMode = ref.read(promptTagModeProvider(_modeId));
+    _session =
+        TagEditorSession(
+            widget.controller,
+            onCommandChanged: (text) {
+              if (!_session.tagMode) widget.onChanged?.call(text);
+            },
+          )
+          ..tagMode = ref.read(promptTagModeProvider(_modeId))
+          ..addListener(_changed);
+    _lastText = widget.controller.text;
+  }
+
+  void _changed() {
+    final text = widget.controller.text;
+    if (text != _lastText) {
+      _lastText = text;
+      if (_session.tagMode) widget.onChanged?.call(text);
+    }
   }
 
   @override

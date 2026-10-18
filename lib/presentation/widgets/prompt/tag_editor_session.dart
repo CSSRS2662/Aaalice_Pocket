@@ -31,12 +31,13 @@ class PromptTextPatch {
 /// UI identity, selection and undo belong to the editor, while the controller
 /// remains the only owner of prompt content. Both views use these transactions.
 class TagEditorSession extends ChangeNotifier {
-  TagEditorSession(this.controller) {
+  TagEditorSession(this.controller, {this.onCommandChanged}) {
     _previous = controller.value;
     _reparse(const {});
     controller.addListener(_changed);
   }
   final TextEditingController controller;
+  final ValueChanged<String>? onCommandChanged;
   late TextEditingValue _previous;
   List<PromptEditorTag> tags = [];
   List<PromptEditorTag> _leaves = [];
@@ -406,6 +407,7 @@ class TagEditorSession extends ChangeNotifier {
       _applying = false;
     }
     notifyListeners();
+    onCommandChanged?.call(controller.text);
   }
 
   void replaceLabel(int id, String label, {bool composing = false}) {
@@ -648,6 +650,7 @@ class TagEditorSession extends ChangeNotifier {
     } finally {
       _restoring = false;
     }
+    onCommandChanged?.call(controller.text);
   }
 
   @override
