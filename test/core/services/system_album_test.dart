@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/core/services/system_album.dart';
+import 'package:nai_launcher/data/services/metadata/hash_calculator.dart';
 import 'package:path/path.dart' as p;
 
 import '../../helpers/memory_system_album.dart';
@@ -91,6 +92,39 @@ void main() {
       expect(target.images, hasLength(1));
     });
 
+    test('目标文件夹里已有同一张图（不在记录里）也算重复，并记下位置', () async {
+      target.images['album://old/2026-09-01_10-00-00-1.png'] = bytes(1);
+
+      final first = await save(bytes(1));
+      // 之后命中记录，不再按内容查找。
+      target.failFind = StateError('must use the record');
+      final second = await save(bytes(1));
+
+      expect(first.duplicate, isTrue);
+      expect(first.location, 'album://old/2026-09-01_10-00-00-1.png');
+      expect(second.location, first.location);
+      expect(target.fileNames, isEmpty);
+    });
+
+    test('写入的字节不同时，也按来源字节在文件夹里查找', () async {
+      final source = bytes(1);
+      target.images['album://old/source.png'] = source;
+
+      final result = await save(bytes(30), identity: source);
+
+      expect(result.duplicate, isTrue);
+      expect(result.location, 'album://old/source.png');
+    });
+
+    test('查询相册失败时照常保存', () async {
+      target.failFind = StateError('query failed');
+
+      final result = await save(bytes(1));
+
+      expect(result.duplicate, isFalse);
+      expect(target.images, hasLength(1));
+    });
+
     test('去重记录存在本机设置里，换一个实例仍然有效', () async {
       final first = await save(bytes(1));
 
@@ -134,6 +168,33 @@ void main() {
 
       await File(first).delete();
       expect(await target.contains(first), isFalse);
+    });
+
+    test('只在保存文件夹里按内容查找', () async {
+      final album = Directory(p.join(directory.path, 'album'));
+      final target = FolderAlbumTarget(() async => album);
+      final calculator = FileHashCalculator();
+      // 文件夹外的同一张图不算。
+      await File(p.join(directory.path, 'outside.png')).writeAsBytes(bytes(1));
+      expect(
+        await target.find(
+          bytes: bytes(1),
+          sha256: await calculator.calculateFromBytesAsync(bytes(1)),
+        ),
+        isNull,
+      );
+
+      await album.create();
+      await File(p.join(album.path, 'other.png')).writeAsBytes(bytes(2));
+      await File(p.join(album.path, 'same.png')).writeAsBytes(bytes(1));
+
+      expect(
+        await target.find(
+          bytes: bytes(1),
+          sha256: await calculator.calculateFromBytesAsync(bytes(1)),
+        ),
+        p.join(album.path, 'same.png'),
+      );
     });
   });
 }

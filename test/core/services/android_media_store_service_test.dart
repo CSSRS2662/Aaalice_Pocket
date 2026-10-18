@@ -64,6 +64,24 @@ void main() {
     expect(calls.first.arguments, {'uri': uri});
   });
 
+  test('按内容查找相册文件夹里的同一张图时传递哈希与大小', () async {
+    MethodCall? receivedCall;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          receivedCall = call;
+          return 'content://media/external/images/media/7';
+        });
+
+    final uri = await AndroidMediaStoreService.findImage(
+      sha256: 'abc123',
+      size: 2048,
+    );
+
+    expect(uri, 'content://media/external/images/media/7');
+    expect(receivedCall?.method, 'findImage');
+    expect(receivedCall?.arguments, {'sha256': 'abc123', 'size': 2048});
+  });
+
   test('不存在的源文件不会调用 Android MediaStore', () async {
     var called = false;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

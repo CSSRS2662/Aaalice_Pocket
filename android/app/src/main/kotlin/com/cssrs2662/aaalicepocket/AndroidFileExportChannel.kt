@@ -1,6 +1,7 @@
 package com.cssrs2662.aaalicepocket
 
 import android.app.Activity
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
@@ -14,6 +15,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileInputStream
+import java.security.MessageDigest
 import java.util.concurrent.Executors
 
 /** Streams app-generated files into Android's Storage Access Framework. */
@@ -64,6 +66,17 @@ class AndroidFileExportChannel(
                 )?.use { cursor -> cursor.moveToFirst() } ?: false
             }.getOrDefault(false)
             activity.runOnUiThread { result.success(exists) }
+        }
+    }
+
+    /**
+     * The first image in the app's Pictures folder whose content hashes to
+     * [sha256], or null. Only images of exactly [size] bytes are read.
+     */
+    fun findMediaImage(sha256: String, size: Long, result: MethodChannel.Result) {
+        executor.execute {
+            val found = runCatching { findAlbumImage(sha256, size) }.getOrNull()
+            activity.runOnUiThread { result.success(found?.toString()) }
         }
     }
 
@@ -281,8 +294,55 @@ class AndroidFileExportChannel(
     }
 
     @Suppress("DEPRECATION")
+    private fun findAlbumImage(sha256: String, size: Long): Uri? {
+        val (folderSelection, folderArgument) =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                "${MediaStore.Images.Media.RELATIVE_PATH} = ?" to albumRelativePath
+            } else {
+                "${MediaStore.Images.Media.DATA} LIKE ?" to
+                    "%/${Environment.DIRECTORY_PICTURES}/$ALBUM_FOLDER/%"
+            }
+        activity.contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            arrayOf(MediaStore.Images.Media._ID),
+            "$folderSelection AND ${MediaStore.Images.Media.SIZE} = ?",
+            arrayOf(folderArgument, size.toString()),
+            null,
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            while (cursor.moveToNext()) {
+                val uri = ContentUris.withAppendedId(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    cursor.getLong(idColumn),
+                )
+                if (sha256Of(uri) == sha256) return uri
+            }
+        }
+        return null
+    }
+
+    private fun sha256Of(uri: Uri): String? {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val read = runCatching {
+            activity.contentResolver.openInputStream(uri)?.use { input ->
+                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                var count = input.read(buffer)
+                while (count >= 0) {
+                    digest.update(buffer, 0, count)
+                    count = input.read(buffer)
+                }
+                true
+            } ?: false
+        }.getOrDefault(false)
+        if (!read) return null
+        return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    private val albumRelativePath: String
+        get() = "${Environment.DIRECTORY_PICTURES}/$ALBUM_FOLDER/"
+
     private fun publishImage(source: File, fileName: String, mimeType: String): Uri {
-        val relativePath = "${Environment.DIRECTORY_PICTURES}/Aaalice NAI Launcher/"
+        val relativePath = albumRelativePath
         val displayName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             uniqueMediaStoreDisplayName(fileName, relativePath)
         } else {
@@ -297,7 +357,7 @@ class AndroidFileExportChannel(
             } else {
                 val directory = File(
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                    "Aaalice NAI Launcher",
+                    ALBUM_FOLDER,
                 )
                 check(directory.exists() || directory.mkdirs()) {
                     "Unable to create the Pictures directory."
@@ -421,6 +481,7 @@ class AndroidFileExportChannel(
     }
 
     private companion object {
+        const val ALBUM_FOLDER = "Aaalice NAI Launcher"
         const val CHANNEL = "com.aaalice.nai_launcher/file_export"
         const val SAVE_DOCUMENT_REQUEST_CODE = 49101
         const val PICK_DIRECTORY_REQUEST_CODE = 49102

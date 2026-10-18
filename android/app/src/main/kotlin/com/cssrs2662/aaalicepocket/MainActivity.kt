@@ -109,6 +109,16 @@ class MainActivity : FlutterActivity() {
                     fileExportChannel?.mediaImageExists(uri, result)
                         ?: result.success(false)
                 }
+                "findImage" -> {
+                    val sha256 = call.argument<String>("sha256")
+                    val size = call.argument<Number>("size")?.toLong()
+                    if (sha256.isNullOrBlank() || size == null || size <= 0) {
+                        result.error("invalid_arguments", "sha256 and size are required", null)
+                        return@setMethodCallHandler
+                    }
+                    fileExportChannel?.findMediaImage(sha256, size, result)
+                        ?: result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }

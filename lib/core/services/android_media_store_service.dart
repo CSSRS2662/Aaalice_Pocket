@@ -54,6 +54,19 @@ class AndroidMediaStoreService {
         false;
   }
 
+  /// Where the app's Pictures folder already has an image of [size] bytes
+  /// whose content hashes to [sha256]; null when it has none.
+  static Future<String?> findImage({
+    required String sha256,
+    required int size,
+  }) async {
+    if (!PlatformCapabilities.current.isAndroid) return null;
+    return _channel.invokeMethod<String>('findImage', {
+      'sha256': sha256,
+      'size': size,
+    });
+  }
+
   static Future<String?> saveImageFromPath({
     required String sourcePath,
     required String fileName,
