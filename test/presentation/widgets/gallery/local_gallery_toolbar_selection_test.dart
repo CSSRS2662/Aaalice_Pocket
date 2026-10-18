@@ -107,8 +107,6 @@ void main() {
   );
 
   const scopeKeys = [
-    'local-gallery-scope-all',
-    'local-gallery-scope-favorites',
     'local-gallery-date-chip',
     'local-gallery-collection-chip',
   ];
@@ -151,7 +149,7 @@ void main() {
             findsNothing,
           );
           expect(find.text('刷新'), findsNothing);
-          for (final label in ['全部', '收藏', '日期', '分类']) {
+          for (final label in ['日期', '分类']) {
             final labelFinder = find.text(label);
             expect(labelFinder, findsOneWidget, reason: label);
             expect(
@@ -178,45 +176,21 @@ void main() {
     }
   }
 
-  testWidgets('收藏一键切换，全部与收藏互斥显示选中态', (tester) async {
+  testWidgets('图库只放收藏：没有全部/收藏切换，分类条件照常显示', (tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 700));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final calls = <String>[];
 
-    await _pumpToolbar(
-      tester,
-      selectionActive: false,
-      collectionLabel: '人物',
-      onShowAll: () => calls.add('all'),
-      onShowFavorites: () => calls.add('favorites'),
+    await _pumpToolbar(tester, selectionActive: false, collectionLabel: '人物');
+
+    expect(find.byKey(const ValueKey('local-gallery-scope-all')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('local-gallery-scope-favorites')),
+      findsNothing,
     );
-    final all = find.byKey(const ValueKey('local-gallery-scope-all'));
-    final favorites = find.byKey(
-      const ValueKey('local-gallery-scope-favorites'),
-    );
-    expect(tester.getSemantics(all), isSemantics(isSelected: true));
-    expect(tester.getSemantics(favorites), isSemantics(isSelected: false));
     expect(find.text('人物'), findsOneWidget);
-
-    await tester.tap(favorites);
-    expect(calls, ['favorites']);
-
-    // 换一个 ProviderScope，让新的过滤条件生效。
-    await tester.pumpWidget(const SizedBox.shrink());
-    await _pumpToolbar(
-      tester,
-      selectionActive: false,
-      criteria: const FilterCriteria(showFavoritesOnly: true),
-      collectionLabel: '人物',
-      onShowAll: () => calls.add('all'),
-      onShowFavorites: () => calls.add('favorites'),
-    );
-    await tester.pumpAndSettle();
-    expect(tester.getSemantics(favorites), isSemantics(isSelected: true));
-    // 收藏由范围切换表达，分类条件回到未选状态。
-    expect(find.text('人物'), findsNothing);
-    await tester.tap(all);
-    expect(calls, ['favorites', 'all']);
+    // 计数就是收藏数，不再显示“筛选结果/全部”。
+    expect(find.text('5'), findsOneWidget);
+    expect(find.text('5/5'), findsNothing);
   });
 
   testWidgets('日期与分类条件显示当前取值，并可单独清除', (tester) async {
@@ -404,14 +378,12 @@ Future<ProviderContainer> _pumpToolbar(
   VoidCallback? onRemoveFromAlbum,
   double textScaleFactor = 1,
   bool showPageTitle = true,
-  FilterCriteria criteria = const FilterCriteria(),
+  FilterCriteria criteria = LocalGalleryNotifier.favoritesOnly,
   String? collectionLabel,
   bool canUndo = false,
   VoidCallback? onUndo,
   VoidCallback? onRefresh,
   VoidCallback? onJumpToDate,
-  VoidCallback? onShowAll,
-  VoidCallback? onShowFavorites,
   VoidCallback? onClearCollection,
 }) async {
   await tester.pumpWidget(
@@ -465,8 +437,6 @@ Future<ProviderContainer> _pumpToolbar(
                 onUndo: onUndo,
                 onRefresh: onRefresh,
                 onJumpToDate: onJumpToDate,
-                onShowAll: onShowAll,
-                onShowFavorites: onShowFavorites,
                 onClearCollection: onClearCollection,
                 batchActions: [
                   const ImageCardAction(

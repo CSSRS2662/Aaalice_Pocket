@@ -2,7 +2,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 
 import 'package:nai_launcher/data/models/gallery/gallery_album.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
@@ -29,26 +28,20 @@ Widget _host(Widget child) {
 /// 相簿树交互回归：桌面右键菜单执行动作、就地重命名、新相簿自动展开。
 /// （此前桌面右键菜单漏注册选择回调，四个操作全部无效。）
 void main() {
-  testWidgets('收藏项注册为本地图像拖拽目标', (tester) async {
+  testWidgets('图库只放收藏，相簿树没有单独的收藏节点', (tester) async {
     await tester.pumpWidget(
       _host(
         GalleryAlbumTreeView(
           albums: const [],
           totalImageCount: 1,
-          favoriteCount: 0,
           onAlbumSelected: (_) {},
-          onImagesFavoriteDrop: (_) async {},
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    final favorite = find.byKey(const ValueKey('local-gallery-favorites'));
-    expect(favorite, findsOneWidget);
-    expect(
-      find.ancestor(of: favorite, matching: find.byType(DropRegion)),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('local-gallery-favorites')), findsNothing);
+    expect(find.text('收藏'), findsNothing);
   });
 
   testWidgets('右键菜单的四个操作各自执行对应回调', (tester) async {

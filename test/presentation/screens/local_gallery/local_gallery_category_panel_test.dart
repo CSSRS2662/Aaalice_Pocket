@@ -55,7 +55,6 @@ void main() {
                     categoryState ??
                     GalleryCategoryState(categories: [category]),
                 albumState: albumState ?? GalleryAlbumState(albums: [album]),
-                favoriteCount: Future.value(1),
                 modal: modal,
                 scrollController: scrollController,
                 onCreateCategory: () {},
@@ -89,18 +88,19 @@ void main() {
 
     final allImagesY = tester.getTopLeft(find.text('全部图片')).dy;
     final albumsY = tester.getTopLeft(find.text('相簿')).dy;
-    final favoriteY = tester.getTopLeft(find.text('收藏')).dy;
     final foldersY = tester.getTopLeft(find.text('文件夹')).dy;
     final categoryY = tester.getTopLeft(find.text('测试文件夹')).dy;
 
     expect(allImagesY, lessThan(albumsY));
-    expect(albumsY, lessThan(favoriteY));
-    expect(favoriteY, lessThan(foldersY));
+    expect(albumsY, lessThan(foldersY));
     expect(foldersY, lessThan(categoryY));
+    // 图库只放收藏，相簿区没有单独的“收藏”行。
+    expect(find.text('收藏'), findsNothing);
     expect(find.text('测试相簿'), findsOneWidget);
     expect(find.byTooltip('新建'), findsNWidgets(2));
     expect(find.byType(Divider), findsNothing);
-    expect(find.byType(GallerySidebarNavigationItem), findsOneWidget);
+    // 收藏行原本是唯一的导航项；图库只放收藏后它不再出现。
+    expect(find.byType(GallerySidebarNavigationItem), findsNothing);
     expect(
       find.byKey(const ValueKey('local-gallery-sidebar-page-header')),
       findsNothing,
@@ -118,9 +118,7 @@ void main() {
           .dx;
     }
 
-    final favoriteIconX = navigationIconX('收藏');
-    expect(navigationIconX('测试相簿'), closeTo(favoriteIconX, 0.1));
-    expect(navigationIconX('测试文件夹'), closeTo(favoriteIconX, 0.1));
+    expect(navigationIconX('测试文件夹'), closeTo(navigationIconX('测试相簿'), 0.1));
 
     final allImagesSize = tester.getSize(
       find.byKey(const ValueKey('local-gallery-all-images')),
@@ -173,7 +171,6 @@ void main() {
     await tester.tap(find.text('相簿'));
     await tester.pump();
 
-    expect(find.text('收藏'), findsNothing);
     expect(find.text('测试相簿'), findsNothing);
     expect(find.text('测试文件夹'), findsOneWidget);
 
@@ -220,7 +217,7 @@ void main() {
 
     expect(find.text('全部图片'), findsOneWidget);
     expect(find.text('相簿'), findsOneWidget);
-    expect(find.text('收藏'), findsOneWidget);
+    expect(find.text('收藏'), findsNothing);
     expect(find.text('文件夹'), findsOneWidget);
     expect(find.byTooltip('新建'), findsNWidgets(2));
     expect(scrollController.hasClients, isTrue);

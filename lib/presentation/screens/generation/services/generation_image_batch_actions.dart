@@ -1,19 +1,16 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
 import '../../../../core/platform/platform_capabilities.dart';
-import '../../../../core/services/android_media_store_service.dart';
 import '../../../../core/services/file_export_service.dart';
-import '../../../../core/utils/generated_image_saves.dart';
+import '../../../../core/services/system_album.dart';
 import '../../../../core/utils/image_save_utils.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../../core/utils/zip_utils.dart';
-import '../../../../data/repositories/gallery_folder_repository.dart';
 import '../../../providers/generation/image_card_selection_provider.dart';
 import '../../../providers/image_generation_provider.dart';
-import '../../../providers/local_gallery_provider.dart';
 import '../../../utils/zip_export_progress.dart';
+import '../../../widgets/common/album_save_feedback.dart';
 import '../../../widgets/common/app_toast.dart';
 import '../../../widgets/common/duplicate_save_notice.dart';
 import '../../../widgets/common/image_card_action.dart';
@@ -23,13 +20,15 @@ class GenerationImageBatchActions {
   GenerationImageBatchActions({
     required this.context,
     required this.images,
-    required this.gallery,
+    required this.album,
     required this.selection,
     required this.deletion,
   });
   final BuildContext context;
   final List<GeneratedImage> images;
-  final LocalGalleryNotifier gallery;
+
+  /// Where saving puts the images; the gallery holds favorites only.
+  final SystemAlbum album;
   final GenerationImageCardSelection selection;
   final GenerationImageDeletion deletion;
 
@@ -60,7 +59,8 @@ class GenerationImageBatchActions {
   ];
   Future<void> _saveSelectedImages() => _saveImages(images);
 
-  /// 图库里已有的图不保存，底部通知提供“依然保存”，只重存这些图。
+  /// 保存只进系统相册；相册里已有的图不保存，底部通知提供“依然保存”，
+  /// 只重存这些图。
   Future<void> _saveImages(
     List<GeneratedImage> targets, {
     bool allowDuplicate = false,
@@ -68,71 +68,37 @@ class GenerationImageBatchActions {
     if (targets.isEmpty) return;
 
     try {
-      final saveDirPath = await GalleryFolderRepository.instance.getRootPath();
-      if (saveDirPath == null) return;
-
-      Object? systemGalleryError;
       final duplicates = <GeneratedImage>[];
-      // 原子保存：日期分类路径 + 独占防冲突 + 失败清理，全部在工具内完成
+      String? location;
       for (final image in targets) {
-        final seed = await ImageSaveUtils.resolveSeed(
-          metadata: image.metadata,
+        final saved = await album.save(
           bytes: image.bytes,
-        );
-        final saved = await GeneratedImageSaves.saveOnce(
-          rootPath: saveDirPath,
-          sourceBytes: image.bytes,
-          source: 'batch-save',
-          seed: seed,
-          allowDuplicate: allowDuplicate,
-          write: () => ImageSaveUtils.saveBytesToDatedPath(
-            rootPath: saveDirPath,
-            bytes: image.bytes,
-            seed: seed,
-          ),
-        );
-        if (saved.reused) {
-          duplicates.add(image);
-          continue;
-        }
-        if (PlatformCapabilities.current.supportsSystemGalleryExport) {
-          try {
-            await AndroidMediaStoreService.savePng(
+          fileName: ImageSaveUtils.albumFileName(
+            seed: await ImageSaveUtils.resolveSeed(
+              metadata: image.metadata,
               bytes: image.bytes,
-              fileName: p.basename(saved.path),
-            );
-          } catch (error) {
-            systemGalleryError ??= error;
-          }
+            ),
+          ),
+          source: 'batch-save',
+          allowDuplicate: allowDuplicate,
+        );
+        if (saved.duplicate) {
+          duplicates.add(image);
+        } else {
+          location = saved.location;
         }
       }
 
-      final savedCount = targets.length - duplicates.length;
-      if (savedCount > 0) await gallery.refresh();
-
-      if (context.mounted) {
-        if (systemGalleryError != null) {
-          AppToast.warning(
-            context,
-            context.l10n.image_savedAppOnly(systemGalleryError.toString()),
-          );
-        } else if (savedCount > 0) {
-          AppToast.success(
-            context,
-            PlatformCapabilities.current.supportsSystemGalleryExport
-                ? context.l10n.image_savedToSystemGallery
-                : context.l10n.image_imageSaved(saveDirPath),
-          );
-        }
-        if (duplicates.isNotEmpty) {
-          showDuplicateSaveNotice(
-            context,
-            count: duplicates.length,
-            onSaveAnyway: () => _saveImages(duplicates, allowDuplicate: true),
-          );
-        }
-        selection.deselectAll(targets.map((image) => image.id));
+      if (!context.mounted) return;
+      if (location != null) showAlbumSaved(context, album, location);
+      if (duplicates.isNotEmpty) {
+        showDuplicateSaveNotice(
+          context,
+          count: duplicates.length,
+          onSaveAnyway: () => _saveImages(duplicates, allowDuplicate: true),
+        );
       }
+      selection.deselectAll(targets.map((image) => image.id));
     } catch (e) {
       if (context.mounted) {
         AppToast.error(context, context.l10n.image_saveFailed(e.toString()));

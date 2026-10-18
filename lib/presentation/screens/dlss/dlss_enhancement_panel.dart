@@ -9,7 +9,8 @@ import '../../../data/services/dlss/dlss_options.dart';
 import '../../adaptive/adaptive_presenter.dart';
 import '../../providers/dlss_provider.dart';
 import '../../providers/generation/dlss_enhancement_adopter.dart';
-import '../../widgets/common/app_toast.dart';
+import '../../providers/system_album_provider.dart';
+import '../../widgets/common/album_save_feedback.dart';
 import '../../widgets/common/image_comparison_view.dart';
 import '../../adaptive/window_size_class.dart';
 import 'dlss_error_view.dart';
@@ -119,7 +120,7 @@ class _DlssEnhancementPanelState extends ConsumerState<DlssEnhancementPanel> {
           );
         });
       } else {
-        AppToast.success(context, '${context.l10n.common_success}\n$path');
+        showAlbumSaved(context, ref.read(systemAlbumProvider), path);
       }
     } catch (error) {
       if (mounted) setState(() => _error = error);

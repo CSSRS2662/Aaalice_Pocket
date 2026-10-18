@@ -100,6 +100,15 @@ class MainActivity : FlutterActivity() {
                         null,
                     )
                 }
+                "imageExists" -> {
+                    val uri = call.argument<String>("uri")
+                    if (uri.isNullOrBlank()) {
+                        result.error("invalid_arguments", "uri is required", null)
+                        return@setMethodCallHandler
+                    }
+                    fileExportChannel?.mediaImageExists(uri, result)
+                        ?: result.success(false)
+                }
                 else -> result.notImplemented()
             }
         }

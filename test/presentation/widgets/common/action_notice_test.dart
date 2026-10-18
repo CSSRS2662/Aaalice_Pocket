@@ -53,7 +53,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text("This image is already in the gallery, so it wasn't saved"),
+      find.text(
+        "This image is already in your photo gallery, so it wasn't saved",
+      ),
       findsOneWidget,
     );
     expect(find.text('Save anyway'), findsOneWidget);
@@ -92,7 +94,7 @@ void main() {
     showDuplicateSaveNotice(context, count: 3, onSaveAnyway: () => saves++);
     await tester.pumpAndSettle();
     expect(
-      find.text("3 images are already in the gallery and weren't saved"),
+      find.text("3 images are already in your photo gallery and weren't saved"),
       findsOneWidget,
     );
     final action = tester.getSize(find.byKey(_action));
@@ -113,7 +115,7 @@ void main() {
 
     expect(find.byKey(_notice), findsOneWidget);
     expect(
-      find.text("2 images are already in the gallery and weren't saved"),
+      find.text("2 images are already in your photo gallery and weren't saved"),
       findsOneWidget,
     );
     ActionNotice.dismiss();

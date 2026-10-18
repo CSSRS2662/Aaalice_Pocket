@@ -14,6 +14,8 @@ import '../../data/models/gallery/nai_image_metadata.dart';
 import '../../core/database/datasources/gallery_data_source.dart';
 import '../../data/repositories/gallery_folder_repository.dart';
 import '../../data/services/gallery/gallery_filter_service.dart';
+import '../../data/services/gallery/gallery_image_file_deleter.dart';
+import '../../data/services/gallery/gallery_unfavorited_cleanup.dart';
 import '../../data/services/gallery/gallery_stream_scanner.dart';
 import '../../data/services/gallery/scan_state_manager.dart';
 import '../../data/services/gallery/unified_gallery_service.dart';
@@ -127,8 +129,12 @@ class LocalGalleryState with _$LocalGalleryState {
 
   const LocalGalleryState._();
 
-  /// 是否有过滤条件
+  /// 是否有过滤条件（图库只放收藏，收藏条件始终生效）
   bool get hasFilters => filterCriteria.hasFilters;
+
+  /// 用户自己加的条件：搜索、日期、标签、分类等，不含始终生效的收藏条件。
+  bool get hasUserFilters =>
+      filterCriteria.copyWith(showFavoritesOnly: false).hasFilters;
 
   /// 是否可以加载更多
   bool get canLoadMore => currentPage < totalPages - 1;
@@ -148,7 +154,14 @@ class LocalGalleryState with _$LocalGalleryState {
 /// 3. 处理错误并转换为友好的错误消息
 @Riverpod(keepAlive: true)
 class LocalGalleryNotifier extends _$LocalGalleryNotifier {
+  /// 图库只放收藏，筛选从这里开始，清除筛选也回到这里。
+  static const favoritesOnly = FilterCriteria(showFavoritesOnly: true);
+
+  /// 取消收藏后保留文件的时长，期间可以撤销；之后从磁盘删除。
+  static const unfavoriteRemovalDelay = Duration(seconds: 5);
+
   LocalGalleryState? _cachedState;
+  final Map<String, Timer> _pendingRemovals = {};
   LocalGalleryService? _service;
   Future<void>? _initialization;
   Future<int>? _favoriteCountLoad;
@@ -173,9 +186,13 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
     GalleryCacheManager().registerOnCacheCleared(_resetState);
     ref.onDispose(() {
       GalleryCacheManager().unregisterOnCacheCleared(_resetState);
+      for (final timer in _pendingRemovals.values) {
+        timer.cancel();
+      }
+      _pendingRemovals.clear();
     });
 
-    return const LocalGalleryState();
+    return const LocalGalleryState(filterCriteria: favoritesOnly);
   }
 
   void _setState(LocalGalleryState newState) {
@@ -192,7 +209,7 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
     _filterRequestSerial++;
     _deferredAdmissions.clear();
     _deferredRemovals.clear();
-    _setState(const LocalGalleryState());
+    _setState(const LocalGalleryState(filterCriteria: favoritesOnly));
   }
 
   /// 获取共享服务实例，所有调用方等待同一个初始化 Future。
@@ -321,8 +338,8 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
         ),
       );
 
-      // 加载首页
-      await loadPage(0);
+      // 图库只放收藏：先把收藏条件交给查询服务，再加载首页。
+      await _applyFilters();
 
       // 后台扫描（通过服务层自动处理）
       _setState(state.copyWith(isIndexing: false, isPageLoading: false));
@@ -812,13 +829,14 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
     await _applyFilters();
   }
 
+  /// 图库只放收藏：收藏条件始终打开，[value] 为 false 时不改变任何条件。
   Future<void> setShowFavoritesOnly(bool value) async {
     final criteria = state.filterCriteria;
-    if (criteria.showFavoritesOnly == value) return;
+    if (criteria.showFavoritesOnly) return;
 
     _setState(
       state.copyWith(
-        filterCriteria: criteria.copyWith(showFavoritesOnly: value),
+        filterCriteria: criteria.copyWith(showFavoritesOnly: true),
         currentPage: 0,
       ),
     );
@@ -1060,9 +1078,7 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
   }
 
   Future<void> clearAllFilters() async {
-    _setState(
-      state.copyWith(filterCriteria: const FilterCriteria(), currentPage: 0),
-    );
+    _setState(state.copyWith(filterCriteria: favoritesOnly, currentPage: 0));
     await _applyFilters();
   }
 
@@ -1150,6 +1166,11 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
 
       _setState(state.copyWith(currentImages: updatedImages));
       ref.read(imageFavoriteStatusProvider.notifier).record(filePath, isFav);
+      if (isFav) {
+        _pendingRemovals.remove(targetKey)?.cancel();
+      } else {
+        _scheduleRemoval(filePath, targetKey);
+      }
 
       // 如果启用了收藏过滤，收藏/取消收藏都要重新应用，保证收藏栏即时增删。
       if (state.filterCriteria.showFavoritesOnly) {
@@ -1173,6 +1194,58 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
       AppLogger.e('Toggle favorite failed', e, null, 'LocalGalleryNotifier');
       return false;
     }
+  }
+
+  /// 是否刚取消收藏、文件还在等待删除（这期间可以撤销）。
+  bool isRemovalPending(String filePath) =>
+      _pendingRemovals.containsKey(galleryFilePathKey(filePath));
+
+  /// 图库只放收藏：取消收藏的图在 [unfavoriteRemovalDelay] 后从磁盘删除。
+  void _scheduleRemoval(String filePath, String key) {
+    _pendingRemovals.remove(key)?.cancel();
+    _pendingRemovals[key] = Timer(
+      unfavoriteRemovalDelay,
+      () => unawaited(_removeUnfavorited(filePath, key)),
+    );
+  }
+
+  Future<void> _removeUnfavorited(String filePath, String key) async {
+    _pendingRemovals.remove(key);
+    try {
+      final service = await getService();
+      if (await service.isFavorite(filePath)) return;
+      await ref.read(galleryImageFileDeleterProvider).delete(filePath);
+      await removeDeletedImages([filePath]);
+      AppLogger.i('Removed unfavorited $filePath', 'LocalGalleryNotifier');
+    } catch (error, stackTrace) {
+      AppLogger.e(
+        'Removing unfavorited image failed',
+        error,
+        stackTrace,
+        'LocalGalleryNotifier',
+      );
+    }
+  }
+
+  /// 图库里没收藏的图片（旧版本每次保存都写进图库），供设置里一键清理。
+  Future<List<String>> findUnfavoritedImages() async =>
+      (await _unfavoritedCleanup()).find();
+
+  /// 永久删除 [paths] 中仍未收藏的图片，并把它们移出图库。
+  Future<GalleryUnfavoritedCleanupResult> deleteUnfavoritedImages(
+    List<String> paths,
+  ) async {
+    final result = await (await _unfavoritedCleanup()).delete(paths);
+    await removeDeletedImages(result.deletedPaths);
+    return result;
+  }
+
+  Future<GalleryUnfavoritedCleanup> _unfavoritedCleanup() async {
+    final deleter = ref.read(galleryImageFileDeleterProvider);
+    return GalleryUnfavoritedCleanup(
+      service: await getService(),
+      deleteFile: deleter.delete,
+    );
   }
 
   Future<bool> isFavorite(String filePath) async {

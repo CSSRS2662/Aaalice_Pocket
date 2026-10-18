@@ -1544,8 +1544,50 @@ abstract class AppLocalizations {
   /// No description provided for @settings_autoSaveSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Automatically save images after generation'**
+  /// **'Automatically save images to your photo gallery after generation'**
   String get settings_autoSaveSubtitle;
+
+  /// No description provided for @settings_cleanUnfavorited.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean up unfavorited images'**
+  String get settings_cleanUnfavorited;
+
+  /// No description provided for @settings_cleanUnfavoritedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The gallery keeps favorites only; delete images that earlier versions saved here without a favorite'**
+  String get settings_cleanUnfavoritedSubtitle;
+
+  /// No description provided for @settings_cleanUnfavoritedNone.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no unfavorited images in the gallery'**
+  String get settings_cleanUnfavoritedNone;
+
+  /// No description provided for @settings_cleanUnfavoritedConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unfavorited images will be permanently deleted from the gallery. Your photo gallery isn\'t affected. This can\'t be undone.'**
+  String settings_cleanUnfavoritedConfirm(int count);
+
+  /// No description provided for @settings_cleanUnfavoritedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {count} unfavorited images'**
+  String settings_cleanUnfavoritedDone(int count);
+
+  /// No description provided for @settings_cleanUnfavoritedPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {deleted}; {failed} couldn\'t be deleted'**
+  String settings_cleanUnfavoritedPartial(int deleted, int failed);
+
+  /// No description provided for @settings_cleanUnfavoritedFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleanup failed: {error}'**
+  String settings_cleanUnfavoritedFailed(String error);
 
   /// No description provided for @settings_about.
   ///
@@ -2933,38 +2975,17 @@ abstract class AppLocalizations {
   /// **'Delete this image from history? This action cannot be undone.'**
   String get generation_deleteImageConfirm;
 
-  /// No description provided for @generation_deleteImageWithFileConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete this image from history and permanently delete the file \"{fileName}\" from the local gallery? This action cannot be undone.'**
-  String generation_deleteImageWithFileConfirm(Object fileName);
-
   /// No description provided for @generation_deleteImagesConfirm.
   ///
   /// In en, this message translates to:
   /// **'Delete the {count} selected images from history? This action cannot be undone.'**
   String generation_deleteImagesConfirm(Object count);
 
-  /// No description provided for @generation_deleteImagesWithFilesConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete the {count} selected images from history and permanently delete {fileCount} of their files saved in the local gallery? This action cannot be undone.'**
-  String generation_deleteImagesWithFilesConfirm(
-    Object count,
-    Object fileCount,
-  );
-
   /// No description provided for @generation_deleteConfirmSkipForSession.
   ///
   /// In en, this message translates to:
   /// **'Don\'t ask again until the app restarts'**
   String get generation_deleteConfirmSkipForSession;
-
-  /// No description provided for @generation_deleteImageFilesFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Removed from history, but {count} local files could not be deleted: {error}'**
-  String generation_deleteImageFilesFailed(Object count, Object error);
 
   /// No description provided for @generation_model.
   ///
@@ -3812,12 +3833,6 @@ abstract class AppLocalizations {
   /// **'Save to Library'**
   String get image_saveToLibrary;
 
-  /// No description provided for @image_imageSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'Image saved to: {path}'**
-  String image_imageSaved(Object path);
-
   /// No description provided for @image_saveFailed.
   ///
   /// In en, this message translates to:
@@ -3827,13 +3842,13 @@ abstract class AppLocalizations {
   /// No description provided for @image_duplicateNotSaved.
   ///
   /// In en, this message translates to:
-  /// **'This image is already in the gallery, so it wasn\'t saved'**
+  /// **'This image is already in your photo gallery, so it wasn\'t saved'**
   String get image_duplicateNotSaved;
 
   /// No description provided for @image_duplicatesNotSaved.
   ///
   /// In en, this message translates to:
-  /// **'{count} images are already in the gallery and weren\'t saved'**
+  /// **'{count} images are already in your photo gallery and weren\'t saved'**
   String image_duplicatesNotSaved(int count);
 
   /// No description provided for @image_saveAnyway.
@@ -10230,14 +10245,20 @@ abstract class AppLocalizations {
   /// No description provided for @localGallery_emptyTitle.
   ///
   /// In en, this message translates to:
-  /// **'No local images'**
+  /// **'No favorites yet'**
   String get localGallery_emptyTitle;
 
   /// No description provided for @localGallery_emptySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Generated images will be saved here'**
+  /// **'Images you favorite appear here'**
   String get localGallery_emptySubtitle;
+
+  /// No description provided for @localGallery_unfavoriteRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfavorited. The image will be removed from the gallery'**
+  String get localGallery_unfavoriteRemoved;
 
   /// No description provided for @localGallery_noMatchingResults.
   ///
@@ -19740,12 +19761,6 @@ abstract class AppLocalizations {
   /// **'Pack failed: {error}'**
   String toast_packFailedWithError(Object error);
 
-  /// No description provided for @toast_saveDirNotSet.
-  ///
-  /// In en, this message translates to:
-  /// **'Save directory is not set'**
-  String get toast_saveDirNotSet;
-
   /// No description provided for @toast_savedTo.
   ///
   /// In en, this message translates to:
@@ -23824,12 +23839,6 @@ abstract class AppLocalizations {
   /// **'Could not save to your photo gallery: {error}'**
   String localGallery_saveToSystemGalleryFailed(Object error);
 
-  /// No description provided for @image_savedAppOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved to the app gallery, but could not export to your photo gallery: {error}'**
-  String image_savedAppOnly(Object error);
-
   /// No description provided for @image_shareFailed.
   ///
   /// In en, this message translates to:
@@ -26134,18 +26143,6 @@ abstract class AppLocalizations {
   /// **'Could not create the watermarked copy. Check the image and try again.'**
   String get watermark_failedGeneric;
 
-  /// No description provided for @watermark_systemGalleryExportFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The copy was saved in Aaalice, but could not be added to the system gallery.'**
-  String get watermark_systemGalleryExportFailed;
-
-  /// No description provided for @watermark_galleryRefreshFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The copy was saved, but the gallery could not refresh. Reopen the gallery to retry.'**
-  String get watermark_galleryRefreshFailed;
-
   /// No description provided for @watermark_sourceMissing.
   ///
   /// In en, this message translates to:
@@ -26721,18 +26718,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The redacted copy could not be created.'**
   String get mosaic_failedGeneric;
-
-  /// No description provided for @mosaic_galleryRefreshFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The file was saved, but the local gallery could not be refreshed.'**
-  String get mosaic_galleryRefreshFailed;
-
-  /// No description provided for @mosaic_systemGalleryExportFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The app copy was saved, but system gallery export failed.'**
-  String get mosaic_systemGalleryExportFailed;
 
   /// No description provided for @mosaic_undo.
   ///

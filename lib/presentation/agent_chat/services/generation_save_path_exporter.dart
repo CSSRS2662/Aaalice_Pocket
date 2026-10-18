@@ -116,7 +116,8 @@ final class GenerationSavePathExporter {
     );
   }
 
-  /// 图库原图就是成品，引用它时不写任何文件。
+  /// 图库原图就是成品，引用它时不写任何文件。图库只放收藏，自动保存只进
+  /// 系统相册，所以只有收藏过的图才有原图可引用。
   Future<GeneratedImageExportOutcome> _referenceOriginal(
     String? originalPath,
   ) async {
@@ -124,9 +125,9 @@ final class GenerationSavePathExporter {
       return const GeneratedImageExportOutcome.failed(
         errorCode: 'original_unavailable',
         errorMessage:
-            'This image was never written to the gallery, so there is no '
-            'original file to reference. Turn on automatic saving or pass an '
-            'explicit save_path.',
+            'This image is not in the gallery, which holds favorites only, '
+            'so there is no original file to reference. Pass an explicit '
+            'save_path to keep a file.',
       );
     }
     return GeneratedImageExportOutcome.saved(

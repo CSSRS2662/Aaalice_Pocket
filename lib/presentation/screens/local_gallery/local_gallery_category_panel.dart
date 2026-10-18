@@ -23,7 +23,6 @@ class LocalGalleryCategoryPanel extends ConsumerStatefulWidget {
     required this.galleryState,
     required this.categoryState,
     required this.albumState,
-    required this.favoriteCount,
     required this.onCreateCategory,
     required this.onCategorySelected,
     required this.onCategoryRename,
@@ -41,7 +40,6 @@ class LocalGalleryCategoryPanel extends ConsumerStatefulWidget {
     required this.onAlbumMoveToSlot,
     required this.onCategoryMoveToSlot,
     required this.onImagesDropToAlbum,
-    this.onImagesFavoriteDrop,
     this.modal = false,
     this.scrollController,
     this.afterSelection,
@@ -50,7 +48,6 @@ class LocalGalleryCategoryPanel extends ConsumerStatefulWidget {
   final LocalGalleryState galleryState;
   final GalleryCategoryState categoryState;
   final GalleryAlbumState albumState;
-  final Future<int> favoriteCount;
   final VoidCallback onCreateCategory;
   final ValueChanged<String?> onCategorySelected;
   final Future<void> Function(String id, String newName) onCategoryRename;
@@ -82,7 +79,6 @@ class LocalGalleryCategoryPanel extends ConsumerStatefulWidget {
   onCategoryMoveToSlot;
   final Future<void> Function(List<String> imagePaths, String albumId)
   onImagesDropToAlbum;
-  final Future<void> Function(List<String> imagePaths)? onImagesFavoriteDrop;
   final bool modal;
   final ScrollController? scrollController;
   final VoidCallback? afterSelection;
@@ -146,29 +142,24 @@ class _LocalGalleryCategoryPanelState
                   ),
                 ),
                 if (_albumsExpanded)
-                  FutureBuilder<int>(
-                    future: widget.favoriteCount,
-                    builder: (context, snapshot) => GalleryAlbumTreeView(
-                      albums: widget.albumState.albums,
-                      sort: albumSort,
-                      totalImageCount: widget.galleryState.totalCount,
-                      favoriteCount: snapshot.data ?? 0,
-                      selectedAlbumId: widget.albumState.selectedAlbumId,
-                      includeAllImages: false,
-                      embedded: true,
-                      onAlbumSelected: (id) {
-                        widget.onAlbumSelected(id);
-                        widget.afterSelection?.call();
-                      },
-                      onAlbumRename: widget.onAlbumRename,
-                      onAlbumDeleteRequest: widget.onAlbumDeleteRequest,
-                      onAddAlbumRequest: widget.onAddAlbumRequest,
-                      onAlbumMove: widget.onAlbumMove,
-                      onAlbumMoveToSlot: widget.onAlbumMoveToSlot,
-                      onImagesDrop: widget.onImagesDropToAlbum,
-                      onImagesFavoriteDrop: widget.onImagesFavoriteDrop,
-                      onCreateAlbumRequest: () => widget.onCreateAlbum(null),
-                    ),
+                  GalleryAlbumTreeView(
+                    albums: widget.albumState.albums,
+                    sort: albumSort,
+                    totalImageCount: widget.galleryState.totalCount,
+                    selectedAlbumId: widget.albumState.selectedAlbumId,
+                    includeAllImages: false,
+                    embedded: true,
+                    onAlbumSelected: (id) {
+                      widget.onAlbumSelected(id);
+                      widget.afterSelection?.call();
+                    },
+                    onAlbumRename: widget.onAlbumRename,
+                    onAlbumDeleteRequest: widget.onAlbumDeleteRequest,
+                    onAddAlbumRequest: widget.onAddAlbumRequest,
+                    onAlbumMove: widget.onAlbumMove,
+                    onAlbumMoveToSlot: widget.onAlbumMoveToSlot,
+                    onImagesDrop: widget.onImagesDropToAlbum,
+                    onCreateAlbumRequest: () => widget.onCreateAlbum(null),
                   ),
                 LibrarySidebarRootDropTarget<GalleryCategory>(
                   canDrop: (category) => category.parentId != null,

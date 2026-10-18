@@ -9,19 +9,18 @@ import '../../../data/models/gallery/gallery_tree_drop_slot.dart';
 import '../common/context_menu_anchor.dart';
 import '../common/themed_input.dart';
 import '../../utils/gallery_drop_reader.dart';
-import 'gallery_sidebar.dart';
 import 'library_sidebar_drag_item.dart';
 import '../../utils/library_sidebar_sort.dart';
 
 enum _AlbumAction { rename, addSubAlbum, moveUp, moveToRoot, delete }
 
-/// 顶部系统节点与可嵌套的用户相簿树。
+/// 可选的“全部图片”节点与可嵌套的用户相簿树。图库只放收藏，所以没有单独的
+/// 收藏节点。
 ///
 /// 拖拽图片到相簿 = 加入相簿（逻辑引用，不移动物理文件）。
 class GalleryAlbumTreeView extends StatefulWidget {
   final List<GalleryAlbum> albums;
   final int totalImageCount;
-  final int favoriteCount;
   final String? selectedAlbumId;
   final bool includeAllImages;
   final bool embedded;
@@ -39,7 +38,6 @@ class GalleryAlbumTreeView extends StatefulWidget {
   onAlbumMoveToSlot;
   final Future<void> Function(List<String> imagePaths, String albumId)?
   onImagesDrop;
-  final Future<void> Function(List<String> imagePaths)? onImagesFavoriteDrop;
   final VoidCallback? onCreateAlbumRequest;
 
   const GalleryAlbumTreeView({
@@ -47,7 +45,6 @@ class GalleryAlbumTreeView extends StatefulWidget {
     required this.albums,
     required this.totalImageCount,
     this.sort = LibrarySidebarSort.original,
-    this.favoriteCount = 0,
     this.selectedAlbumId,
     this.includeAllImages = true,
     this.embedded = false,
@@ -58,7 +55,6 @@ class GalleryAlbumTreeView extends StatefulWidget {
     this.onAlbumMove,
     this.onAlbumMoveToSlot,
     this.onImagesDrop,
-    this.onImagesFavoriteDrop,
     this.onCreateAlbumRequest,
   });
 
@@ -69,7 +65,6 @@ class GalleryAlbumTreeView extends StatefulWidget {
 class _GalleryAlbumTreeViewState extends State<GalleryAlbumTreeView> {
   final Set<String> _expandedIds = {};
   final Set<String> _superDraggingAlbumIds = {};
-  bool _favoriteDropActive = false;
 
   @override
   void didUpdateWidget(covariant GalleryAlbumTreeView oldWidget) {
@@ -107,58 +102,10 @@ class _GalleryAlbumTreeViewState extends State<GalleryAlbumTreeView> {
             isSelected: widget.selectedAlbumId == null,
             onTap: () => widget.onAlbumSelected(null),
           ),
-        _wrapFavoriteDropTarget(
-          GallerySidebarFavoritesItem(
-            key: const ValueKey('local-gallery-favorites'),
-            label: context.l10n.common_favorite,
-            count: widget.favoriteCount,
-            isSelected: widget.selectedAlbumId == 'favorites',
-            onTap: () => widget.onAlbumSelected('favorites'),
-          ),
-        ),
         if (widget.albums.isEmpty)
           _EmptyAlbumHint(onCreate: widget.onCreateAlbumRequest),
         ..._buildRootNodes(),
       ],
-    );
-  }
-
-  Widget _wrapFavoriteDropTarget(Widget child) {
-    final onDrop = widget.onImagesFavoriteDrop;
-    if (onDrop == null) return child;
-    return DropRegion(
-      formats: galleryDropFormats,
-      onDropOver: (event) {
-        final accepts = canAcceptGalleryDrop(
-          event.session.items,
-          internalOnly: true,
-        );
-        if (_favoriteDropActive != accepts) {
-          setState(() => _favoriteDropActive = accepts);
-        }
-        return accepts ? DropOperation.copy : DropOperation.none;
-      },
-      onDropLeave: (_) {
-        if (_favoriteDropActive) setState(() => _favoriteDropActive = false);
-      },
-      onPerformDrop: (event) async {
-        if (_favoriteDropActive) setState(() => _favoriteDropActive = false);
-        await performGalleryDrop(context, event, onDrop, internalOnly: true);
-      },
-      child: AnimatedContainer(
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 150),
-        decoration: _favoriteDropActive
-            ? BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-              )
-            : null,
-        child: child,
-      ),
     );
   }
 

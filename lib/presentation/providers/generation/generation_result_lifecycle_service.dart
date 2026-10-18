@@ -1,13 +1,10 @@
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:path/path.dart' as p;
-
+import '../../../core/services/system_album.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/image_save_utils.dart';
 import '../../../core/utils/nai_resolution_adapter.dart';
-import '../../../data/models/gallery/gallery_index_admission.dart';
 import '../../../data/models/image/image_params.dart';
 import '../../../data/models/fixed_tag/fixed_tag_usage_snapshot.dart';
 import '../../../data/services/image_metadata_service.dart';
@@ -17,27 +14,13 @@ import 'generation_models.dart';
 class GenerationResultLifecycleDependencies {
   const GenerationResultLifecycleDependencies({
     required this.historyStorage,
-    required this.resolveGalleryRootPath,
-    required this.addGalleryImages,
-    required this.refreshGallery,
-    required this.removeGalleryImages,
-    required this.deleteGalleryFile,
-    required this.incrementStatistics,
-    this.publishToSystemGallery,
+    required this.systemAlbum,
   });
 
   final GenerationHistoryStorageService historyStorage;
-  final Future<String?> Function() resolveGalleryRootPath;
-  final Future<GalleryIndexAdmission> Function(List<String> paths)
-  addGalleryImages;
-  final Future<void> Function() refreshGallery;
-  final Future<void> Function(List<String> paths) removeGalleryImages;
 
-  /// 文件已不存在时返回 `false`。
-  final Future<bool> Function(String path) deleteGalleryFile;
-  final Future<void> Function(int count) incrementStatistics;
-  final Future<void> Function(String sourcePath, String fileName)?
-  publishToSystemGallery;
+  /// Where auto-save puts results; the gallery holds favorites only.
+  final SystemAlbum systemAlbum;
 }
 
 class GenerationSaveSnapshot {
@@ -53,33 +36,21 @@ class GenerationSaveSnapshot {
 class GenerationSaveResult {
   const GenerationSaveResult(
     this.images,
-    this.savedPaths, {
+    this.albumLocations, {
     this.systemGalleryExportFailureCount = 0,
   });
 
   final List<GeneratedImage> images;
-  final List<String> savedPaths;
+
+  /// Where each image that was saved, or already there, is in the album.
+  final List<String> albumLocations;
   final int systemGalleryExportFailureCount;
 }
 
-class SavedFileDeletionResult {
-  const SavedFileDeletionResult({
-    this.deletedPaths = const [],
-    this.failures = const {},
-  });
-
-  final List<String> deletedPaths;
-  final Map<String, Object> failures;
-}
-
 class GeneratedImageRemovalResult {
-  const GeneratedImageRemovalResult({
-    this.removedCount = 0,
-    this.files = const SavedFileDeletionResult(),
-  });
+  const GeneratedImageRemovalResult({this.removedCount = 0});
 
   final int removedCount;
-  final SavedFileDeletionResult files;
 }
 
 class ExternalImagePreparationResult {
@@ -97,14 +68,15 @@ class ExternalImagePreparationResult {
 class GenerationResultLifecycleService {
   const GenerationResultLifecycleService(this.dependencies);
 
-  static const int historyLimit = 50;
+  static const int historyLimit = GenerationHistoryStorageService.maxEntries;
 
   final GenerationResultLifecycleDependencies dependencies;
 
   Future<List<GeneratedImage>> loadHistory() =>
       dependencies.historyStorage.load();
 
-  Future<void> persistHistory({
+  /// Returns where each persisted image's PNG now lives, keyed by id.
+  Future<Map<String, String>> persistHistory({
     required Iterable<GeneratedImage> changedImages,
     required List<String> order,
   }) => dependencies.historyStorage.persistImages(
@@ -162,29 +134,13 @@ class GenerationResultLifecycleService {
     );
   }
 
+  /// Auto-save: puts [images] in the system album, the same place the save
+  /// button does. An image the album already has is not written again.
   Future<GenerationSaveResult> saveImages(
     List<GeneratedImage> images,
     ImageParams params, {
     required GenerationSaveSnapshot snapshot,
-    String? directoryPath,
-    bool syncToGalleryIndex = true,
   }) async {
-    String? rootPath;
-    try {
-      rootPath = directoryPath ?? await dependencies.resolveGalleryRootPath();
-    } catch (error, stackTrace) {
-      AppLogger.e('自动保存失败', error, stackTrace);
-      return GenerationSaveResult(images, const []);
-    }
-    if (rootPath == null) return GenerationSaveResult(images, const []);
-    final directory = Directory(rootPath);
-    try {
-      if (!await directory.exists()) await directory.create(recursive: true);
-    } catch (error, stackTrace) {
-      AppLogger.e('自动保存失败', error, stackTrace);
-      return GenerationSaveResult(images, const []);
-    }
-
     final charCaptions = <Map<String, dynamic>>[];
     final charNegCaptions = <Map<String, dynamic>>[];
     for (final character in params.characters) {
@@ -202,21 +158,10 @@ class GenerationResultLifecycleService {
       });
     }
 
-    final updated = <GeneratedImage>[];
-    final paths = <String>[];
-    var systemGalleryExportFailureCount = 0;
+    final locations = <String>[];
+    var failures = 0;
     for (final image in images) {
       try {
-        // 批量生成途中先收藏过的图已经写过文件：沿用它，不再存第二份。
-        final existingPath = image.filePath;
-        if (existingPath != null && await File(existingPath).exists()) {
-          paths.add(existingPath);
-          updated.add(image);
-          if (!await _publishToSystemGallery(existingPath)) {
-            systemGalleryExportFailureCount++;
-          }
-          continue;
-        }
         final hasMetadata = ImageSaveUtils.hasEmbeddedNovelAiMetadata(
           image.bytes,
         );
@@ -230,14 +175,11 @@ class GenerationResultLifecycleService {
             actualSeed = Random().nextInt(4294967295);
           }
         }
-        final saved = await ImageSaveUtils.saveResultImage(
-          rootPath: rootPath,
+        final bytes = await ImageSaveUtils.resultBytesForSave(
           imageBytes: image.bytes,
           preserveOriginalBytes: image.preserveOriginalBytesOnSave,
-          source: 'auto-save',
           fixedTagUsageSnapshot:
               image.fixedTagUsageSnapshot ?? snapshot.fixedTagUsageSnapshot,
-          seed: actualSeed,
           rebuild: () => ImageSaveUtils.rebuildImageBytesWithMetadata(
             imageBytes: image.bytes,
             params: params.copyWith(width: image.width, height: image.height),
@@ -248,81 +190,24 @@ class GenerationResultLifecycleService {
             useStealth: false,
           ),
         );
-        final path = saved.path;
-        paths.add(path);
-        updated.add(image.copyWithFilePath(path));
-        if (!await _publishToSystemGallery(path)) {
-          systemGalleryExportFailureCount++;
-        }
+        final saved = await dependencies.systemAlbum.save(
+          bytes: bytes,
+          identity: image.bytes,
+          fileName: ImageSaveUtils.albumFileName(seed: actualSeed),
+          source: 'auto-save',
+        );
+        locations.add(saved.location);
       } catch (error, stackTrace) {
         AppLogger.e('自动保存图像失败', error, stackTrace);
-        updated.add(image);
+        failures++;
       }
     }
 
-    if (paths.isNotEmpty) {
-      if (syncToGalleryIndex) {
-        try {
-          // 全量重扫要枚举整个图库根目录，只有索引与磁盘真的对不上才值得付这个代价。
-          final admission = await dependencies.addGalleryImages(paths);
-          if (admission.requiresFullRescan) {
-            await dependencies.refreshGallery();
-          }
-        } catch (error, stackTrace) {
-          AppLogger.e('自动保存图库索引更新失败', error, stackTrace);
-        }
-      }
-      try {
-        await dependencies.incrementStatistics(paths.length);
-      } catch (error) {
-        AppLogger.w('统计缓存增量更新失败: $error', 'AutoSave');
-      }
-      preloadMetadata(updated.where((image) => image.filePath != null));
-    }
+    // 统计缓存记的是图库图片数；自动保存只进系统相册，不改变它。
     return GenerationSaveResult(
-      updated,
-      paths,
-      systemGalleryExportFailureCount: systemGalleryExportFailureCount,
-    );
-  }
-
-  /// 没有系统相册或发布成功时返回 true；失败只记日志，不影响应用图库里的文件。
-  Future<bool> _publishToSystemGallery(String path) async {
-    final publish = dependencies.publishToSystemGallery;
-    if (publish == null) return true;
-    try {
-      await publish(path, p.basename(path));
-      return true;
-    } catch (error, stackTrace) {
-      AppLogger.e('自动保存到系统相册失败', error, stackTrace);
-      return false;
-    }
-  }
-
-  /// 单个文件失败不阻断其余文件；只把真正删掉的路径移出图库索引。
-  Future<SavedFileDeletionResult> deleteSavedFiles(
-    Iterable<String> paths,
-  ) async {
-    final deleted = <String>[];
-    final failures = <String, Object>{};
-    for (final path in paths.toSet()) {
-      try {
-        if (await dependencies.deleteGalleryFile(path)) deleted.add(path);
-      } catch (error, stackTrace) {
-        AppLogger.e('删除生成结果的图库文件失败', error, stackTrace);
-        failures[path] = error;
-      }
-    }
-    if (deleted.isNotEmpty) {
-      try {
-        await dependencies.removeGalleryImages(deleted);
-      } catch (error, stackTrace) {
-        AppLogger.e('删除后更新图库索引失败', error, stackTrace);
-      }
-    }
-    return SavedFileDeletionResult(
-      deletedPaths: List.unmodifiable(deleted),
-      failures: Map.unmodifiable(failures),
+      images,
+      locations,
+      systemGalleryExportFailureCount: failures,
     );
   }
 

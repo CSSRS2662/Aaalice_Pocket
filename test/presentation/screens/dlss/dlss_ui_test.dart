@@ -19,6 +19,7 @@ import 'package:nai_launcher/data/services/dlss/dlss_worker.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/providers/dlss_provider.dart';
 import 'package:nai_launcher/presentation/providers/image_generation_provider.dart';
+import 'package:nai_launcher/presentation/providers/system_album_provider.dart';
 import 'package:nai_launcher/presentation/widgets/common/image_comparison_view.dart';
 import 'package:nai_launcher/presentation/screens/dlss/dlss_enhancement_panel.dart';
 import 'package:nai_launcher/presentation/screens/dlss/dlss_settings_section.dart';
@@ -28,6 +29,8 @@ import 'package:nai_launcher/presentation/screens/settings/sections/generation_s
 import 'package:nai_launcher/presentation/screens/settings/sections/integrations_settings_section.dart';
 import 'package:nai_launcher/presentation/screens/settings/widgets/settings_card.dart';
 import 'package:nai_launcher/presentation/widgets/gallery/local_image_context_menu.dart';
+
+import '../../../helpers/memory_system_album.dart';
 
 void main() {
   testWidgets(
@@ -678,7 +681,7 @@ void main() {
     );
   });
 
-  testWidgets('saving an enhanced result adopts it and reports the new file', (
+  testWidgets('saving an enhanced result adopts it and reports the album', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1100, 850));
@@ -699,6 +702,9 @@ void main() {
         ),
         overrides: [
           imageGenerationNotifierProvider.overrideWith(() => registrar),
+          systemAlbumProvider.overrideWithValue(
+            memorySystemAlbum(MemoryAlbumTarget()),
+          ),
         ],
       ),
     );
@@ -711,7 +717,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(registrar.results.single, same(controller.outputs.single));
     expect(registrar.comparisonSources.single, same(source));
-    expect(find.textContaining(registrar.savedPath!), findsOneWidget);
+    // Saving goes to the system album only.
+    expect(find.text('已保存到系统相册'), findsOneWidget);
     expect(find.text('保存失败，请检查图像保存目录及磁盘空间'), findsNothing);
     expect(tester.takeException(), isNull);
     // The toast lingers for 3 s plus its exit animation; drain it first.
@@ -958,8 +965,6 @@ class _Registrar extends ImageGenerationNotifier {
     int? height,
     Uint8List? comparisonSourceImage,
     bool saveToLocal = false,
-    String? saveDirectoryPath,
-    bool syncToGalleryIndex = true,
     bool addToDisplay = false,
     bool replaceCurrentDisplay = false,
     bool embedNaiMetadata = true,

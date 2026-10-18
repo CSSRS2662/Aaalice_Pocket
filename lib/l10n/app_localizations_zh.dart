@@ -758,7 +758,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_autoSave => '自动保存';
 
   @override
-  String get settings_autoSaveSubtitle => '生成后自动保存图片';
+  String get settings_autoSaveSubtitle => '生成后自动保存到系统相册';
+
+  @override
+  String get settings_cleanUnfavorited => '清理未收藏的图片';
+
+  @override
+  String get settings_cleanUnfavoritedSubtitle => '图库只保留收藏；删除旧版本存进图库但没收藏的图片';
+
+  @override
+  String get settings_cleanUnfavoritedNone => '图库里没有未收藏的图片';
+
+  @override
+  String settings_cleanUnfavoritedConfirm(int count) {
+    return '将永久删除图库里 $count 张未收藏的图片，系统相册不受影响。此操作无法撤销。';
+  }
+
+  @override
+  String settings_cleanUnfavoritedDone(int count) {
+    return '已删除 $count 张未收藏的图片';
+  }
+
+  @override
+  String settings_cleanUnfavoritedPartial(int deleted, int failed) {
+    return '已删除 $deleted 张，$failed 张删除失败';
+  }
+
+  @override
+  String settings_cleanUnfavoritedFailed(String error) {
+    return '清理失败：$error';
+  }
 
   @override
   String get settings_about => '关于';
@@ -1505,30 +1534,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generation_deleteImageConfirm => '从历史记录中删除这张图片？此操作不可撤销。';
 
   @override
-  String generation_deleteImageWithFileConfirm(Object fileName) {
-    return '从历史记录中删除这张图片，并永久删除本地图库中的文件「$fileName」？此操作不可撤销。';
-  }
-
-  @override
   String generation_deleteImagesConfirm(Object count) {
     return '从历史记录中删除选中的 $count 张图片？此操作不可撤销。';
   }
 
   @override
-  String generation_deleteImagesWithFilesConfirm(
-    Object count,
-    Object fileCount,
-  ) {
-    return '从历史记录中删除选中的 $count 张图片，并永久删除其中 $fileCount 个已保存到本地图库的文件？此操作不可撤销。';
-  }
-
-  @override
   String get generation_deleteConfirmSkipForSession => '本次运行期间不再询问';
-
-  @override
-  String generation_deleteImageFilesFailed(Object count, Object error) {
-    return '图片已从历史记录移除，但有 $count 个本地文件删除失败：$error';
-  }
 
   @override
   String get generation_model => '模型';
@@ -1995,21 +2006,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get image_saveToLibrary => '保存到词库';
 
   @override
-  String image_imageSaved(Object path) {
-    return '图片已保存到: $path';
-  }
-
-  @override
   String image_saveFailed(Object error) {
     return '保存失败: $error';
   }
 
   @override
-  String get image_duplicateNotSaved => '图库里已有这张图，本次未保存';
+  String get image_duplicateNotSaved => '系统相册里已有这张图，本次未保存';
 
   @override
   String image_duplicatesNotSaved(int count) {
-    return '$count 张图库里已有，本次未保存';
+    return '$count 张系统相册里已有，本次未保存';
   }
 
   @override
@@ -5502,10 +5508,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localGallery_indexingLocalImages => '索引本地图片中...';
 
   @override
-  String get localGallery_emptyTitle => '暂无本地图片';
+  String get localGallery_emptyTitle => '还没有收藏';
 
   @override
-  String get localGallery_emptySubtitle => '生成的图片将保存在此处';
+  String get localGallery_emptySubtitle => '收藏的图片会放在这里';
+
+  @override
+  String get localGallery_unfavoriteRemoved => '已取消收藏，图片将从图库删除';
 
   @override
   String get localGallery_noMatchingResults => '无匹配结果';
@@ -10835,9 +10844,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get toast_saveDirNotSet => '未设置保存目录';
-
-  @override
   String toast_savedTo(Object path) {
     return '已保存到 $path';
   }
@@ -13139,11 +13145,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String image_savedAppOnly(Object error) {
-    return '已保存到应用图库，但无法导出到系统相册：$error';
-  }
-
-  @override
   String image_shareFailed(Object error) {
     return '分享失败: $error';
   }
@@ -14395,13 +14396,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get watermark_failedGeneric => '无法创建水印副本，请检查图片后重试。';
 
   @override
-  String get watermark_systemGalleryExportFailed =>
-      '副本已保存在 Aaalice 中，但未能添加到系统图库。';
-
-  @override
-  String get watermark_galleryRefreshFailed => '副本已保存，但图库未能刷新；重新打开图库即可重试。';
-
-  @override
   String get watermark_sourceMissing => '找不到原图，请重新选择原图后再生成水印。';
 
   @override
@@ -14693,12 +14687,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mosaic_failedGeneric => '无法创建打码副本。';
-
-  @override
-  String get mosaic_galleryRefreshFailed => '文件已保存，但本地图库刷新失败。';
-
-  @override
-  String get mosaic_systemGalleryExportFailed => '应用内副本已保存，但导出到系统相册失败。';
 
   @override
   String get mosaic_undo => '撤销';
@@ -16538,7 +16526,36 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_autoSave => '自動儲存';
 
   @override
-  String get settings_autoSaveSubtitle => '生成後自動儲存圖片';
+  String get settings_autoSaveSubtitle => '生成後自動儲存到系統相簿';
+
+  @override
+  String get settings_cleanUnfavorited => '清理未收藏的圖片';
+
+  @override
+  String get settings_cleanUnfavoritedSubtitle => '圖庫只保留收藏；刪除舊版本存進圖庫但沒收藏的圖片';
+
+  @override
+  String get settings_cleanUnfavoritedNone => '圖庫裡沒有未收藏的圖片';
+
+  @override
+  String settings_cleanUnfavoritedConfirm(int count) {
+    return '將永久刪除圖庫裡 $count 張未收藏的圖片，系統相簿不受影響。此操作無法撤銷。';
+  }
+
+  @override
+  String settings_cleanUnfavoritedDone(int count) {
+    return '已刪除 $count 張未收藏的圖片';
+  }
+
+  @override
+  String settings_cleanUnfavoritedPartial(int deleted, int failed) {
+    return '已刪除 $deleted 張，$failed 張刪除失敗';
+  }
+
+  @override
+  String settings_cleanUnfavoritedFailed(String error) {
+    return '清理失敗：$error';
+  }
 
   @override
   String get settings_about => '關於';
@@ -17285,30 +17302,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get generation_deleteImageConfirm => '從歷史記錄中刪除這張圖片？此操作不可撤銷。';
 
   @override
-  String generation_deleteImageWithFileConfirm(Object fileName) {
-    return '從歷史記錄中刪除這張圖片，並永久刪除本機圖庫中的檔案「$fileName」？此操作不可撤銷。';
-  }
-
-  @override
   String generation_deleteImagesConfirm(Object count) {
     return '從歷史記錄中刪除選取的 $count 張圖片？此操作不可撤銷。';
   }
 
   @override
-  String generation_deleteImagesWithFilesConfirm(
-    Object count,
-    Object fileCount,
-  ) {
-    return '從歷史記錄中刪除選取的 $count 張圖片，並永久刪除其中 $fileCount 個已儲存到本機圖庫的檔案？此操作不可撤銷。';
-  }
-
-  @override
   String get generation_deleteConfirmSkipForSession => '本次執行期間不再詢問';
-
-  @override
-  String generation_deleteImageFilesFailed(Object count, Object error) {
-    return '圖片已從歷史記錄移除，但有 $count 個本機檔案刪除失敗：$error';
-  }
 
   @override
   String get generation_model => '模型';
@@ -17775,21 +17774,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get image_saveToLibrary => '儲存到詞庫';
 
   @override
-  String image_imageSaved(Object path) {
-    return '圖片已儲存到: $path';
-  }
-
-  @override
   String image_saveFailed(Object error) {
     return '儲存失敗: $error';
   }
 
   @override
-  String get image_duplicateNotSaved => '圖庫裡已有這張圖，本次未儲存';
+  String get image_duplicateNotSaved => '系統相簿裡已有這張圖，本次未儲存';
 
   @override
   String image_duplicatesNotSaved(int count) {
-    return '$count 張圖庫裡已有，本次未儲存';
+    return '$count 張系統相簿裡已有，本次未儲存';
   }
 
   @override
@@ -21282,10 +21276,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get localGallery_indexingLocalImages => '索引本地圖片中...';
 
   @override
-  String get localGallery_emptyTitle => '暫無本地圖片';
+  String get localGallery_emptyTitle => '還沒有收藏';
 
   @override
-  String get localGallery_emptySubtitle => '生成的圖片將儲存在此處';
+  String get localGallery_emptySubtitle => '收藏的圖片會放在這裡';
+
+  @override
+  String get localGallery_unfavoriteRemoved => '已取消收藏，圖片將從圖庫刪除';
 
   @override
   String get localGallery_noMatchingResults => '無匹配結果';
@@ -26615,9 +26612,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get toast_saveDirNotSet => '未設定儲存目錄';
-
-  @override
   String toast_savedTo(Object path) {
     return '已儲存到 $path';
   }
@@ -28919,11 +28913,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String image_savedAppOnly(Object error) {
-    return '已儲存到應用程式圖庫，但無法匯出到系統相簿：$error';
-  }
-
-  @override
   String image_shareFailed(Object error) {
     return '分享失敗: $error';
   }
@@ -30176,13 +30165,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get watermark_failedGeneric => '無法建立浮水印副本，請檢查圖片後再試一次。';
 
   @override
-  String get watermark_systemGalleryExportFailed =>
-      '副本已儲存在 Aaalice 中，但無法加入系統圖庫。';
-
-  @override
-  String get watermark_galleryRefreshFailed => '副本已儲存，但圖庫無法重新整理；重新開啟圖庫即可重試。';
-
-  @override
   String get watermark_sourceMissing => '找不到原圖，請重新選擇原圖後再產生浮水印。';
 
   @override
@@ -30474,12 +30456,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get mosaic_failedGeneric => '無法建立打碼副本。';
-
-  @override
-  String get mosaic_galleryRefreshFailed => '檔案已儲存，但本機圖庫重新整理失敗。';
-
-  @override
-  String get mosaic_systemGalleryExportFailed => '應用程式內副本已儲存，但匯出至系統相簿失敗。';
 
   @override
   String get mosaic_undo => '復原';

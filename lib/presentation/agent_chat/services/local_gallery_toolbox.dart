@@ -10,7 +10,8 @@ import '../../providers/local_gallery_provider.dart';
 import 'defined_agent_tool.dart';
 import 'toolbox_json.dart';
 
-/// Indexed local-gallery search, metadata, and favorite tools.
+/// Indexed local-gallery search, metadata, and favorite tools. The gallery
+/// holds favorites only.
 class LocalGalleryToolbox {
   LocalGalleryToolbox(this._ref);
 
@@ -22,7 +23,7 @@ class LocalGalleryToolbox {
     name: 'search_local_gallery',
     label: 'Search Local Gallery',
     description:
-        'Search indexed local images by metadata text, tags, favorite, date, model, dimensions, and file size.',
+        'Search the local gallery, which holds favorite images only, by metadata text, tags, date, model, dimensions, and file size.',
     parameters: toolboxObject(
       properties: {
         'query': {'type': 'string', 'maxLength': 1000},
@@ -31,7 +32,6 @@ class LocalGalleryToolbox {
           'items': {'type': 'string'},
           'maxItems': 50,
         },
-        'favorites_only': {'type': 'boolean'},
         'date_start': {'type': 'string'},
         'date_end': {'type': 'string'},
         'model': {'type': 'string'},
@@ -58,7 +58,6 @@ class LocalGalleryToolbox {
       await notifier.clearAllFilters();
       await notifier.setSearchQuery(params['query'] as String? ?? '');
       await notifier.setSelectedTags(toolboxStrings(params['tags']));
-      await notifier.setShowFavoritesOnly(params['favorites_only'] == true);
       await notifier.setDateRange(
         _date(params['date_start']),
         _date(params['date_end']),
@@ -177,7 +176,8 @@ class LocalGalleryToolbox {
   DefinedAgentTool _toggleFavorite() => DefinedAgentTool(
     name: 'toggle_local_gallery_favorite',
     label: 'Toggle Local Gallery Favorite',
-    description: 'Toggle a local image favorite by stable database ID.',
+    description:
+        'Toggle a local image favorite by stable database ID. The gallery holds favorites only, so unfavoriting deletes the image from the gallery a few seconds later.',
     parameters: _identitySchema,
     executeFn: (_, params) async {
       final data = await _load(params['image_id'] as int);

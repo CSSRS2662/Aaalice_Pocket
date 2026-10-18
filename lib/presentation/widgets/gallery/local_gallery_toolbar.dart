@@ -73,10 +73,6 @@ class LocalGalleryToolbar extends ConsumerStatefulWidget {
   /// 分类面板切换按钮回调
   final VoidCallback? onToggleCategoryPanel;
 
-  /// 范围切换：显示全部图片 / 只显示收藏。
-  final VoidCallback? onShowAll;
-  final VoidCallback? onShowFavorites;
-
   /// 清除当前分类或相簿条件。
   final VoidCallback? onClearCollection;
 
@@ -108,8 +104,6 @@ class LocalGalleryToolbar extends ConsumerStatefulWidget {
     this.batchActions = const [],
     this.showCategoryPanel = true,
     this.onToggleCategoryPanel,
-    this.onShowAll,
-    this.onShowFavorites,
     this.onClearCollection,
     this.onJumpToDate,
     this.collectionLabel,
@@ -198,9 +192,7 @@ class _LocalGalleryToolbarState extends ConsumerState<LocalGalleryToolbar> {
           currentPageImagePaths.every(
             (p) => selectionState.selectedIds.contains(p),
           );
-      final selectableResultCount = state.hasFilters
-          ? state.filteredCount
-          : state.totalCount;
+      final selectableResultCount = state.filteredCount;
       final isAllResultSelected =
           selectableResultCount > 0 &&
           selectionState.selectedIds.length == selectableResultCount;
@@ -255,9 +247,7 @@ class _LocalGalleryToolbarState extends ConsumerState<LocalGalleryToolbar> {
       count: state.isIndexing
           ? null
           : GalleryLibraryCountBadge(
-              label: state.hasFilters
-                  ? '${state.filteredCount}/${state.totalCount}'
-                  : '${state.totalCount}',
+              label: '${state.filteredCount}',
             ),
       search: _buildSearchField(),
       primaryAction: _FilterPanelButton(
@@ -278,8 +268,6 @@ class _LocalGalleryToolbarState extends ConsumerState<LocalGalleryToolbar> {
         _buildMoreMenu(state),
       ],
       filters: LocalGalleryScopeBar(
-        onShowAll: widget.onShowAll ?? () {},
-        onShowFavorites: widget.onShowFavorites ?? () {},
         onPickDateRange: () => _selectDateRange(context, state),
         onClearDateRange: () => ref
             .read(localGalleryNotifierProvider.notifier)
@@ -345,7 +333,7 @@ class _LocalGalleryToolbarState extends ConsumerState<LocalGalleryToolbar> {
             onPressed: widget.onOpenFolder,
             child: Text(l10n.shortcut_action_open_folder),
           ),
-        if (state.hasFilters) ...[
+        if (state.hasUserFilters) ...[
           const Divider(height: 1),
           MenuItemButton(
             key: const ValueKey('local-gallery-more-clear-filters'),

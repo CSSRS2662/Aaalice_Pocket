@@ -674,26 +674,73 @@ class ImageSaveUtils {
       bytes,
     );
     FileHashCalculator().registerPathHash(path, contentHash);
-    final snapshot = rebuilt
-        ? rebuiltFixedTagUsageSnapshot ?? fixedTagUsageSnapshot
-        : fixedTagUsageSnapshot;
-    if (!preserveOriginalBytes && snapshot != null) {
-      try {
-        await FixedTagUsageRecordStore().record(
-          contentHash: contentHash,
-          snapshot: snapshot,
-        );
-      } catch (error, stack) {
-        // 文件已落盘，记录失败不能让调用方把这次保存报成失败。
-        AppLogger.e(
-          'Failed to record fixed-tag usage for $path',
-          error,
-          stack,
-          'ImageSaveUtils',
-        );
-      }
+    if (!preserveOriginalBytes) {
+      await _recordFixedTagUsage(
+        contentHash,
+        rebuilt
+            ? rebuiltFixedTagUsageSnapshot ?? fixedTagUsageSnapshot
+            : fixedTagUsageSnapshot,
+      );
     }
     return SavedResultImage(path: path, bytes: bytes, contentHash: contentHash);
+  }
+
+  /// 保存进系统相册的字节：已有 NovelAI 元数据的图原样保留，其余按 [rebuild]
+  /// 补写元数据（[preserveOriginalBytes] 时不补写）。与图库保存一样，按结果的
+  /// 内容哈希记下固定词快照。
+  static Future<Uint8List> resultBytesForSave({
+    required Uint8List imageBytes,
+    required bool preserveOriginalBytes,
+    required Future<Uint8List> Function() rebuild,
+    FixedTagUsageSnapshot? fixedTagUsageSnapshot,
+    FixedTagUsageSnapshot? rebuiltFixedTagUsageSnapshot,
+  }) async {
+    final rebuilt =
+        !preserveOriginalBytes && !hasEmbeddedNovelAiMetadata(imageBytes);
+    final bytes = rebuilt ? await rebuild() : imageBytes;
+    if (!preserveOriginalBytes) {
+      await _recordFixedTagUsage(
+        await FileHashCalculator().calculateFromBytesAsync(bytes),
+        rebuilt
+            ? rebuiltFixedTagUsageSnapshot ?? fixedTagUsageSnapshot
+            : fixedTagUsageSnapshot,
+      );
+    }
+    return bytes;
+  }
+
+  /// 记录失败只写日志：图已保存，不能让调用方把这次保存报成失败。
+  static Future<void> _recordFixedTagUsage(
+    String contentHash,
+    FixedTagUsageSnapshot? snapshot,
+  ) async {
+    if (snapshot == null) return;
+    try {
+      await FixedTagUsageRecordStore().record(
+        contentHash: contentHash,
+        snapshot: snapshot,
+      );
+    } catch (error, stack) {
+      AppLogger.e(
+        'Failed to record fixed-tag usage for $contentHash',
+        error,
+        stack,
+        'ImageSaveUtils',
+      );
+    }
+  }
+
+  /// 系统相册里的文件名：相册不分日期文件夹，日期写进文件名。
+  /// [seed] 为 null 或小于 0 时用毫秒时间戳代替。
+  static String albumFileName({int? seed, DateTime? now}) {
+    final time = now ?? DateTime.now();
+    String two(int v) => v.toString().padLeft(2, '0');
+    final seedPart = (seed != null && seed >= 0)
+        ? '$seed'
+        : '${time.millisecondsSinceEpoch}';
+    return '${time.year}-${two(time.month)}-${two(time.day)}_'
+        '${two(time.hour)}-${two(time.minute)}-${two(time.second)}-'
+        '$seedPart.png';
   }
 
   /// 解析图片的真实 seed：优先用已有元数据，否则从 PNG 字节解析。

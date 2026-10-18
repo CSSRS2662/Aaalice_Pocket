@@ -789,7 +789,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_autoSaveSubtitle =>
-      'Automatically save images after generation';
+      'Automatically save images to your photo gallery after generation';
+
+  @override
+  String get settings_cleanUnfavorited => 'Clean up unfavorited images';
+
+  @override
+  String get settings_cleanUnfavoritedSubtitle =>
+      'The gallery keeps favorites only; delete images that earlier versions saved here without a favorite';
+
+  @override
+  String get settings_cleanUnfavoritedNone =>
+      'There are no unfavorited images in the gallery';
+
+  @override
+  String settings_cleanUnfavoritedConfirm(int count) {
+    return '$count unfavorited images will be permanently deleted from the gallery. Your photo gallery isn\'t affected. This can\'t be undone.';
+  }
+
+  @override
+  String settings_cleanUnfavoritedDone(int count) {
+    return 'Deleted $count unfavorited images';
+  }
+
+  @override
+  String settings_cleanUnfavoritedPartial(int deleted, int failed) {
+    return 'Deleted $deleted; $failed couldn\'t be deleted';
+  }
+
+  @override
+  String settings_cleanUnfavoritedFailed(String error) {
+    return 'Cleanup failed: $error';
+  }
 
   @override
   String get settings_about => 'About';
@@ -1563,31 +1594,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Delete this image from history? This action cannot be undone.';
 
   @override
-  String generation_deleteImageWithFileConfirm(Object fileName) {
-    return 'Delete this image from history and permanently delete the file \"$fileName\" from the local gallery? This action cannot be undone.';
-  }
-
-  @override
   String generation_deleteImagesConfirm(Object count) {
     return 'Delete the $count selected images from history? This action cannot be undone.';
   }
 
   @override
-  String generation_deleteImagesWithFilesConfirm(
-    Object count,
-    Object fileCount,
-  ) {
-    return 'Delete the $count selected images from history and permanently delete $fileCount of their files saved in the local gallery? This action cannot be undone.';
-  }
-
-  @override
   String get generation_deleteConfirmSkipForSession =>
       'Don\'t ask again until the app restarts';
-
-  @override
-  String generation_deleteImageFilesFailed(Object count, Object error) {
-    return 'Removed from history, but $count local files could not be deleted: $error';
-  }
 
   @override
   String get generation_model => 'Model';
@@ -2074,22 +2087,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get image_saveToLibrary => 'Save to Library';
 
   @override
-  String image_imageSaved(Object path) {
-    return 'Image saved to: $path';
-  }
-
-  @override
   String image_saveFailed(Object error) {
     return 'Save failed: $error';
   }
 
   @override
   String get image_duplicateNotSaved =>
-      'This image is already in the gallery, so it wasn\'t saved';
+      'This image is already in your photo gallery, so it wasn\'t saved';
 
   @override
   String image_duplicatesNotSaved(int count) {
-    return '$count images are already in the gallery and weren\'t saved';
+    return '$count images are already in your photo gallery and weren\'t saved';
   }
 
   @override
@@ -5756,11 +5764,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localGallery_indexingLocalImages => 'Indexing local images...';
 
   @override
-  String get localGallery_emptyTitle => 'No local images';
+  String get localGallery_emptyTitle => 'No favorites yet';
 
   @override
-  String get localGallery_emptySubtitle =>
-      'Generated images will be saved here';
+  String get localGallery_emptySubtitle => 'Images you favorite appear here';
+
+  @override
+  String get localGallery_unfavoriteRemoved =>
+      'Unfavorited. The image will be removed from the gallery';
 
   @override
   String get localGallery_noMatchingResults => 'No matching results';
@@ -11297,9 +11308,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get toast_saveDirNotSet => 'Save directory is not set';
-
-  @override
   String toast_savedTo(Object path) {
     return 'Saved to $path';
   }
@@ -13726,11 +13734,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String image_savedAppOnly(Object error) {
-    return 'Saved to the app gallery, but could not export to your photo gallery: $error';
-  }
-
-  @override
   String image_shareFailed(Object error) {
     return 'Share failed: $error';
   }
@@ -15054,14 +15057,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not create the watermarked copy. Check the image and try again.';
 
   @override
-  String get watermark_systemGalleryExportFailed =>
-      'The copy was saved in Aaalice, but could not be added to the system gallery.';
-
-  @override
-  String get watermark_galleryRefreshFailed =>
-      'The copy was saved, but the gallery could not refresh. Reopen the gallery to retry.';
-
-  @override
   String get watermark_sourceMissing =>
       'The original image is missing. Choose it again to recreate the watermark.';
 
@@ -15370,14 +15365,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mosaic_failedGeneric => 'The redacted copy could not be created.';
-
-  @override
-  String get mosaic_galleryRefreshFailed =>
-      'The file was saved, but the local gallery could not be refreshed.';
-
-  @override
-  String get mosaic_systemGalleryExportFailed =>
-      'The app copy was saved, but system gallery export failed.';
 
   @override
   String get mosaic_undo => 'Undo';

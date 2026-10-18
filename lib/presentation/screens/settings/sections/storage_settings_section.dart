@@ -18,6 +18,7 @@ import '../../../widgets/common/themed_confirm_dialog.dart';
 import '../widgets/cache_statistics_tile.dart';
 import '../widgets/data_source_cache_settings.dart';
 import '../widgets/gallery_cache_actions.dart';
+import '../widgets/gallery_unfavorited_cleanup_tile.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/settings_page_layout.dart';
 
@@ -252,6 +253,7 @@ class _StorageSettingsSectionState
                       .setAutoSave(value);
                 },
               ),
+              const GalleryUnfavoritedCleanupTile(),
             ],
           ),
         ),

@@ -295,7 +295,45 @@
   },
   "settings_imageSavePath": "画像の保存場所",
   "settings_autoSave": "自動保存",
-  "settings_autoSaveSubtitle": "生成後に画像を自動的に保存します",
+  "settings_autoSaveSubtitle": "生成後に画像をシステムギャラリーへ自動保存します",
+  "settings_cleanUnfavorited": "お気に入り以外の画像を整理",
+  "settings_cleanUnfavoritedSubtitle": "ギャラリーにはお気に入りだけを残します。以前のバージョンで保存された、お気に入りでない画像を削除します",
+  "settings_cleanUnfavoritedNone": "ギャラリーにお気に入り以外の画像はありません",
+  "settings_cleanUnfavoritedConfirm": "ギャラリーからお気に入り以外の画像 {count} 枚を完全に削除します。システムギャラリーには影響しません。この操作は元に戻せません。",
+  "@settings_cleanUnfavoritedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedDone": "お気に入り以外の画像を {count} 枚削除しました",
+  "@settings_cleanUnfavoritedDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedPartial": "{deleted} 枚を削除し、{failed} 枚は削除できませんでした",
+  "@settings_cleanUnfavoritedPartial": {
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedFailed": "整理に失敗しました：{error}",
+  "@settings_cleanUnfavoritedFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settings_about": "概要",
   "settings_version": "バージョン {version}",
   "@settings_version": {
@@ -592,33 +630,13 @@
   "generation_clearHistory": "履歴をクリア",
   "generation_clearHistoryConfirm": "すべての履歴レコードをクリアしてもよろしいですか?この操作は元に戻すことができません。",
   "generation_deleteImageConfirm": "この画像を履歴から削除しますか？この操作は元に戻せません。",
-  "generation_deleteImageWithFileConfirm": "この画像を履歴から削除し、ローカルギャラリーのファイル「{fileName}」も完全に削除しますか？この操作は元に戻せません。",
-  "@generation_deleteImageWithFileConfirm": {
-    "placeholders": {
-      "fileName": {}
-    }
-  },
   "generation_deleteImagesConfirm": "選択した {count} 枚の画像を履歴から削除しますか？この操作は元に戻せません。",
   "@generation_deleteImagesConfirm": {
     "placeholders": {
       "count": {}
     }
   },
-  "generation_deleteImagesWithFilesConfirm": "選択した {count} 枚の画像を履歴から削除し、そのうちローカルギャラリーに保存済みの {fileCount} 個のファイルも完全に削除しますか？この操作は元に戻せません。",
-  "@generation_deleteImagesWithFilesConfirm": {
-    "placeholders": {
-      "count": {},
-      "fileCount": {}
-    }
-  },
   "generation_deleteConfirmSkipForSession": "アプリを再起動するまで確認しない",
-  "generation_deleteImageFilesFailed": "履歴からは削除しましたが、{count} 個のローカルファイルを削除できませんでした：{error}",
-  "@generation_deleteImageFilesFailed": {
-    "placeholders": {
-      "count": {},
-      "error": {}
-    }
-  },
   "generation_model": "モデル",
   "generation_opusUsageRemaining": "Opus 無料生成の残り {percent}%",
   "generation_opusUsageEstimate": "あと約 {count} 枚生成可能",
@@ -867,20 +885,14 @@
   "image_copy": "コピー",
   "image_upscale": "拡大",
   "image_saveToLibrary": "ライブラリに保存",
-  "image_imageSaved": "画像は次の場所に保存されました: {path}",
-  "@image_imageSaved": {
-    "placeholders": {
-      "path": {}
-    }
-  },
   "image_saveFailed": "保存に失敗しました: {error}",
   "@image_saveFailed": {
     "placeholders": {
       "error": {}
     }
   },
-  "image_duplicateNotSaved": "この画像はすでにギャラリーにあるため、保存しませんでした",
-  "image_duplicatesNotSaved": "{count} 枚はすでにギャラリーにあるため、保存しませんでした",
+  "image_duplicateNotSaved": "この画像はすでにシステムギャラリーにあるため、保存しませんでした",
+  "image_duplicatesNotSaved": "{count} 枚はすでにシステムギャラリーにあるため、保存しませんでした",
   "@image_duplicatesNotSaved": {
     "placeholders": {
       "count": {
@@ -2501,8 +2513,9 @@
     }
   },
   "localGallery_indexingLocalImages": "ローカル画像のインデックスを作成しています...",
-  "localGallery_emptyTitle": "ローカル イメージがありません",
-  "localGallery_emptySubtitle": "生成された画像はここに保存されます",
+  "localGallery_emptyTitle": "お気に入りはまだありません",
+  "localGallery_emptySubtitle": "お気に入りにした画像がここに表示されます",
+  "localGallery_unfavoriteRemoved": "お気に入りを解除しました。画像はギャラリーから削除されます",
   "localGallery_noMatchingResults": "一致する結果はありません",
   "localGallery_loadingGroupedImages": "グループ化された画像を読み込み中...",
   "localGallery_jumpedToMonth": "{year}-{month} にジャンプしました",
@@ -5449,7 +5462,6 @@
       "error": {}
     }
   },
-  "toast_saveDirNotSet": "保存ディレクトリが設定されていません",
   "toast_savedTo": "{path} に保存されました",
   "@toast_savedTo": {
     "placeholders": {
@@ -6621,8 +6633,6 @@
   "localGallery_saveToSystemGallery": "システムギャラリーに保存",
   "localGallery_saveToSystemGalleryFailed": "システムギャラリーに保存できませんでした: {error}",
   "@localGallery_saveToSystemGalleryFailed": {"placeholders":{"error":{}}},
-  "image_savedAppOnly": "アプリ内ギャラリーには保存しましたが、システムギャラリーに書き出せませんでした: {error}",
-  "@image_savedAppOnly": {"placeholders":{"error":{}}},
   "image_shareFailed": "共有に失敗しました: {error}",
   "@image_shareFailed": {"placeholders":{"error":{}}},
   "onlineGallery_savedFiles": "{count} 個のファイルを保存しました",
@@ -7033,8 +7043,6 @@
   "watermark_failed": "透かし入りコピーを作成できませんでした：{error}",
   "@watermark_failed": {"placeholders":{"error":{}}},
   "watermark_failedGeneric": "透かし入りコピーを作成できませんでした。画像を確認して再試行してください。",
-  "watermark_systemGalleryExportFailed": "コピーは Aaalice に保存されましたが、システムギャラリーに追加できませんでした。",
-  "watermark_galleryRefreshFailed": "コピーは保存されましたが、ギャラリーを更新できませんでした。ギャラリーを開き直して再試行してください。",
   "watermark_sourceMissing": "元画像が見つかりません。再作成するには元画像を選び直してください。",
   "watermark_chooseOriginal": "元画像を選択",
   "watermark_dragHint": "選択したレイヤーをドラッグします。矢印キーで微調整し、Shift キーで大きく移動します。",
@@ -7131,8 +7139,6 @@
   "mosaic_share": "共有",
   "mosaic_cancelled": "処理をキャンセルしました。",
   "mosaic_failedGeneric": "モザイク済みコピーを作成できませんでした。",
-  "mosaic_galleryRefreshFailed": "ファイルは保存されましたが、ローカルギャラリーを更新できませんでした。",
-  "mosaic_systemGalleryExportFailed": "アプリ内には保存されましたが、システムギャラリーへの書き出しに失敗しました。",
   "mosaic_undo": "元に戻す",
   "mosaic_redo": "やり直す",
   "mosaic_reset": "リセット",

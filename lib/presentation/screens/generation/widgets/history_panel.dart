@@ -4,7 +4,7 @@ import '../../../widgets/common/image_card_action.dart';
 import '../../../widgets/common/image_card_action_dispatch.dart';
 import '../../../widgets/common/image_card_batch_scope.dart';
 import '../services/generated_image_favorite.dart';
-import '../services/generated_image_file_link.dart';
+import '../services/generated_image_reveal.dart';
 import '../services/generation_image_batch_actions.dart';
 import '../services/generation_image_deletion.dart';
 import 'dart:async';
@@ -18,7 +18,6 @@ import 'package:path/path.dart' as p;
 import '../../../../core/enums/precise_ref_type.dart';
 import '../../../../core/platform/platform_capabilities.dart';
 import '../../../../core/utils/localization_extension.dart';
-import '../../../../core/utils/file_explorer_utils.dart';
 import '../../../../core/utils/image_share_sanitizer.dart';
 import '../../../../core/utils/vibe_file_parser.dart';
 import '../../../providers/alias_resolver_service.dart';
@@ -33,7 +32,9 @@ import '../../../providers/grid_columns_provider.dart';
 import '../../../providers/history_click_behavior_provider.dart';
 import '../../../providers/image_favorite_status_provider.dart';
 import '../../../selection/card_drag_select.dart';
+import '../../../providers/generation/generated_image_file_cache.dart';
 import '../../../providers/image_generation_provider.dart';
+import '../../../providers/system_album_provider.dart';
 import '../../../providers/local_gallery_provider.dart';
 import '../../../providers/reverse_prompt_provider.dart';
 import '../../../providers/share_image_settings_provider.dart';
@@ -194,7 +195,7 @@ class _HistoryPanelState extends ConsumerState<HistoryPanel> {
       actions: GenerationImageBatchActions(
         context: context,
         images: selectedImages,
-        gallery: ref.read(localGalleryNotifierProvider.notifier),
+        album: ref.read(systemAlbumProvider),
         selection: _selection,
         deletion: _deletion,
       ).build(),
@@ -794,6 +795,14 @@ class _HistoryPanelState extends ConsumerState<HistoryPanel> {
                 // 历史图像（已去重）- 使用图像自己的宽高比
                 final historyIndex = index - currentGenerationCount;
                 final historyImage = deduplicatedHistory[historyIndex];
+                // 后面的几张先在后台读文件，滚到时不必在界面线程上读。
+                unawaited(
+                  GeneratedImageFileCache.prefetch([
+                    for (final next
+                        in deduplicatedHistory.skip(historyIndex + 1).take(12))
+                      if (next.storedPath case final path?) path,
+                  ]),
+                );
                 final isFavorite = _favoriteStateFor(historyImage);
                 final isFailedSnapshot = historyImage.isFailedStreamSnapshot;
                 // 计算在原始 history 中的真实索引（用于选择操作）
@@ -1497,27 +1506,10 @@ class _HistoryPanelState extends ConsumerState<HistoryPanel> {
           );
   }
 
-  /// 在文件夹中定位图片。已保存的图片直接定位原文件，未保存时先保存再定位。
   Future<void> _openImageInExplorer(
     BuildContext context,
     GeneratedImage image,
-  ) async {
-    try {
-      final linked = await GeneratedImageFileLink.ensureSaved(
-        ref.read,
-        image,
-        context.l10n,
-      );
-      await FileExplorerUtils.revealFile(linked.path);
-      if (linked.newlySavedRoot case final root? when context.mounted) {
-        AppToast.success(context, context.l10n.image_imageSaved(root));
-      }
-    } catch (e) {
-      if (context.mounted) {
-        AppToast.error(context, context.l10n.image_saveFailed(e.toString()));
-      }
-    }
-  }
+  ) => revealGeneratedImage(context, ref, image);
 
   void _showLinkedDetail(BuildContext context, GeneratedImage image) {
     final state = ref.read(imageGenerationNotifierProvider);

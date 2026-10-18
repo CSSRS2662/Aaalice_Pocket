@@ -299,7 +299,45 @@
   "settings_loadFailed": "加载失败: {error}",
   "settings_imageSavePath": "图片保存位置",
   "settings_autoSave": "自动保存",
-  "settings_autoSaveSubtitle": "生成后自动保存图片",
+  "settings_autoSaveSubtitle": "生成后自动保存到系统相册",
+  "settings_cleanUnfavorited": "清理未收藏的图片",
+  "settings_cleanUnfavoritedSubtitle": "图库只保留收藏；删除旧版本存进图库但没收藏的图片",
+  "settings_cleanUnfavoritedNone": "图库里没有未收藏的图片",
+  "settings_cleanUnfavoritedConfirm": "将永久删除图库里 {count} 张未收藏的图片，系统相册不受影响。此操作无法撤销。",
+  "@settings_cleanUnfavoritedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedDone": "已删除 {count} 张未收藏的图片",
+  "@settings_cleanUnfavoritedDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedPartial": "已删除 {deleted} 张，{failed} 张删除失败",
+  "@settings_cleanUnfavoritedPartial": {
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedFailed": "清理失败：{error}",
+  "@settings_cleanUnfavoritedFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settings_about": "关于",
   "settings_version": "版本 {version}",
   "settings_fileLogging": "记录应用日志",
@@ -590,33 +628,13 @@
   "generation_clearHistory": "清除历史记录",
   "generation_clearHistoryConfirm": "确定要清除所有历史记录吗？此操作不可撤销。",
   "generation_deleteImageConfirm": "从历史记录中删除这张图片？此操作不可撤销。",
-  "generation_deleteImageWithFileConfirm": "从历史记录中删除这张图片，并永久删除本地图库中的文件「{fileName}」？此操作不可撤销。",
-  "@generation_deleteImageWithFileConfirm": {
-    "placeholders": {
-      "fileName": {}
-    }
-  },
   "generation_deleteImagesConfirm": "从历史记录中删除选中的 {count} 张图片？此操作不可撤销。",
   "@generation_deleteImagesConfirm": {
     "placeholders": {
       "count": {}
     }
   },
-  "generation_deleteImagesWithFilesConfirm": "从历史记录中删除选中的 {count} 张图片，并永久删除其中 {fileCount} 个已保存到本地图库的文件？此操作不可撤销。",
-  "@generation_deleteImagesWithFilesConfirm": {
-    "placeholders": {
-      "count": {},
-      "fileCount": {}
-    }
-  },
   "generation_deleteConfirmSkipForSession": "本次运行期间不再询问",
-  "generation_deleteImageFilesFailed": "图片已从历史记录移除，但有 {count} 个本地文件删除失败：{error}",
-  "@generation_deleteImageFilesFailed": {
-    "placeholders": {
-      "count": {},
-      "error": {}
-    }
-  },
   "generation_model": "模型",
   "generation_opusUsageRemaining": "Opus 免费生成剩余 {percent}%",
   "generation_opusUsageEstimate": "约可再生成 {count} 张",
@@ -831,10 +849,9 @@
   "image_copy": "复制",
   "image_upscale": "放大",
   "image_saveToLibrary": "保存到词库",
-  "image_imageSaved": "图片已保存到: {path}",
   "image_saveFailed": "保存失败: {error}",
-  "image_duplicateNotSaved": "图库里已有这张图，本次未保存",
-  "image_duplicatesNotSaved": "{count} 张图库里已有，本次未保存",
+  "image_duplicateNotSaved": "系统相册里已有这张图，本次未保存",
+  "image_duplicatesNotSaved": "{count} 张系统相册里已有，本次未保存",
   "@image_duplicatesNotSaved": {
     "placeholders": {
       "count": {
@@ -2557,8 +2574,9 @@
     }
   },
   "localGallery_indexingLocalImages": "索引本地图片中...",
-  "localGallery_emptyTitle": "暂无本地图片",
-  "localGallery_emptySubtitle": "生成的图片将保存在此处",
+  "localGallery_emptyTitle": "还没有收藏",
+  "localGallery_emptySubtitle": "收藏的图片会放在这里",
+  "localGallery_unfavoriteRemoved": "已取消收藏，图片将从图库删除",
   "localGallery_noMatchingResults": "无匹配结果",
   "localGallery_loadingGroupedImages": "加载分组图片中...",
   "localGallery_jumpedToMonth": "已跳转到 {year}-{month}",
@@ -5229,7 +5247,6 @@
       "error": {}
     }
   },
-  "toast_saveDirNotSet": "未设置保存目录",
   "toast_savedTo": "已保存到 {path}",
   "@toast_savedTo": {
     "placeholders": {
@@ -5966,11 +5983,6 @@
       "error": {}
     }
   },
-  "@image_imageSaved": {
-    "placeholders": {
-      "path": {}
-    }
-  },
   "@image_saveFailed": {
     "placeholders": {
       "error": {}
@@ -6667,8 +6679,6 @@
   "localGallery_saveToSystemGallery": "保存到系统相册",
   "localGallery_saveToSystemGalleryFailed": "无法保存到系统相册：{error}",
   "@localGallery_saveToSystemGalleryFailed": {"placeholders":{"error":{}}},
-  "image_savedAppOnly": "已保存到应用图库，但无法导出到系统相册：{error}",
-  "@image_savedAppOnly": {"placeholders":{"error":{}}},
   "image_shareFailed": "分享失败: {error}",
   "@image_shareFailed": {"placeholders":{"error":{}}},
   "onlineGallery_savedFiles": "已保存 {count} 个文件",
@@ -7079,8 +7089,6 @@
   "watermark_failed": "无法创建水印副本：{error}",
   "@watermark_failed": {"placeholders":{"error":{}}},
   "watermark_failedGeneric": "无法创建水印副本，请检查图片后重试。",
-  "watermark_systemGalleryExportFailed": "副本已保存在 Aaalice 中，但未能添加到系统图库。",
-  "watermark_galleryRefreshFailed": "副本已保存，但图库未能刷新；重新打开图库即可重试。",
   "watermark_sourceMissing": "找不到原图，请重新选择原图后再生成水印。",
   "watermark_chooseOriginal": "选择原图",
   "watermark_dragHint": "拖动所选图层；方向键可精细移动，按住 Shift 可加大步长。",
@@ -7177,8 +7185,6 @@
   "mosaic_share": "分享",
   "mosaic_cancelled": "已取消打码渲染。",
   "mosaic_failedGeneric": "无法创建打码副本。",
-  "mosaic_galleryRefreshFailed": "文件已保存，但本地图库刷新失败。",
-  "mosaic_systemGalleryExportFailed": "应用内副本已保存，但导出到系统相册失败。",
   "mosaic_undo": "撤销",
   "mosaic_redo": "重做",
   "mosaic_reset": "重置",

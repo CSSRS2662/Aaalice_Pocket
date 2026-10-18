@@ -7,9 +7,7 @@ import 'package:image/image.dart' as img;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/constants/model_capabilities.dart';
-import '../../core/platform/platform_capabilities.dart';
 import '../../core/services/android_foreground_task_service.dart';
-import '../../core/services/android_media_store_service.dart';
 import '../../core/services/anlas_calculator.dart';
 import '../../core/services/character_conversion_service.dart';
 import '../../core/storage/local_storage_service.dart';
@@ -31,17 +29,15 @@ import '../../data/models/gallery/nai_image_metadata.dart';
 import '../../data/models/gallery/prompt_group_snapshot.dart';
 import '../../data/models/image/image_params.dart';
 import '../../data/models/image/image_stream_chunk.dart';
-import '../../data/repositories/gallery_folder_repository.dart';
 import 'alias_resolver_service.dart';
-import '../../data/services/gallery/gallery_image_file_deleter.dart';
 import '../../data/services/prompt_group/character_section_store.dart';
 import '../../data/services/prompt_group/prompt_group_record_store.dart';
-import '../../data/services/statistics_cache_service.dart';
 import '../services/generation_history_storage_service.dart';
 import '../../data/services/auth_provider.dart';
 import 'dlss_provider.dart';
 import 'character_prompt_provider.dart';
 import 'fixed_tags_provider.dart';
+import 'generation/generated_image_file_cache.dart';
 import 'generation/generated_image_save_queue.dart';
 import 'generation/generation_command.dart';
 import 'generation/generation_cooldown_provider.dart';
@@ -55,12 +51,12 @@ import 'generation/image_generation_coordinator.dart';
 import 'generation/image_workflow_controller.dart';
 import 'generation/stream_preview_snapshot.dart';
 import 'image_save_settings_provider.dart';
-import 'local_gallery_provider.dart';
 import 'prompt_config_provider.dart';
 import 'prompt_group_state_provider.dart';
 import 'quality_preset_provider.dart';
 import 'queue_execution_provider.dart';
 import 'subscription_provider.dart';
+import 'system_album_provider.dart';
 import 'uc_preset_provider.dart';
 
 export 'generation/generation_models.dart';
@@ -82,6 +78,9 @@ part 'image_generation_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class ImageGenerationNotifier extends _$ImageGenerationNotifier {
+  /// History images whose files are read ahead after a restore.
+  static const int _historyPrefetchCount = 24;
+
   Future<void>? _historyRestoreInFlight;
   bool _hasRestoredHistory = false;
   Completer<void>? _generationInvocationSettled;
@@ -138,29 +137,10 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
   }
 
   GenerationResultLifecycleService _lifecycle() {
-    final gallery = ref.read(localGalleryNotifierProvider.notifier);
-    final statistics = ref.read(statisticsCacheServiceProvider);
     return GenerationResultLifecycleService(
       GenerationResultLifecycleDependencies(
         historyStorage: ref.read(generationHistoryStorageServiceProvider),
-        resolveGalleryRootPath: GalleryFolderRepository.instance.getRootPath,
-        addGalleryImages: gallery.addNewlySavedImages,
-        refreshGallery: gallery.refresh,
-        removeGalleryImages: gallery.removeDeletedImages,
-        deleteGalleryFile: GalleryImageFileDeleter(
-          ref.read(localStorageServiceProvider),
-        ).delete,
-        incrementStatistics: statistics.incrementImageCount,
-        publishToSystemGallery:
-            PlatformCapabilities.operatingSystem.supportsSystemGalleryExport
-            ? (sourcePath, fileName) async {
-                await AndroidMediaStoreService.saveImageFromPath(
-                  sourcePath: sourcePath,
-                  fileName: fileName,
-                  mimeType: 'image/png',
-                );
-              }
-            : null,
+        systemAlbum: ref.read(systemAlbumProvider),
       ),
     );
   }
@@ -239,6 +219,13 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
             : state.displayHeight,
       );
       _retainHistoryCaches();
+      // The first screen of history reads its files ahead of being shown.
+      unawaited(
+        GeneratedImageFileCache.prefetch([
+          for (final image in merged.take(_historyPrefetchCount))
+            if (image.storedPath case final path?) path,
+        ]),
+      );
     } catch (error, stackTrace) {
       AppLogger.e('Failed to restore generation history', error, stackTrace);
     }
@@ -274,16 +261,37 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
             changedImages: changed,
             order: state.history.map((image) => image.id).toList(),
           )
-          .then((_) {
+          .then((stored) {
             if (!_isCurrentLifecycle(epoch)) return;
             _persistedHistoryFilePaths
               ..removeWhere((id, _) => !historyIds.contains(id))
               ..addEntries(
                 changed.map((image) => MapEntry(image.id, image.filePath)),
               );
+            _readHistoryFromFiles(stored);
           })
           .catchError((Object _) {}),
     );
+  }
+
+  /// Lets persisted history images read their PNG from [stored] files, so a
+  /// long history does not keep every image in memory. The bytes already in
+  /// memory seed the file cache, so nothing is read back right away.
+  void _readHistoryFromFiles(Map<String, String> stored) {
+    if (_isDisposed || stored.isEmpty) return;
+    var changed = false;
+    final history = <GeneratedImage>[];
+    for (final image in state.history) {
+      final path = stored[image.id];
+      if (path == null || image.isStored) {
+        history.add(image);
+        continue;
+      }
+      GeneratedImageFileCache.remember(path, image.bytes);
+      history.add(image.withStoredFile(path));
+      changed = true;
+    }
+    if (changed) state = state.copyWith(history: history);
   }
 
   Future<void> waitUntilGenerationInvocationSettled() =>
@@ -1012,6 +1020,8 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
   ///
   /// [comparisonSourceImage] is supplied by single-source transformations such
   /// as NovelAI upscale and local upscale so their result can be compared.
+  /// With [saveToLocal] the result also goes to the system album, and its
+  /// location there is returned; null when it was not saved.
   Future<String?> registerExternalImage(
     Uint8List imageBytes, {
     required ImageParams params,
@@ -1019,8 +1029,6 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     int? height,
     Uint8List? comparisonSourceImage,
     bool saveToLocal = false,
-    String? saveDirectoryPath,
-    bool syncToGalleryIndex = true,
     bool addToDisplay = false,
     bool replaceCurrentDisplay = false,
     bool embedNaiMetadata = true,
@@ -1040,7 +1048,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
       embedNaiMetadata: embedNaiMetadata,
     );
     if (!_isCurrentLifecycle(epoch)) return null;
-    var image = prepared.image;
+    final image = prepared.image;
     final shouldDisplay = addToDisplay || replaceCurrentDisplay;
     state = state.copyWith(
       currentImages: replaceCurrentDisplay
@@ -1062,15 +1070,10 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     );
     _retainHistoryCaches();
     if (saveToLocal) {
-      final result = await _saveImages(
-        [image],
-        prepared.params,
-        epoch: epoch,
-        directoryPath: saveDirectoryPath,
-        syncToGalleryIndex: syncToGalleryIndex,
-      );
-      image = result.images.first;
-      return _deletedImageIds.contains(image.id) ? null : image.filePath;
+      final result = await _saveImages([image], prepared.params, epoch: epoch);
+      return _deletedImageIds.contains(image.id)
+          ? null
+          : result.albumLocations.firstOrNull;
     }
     lifecycle.preloadMetadata([image]);
     return null;
@@ -1086,70 +1089,36 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     List<GeneratedImage> images,
     ImageParams params, {
     required int epoch,
-    String? directoryPath,
-    bool syncToGalleryIndex = true,
-  }) => _saveQueue.run(
-    [for (final image in images) image.id],
-    () => _writeImages(
-      images,
-      params,
-      epoch: epoch,
-      directoryPath: directoryPath,
-      syncToGalleryIndex: syncToGalleryIndex,
-    ),
-  );
+  }) => _saveQueue.run([
+    for (final image in images) image.id,
+  ], () => _writeImages(images, params, epoch: epoch));
 
   Future<GenerationSaveResult> _writeImages(
     List<GeneratedImage> queuedImages,
     ImageParams params, {
     required int epoch,
-    String? directoryPath,
-    required bool syncToGalleryIndex,
   }) async {
     if (!_isCurrentLifecycle(epoch)) {
       return GenerationSaveResult(queuedImages, const []);
     }
-    // 排队期间收藏可能已先存过其中几张，带上那时记下的文件。
+    // 排队期间被删除的结果不再存进相册。
     final images = [
       for (final image in queuedImages)
-        switch (state.findImageById(image.id)?.filePath) {
-          final path? when image.filePath == null => image.copyWithFilePath(
-            path,
-          ),
-          _ => image,
-        },
+        if (!_deletedImageIds.contains(image.id)) image,
     ];
     final fixedTagUsageSnapshot =
         (images.isEmpty ? null : images.first.fixedTagUsageSnapshot) ??
         FixedTagUsageSnapshot.capture(
           ref.read(fixedTagsNotifierProvider).entries,
         );
-    final lifecycle = _lifecycle();
-    final result = await lifecycle.saveImages(
+    return _lifecycle().saveImages(
       images,
       params,
       snapshot: GenerationSaveSnapshot(
         fixedTagUsageSnapshot: fixedTagUsageSnapshot,
         useCoords: params.useCoords,
       ),
-      directoryPath: directoryPath,
-      syncToGalleryIndex: syncToGalleryIndex,
     );
-    if (!_isCurrentLifecycle(epoch)) return result;
-    final orphanedPaths = <String>[];
-    for (final image in result.images) {
-      final path = image.filePath;
-      if (path == null) continue;
-      if (_deletedImageIds.contains(image.id)) {
-        orphanedPaths.add(path);
-      } else {
-        _replaceImage(image.id, image);
-      }
-    }
-    if (orphanedPaths.isNotEmpty) {
-      await lifecycle.deleteSavedFiles(orphanedPaths);
-    }
-    return result;
   }
 
   void _replaceImage(String id, GeneratedImage replacement) {
@@ -1191,9 +1160,9 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     _retainHistoryCaches();
   }
 
-  /// 从当前批次、历史与中央预览移除这些结果，并永久删除它们关联的图库文件。
+  /// 从当前批次、历史与中央预览永久移除这些结果。
   ///
-  /// 仍被其他结果引用的文件不会删除。
+  /// 收藏进图库的文件不受影响：图库只放收藏，取消收藏才会删除它们。
   Future<GeneratedImageRemovalResult> removeImages(
     Iterable<String> imageIds,
   ) async {
@@ -1225,39 +1194,17 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
       errorMessage: state.errorMessage,
     );
     _retainHistoryCaches();
-
-    final referencedPaths = <String?>{
-      for (final image in [
-        ...state.currentImages,
-        ...state.history,
-        ...state.displayImages,
-      ])
-        image.filePath,
-    };
-    final paths = <String>[
-      for (final image in removed.values)
-        if (image.filePath case final String path
-            when path.isNotEmpty && !referencedPaths.contains(path))
-          path,
-    ];
-    final files = paths.isEmpty
-        ? const SavedFileDeletionResult()
-        : await _lifecycle().deleteSavedFiles(paths);
-    return GeneratedImageRemovalResult(
-      removedCount: removed.length,
-      files: files,
-    );
+    return GeneratedImageRemovalResult(removedCount: removed.length);
   }
 
   void updateDisplayImages(List<GeneratedImage> images) {
     state = state.copyWith(displayImages: images);
   }
 
+  /// 收藏写入图库后回写路径。结果已被删除时什么都不做：收藏是用户的选择，
+  /// 只有取消收藏才会把图库里的文件删掉。
   void updateImageFilePath(String imageId, String filePath) {
-    if (_deletedImageIds.contains(imageId)) {
-      unawaited(_lifecycle().deleteSavedFiles([filePath]));
-      return;
-    }
+    if (_deletedImageIds.contains(imageId)) return;
     final image = state.findImageById(imageId);
     if (image == null) return;
     _replaceImage(imageId, image.copyWithFilePath(filePath));

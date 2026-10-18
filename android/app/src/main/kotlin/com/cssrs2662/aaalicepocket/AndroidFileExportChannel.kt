@@ -51,6 +51,22 @@ class AndroidFileExportChannel(
         }
     }
 
+    /** Whether the image an earlier save published at [uri] is still there. */
+    fun mediaImageExists(uri: String, result: MethodChannel.Result) {
+        executor.execute {
+            val exists = runCatching {
+                activity.contentResolver.query(
+                    Uri.parse(uri),
+                    arrayOf(MediaStore.Images.Media._ID),
+                    null,
+                    null,
+                    null,
+                )?.use { cursor -> cursor.moveToFirst() } ?: false
+            }.getOrDefault(false)
+            activity.runOnUiThread { result.success(exists) }
+        }
+    }
+
     fun saveImageToPictures(
         sourcePath: String,
         displayName: String,

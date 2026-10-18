@@ -304,7 +304,45 @@
   },
   "settings_imageSavePath": "Image Save Location",
   "settings_autoSave": "Auto Save",
-  "settings_autoSaveSubtitle": "Automatically save images after generation",
+  "settings_autoSaveSubtitle": "Automatically save images to your photo gallery after generation",
+  "settings_cleanUnfavorited": "Clean up unfavorited images",
+  "settings_cleanUnfavoritedSubtitle": "The gallery keeps favorites only; delete images that earlier versions saved here without a favorite",
+  "settings_cleanUnfavoritedNone": "There are no unfavorited images in the gallery",
+  "settings_cleanUnfavoritedConfirm": "{count} unfavorited images will be permanently deleted from the gallery. Your photo gallery isn't affected. This can't be undone.",
+  "@settings_cleanUnfavoritedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedDone": "Deleted {count} unfavorited images",
+  "@settings_cleanUnfavoritedDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedPartial": "Deleted {deleted}; {failed} couldn't be deleted",
+  "@settings_cleanUnfavoritedPartial": {
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedFailed": "Cleanup failed: {error}",
+  "@settings_cleanUnfavoritedFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settings_about": "About",
   "settings_version": "Version {version}",
   "@settings_version": {
@@ -600,33 +638,13 @@
   "generation_clearHistory": "Clear History",
   "generation_clearHistoryConfirm": "Are you sure you want to clear all history records? This action cannot be undone.",
   "generation_deleteImageConfirm": "Delete this image from history? This action cannot be undone.",
-  "generation_deleteImageWithFileConfirm": "Delete this image from history and permanently delete the file \"{fileName}\" from the local gallery? This action cannot be undone.",
-  "@generation_deleteImageWithFileConfirm": {
-    "placeholders": {
-      "fileName": {}
-    }
-  },
   "generation_deleteImagesConfirm": "Delete the {count} selected images from history? This action cannot be undone.",
   "@generation_deleteImagesConfirm": {
     "placeholders": {
       "count": {}
     }
   },
-  "generation_deleteImagesWithFilesConfirm": "Delete the {count} selected images from history and permanently delete {fileCount} of their files saved in the local gallery? This action cannot be undone.",
-  "@generation_deleteImagesWithFilesConfirm": {
-    "placeholders": {
-      "count": {},
-      "fileCount": {}
-    }
-  },
   "generation_deleteConfirmSkipForSession": "Don't ask again until the app restarts",
-  "generation_deleteImageFilesFailed": "Removed from history, but {count} local files could not be deleted: {error}",
-  "@generation_deleteImageFilesFailed": {
-    "placeholders": {
-      "count": {},
-      "error": {}
-    }
-  },
   "generation_model": "Model",
   "generation_opusUsageRemaining": "{percent}% of Opus Generations remaining",
   "generation_opusUsageEstimate": "About {count} images left",
@@ -876,20 +894,14 @@
   "image_copy": "Copy",
   "image_upscale": "Upscale",
   "image_saveToLibrary": "Save to Library",
-  "image_imageSaved": "Image saved to: {path}",
-  "@image_imageSaved": {
-    "placeholders": {
-      "path": {}
-    }
-  },
   "image_saveFailed": "Save failed: {error}",
   "@image_saveFailed": {
     "placeholders": {
       "error": {}
     }
   },
-  "image_duplicateNotSaved": "This image is already in the gallery, so it wasn't saved",
-  "image_duplicatesNotSaved": "{count} images are already in the gallery and weren't saved",
+  "image_duplicateNotSaved": "This image is already in your photo gallery, so it wasn't saved",
+  "image_duplicatesNotSaved": "{count} images are already in your photo gallery and weren't saved",
   "@image_duplicatesNotSaved": {
     "placeholders": {
       "count": {
@@ -2536,8 +2548,9 @@
     }
   },
   "localGallery_indexingLocalImages": "Indexing local images...",
-  "localGallery_emptyTitle": "No local images",
-  "localGallery_emptySubtitle": "Generated images will be saved here",
+  "localGallery_emptyTitle": "No favorites yet",
+  "localGallery_emptySubtitle": "Images you favorite appear here",
+  "localGallery_unfavoriteRemoved": "Unfavorited. The image will be removed from the gallery",
   "localGallery_noMatchingResults": "No matching results",
   "localGallery_loadingGroupedImages": "Loading grouped images...",
   "localGallery_jumpedToMonth": "Jumped to {year}-{month}",
@@ -5431,7 +5444,6 @@
       "error": {}
     }
   },
-  "toast_saveDirNotSet": "Save directory is not set",
   "toast_savedTo": "Saved to {path}",
   "@toast_savedTo": {
     "placeholders": {
@@ -6598,8 +6610,6 @@
   "localGallery_saveToSystemGallery": "Save to photo gallery",
   "localGallery_saveToSystemGalleryFailed": "Could not save to your photo gallery: {error}",
   "@localGallery_saveToSystemGalleryFailed": {"placeholders":{"error":{}}},
-  "image_savedAppOnly": "Saved to the app gallery, but could not export to your photo gallery: {error}",
-  "@image_savedAppOnly": {"placeholders":{"error":{}}},
   "image_shareFailed": "Share failed: {error}",
   "@image_shareFailed": {"placeholders":{"error":{}}},
   "onlineGallery_savedFiles": "Saved {count} files",
@@ -7010,8 +7020,6 @@
   "watermark_failed": "Could not create watermark copy: {error}",
   "@watermark_failed": {"placeholders":{"error":{}}},
   "watermark_failedGeneric": "Could not create the watermarked copy. Check the image and try again.",
-  "watermark_systemGalleryExportFailed": "The copy was saved in Aaalice, but could not be added to the system gallery.",
-  "watermark_galleryRefreshFailed": "The copy was saved, but the gallery could not refresh. Reopen the gallery to retry.",
   "watermark_sourceMissing": "The original image is missing. Choose it again to recreate the watermark.",
   "watermark_chooseOriginal": "Choose original image",
   "watermark_dragHint": "Drag the selected layer. Arrow keys move precisely; hold Shift for larger steps.",
@@ -7108,8 +7116,6 @@
   "mosaic_share": "Share",
   "mosaic_cancelled": "Redaction rendering was cancelled.",
   "mosaic_failedGeneric": "The redacted copy could not be created.",
-  "mosaic_galleryRefreshFailed": "The file was saved, but the local gallery could not be refreshed.",
-  "mosaic_systemGalleryExportFailed": "The app copy was saved, but system gallery export failed.",
   "mosaic_undo": "Undo",
   "mosaic_redo": "Redo",
   "mosaic_reset": "Reset",

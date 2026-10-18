@@ -4,20 +4,18 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart' as p;
 
 import '../../../core/mosaic/mosaic_derivative_registry.dart';
 import '../../../core/platform/platform_capabilities.dart';
 import '../../../core/storage/local_storage_service.dart';
-import '../../../core/services/android_media_store_service.dart';
-import '../../../core/utils/generated_image_saves.dart';
+import '../../../core/services/system_album.dart';
 import '../../../core/utils/image_save_utils.dart';
 import '../../../core/utils/image_share_sanitizer.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../../core/watermark/watermark_derivative_registry.dart';
-import '../../../data/repositories/gallery_folder_repository.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../providers/mosaic_settings_provider.dart';
+import '../../providers/system_album_provider.dart';
 import '../../providers/share_image_settings_provider.dart';
 import '../../providers/copy_drag_watermark_provider.dart';
 import '../../providers/watermark_settings_provider.dart';
@@ -27,6 +25,7 @@ import '../../screens/dlss/dlss_error_view.dart';
 import '../../screens/watermark/watermark_editor_launcher.dart';
 import '../../utils/clipboard_image.dart';
 import 'app_toast.dart';
+import 'album_save_feedback.dart';
 import 'duplicate_save_notice.dart';
 import 'image_card_controller.dart';
 import 'image_card_action.dart';
@@ -381,63 +380,37 @@ class ImageCardActionCoordinator {
     );
   }
 
-  /// 图库里已有同一张图时不保存，底部通知提供“依然保存”。
-  Future<void> saveImage({bool allowDuplicate = false}) async {
+  /// 保存只进系统相册；相册里已有这张图时不保存，底部通知提供“依然保存”。
+  Future<void> saveImage() => _saveToAlbum(
+    // 通知停留期间卡片可能被卸载，相册句柄先取好。
+    ref.read(systemAlbumProvider),
+    allowDuplicate: false,
+  );
+
+  Future<void> _saveToAlbum(
+    SystemAlbum album, {
+    required bool allowDuplicate,
+  }) async {
     final l10n = context.l10n;
     final bytes = _data.imageBytes;
     if (bytes == null) return;
     try {
-      final rootPath = await GalleryFolderRepository.instance.getRootPath();
-      if (rootPath == null || rootPath.isEmpty) {
-        if (context.mounted) AppToast.error(context, l10n.toast_saveDirNotSet);
-        return;
-      }
       final seed = await ImageSaveUtils.resolveSeed(bytes: bytes);
-      final saved = await GeneratedImageSaves.saveOnce(
-        rootPath: rootPath,
-        sourceBytes: bytes,
+      final saved = await album.save(
+        bytes: bytes,
+        fileName: ImageSaveUtils.albumFileName(seed: seed),
         source: 'card-save',
-        seed: seed,
         allowDuplicate: allowDuplicate,
-        write: () => ImageSaveUtils.saveBytesToDatedPath(
-          rootPath: rootPath,
-          bytes: bytes,
-          seed: seed,
-        ),
       );
-      if (saved.reused) {
-        if (context.mounted) {
-          showDuplicateSaveNotice(
-            context,
-            onSaveAnyway: () => saveImage(allowDuplicate: true),
-          );
-        }
+      if (!context.mounted) return;
+      if (saved.duplicate) {
+        showDuplicateSaveNotice(
+          context,
+          onSaveAnyway: () => _saveToAlbum(album, allowDuplicate: true),
+        );
         return;
       }
-      if (PlatformCapabilities.current.supportsSystemGalleryExport) {
-        try {
-          await AndroidMediaStoreService.savePng(
-            bytes: bytes,
-            fileName: p.basename(saved.path),
-          );
-        } catch (error) {
-          if (context.mounted) {
-            AppToast.warning(
-              context,
-              l10n.image_savedAppOnly(error.toString()),
-            );
-          }
-          return;
-        }
-      }
-      if (context.mounted) {
-        AppToast.success(
-          context,
-          PlatformCapabilities.current.supportsSystemGalleryExport
-              ? l10n.image_savedToSystemGallery
-              : l10n.toast_savedTo(rootPath),
-        );
-      }
+      showAlbumSaved(context, album, saved.location);
     } catch (error) {
       if (context.mounted) {
         AppToast.error(context, l10n.image_saveFailed(error.toString()));

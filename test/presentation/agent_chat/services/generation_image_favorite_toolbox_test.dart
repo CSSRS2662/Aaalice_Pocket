@@ -81,6 +81,68 @@ void main() {
   });
 
   test(
+    'favoriting an unsaved history image saves it into the gallery',
+    () async {
+      final unsaved = GeneratedImage(
+        id: 'unsaved',
+        bytes: Uint8List.fromList(const [1, 2, 3]),
+        width: 1,
+        height: 1,
+      );
+      String? savedPath;
+      final writes = <bool>[];
+      final toolbox = GenerationImageFavoriteToolbox.forTesting(
+        resolveImage: (_) =>
+            savedPath == null ? unsaved : unsaved.copyWithFilePath(savedPath!),
+        saveToGallery: (image) async {
+          expect(image.id, 'unsaved');
+          return savedPath = imageFile.path;
+        },
+        readFavorite: (path) async {
+          expect(path, imageFile.path);
+          return const LocalGalleryFavoriteRecord(id: 5, favorite: false);
+        },
+        writeFavorite: (_, favorite) async {
+          writes.add(favorite);
+          return favorite;
+        },
+      );
+
+      final result = await toolbox.tools().single.execute('save', {
+        'resource_ref': _ref('unsaved'),
+        'favorite': true,
+      });
+
+      expect(result.isError, isFalse);
+      expect(result.details['favorite'], isTrue);
+      expect(result.details['local_gallery_image_id'], 5);
+      expect(writes, [true]);
+    },
+  );
+
+  test('unfavoriting an image outside the gallery changes nothing', () async {
+    final toolbox = GenerationImageFavoriteToolbox.forTesting(
+      resolveImage: (_) => GeneratedImage(
+        id: 'outside',
+        bytes: Uint8List.fromList(const [1, 2, 3]),
+        width: 1,
+        height: 1,
+      ),
+      saveToGallery: (_) async => fail('must not save to unfavorite'),
+      readFavorite: (_) async => fail('must not read local gallery'),
+      writeFavorite: (_, __) async => fail('must not mutate local gallery'),
+    );
+
+    final result = await toolbox.tools().single.execute('outside', {
+      'resource_ref': _ref('outside'),
+      'favorite': false,
+    });
+
+    expect(result.isError, isFalse);
+    expect(result.details['favorite'], isFalse);
+  });
+
+  test(
     'rechecks generation history after asynchronous record lookup',
     () async {
       final image = _image('race', imageFile.path);

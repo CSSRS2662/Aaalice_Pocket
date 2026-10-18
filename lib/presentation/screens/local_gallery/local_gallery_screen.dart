@@ -300,9 +300,6 @@ class _LocalGalleryShell extends ConsumerWidget {
       onToggleCategoryPanel: viewModel.usePersistentCategories
           ? controller.toggleCategoryPanel
           : () => unawaited(controller.showCategoryPanelSheet()),
-      onShowAll: () => unawaited(controller.handleCategorySelected(null)),
-      onShowFavorites: () =>
-          unawaited(controller.handleCategorySelected('favorites')),
       onClearCollection: () =>
           unawaited(controller.handleCategorySelected(null)),
       onJumpToDate: () => unawaited(controller.jumpToDate()),
@@ -312,9 +309,8 @@ class _LocalGalleryShell extends ConsumerWidget {
     );
   }
 
-  /// 当前选中的分类或相簿名称；收藏由范围切换单独表达，不在这里显示。
+  /// 当前选中的分类或相簿名称；图库只放收藏，未选分类或相簿时为 null。
   String? _collectionLabel(WidgetRef ref) {
-    if (viewModel.gallery.filterCriteria.showFavoritesOnly) return null;
     final albums = ref.watch(galleryAlbumNotifierProvider);
     final albumId = albums.selectedAlbumId;
     if (albumId != null && albumId != 'favorites') {
@@ -338,7 +334,7 @@ class _LocalGalleryShell extends ConsumerWidget {
       return const GalleryLoadingView();
     }
     if (gallery.currentImages.isEmpty) {
-      return gallery.hasFilters
+      return gallery.hasUserFilters
           ? const GalleryNoResultsView()
           : const GalleryEmptyView();
     }

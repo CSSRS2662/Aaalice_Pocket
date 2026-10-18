@@ -1,8 +1,14 @@
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/mosaic/mosaic_derivative_registry.dart';
 import '../../../core/storage/local_storage_service.dart';
 import '../../../core/watermark/watermark_derivative_registry.dart';
+
+final galleryImageFileDeleterProvider = Provider<GalleryImageFileDeleter>(
+  (ref) => GalleryImageFileDeleter(ref.read(localStorageServiceProvider)),
+);
 
 /// 永久删除图库中的图片文件，并清理以该路径登记的水印/打码衍生关系。
 class GalleryImageFileDeleter {

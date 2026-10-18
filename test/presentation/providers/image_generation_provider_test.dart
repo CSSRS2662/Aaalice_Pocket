@@ -35,7 +35,10 @@ import 'package:nai_launcher/presentation/providers/image_generation_provider.da
 import 'package:nai_launcher/presentation/providers/image_save_settings_provider.dart';
 import 'package:nai_launcher/presentation/providers/local_gallery_provider.dart';
 import 'package:nai_launcher/presentation/providers/subscription_provider.dart';
+import 'package:nai_launcher/presentation/providers/system_album_provider.dart';
 import 'package:nai_launcher/presentation/providers/notification_settings_provider.dart';
+
+import '../../helpers/memory_system_album.dart';
 
 class MockNAIImageGenerationApiService extends Mock
     implements NAIImageGenerationApiService {}
@@ -52,10 +55,15 @@ class _UnauthenticatedAuthNotifier extends AuthNotifier {
 
 ProviderContainer _createAuthenticatedContainer({
   List<Override> overrides = const [],
+  MemoryAlbumTarget? album,
 }) {
   return ProviderContainer(
     overrides: [
       authNotifierProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+      // Saving goes to the system album; keep it in memory.
+      systemAlbumProvider.overrideWithValue(
+        memorySystemAlbum(album ?? MemoryAlbumTarget()),
+      ),
       ...overrides,
     ],
   );
@@ -136,9 +144,12 @@ void main() {
 
   group('ImageGenerationNotifier', () {
     late ProviderContainer container;
+    late MemoryAlbumTarget album;
 
     setUp(() {
+      album = MemoryAlbumTarget();
       container = _createAuthenticatedContainer(
+        album: album,
         overrides: [
           subscriptionNotifierProvider.overrideWith(
             TestSubscriptionNotifier.new,
@@ -525,103 +536,103 @@ void main() {
       (true, 'during'),
       (true, 'after'),
     ]) {
-      test(
-        'favoriting a result saves one file (auto-save $autoSave, $moment)',
-        () async {
-          final mockApiService = MockNAIImageGenerationApiService();
-          when(
-            () => mockApiService.generateImage(
-              any(),
-              onProgress: any(named: 'onProgress'),
-              focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
-              minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
-              focusedSelectionRect: any(named: 'focusedSelectionRect'),
+      test('favoriting saves one gallery file, auto-save only the album '
+          '(auto-save $autoSave, $moment)', () async {
+        final mockApiService = MockNAIImageGenerationApiService();
+        when(
+          () => mockApiService.generateImage(
+            any(),
+            onProgress: any(named: 'onProgress'),
+            focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+            minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+            focusedSelectionRect: any(named: 'focusedSelectionRect'),
+          ),
+        ).thenAnswer(
+          (_) async =>
+              ([_validImageBytes(width: 512, height: 768)], <int, String>{}),
+        );
+        when(
+          () => mockApiService.generateImageStream(
+            any(),
+            focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+            minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+            focusedSelectionRect: any(named: 'focusedSelectionRect'),
+          ),
+        ).thenAnswer((_) => const Stream.empty());
+        container.dispose();
+        container = _createAuthenticatedContainer(
+          album: album,
+          overrides: [
+            naiImageGenerationApiServiceProvider.overrideWithValue(
+              mockApiService,
             ),
-          ).thenAnswer(
-            (_) async =>
-                ([_validImageBytes(width: 512, height: 768)], <int, String>{}),
-          );
-          when(
-            () => mockApiService.generateImageStream(
-              any(),
-              focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
-              minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
-              focusedSelectionRect: any(named: 'focusedSelectionRect'),
+            subscriptionNotifierProvider.overrideWith(
+              TestSubscriptionNotifier.new,
             ),
-          ).thenAnswer((_) => const Stream.empty());
-          container.dispose();
-          container = _createAuthenticatedContainer(
-            overrides: [
-              naiImageGenerationApiServiceProvider.overrideWithValue(
-                mockApiService,
-              ),
-              subscriptionNotifierProvider.overrideWith(
-                TestSubscriptionNotifier.new,
-              ),
-              localGalleryNotifierProvider.overrideWith(
-                TestLocalGalleryNotifier.new,
-              ),
-            ],
-          );
-          await container
-              .read(notificationSettingsNotifierProvider.notifier)
-              .setSoundEnabled(false);
-          container.read(subscriptionNotifierProvider);
-          final gallery = await Directory.systemTemp.createTemp(
-            'nai_launcher_favorite_save_',
-          );
-          addTearDown(() => gallery.delete(recursive: true));
-          final saveSettings = container.read(
-            imageSaveSettingsNotifierProvider.notifier,
-          );
-          await saveSettings.setCustomPath(gallery.path);
-          await saveSettings.setAutoSave(autoSave);
-          final l10n = lookupAppLocalizations(const Locale('zh'));
-          final notifier = container.read(
-            imageGenerationNotifierProvider.notifier,
-          );
+            localGalleryNotifierProvider.overrideWith(
+              TestLocalGalleryNotifier.new,
+            ),
+          ],
+        );
+        await container
+            .read(notificationSettingsNotifierProvider.notifier)
+            .setSoundEnabled(false);
+        container.read(subscriptionNotifierProvider);
+        final gallery = await Directory.systemTemp.createTemp(
+          'nai_launcher_favorite_save_',
+        );
+        addTearDown(() => gallery.delete(recursive: true));
+        final saveSettings = container.read(
+          imageSaveSettingsNotifierProvider.notifier,
+        );
+        await saveSettings.setCustomPath(gallery.path);
+        await saveSettings.setAutoSave(autoSave);
+        final l10n = lookupAppLocalizations(const Locale('zh'));
+        final notifier = container.read(
+          imageGenerationNotifierProvider.notifier,
+        );
 
-          Future<void>? favorite;
-          final subscription = container.listen(
-            imageGenerationNotifierProvider,
-            (_, next) {
-              if (moment != 'during' ||
-                  favorite != null ||
-                  next.currentImages.isEmpty) {
-                return;
-              }
-              favorite = GeneratedImageFileLink.ensureSaved(
-                container.read,
-                next.currentImages.single,
-                l10n,
-              );
-            },
+        Future<void>? favorite;
+        final subscription = container.listen(imageGenerationNotifierProvider, (
+          _,
+          next,
+        ) {
+          if (moment != 'during' ||
+              favorite != null ||
+              next.currentImages.isEmpty) {
+            return;
+          }
+          favorite = GeneratedImageFileLink.ensureSaved(
+            container.read,
+            next.currentImages.single,
+            l10n,
           );
-          await notifier.generate(
-            container.read(generationParamsNotifierProvider),
-          );
-          subscription.close();
-          await favorite;
-          final image = container
-              .read(imageGenerationNotifierProvider)
-              .currentImages
-              .single;
-          await GeneratedImageFileLink.ensureSaved(container.read, image, l10n);
-          // A second tap, for example unfavoriting, reuses the file too.
-          await GeneratedImageFileLink.ensureSaved(container.read, image, l10n);
+        });
+        await notifier.generate(
+          container.read(generationParamsNotifierProvider),
+        );
+        subscription.close();
+        await favorite;
+        final image = container
+            .read(imageGenerationNotifierProvider)
+            .currentImages
+            .single;
+        await GeneratedImageFileLink.ensureSaved(container.read, image, l10n);
+        // A second tap, for example unfavoriting, reuses the file too.
+        await GeneratedImageFileLink.ensureSaved(container.read, image, l10n);
 
-          final files = gallery
-              .listSync(recursive: true)
-              .whereType<File>()
-              .where((file) => file.path.endsWith('.png'))
-              .toList();
-          expect(
-            files,
-            hasLength(1),
-            reason: files.map((file) => file.path).join(', '),
-          );
-        },
-      );
+        final files = gallery
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((file) => file.path.endsWith('.png'))
+            .toList();
+        expect(
+          files,
+          hasLength(1),
+          reason: files.map((file) => file.path).join(', '),
+        );
+        expect(album.images, hasLength(autoSave ? 1 : 0));
+      });
     }
 
     test(
@@ -993,31 +1004,26 @@ void main() {
     );
 
     test(
-      'registerExternalImage should save image locally when requested',
+      'registerExternalImage saves to the system album when requested',
       () async {
         final notifier = container.read(
           imageGenerationNotifierProvider.notifier,
         );
         final params = container.read(generationParamsNotifierProvider);
-        final tempDir = await Directory.systemTemp.createTemp(
-          'nai_launcher_director_',
-        );
-        addTearDown(() => tempDir.delete(recursive: true));
 
-        await notifier.registerExternalImage(
+        final location = await notifier.registerExternalImage(
           _validImageBytes(width: 512, height: 768),
           params: params,
           saveToLocal: true,
-          saveDirectoryPath: tempDir.path,
-          syncToGalleryIndex: false,
         );
 
+        expect(location, album.images.keys.single);
+        // The gallery holds favorites only, so the result stays unlinked.
         final savedImage = container
             .read(imageGenerationNotifierProvider)
             .history
             .first;
-        expect(savedImage.filePath, isNotNull);
-        expect(File(savedImage.filePath!).existsSync(), isTrue);
+        expect(savedImage.filePath, isNull);
       },
     );
 
@@ -1043,17 +1049,10 @@ void main() {
           'prompt',
           comfyPrompt,
         );
-        final tempDir = await Directory.systemTemp.createTemp(
-          'nai_launcher_seedvr2_raw_',
-        );
-        addTearDown(() => tempDir.delete(recursive: true));
-
         await notifier.registerExternalImage(
           originalBytes,
           params: params,
           saveToLocal: true,
-          saveDirectoryPath: tempDir.path,
-          syncToGalleryIndex: false,
           embedNaiMetadata: false,
         );
 
@@ -1061,7 +1060,7 @@ void main() {
             .read(imageGenerationNotifierProvider)
             .history
             .first;
-        final savedBytes = await File(savedImage.filePath!).readAsBytes();
+        final savedBytes = album.images.values.single;
 
         expect(savedImage.preserveOriginalBytesOnSave, isTrue);
         expect(savedImage.bytes, orderedEquals(originalBytes));
@@ -1240,6 +1239,7 @@ void main() {
 
       container.dispose();
       container = _createAuthenticatedContainer(
+        album: album,
         overrides: [
           naiImageGenerationApiServiceProvider.overrideWithValue(
             mockApiService,
@@ -1300,9 +1300,10 @@ void main() {
       expect(generationState.history.single.height, equals(960));
       expect(generationState.displayWidth, equals(640));
       expect(generationState.displayHeight, equals(960));
-      expect(generationState.history.single.filePath, isNotNull);
+      // Auto-save goes to the system album; the gallery holds favorites only.
+      expect(generationState.history.single.filePath, isNull);
       final savedResult = UnifiedMetadataParser.parseFromPng(
-        await File(generationState.history.single.filePath!).readAsBytes(),
+        album.images.values.single,
       );
       expect(savedResult.success, isTrue);
       expect(savedResult.metadata?.width, equals(640));

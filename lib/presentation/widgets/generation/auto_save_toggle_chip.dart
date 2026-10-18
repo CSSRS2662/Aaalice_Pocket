@@ -244,10 +244,7 @@ class _AutoSaveToggleChipState extends ConsumerState<AutoSaveToggleChip>
         ? context.l10n.common_enabled
         : context.l10n.common_disabled;
 
-    if (settings.autoSave && settings.hasCustomPath) {
-      return '${context.l10n.settings_autoSaveSubtitle}\n$statusText\n${context.l10n.settings_imageSavePath}: ${settings.customPath}';
-    }
-
+    // 自动保存只写系统相册，与图库目录无关。
     return '${context.l10n.settings_autoSaveSubtitle}\n$statusText';
   }
 

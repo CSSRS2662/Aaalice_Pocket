@@ -774,7 +774,37 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_autoSave => '自動保存';
 
   @override
-  String get settings_autoSaveSubtitle => '生成後に画像を自動的に保存します';
+  String get settings_autoSaveSubtitle => '生成後に画像をシステムギャラリーへ自動保存します';
+
+  @override
+  String get settings_cleanUnfavorited => 'お気に入り以外の画像を整理';
+
+  @override
+  String get settings_cleanUnfavoritedSubtitle =>
+      'ギャラリーにはお気に入りだけを残します。以前のバージョンで保存された、お気に入りでない画像を削除します';
+
+  @override
+  String get settings_cleanUnfavoritedNone => 'ギャラリーにお気に入り以外の画像はありません';
+
+  @override
+  String settings_cleanUnfavoritedConfirm(int count) {
+    return 'ギャラリーからお気に入り以外の画像 $count 枚を完全に削除します。システムギャラリーには影響しません。この操作は元に戻せません。';
+  }
+
+  @override
+  String settings_cleanUnfavoritedDone(int count) {
+    return 'お気に入り以外の画像を $count 枚削除しました';
+  }
+
+  @override
+  String settings_cleanUnfavoritedPartial(int deleted, int failed) {
+    return '$deleted 枚を削除し、$failed 枚は削除できませんでした';
+  }
+
+  @override
+  String settings_cleanUnfavoritedFailed(String error) {
+    return '整理に失敗しました：$error';
+  }
 
   @override
   String get settings_about => '概要';
@@ -1527,30 +1557,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get generation_deleteImageConfirm => 'この画像を履歴から削除しますか？この操作は元に戻せません。';
 
   @override
-  String generation_deleteImageWithFileConfirm(Object fileName) {
-    return 'この画像を履歴から削除し、ローカルギャラリーのファイル「$fileName」も完全に削除しますか？この操作は元に戻せません。';
-  }
-
-  @override
   String generation_deleteImagesConfirm(Object count) {
     return '選択した $count 枚の画像を履歴から削除しますか？この操作は元に戻せません。';
   }
 
   @override
-  String generation_deleteImagesWithFilesConfirm(
-    Object count,
-    Object fileCount,
-  ) {
-    return '選択した $count 枚の画像を履歴から削除し、そのうちローカルギャラリーに保存済みの $fileCount 個のファイルも完全に削除しますか？この操作は元に戻せません。';
-  }
-
-  @override
   String get generation_deleteConfirmSkipForSession => 'アプリを再起動するまで確認しない';
-
-  @override
-  String generation_deleteImageFilesFailed(Object count, Object error) {
-    return '履歴からは削除しましたが、$count 個のローカルファイルを削除できませんでした：$error';
-  }
 
   @override
   String get generation_model => 'モデル';
@@ -2022,21 +2034,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get image_saveToLibrary => 'ライブラリに保存';
 
   @override
-  String image_imageSaved(Object path) {
-    return '画像は次の場所に保存されました: $path';
-  }
-
-  @override
   String image_saveFailed(Object error) {
     return '保存に失敗しました: $error';
   }
 
   @override
-  String get image_duplicateNotSaved => 'この画像はすでにギャラリーにあるため、保存しませんでした';
+  String get image_duplicateNotSaved => 'この画像はすでにシステムギャラリーにあるため、保存しませんでした';
 
   @override
   String image_duplicatesNotSaved(int count) {
-    return '$count 枚はすでにギャラリーにあるため、保存しませんでした';
+    return '$count 枚はすでにシステムギャラリーにあるため、保存しませんでした';
   }
 
   @override
@@ -5605,10 +5612,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get localGallery_indexingLocalImages => 'ローカル画像のインデックスを作成しています...';
 
   @override
-  String get localGallery_emptyTitle => 'ローカル イメージがありません';
+  String get localGallery_emptyTitle => 'お気に入りはまだありません';
 
   @override
-  String get localGallery_emptySubtitle => '生成された画像はここに保存されます';
+  String get localGallery_emptySubtitle => 'お気に入りにした画像がここに表示されます';
+
+  @override
+  String get localGallery_unfavoriteRemoved => 'お気に入りを解除しました。画像はギャラリーから削除されます';
 
   @override
   String get localGallery_noMatchingResults => '一致する結果はありません';
@@ -11023,9 +11033,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get toast_saveDirNotSet => '保存ディレクトリが設定されていません';
-
-  @override
   String toast_savedTo(Object path) {
     return '$path に保存されました';
   }
@@ -13361,11 +13368,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String image_savedAppOnly(Object error) {
-    return 'アプリ内ギャラリーには保存しましたが、システムギャラリーに書き出せませんでした: $error';
-  }
-
-  @override
   String image_shareFailed(Object error) {
     return '共有に失敗しました: $error';
   }
@@ -14654,14 +14656,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get watermark_failedGeneric => '透かし入りコピーを作成できませんでした。画像を確認して再試行してください。';
 
   @override
-  String get watermark_systemGalleryExportFailed =>
-      'コピーは Aaalice に保存されましたが、システムギャラリーに追加できませんでした。';
-
-  @override
-  String get watermark_galleryRefreshFailed =>
-      'コピーは保存されましたが、ギャラリーを更新できませんでした。ギャラリーを開き直して再試行してください。';
-
-  @override
   String get watermark_sourceMissing => '元画像が見つかりません。再作成するには元画像を選び直してください。';
 
   @override
@@ -14957,14 +14951,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get mosaic_failedGeneric => 'モザイク済みコピーを作成できませんでした。';
-
-  @override
-  String get mosaic_galleryRefreshFailed =>
-      'ファイルは保存されましたが、ローカルギャラリーを更新できませんでした。';
-
-  @override
-  String get mosaic_systemGalleryExportFailed =>
-      'アプリ内には保存されましたが、システムギャラリーへの書き出しに失敗しました。';
 
   @override
   String get mosaic_undo => '元に戻す';

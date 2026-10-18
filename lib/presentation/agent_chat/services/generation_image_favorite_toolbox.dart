@@ -6,8 +6,11 @@ import '../../../core/agent/agent_types.dart';
 import '../../../core/agent/resources/agent_chat_resource_reference.dart';
 import '../../../core/agent/resources/agent_chat_resource_reference_codec.dart';
 import '../../../core/database/database_providers.dart';
+import '../../../core/utils/locale_provider.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../providers/image_generation_provider.dart';
 import '../../providers/local_gallery_provider.dart';
+import '../../screens/generation/services/generated_image_file_link.dart';
 import 'defined_agent_tool.dart';
 import 'generation_image_resource.dart';
 import 'toolbox_json.dart';
@@ -18,6 +21,9 @@ typedef LocalGalleryFavoriteReader =
 typedef LocalGalleryFavoriteWriter =
     Future<bool> Function(String path, bool favorite);
 
+/// Saves a generated image into the gallery and returns its file path.
+typedef GeneratedImageGallerySaver = Future<String> Function(GeneratedImage);
+
 class LocalGalleryFavoriteRecord {
   const LocalGalleryFavoriteRecord({required this.id, required this.favorite});
 
@@ -27,35 +33,41 @@ class LocalGalleryFavoriteRecord {
 
 /// Mutates the favorite state owned by the indexed local gallery.
 ///
-/// A generated image without an existing persistent gallery record is rejected;
-/// this toolbox never creates a parallel favorite state for generation history.
+/// The gallery holds favorites only: favoriting saves the generated image into
+/// it, exactly like the favorite button, and unfavoriting removes it again.
+/// This toolbox never creates a parallel favorite state for generation history.
 class GenerationImageFavoriteToolbox {
   GenerationImageFavoriteToolbox(
     Ref ref, {
     GeneratedImageFavoriteResolver? resolveImage,
     LocalGalleryFavoriteReader? readFavorite,
     LocalGalleryFavoriteWriter? writeFavorite,
+    GeneratedImageGallerySaver? saveToGallery,
   }) : _ref = ref,
        _resolveImage =
            resolveImage ??
            ((id) =>
                ref.read(imageGenerationNotifierProvider).findImageById(id)),
        _readFavorite = readFavorite,
-       _writeFavorite = writeFavorite;
+       _writeFavorite = writeFavorite,
+       _saveToGallery = saveToGallery;
 
   GenerationImageFavoriteToolbox.forTesting({
     required GeneratedImageFavoriteResolver resolveImage,
     required LocalGalleryFavoriteReader readFavorite,
     required LocalGalleryFavoriteWriter writeFavorite,
+    GeneratedImageGallerySaver? saveToGallery,
   }) : _ref = null,
        _resolveImage = resolveImage,
        _readFavorite = readFavorite,
-       _writeFavorite = writeFavorite;
+       _writeFavorite = writeFavorite,
+       _saveToGallery = saveToGallery;
 
   final Ref? _ref;
   final GeneratedImageFavoriteResolver _resolveImage;
   final LocalGalleryFavoriteReader? _readFavorite;
   final LocalGalleryFavoriteWriter? _writeFavorite;
+  final GeneratedImageGallerySaver? _saveToGallery;
 
   List<AgentTool> tools() => [_setFavorite()];
 
@@ -63,9 +75,11 @@ class GenerationImageFavoriteToolbox {
     name: 'set_generated_image_favorite',
     label: 'Set Generated Image Favorite',
     description:
-        'Favorite or unfavorite a generated image through its existing indexed '
-        'local-gallery record. Pass the stable generated-image resource_ref; '
-        'unsaved or unindexed history images are rejected.',
+        'Favorite or unfavorite a generated image. The local gallery holds '
+        'favorites only: favoriting saves the image into it, unfavoriting '
+        'removes it from the gallery a few seconds later. Saving to the '
+        'system album is separate. Pass the stable generated-image '
+        'resource_ref.',
     parameters: toolboxObject(
       properties: {
         'resource_ref': {'type': 'object'},
@@ -108,13 +122,38 @@ class GenerationImageFavoriteToolbox {
             '${reference.resourceId} is a failed stream snapshot.',
       );
     }
-    final path = image.filePath;
+    final requested = params['favorite'] as bool;
+    var path = image.filePath;
     if (path == null || path.isEmpty || !await File(path).exists()) {
-      return agentToolError(
-        'local_record_required',
-        'set_generated_image_favorite: generated image '
-            '${reference.resourceId} has no available persisted local file.',
-      );
+      // Not in the gallery means not a favorite.
+      if (!requested) {
+        return agentToolJsonResult({
+          'ok': true,
+          'image_id': reference.resourceId,
+          'favorite': false,
+          'resource_ref': AgentChatResourceReferenceCodec.encodeJsonMap(
+            reference,
+          ),
+        });
+      }
+      final save = _saveToGallery ?? _saveIndexed;
+      if (_saveToGallery == null && _ref == null) {
+        return agentToolError(
+          'local_record_required',
+          'set_generated_image_favorite: generated image '
+              '${reference.resourceId} has no available persisted local file.',
+        );
+      }
+      try {
+        path = await save(image);
+      } on Object catch (error) {
+        return agentToolError(
+          'favorite_save_failed',
+          'set_generated_image_favorite: generated image '
+              '${reference.resourceId} could not be saved into the local '
+              'gallery ($error).',
+        );
+      }
     }
 
     final LocalGalleryFavoriteRecord? record;
@@ -159,7 +198,6 @@ class GenerationImageFavoriteToolbox {
       );
     }
 
-    final requested = params['favorite'] as bool;
     var favorite = record.favorite;
     if (favorite != requested) {
       try {
@@ -198,6 +236,18 @@ class GenerationImageFavoriteToolbox {
             ),
           ),
     });
+  }
+
+  Future<String> _saveIndexed(GeneratedImage image) async {
+    final ref = _ref!;
+    final path = await GeneratedImageFileLink.ensureSaved(
+      ref.read,
+      image,
+      lookupAppLocalizations(ref.read(localeNotifierProvider)),
+    );
+    // Waiting for the gallery service admits the new file to the index.
+    await ref.read(localGalleryNotifierProvider.notifier).getService();
+    return path;
   }
 
   Future<LocalGalleryFavoriteRecord?> _readIndexedFavorite(String path) async {

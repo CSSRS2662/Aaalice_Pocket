@@ -27,7 +27,6 @@ import '../../providers/selection_mode_provider.dart';
 import '../../services/library_sidebar_move_service.dart';
 import '../../utils/asset_protection_guard.dart';
 import '../../widgets/common/app_toast.dart';
-import '../../widgets/common/image_card_action.dart';
 import '../../widgets/common/themed_confirm_dialog.dart';
 import '../../widgets/common/themed_input_dialog.dart';
 import '../../widgets/gallery_filter_panel.dart';
@@ -281,9 +280,6 @@ class LocalGalleryScreenController extends ChangeNotifier {
       galleryState: galleryState,
       categoryState: categoryState,
       albumState: albumState,
-      favoriteCount: _ref
-          .read(localGalleryNotifierProvider.notifier)
-          .getTotalFavoriteCount(),
       modal: modal,
       scrollController: scrollController,
       afterSelection: afterSelection,
@@ -316,7 +312,6 @@ class LocalGalleryScreenController extends ChangeNotifier {
           .read(librarySidebarMoveServiceProvider)
           .moveAlbum(id, targetId, slot),
       onImagesDropToAlbum: handleImagesDropToAlbum,
-      onImagesFavoriteDrop: handleImagesFavoriteDrop,
     );
   }
 
@@ -408,21 +403,17 @@ class LocalGalleryScreenController extends ChangeNotifier {
   Future<void> handleCategorySelected(String? id) async {
     final gallery = _ref.read(localGalleryNotifierProvider.notifier);
 
-    // 分类、收藏与相簿必须同时清理状态和真实过滤条件，避免空相簿
-    // 留下不可见的 albumId，导致“全部图片”仍显示空结果。
+    // 分类与相簿必须同时清理状态和真实过滤条件，避免空相簿留下不可见的
+    // albumId，导致图库仍显示空结果。图库只放收藏，收藏条件始终生效。
     await _ref.read(galleryAlbumNotifierProvider.notifier).selectAlbum(null);
     if (!_mounted()) return;
 
     _ref.read(galleryCategoryNotifierProvider.notifier).selectCategory(id);
     final categoryState = _ref.read(galleryCategoryNotifierProvider);
     final category = id != null ? categoryState.categories.findById(id) : null;
-    if (id == 'favorites') {
-      await gallery.setShowFavoritesOnly(true);
-    } else if (id != null && category != null) {
-      await gallery.setShowFavoritesOnly(false);
+    if (category != null) {
       await gallery.setSelectedCategory(id, category.folderPath);
     } else {
-      await gallery.setShowFavoritesOnly(false);
       await gallery.setSelectedCategory(null, null);
     }
   }
@@ -473,22 +464,6 @@ class LocalGalleryScreenController extends ChangeNotifier {
 
   Future<void> handleImagesDrop(List<String> imagePaths, String? categoryId) =>
       _actions.moveImagesToCategory(imagePaths, categoryId);
-
-  Future<void> handleImagesFavoriteDrop(List<String> imagePaths) async {
-    final owner = _ref.read(localGalleryNotifierProvider.notifier);
-    final service = await owner.getService();
-    final images = await service.getRecordsByPaths(imagePaths);
-    if (images.length != imagePaths.toSet().length) {
-      throw StateError('Some dropped gallery images are unavailable');
-    }
-    final result = await ImageCardBatchResult.execute(images, (image) async {
-      if (image.isFavorite) return;
-      if (!await owner.toggleFavorite(image.path)) {
-        throw StateError('Unable to favorite image: ${image.path}');
-      }
-    });
-    result.requireComplete();
-  }
 
   Future<void> handleSyncWithFileSystem() async {
     await _ref

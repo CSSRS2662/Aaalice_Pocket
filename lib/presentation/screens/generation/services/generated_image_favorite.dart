@@ -6,12 +6,14 @@ import '../../../../core/utils/localization_extension.dart';
 import '../../../providers/image_generation_provider.dart';
 import '../../../providers/local_gallery_provider.dart';
 import '../../../widgets/common/app_toast.dart';
+import '../../../widgets/gallery/gallery_favorite_toggle.dart';
 import 'generated_image_file_link.dart';
 
 final Set<String> _togglesInFlight = {};
 
 /// Toggles a generated image's favorite, saving it to the gallery first when
-/// needed. The heart shows the result, so only failures are announced.
+/// needed. The heart shows the result; failures are announced, and so is an
+/// unfavorite, since that removes the image from the gallery.
 Future<void> toggleGeneratedImageFavorite(
   BuildContext context,
   WidgetRef ref,
@@ -22,15 +24,16 @@ Future<void> toggleGeneratedImageFavorite(
   final gallery = ref.read(localGalleryNotifierProvider.notifier);
   final l10n = context.l10n;
   try {
-    final linked = await GeneratedImageFileLink.ensureSaved(
+    final path = await GeneratedImageFileLink.ensureSaved(
       ref.read,
       image,
       l10n,
     );
-    final favorite = await gallery.toggleFavorite(linked.path);
+    final favorite = context.mounted
+        ? await toggleGalleryFavorite(context, gallery, path)
+        : await gallery.toggleFavorite(path);
     AppLogger.i(
-      '[GeneratedSave] favorite=$favorite for result ${image.id} at '
-          '${linked.path}',
+      '[GeneratedSave] favorite=$favorite for result ${image.id} at $path',
       'GeneratedImageFavorite',
     );
   } catch (error) {

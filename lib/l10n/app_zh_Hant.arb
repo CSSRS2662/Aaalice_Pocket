@@ -293,7 +293,45 @@
   "settings_loadFailed": "載入失敗: {error}",
   "settings_imageSavePath": "圖片儲存位置",
   "settings_autoSave": "自動儲存",
-  "settings_autoSaveSubtitle": "生成後自動儲存圖片",
+  "settings_autoSaveSubtitle": "生成後自動儲存到系統相簿",
+  "settings_cleanUnfavorited": "清理未收藏的圖片",
+  "settings_cleanUnfavoritedSubtitle": "圖庫只保留收藏；刪除舊版本存進圖庫但沒收藏的圖片",
+  "settings_cleanUnfavoritedNone": "圖庫裡沒有未收藏的圖片",
+  "settings_cleanUnfavoritedConfirm": "將永久刪除圖庫裡 {count} 張未收藏的圖片，系統相簿不受影響。此操作無法撤銷。",
+  "@settings_cleanUnfavoritedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedDone": "已刪除 {count} 張未收藏的圖片",
+  "@settings_cleanUnfavoritedDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedPartial": "已刪除 {deleted} 張，{failed} 張刪除失敗",
+  "@settings_cleanUnfavoritedPartial": {
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_cleanUnfavoritedFailed": "清理失敗：{error}",
+  "@settings_cleanUnfavoritedFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "settings_about": "關於",
   "settings_version": "版本 {version}",
   "settings_fileLogging": "記錄應用日誌",
@@ -585,33 +623,13 @@
   "generation_clearHistory": "清除歷史記錄",
   "generation_clearHistoryConfirm": "確定要清除所有歷史記錄嗎？此操作不可撤銷。",
   "generation_deleteImageConfirm": "從歷史記錄中刪除這張圖片？此操作不可撤銷。",
-  "generation_deleteImageWithFileConfirm": "從歷史記錄中刪除這張圖片，並永久刪除本機圖庫中的檔案「{fileName}」？此操作不可撤銷。",
-  "@generation_deleteImageWithFileConfirm": {
-    "placeholders": {
-      "fileName": {}
-    }
-  },
   "generation_deleteImagesConfirm": "從歷史記錄中刪除選取的 {count} 張圖片？此操作不可撤銷。",
   "@generation_deleteImagesConfirm": {
     "placeholders": {
       "count": {}
     }
   },
-  "generation_deleteImagesWithFilesConfirm": "從歷史記錄中刪除選取的 {count} 張圖片，並永久刪除其中 {fileCount} 個已儲存到本機圖庫的檔案？此操作不可撤銷。",
-  "@generation_deleteImagesWithFilesConfirm": {
-    "placeholders": {
-      "count": {},
-      "fileCount": {}
-    }
-  },
   "generation_deleteConfirmSkipForSession": "本次執行期間不再詢問",
-  "generation_deleteImageFilesFailed": "圖片已從歷史記錄移除，但有 {count} 個本機檔案刪除失敗：{error}",
-  "@generation_deleteImageFilesFailed": {
-    "placeholders": {
-      "count": {},
-      "error": {}
-    }
-  },
   "generation_model": "模型",
   "generation_opusUsageRemaining": "Opus 免費生成剩餘 {percent}%",
   "generation_opusUsageEstimate": "約可再生成 {count} 張",
@@ -825,10 +843,9 @@
   "image_copy": "複製",
   "image_upscale": "放大",
   "image_saveToLibrary": "儲存到詞庫",
-  "image_imageSaved": "圖片已儲存到: {path}",
   "image_saveFailed": "儲存失敗: {error}",
-  "image_duplicateNotSaved": "圖庫裡已有這張圖，本次未儲存",
-  "image_duplicatesNotSaved": "{count} 張圖庫裡已有，本次未儲存",
+  "image_duplicateNotSaved": "系統相簿裡已有這張圖，本次未儲存",
+  "image_duplicatesNotSaved": "{count} 張系統相簿裡已有，本次未儲存",
   "@image_duplicatesNotSaved": {
     "placeholders": {
       "count": {
@@ -2575,8 +2592,9 @@
     }
   },
   "localGallery_indexingLocalImages": "索引本地圖片中...",
-  "localGallery_emptyTitle": "暫無本地圖片",
-  "localGallery_emptySubtitle": "生成的圖片將儲存在此處",
+  "localGallery_emptyTitle": "還沒有收藏",
+  "localGallery_emptySubtitle": "收藏的圖片會放在這裡",
+  "localGallery_unfavoriteRemoved": "已取消收藏，圖片將從圖庫刪除",
   "localGallery_noMatchingResults": "無匹配結果",
   "localGallery_loadingGroupedImages": "載入分組圖片中...",
   "localGallery_jumpedToMonth": "已跳轉到 {year}-{month}",
@@ -5316,7 +5334,6 @@
       "error": {}
     }
   },
-  "toast_saveDirNotSet": "未設定儲存目錄",
   "toast_savedTo": "已儲存到 {path}",
   "@toast_savedTo": {
     "placeholders": {
@@ -6092,11 +6109,6 @@
   "@image_copyFailed": {
     "placeholders": {
       "error": {}
-    }
-  },
-  "@image_imageSaved": {
-    "placeholders": {
-      "path": {}
     }
   },
   "@image_saveFailed": {
@@ -6947,8 +6959,6 @@
   "localGallery_saveToSystemGallery": "儲存到系統相簿",
   "localGallery_saveToSystemGalleryFailed": "無法儲存到系統相簿：{error}",
   "@localGallery_saveToSystemGalleryFailed": {"placeholders":{"error":{}}},
-  "image_savedAppOnly": "已儲存到應用程式圖庫，但無法匯出到系統相簿：{error}",
-  "@image_savedAppOnly": {"placeholders":{"error":{}}},
   "image_shareFailed": "分享失敗: {error}",
   "@image_shareFailed": {"placeholders":{"error":{}}},
   "onlineGallery_savedFiles": "已儲存 {count} 個檔案",
@@ -7359,8 +7369,6 @@
   "watermark_failed": "無法建立浮水印副本：{error}",
   "@watermark_failed": {"placeholders":{"error":{}}},
   "watermark_failedGeneric": "無法建立浮水印副本，請檢查圖片後再試一次。",
-  "watermark_systemGalleryExportFailed": "副本已儲存在 Aaalice 中，但無法加入系統圖庫。",
-  "watermark_galleryRefreshFailed": "副本已儲存，但圖庫無法重新整理；重新開啟圖庫即可重試。",
   "watermark_sourceMissing": "找不到原圖，請重新選擇原圖後再產生浮水印。",
   "watermark_chooseOriginal": "選擇原圖",
   "watermark_dragHint": "拖曳所選圖層；方向鍵可精細移動，按住 Shift 可加大步長。",
@@ -7457,8 +7465,6 @@
   "mosaic_share": "分享",
   "mosaic_cancelled": "已取消打碼算繪。",
   "mosaic_failedGeneric": "無法建立打碼副本。",
-  "mosaic_galleryRefreshFailed": "檔案已儲存，但本機圖庫重新整理失敗。",
-  "mosaic_systemGalleryExportFailed": "應用程式內副本已儲存，但匯出至系統相簿失敗。",
   "mosaic_undo": "復原",
   "mosaic_redo": "重做",
   "mosaic_reset": "重設",

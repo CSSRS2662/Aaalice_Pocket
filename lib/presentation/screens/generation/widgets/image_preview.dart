@@ -3,12 +3,11 @@ import '../../../selection/card_selection_scope.dart';
 import '../../../widgets/common/image_card_batch_scope.dart';
 import '../../../widgets/bulk_action_bar.dart';
 import '../services/generated_image_favorite.dart';
-import '../services/generated_image_file_link.dart';
+import '../services/generated_image_reveal.dart';
 import '../services/generation_image_batch_actions.dart';
 import '../services/generation_image_deletion.dart';
 import 'package:nai_launcher/data/models/image/image_postprocess_phase.dart';
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -18,14 +17,11 @@ import 'package:path/path.dart' as p;
 
 import '../../../../core/enums/precise_ref_type.dart';
 import '../../../../core/platform/platform_capabilities.dart';
-import '../../../../core/services/android_media_store_service.dart';
 import '../../../../core/services/character_conversion_service.dart';
 import '../../../../core/shortcuts/default_shortcuts.dart';
 import '../../../../core/shortcuts/shortcut_config.dart';
 import '../../../../core/shortcuts/shortcut_manager.dart';
-import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/character_prompt_block_parser.dart';
-import '../../../../core/utils/file_explorer_utils.dart';
 import '../../../../core/utils/image_save_utils.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../../core/utils/nai_resolution_adapter.dart';
@@ -33,7 +29,6 @@ import '../../../../core/utils/prompt_preset_resolution.dart';
 import '../../../../core/utils/vibe_file_parser.dart';
 import '../../../../data/models/fixed_tag/fixed_tag_usage_snapshot.dart';
 import '../../../../data/models/image/image_stream_chunk.dart';
-import '../../../../data/repositories/gallery_folder_repository.dart';
 import '../../../providers/alias_resolver_service.dart';
 import '../../../../data/services/image_metadata_service.dart';
 import '../../../adaptive/window_size_class.dart';
@@ -47,6 +42,7 @@ import '../../../providers/character_position_canvas_provider.dart';
 import '../../../providers/character_prompt_provider.dart';
 import '../../../providers/fixed_tags_provider.dart';
 import '../../../providers/image_generation_provider.dart';
+import '../../../providers/system_album_provider.dart';
 import '../../../providers/local_gallery_provider.dart';
 import '../../../providers/quality_preset_provider.dart';
 import '../../../providers/preview_transparency_provider.dart';
@@ -59,6 +55,7 @@ import '../../../services/image_workflow_launcher.dart';
 import '../../../services/image_metadata_import_workflow.dart';
 import '../../../widgets/character/character_position_canvas.dart';
 import '../../../widgets/common/app_toast.dart';
+import '../../../widgets/common/album_save_feedback.dart';
 import '../../../widgets/common/duplicate_save_notice.dart';
 import '../../../widgets/common/draggable_memory_image.dart';
 import '../../../widgets/common/image_detail/file_image_detail_data.dart';
@@ -178,7 +175,7 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
       actions: GenerationImageBatchActions(
         context: context,
         images: selectedImages,
-        gallery: ref.read(localGalleryNotifierProvider.notifier),
+        album: ref.read(systemAlbumProvider),
         selection: selectionNotifier,
         deletion: GenerationImageDeletion(context: context, ref: ref),
       ).build(),
@@ -1009,27 +1006,10 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
     }
   }
 
-  /// 在文件夹中定位图片。已保存的图片直接定位原文件，未保存时先保存再定位。
   Future<void> _openImageInExplorer(
     BuildContext context,
     GeneratedImage image,
-  ) async {
-    try {
-      final linked = await GeneratedImageFileLink.ensureSaved(
-        ref.read,
-        image,
-        context.l10n,
-      );
-      await FileExplorerUtils.revealFile(linked.path);
-      if (linked.newlySavedRoot case final root? when context.mounted) {
-        AppToast.success(context, context.l10n.image_imageSaved(root));
-      }
-    } catch (e) {
-      if (context.mounted) {
-        AppToast.error(context, context.l10n.image_saveFailed(e.toString()));
-      }
-    }
-  }
+  ) => revealGeneratedImage(context, ref, image);
 
   Widget _buildSingleAspectRatioCard({
     required double aspectRatio,
@@ -1206,27 +1186,15 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
     );
   }
 
-  /// 获取保存目录
-  Future<Directory?> _getSaveDirectory() async {
-    final dirPath = await GalleryFolderRepository.instance.getRootPath();
-    if (dirPath == null) return null;
-    final dir = Directory(dirPath);
-    if (!await dir.exists()) {
-      await dir.create(recursive: true);
-    }
-    return dir;
-  }
-
-  /// 保存图像；图库里已有同一张图时不保存，底部通知提供“依然保存”。
+  /// 保存只进系统相册；相册里已有这张图时不保存，底部通知提供“依然保存”。
   Future<void> _saveImage(
     BuildContext context,
     ImageDetailData image, {
     bool allowDuplicate = false,
   }) async {
+    final album = ref.read(systemAlbumProvider);
     try {
       final imageBytes = await image.getImageBytes();
-      final saveDir = await _getSaveDirectory();
-      if (saveDir == null) return;
 
       // 统一解析真实 seed：文件名与元数据嵌入共用同一结果
       final resolvedSeed = await ImageSaveUtils.resolveSeed(
@@ -1322,105 +1290,39 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
         );
       }
 
-      // 原子保存：日期分类路径 + 独占防冲突 + 失败清理，全部在工具内完成
-      final saved = await ImageSaveUtils.saveResultImage(
-        rootPath: saveDir.path,
+      final bytes = await ImageSaveUtils.resultBytesForSave(
         imageBytes: imageBytes,
         preserveOriginalBytes: image.preserveOriginalBytesOnSave,
-        source: 'preview-save',
-        allowDuplicate: allowDuplicate,
         fixedTagUsageSnapshot: capturedFixedTags,
         rebuiltFixedTagUsageSnapshot:
             capturedFixedTags ??
             FixedTagUsageSnapshot.capture(fixedTagsState.entries),
-        seed: actualSeed,
         rebuild: rebuildBytes,
       );
-      final finalBytes = saved.bytes;
-      final filePath = saved.path;
-      if (saved.reused) {
-        // 图库里那份就是这张图：记下它，收藏与定位直接用它。
-        _linkDisplayImage(image.identifier, filePath);
-        if (context.mounted) {
-          showDuplicateSaveNotice(
-            context,
-            onSaveAnyway: () {
-              if (mounted) {
-                unawaited(_saveImage(context, image, allowDuplicate: true));
-              }
-            },
-          );
-        }
+      final saved = await album.save(
+        bytes: bytes,
+        identity: imageBytes,
+        fileName: ImageSaveUtils.albumFileName(seed: actualSeed),
+        source: 'preview-save',
+        allowDuplicate: allowDuplicate,
+      );
+      if (!context.mounted) return;
+      if (saved.duplicate) {
+        showDuplicateSaveNotice(
+          context,
+          onSaveAnyway: () {
+            if (mounted) {
+              unawaited(_saveImage(context, image, allowDuplicate: true));
+            }
+          },
+        );
         return;
       }
-
-      Object? systemGalleryError;
-      if (PlatformCapabilities.current.supportsSystemGalleryExport) {
-        try {
-          await AndroidMediaStoreService.savePng(
-            bytes: finalBytes,
-            fileName: p.basename(filePath),
-          );
-        } catch (error) {
-          systemGalleryError = error;
-        }
-      }
-
-      // 立即解析并缓存刚保存图像的元数据
-      unawaited(
-        ImageMetadataService()
-            .getMetadata(filePath)
-            .then((metadata) {
-              AppLogger.d(
-                '生成图像元数据已缓存: ${metadata?.prompt.substring(0, metadata.prompt.length > 30 ? 30 : metadata.prompt.length)}...',
-                'ImagePreview',
-              );
-            })
-            .catchError((e) {
-              AppLogger.w('生成图像元数据缓存失败: $e', 'ImagePreview');
-            }),
-      );
-
-      _linkDisplayImage(image.identifier, filePath);
-
-      ref.read(localGalleryNotifierProvider.notifier).refresh();
-
-      if (context.mounted) {
-        if (systemGalleryError != null) {
-          AppToast.warning(
-            context,
-            context.l10n.image_savedAppOnly(systemGalleryError.toString()),
-          );
-        } else {
-          AppToast.success(
-            context,
-            PlatformCapabilities.current.supportsSystemGalleryExport
-                ? context.l10n.image_savedToSystemGallery
-                : context.l10n.image_imageSaved(saveDir.path),
-          );
-        }
-      }
+      showAlbumSaved(context, album, saved.location);
     } catch (e) {
       if (context.mounted) {
         AppToast.error(context, context.l10n.image_saveFailed(e.toString()));
       }
-    }
-  }
-
-  /// 把保存（或图库里已有）的文件路径记到预览中的这张图上。
-  void _linkDisplayImage(String imageId, String filePath) {
-    final currentState = ref.read(imageGenerationNotifierProvider);
-    final updatedImages = currentState.displayImages.map((img) {
-      if (img.id == imageId) {
-        return img.copyWithFilePath(filePath);
-      }
-      return img;
-    }).toList();
-
-    if (updatedImages.isNotEmpty) {
-      ref
-          .read(imageGenerationNotifierProvider.notifier)
-          .updateDisplayImages(updatedImages);
     }
   }
 }

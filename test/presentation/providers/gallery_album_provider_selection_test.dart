@@ -35,58 +35,47 @@ void main() {
       container.read(galleryAlbumNotifierProvider).selectedAlbumId;
 
   group('GalleryAlbumNotifier.selectAlbum', () {
-    test('drops the previous album when favorites is selected', () async {
+    // The gallery holds favorites only, so every query keeps the favorites
+    // condition; the legacy "favorites" album means no album at all.
+    test('the legacy favorites album drops the previous album', () async {
       await albums().selectAlbum('album-a');
       expect(criteria().albumId, 'album-a');
 
       await albums().selectAlbum('favorites');
 
-      expect(selectedAlbumId(), 'favorites');
       expect(criteria().albumId, isNull);
       expect(criteria().categoryId, isNull);
       expect(criteria().showFavoritesOnly, isTrue);
     });
 
-    test('never narrows favorites by the previous album', () async {
-      await albums().selectAlbum('album-a');
-      await albums().selectAlbum('favorites');
-
-      expect(
-        service.applied.where(
-          (applied) => applied.showFavoritesOnly && applied.albumId != null,
-        ),
-        isEmpty,
-      );
-    });
-
-    test('drops the favorites flag when a normal album is selected', () async {
-      await albums().selectAlbum('favorites');
-
+    test('a normal album narrows the favorites', () async {
       await albums().selectAlbum('album-a');
 
       expect(selectedAlbumId(), 'album-a');
       expect(criteria().albumId, 'album-a');
-      expect(criteria().showFavoritesOnly, isFalse);
+      expect(criteria().showFavoritesOnly, isTrue);
     });
 
-    test('clears both after browsing an album', () async {
+    test('every applied filter keeps the favorites condition', () async {
+      await albums().selectAlbum('album-a');
+      await albums().selectAlbum('favorites');
+      await albums().selectAlbum(null);
+
+      expect(service.applied, isNotEmpty);
+      expect(
+        service.applied.where((applied) => !applied.showFavoritesOnly),
+        isEmpty,
+      );
+    });
+
+    test('clearing the album keeps only the favorites condition', () async {
       await albums().selectAlbum('album-a');
 
       await albums().selectAlbum(null);
 
       expect(selectedAlbumId(), isNull);
       expect(criteria().albumId, isNull);
-      expect(criteria().showFavoritesOnly, isFalse);
-    });
-
-    test('clears both after browsing favorites', () async {
-      await albums().selectAlbum('favorites');
-
-      await albums().selectAlbum(null);
-
-      expect(selectedAlbumId(), isNull);
-      expect(criteria().albumId, isNull);
-      expect(criteria().showFavoritesOnly, isFalse);
+      expect(criteria().showFavoritesOnly, isTrue);
     });
   });
 }

@@ -1,14 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import '../../core/constants/storage_keys.dart';
 import '../../core/utils/app_logger.dart';
 import '../../data/models/gallery/nai_image_metadata.dart';
 import '../../data/models/fixed_tag/fixed_tag_usage_snapshot.dart';
+import '../providers/generation/generated_image_file_cache.dart';
 import '../providers/generation/generation_models.dart';
 
 /// Tests and embedders opt in explicitly so independently-created provider
@@ -26,19 +30,40 @@ final generationHistoryStorageServiceProvider =
 
 /// Durable backing store for the bounded generation history.
 ///
-/// Records are stored independently so adding one result does not rewrite the
-/// PNG bytes of every older result. The order index is committed last; an
-/// interrupted write can therefore leave only an orphan record, which is
-/// removed during the next load without losing an indexed image.
+/// Each PNG lives in its own file in [directory]; Hive keeps the order index
+/// and one small metadata record per image, so loading the history does not
+/// read every image into memory. The order index is committed last; an
+/// interrupted write can therefore leave only an orphan record or file,
+/// which is removed during the next load without losing an indexed image.
+/// Records from before files carry the PNG themselves and move to files on
+/// their first load.
 class GenerationHistoryStorageService {
-  GenerationHistoryStorageService({this.enabled = true});
+  GenerationHistoryStorageService({
+    this.enabled = true,
+    Future<Directory> Function()? directory,
+  }) : _resolveDirectory = directory ?? _defaultDirectory;
 
   static const _orderKey = 'generation_history_v1_order';
   static const _recordPrefix = 'generation_history_v1_record_';
-  static const maxEntries = 50;
+  static const _fileKey = 'file';
+
+  /// History keeps the newest results; older ones are deleted for good.
+  static const maxEntries = 200;
 
   final bool enabled;
+  final Future<Directory> Function() _resolveDirectory;
+  Future<Directory>? _directory;
   Future<void> _pendingWrite = Future<void>.value();
+
+  static Future<Directory> _defaultDirectory() async => Directory(
+    p.join((await getApplicationSupportDirectory()).path, 'generation_history'),
+  );
+
+  Future<Directory> get _imageDirectory => _directory ??= () async {
+    final directory = await _resolveDirectory();
+    await directory.create(recursive: true);
+    return directory;
+  }();
 
   Box<dynamic>? get _box {
     if (!enabled || !Hive.isBoxOpen(StorageKeys.historyBox)) {
@@ -50,6 +75,7 @@ class GenerationHistoryStorageService {
   Future<List<GeneratedImage>> load() async {
     final box = _box;
     if (box == null) return const [];
+    final directory = await _imageDirectory;
 
     final rawOrder = box.get(_orderKey);
     final order = rawOrder is List
@@ -57,12 +83,20 @@ class GenerationHistoryStorageService {
         : <String>[];
     final images = <GeneratedImage>[];
     final validIds = <String>[];
+    var migrated = false;
 
     for (final id in order) {
       try {
         final raw = box.get('$_recordPrefix$id');
         if (raw is! Map) continue;
-        final image = _decodeRecord(id, Map<dynamic, dynamic>.from(raw));
+        final record = Map<dynamic, dynamic>.from(raw);
+        if (record[_fileKey] is! String) {
+          if (!await _moveBytesToFile(box, directory, id, record)) continue;
+          migrated = true;
+        }
+        final path = p.join(directory.path, record[_fileKey] as String);
+        if (!await File(path).exists()) continue;
+        final image = _decodeRecord(id, record, path);
         if (image == null) continue;
         images.add(image);
         validIds.add(id);
@@ -86,43 +120,65 @@ class GenerationHistoryStorageService {
       await box.put(_orderKey, validIds);
       await box.deleteAll(staleKeys);
     }
+    // Queued behind pending writes, so a file being written is never swept.
+    await _enqueue(() async {
+      final indexed = (box.get(_orderKey) as List?)?.whereType<String>();
+      await _deleteOrphanFiles(directory, {
+        for (final id in indexed ?? const <String>[]) _fileName(id),
+      });
+    });
+    // Records that carried their PNG leave the box full of free space.
+    if (migrated || staleKeys.isNotEmpty) await box.compact();
 
     return images;
   }
 
-  Future<void> persistImages({
+  /// Writes the images in [changedImages] that are still in [order] and
+  /// returns where each one's PNG now lives, keyed by image id.
+  Future<Map<String, String>> persistImages({
     required Iterable<GeneratedImage> changedImages,
     required List<String> order,
   }) {
-    final records = <String, Map<String, dynamic>>{
-      for (final image in changedImages)
-        '$_recordPrefix${image.id}': _encodeRecord(image),
-    };
     final boundedOrder = List<String>.unmodifiable(
       order.toSet().take(maxEntries),
     );
+    final retained = boundedOrder.toSet();
+    final changed = [
+      for (final image in changedImages)
+        if (retained.contains(image.id)) image,
+    ];
+    final stored = <String, String>{};
 
     return _enqueue(() async {
       final box = _box;
       if (box == null) return;
+      final directory = await _imageDirectory;
 
       final previousOrder =
           (box.get(_orderKey) as List?)?.whereType<String>().toSet() ??
           const <String>{};
+      final records = <String, Map<String, dynamic>>{};
+      for (final image in changed) {
+        final path = p.join(directory.path, _fileName(image.id));
+        if (image.storedPath != path && !await File(path).exists()) {
+          await _writeAtomically(path, image.bytes);
+        }
+        records['$_recordPrefix${image.id}'] = _encodeRecord(image);
+        stored[image.id] = path;
+      }
       if (records.isNotEmpty) {
         await box.putAll(records);
       }
       await box.put(_orderKey, boundedOrder);
 
-      final retained = boundedOrder.toSet();
-      final evictedKeys = previousOrder
-          .difference(retained)
-          .map((id) => '$_recordPrefix$id')
-          .toList();
-      if (evictedKeys.isNotEmpty) {
-        await box.deleteAll(evictedKeys);
+      final evicted = previousOrder.difference(retained);
+      if (evicted.isNotEmpty) {
+        await box.deleteAll(evicted.map((id) => '$_recordPrefix$id'));
+        for (final id in evicted) {
+          await _deleteImageFile(p.join(directory.path, _fileName(id)));
+        }
       }
-    });
+    }).then((_) => stored);
   }
 
   Future<void> clear() {
@@ -137,6 +193,7 @@ class GenerationHistoryStorageService {
       if (recordKeys.isNotEmpty) {
         await box.deleteAll(recordKeys);
       }
+      await _deleteOrphanFiles(await _imageDirectory, const {});
     });
   }
 
@@ -150,9 +207,58 @@ class GenerationHistoryStorageService {
     return next;
   }
 
+  static String _fileName(String id) => '$id.png';
+
+  Future<bool> _moveBytesToFile(
+    Box<dynamic> box,
+    Directory directory,
+    String id,
+    Map<dynamic, dynamic> record,
+  ) async {
+    final raw = record['bytes'];
+    final bytes = raw is Uint8List
+        ? raw
+        : raw is List<int>
+        ? Uint8List.fromList(raw)
+        : null;
+    if (bytes == null || bytes.isEmpty) return false;
+    await _writeAtomically(p.join(directory.path, _fileName(id)), bytes);
+    record
+      ..remove('bytes')
+      ..[_fileKey] = _fileName(id);
+    await box.put('$_recordPrefix$id', record);
+    return true;
+  }
+
+  static Future<void> _writeAtomically(String path, Uint8List bytes) async {
+    final partial = File('$path.part');
+    await partial.writeAsBytes(bytes, flush: true);
+    await partial.rename(path);
+  }
+
+  static Future<void> _deleteImageFile(String path) async {
+    GeneratedImageFileCache.evict(path);
+    try {
+      await File(path).delete();
+    } on PathNotFoundException {
+      // Already gone.
+    }
+  }
+
+  static Future<void> _deleteOrphanFiles(
+    Directory directory,
+    Set<String> keep,
+  ) async {
+    if (!await directory.exists()) return;
+    await for (final entity in directory.list(followLinks: false)) {
+      if (entity is! File || keep.contains(p.basename(entity.path))) continue;
+      await _deleteImageFile(entity.path);
+    }
+  }
+
   static Map<String, dynamic> _encodeRecord(GeneratedImage image) {
     return <String, dynamic>{
-      'bytes': image.bytes,
+      _fileKey: _fileName(image.id),
       'width': image.width,
       'height': image.height,
       'createdAt': image.createdAt.toIso8601String(),
@@ -168,15 +274,11 @@ class GenerationHistoryStorageService {
     };
   }
 
-  static GeneratedImage? _decodeRecord(String id, Map<dynamic, dynamic> raw) {
-    final rawBytes = raw['bytes'];
-    final bytes = rawBytes is Uint8List
-        ? rawBytes
-        : rawBytes is List<int>
-        ? Uint8List.fromList(rawBytes)
-        : null;
-    if (bytes == null || bytes.isEmpty) return null;
-
+  static GeneratedImage? _decodeRecord(
+    String id,
+    Map<dynamic, dynamic> raw,
+    String storedPath,
+  ) {
     final width = raw['width'];
     final height = raw['height'];
     if (width is! int || width <= 0 || height is! int || height <= 0) {
@@ -215,9 +317,9 @@ class GenerationHistoryStorageService {
       }
     }
 
-    return GeneratedImage(
+    return GeneratedImage.stored(
       id: id,
-      bytes: bytes,
+      storedPath: storedPath,
       width: width,
       height: height,
       createdAt: createdAt,

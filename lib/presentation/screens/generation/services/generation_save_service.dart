@@ -3,18 +3,16 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart' as p;
 
-import '../../../../core/platform/platform_capabilities.dart';
-import '../../../../core/services/android_media_store_service.dart';
+import '../../../../core/services/system_album.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../../core/utils/image_save_utils.dart';
 import '../../../../data/models/gallery/nai_image_metadata.dart';
-import '../../../../data/repositories/gallery_folder_repository.dart';
 import '../../../../data/services/image_metadata_service.dart';
 import '../../../providers/image_generation_provider.dart';
-import '../../../providers/local_gallery_provider.dart';
 import '../../../utils/image_detail_opener.dart';
+import '../../../providers/system_album_provider.dart';
+import '../../../widgets/common/album_save_feedback.dart';
 import '../../../widgets/common/app_toast.dart';
 import '../../../widgets/common/duplicate_save_notice.dart';
 import '../../../widgets/common/image_detail/file_image_detail_data.dart';
@@ -112,8 +110,8 @@ class GenerationSaveService {
 
   /// 从详情页保存图像
   ///
-  /// 使用 [ImageSaveUtils] 确保元数据完整嵌入。图库里已有同一张图时不保存，
-  /// 底部通知提供“依然保存”。
+  /// 保存只进系统相册，并用 [ImageSaveUtils] 确保元数据完整嵌入。相册里已有
+  /// 这张图时不保存，底部通知提供“依然保存”。
   static Future<void> saveImageFromDetail(
     BuildContext context,
     WidgetRef ref,
@@ -121,39 +119,29 @@ class GenerationSaveService {
   ) => _saveFromDetail(
     context,
     // 详情页可能在保存期间关闭，句柄在第一个 await 之前取好。
-    ref.read(localGalleryNotifierProvider.notifier),
+    ref.read(systemAlbumProvider),
     image,
     allowDuplicate: false,
   );
 
   static Future<void> _saveFromDetail(
     BuildContext context,
-    LocalGalleryNotifier gallery,
+    SystemAlbum album,
     ImageDetailData image, {
     required bool allowDuplicate,
   }) async {
     try {
       final imageBytes = await image.getImageBytes();
-      final saveDirPath = await GalleryFolderRepository.instance.getRootPath();
-      if (saveDirPath == null) return;
 
       // 获取已有元数据（如果图像已包含）
       final existingMetadata = image.metadata;
       final fixedTagUsageSnapshot = image is GeneratedImageDetailData
           ? image.fixedTagUsageSnapshot
           : existingMetadata?.fixedTagUsageSnapshot;
-      // 原子保存：日期分类路径 + 独占防冲突 + 失败清理，全部在工具内完成
-      final saved = await ImageSaveUtils.saveResultImage(
-        rootPath: saveDirPath,
+      final bytes = await ImageSaveUtils.resultBytesForSave(
         imageBytes: imageBytes,
         preserveOriginalBytes: image.preserveOriginalBytesOnSave,
-        source: 'detail-save',
-        allowDuplicate: allowDuplicate,
         fixedTagUsageSnapshot: fixedTagUsageSnapshot,
-        seed: await ImageSaveUtils.resolveSeed(
-          metadata: existingMetadata,
-          bytes: imageBytes,
-        ),
         rebuild: () async => existingMetadata == null
             ? imageBytes
             : ImageSaveUtils.buildPrebuiltMetadataBytes(
@@ -168,48 +156,28 @@ class GenerationSaveService {
                 },
               ),
       );
-      if (saved.reused) {
-        if (context.mounted) {
-          showDuplicateSaveNotice(
-            context,
-            onSaveAnyway: () =>
-                _saveFromDetail(context, gallery, image, allowDuplicate: true),
-          );
-        }
+      final saved = await album.save(
+        bytes: bytes,
+        identity: imageBytes,
+        fileName: ImageSaveUtils.albumFileName(
+          seed: await ImageSaveUtils.resolveSeed(
+            metadata: existingMetadata,
+            bytes: imageBytes,
+          ),
+        ),
+        source: 'detail-save',
+        allowDuplicate: allowDuplicate,
+      );
+      if (!context.mounted) return;
+      if (saved.duplicate) {
+        showDuplicateSaveNotice(
+          context,
+          onSaveAnyway: () =>
+              _saveFromDetail(context, album, image, allowDuplicate: true),
+        );
         return;
       }
-      final finalBytes = saved.bytes;
-      final filePath = saved.path;
-
-      Object? systemGalleryError;
-      if (PlatformCapabilities.current.supportsSystemGalleryExport) {
-        try {
-          await AndroidMediaStoreService.savePng(
-            bytes: finalBytes,
-            fileName: p.basename(filePath),
-          );
-        } catch (error) {
-          systemGalleryError = error;
-        }
-      }
-
-      gallery.refresh();
-
-      if (context.mounted) {
-        if (systemGalleryError != null) {
-          AppToast.warning(
-            context,
-            context.l10n.image_savedAppOnly(systemGalleryError.toString()),
-          );
-        } else {
-          AppToast.success(
-            context,
-            PlatformCapabilities.current.supportsSystemGalleryExport
-                ? context.l10n.image_savedToSystemGallery
-                : context.l10n.image_imageSaved(saveDirPath),
-          );
-        }
-      }
+      showAlbumSaved(context, album, saved.location);
     } catch (e) {
       if (context.mounted) {
         AppToast.error(context, context.l10n.image_saveFailed(e.toString()));

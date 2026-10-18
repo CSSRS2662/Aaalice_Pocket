@@ -121,7 +121,6 @@ void main() {
         albums: [album, childAlbum],
         selectedAlbumId: selectedAlbumId,
       ),
-      favoriteCount: Future.value(1),
       onCreateCategory: () {},
       onCategorySelected: (_) {},
       onCategoryRename: (_, _) async {},

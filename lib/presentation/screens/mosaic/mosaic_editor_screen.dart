@@ -7,21 +7,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/mosaic/mosaic_derivative_registry.dart';
 import '../../../core/mosaic/mosaic_render_service.dart';
 import '../../../core/platform/platform_capabilities.dart';
-import '../../../core/services/android_media_store_service.dart';
 import '../../../core/services/native_share_service.dart';
-import '../../../core/storage/local_storage_service.dart';
 import '../../../core/utils/app_logger.dart';
-import '../../../core/utils/image_save_utils.dart';
 import '../../../core/utils/image_share_sanitizer.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../../data/models/mosaic/mosaic_settings.dart';
-import '../../../data/repositories/gallery_folder_repository.dart';
 import '../../../data/services/fixed_tag/fixed_tag_usage_record_store.dart';
-import '../../providers/local_gallery_provider.dart';
 import '../../providers/mosaic_settings_provider.dart';
+import '../../providers/system_album_provider.dart';
 import '../../providers/share_image_settings_provider.dart';
 import '../../widgets/image_editor/widgets/color_picker.dart';
 import '../../widgets/common/horizontal_segmented_control.dart';
@@ -77,7 +72,6 @@ class _MosaicEditorScreenState extends ConsumerState<MosaicEditorScreen> {
   String? _selectedId;
   late Uint8List _sourceBytes;
   late String _sourceFileName;
-  String? _sourcePath;
   ui.Image? _sourceImage;
   ui.Image? _processedImage;
   bool _loading = true;
@@ -93,7 +87,6 @@ class _MosaicEditorScreenState extends ConsumerState<MosaicEditorScreen> {
     super.initState();
     _sourceBytes = widget.sourceBytes;
     _sourceFileName = widget.sourceFileName;
-    _sourcePath = widget.sourcePath;
     final state = ref.read(mosaicSettingsProvider);
     _settings = state.configuration;
     _initialSettings = _settings;
@@ -608,63 +601,24 @@ class _MosaicEditorScreenState extends ConsumerState<MosaicEditorScreen> {
         cancellationToken: token,
       );
       if (!mounted || token.isCancelled) return;
-      final galleryRoot = await GalleryFolderRepository.instance.getRootPath();
-      if (!mounted || token.isCancelled) return;
-      if (galleryRoot == null || galleryRoot.isEmpty) {
-        throw StateError(context.l10n.localGallery_saveDirectoryNotSet);
-      }
-      final output = await ImageSaveUtils.saveBytesToDatedPath(
-        rootPath: galleryRoot,
-        bytes: result.bytes,
-        preferredFileName: result.fileName,
-      );
+      // 保存只进系统相册；图库只放收藏。
+      final saved = await ref
+          .read(systemAlbumProvider)
+          .save(
+            bytes: result.bytes,
+            fileName: result.fileName,
+            source: 'mosaic-save',
+          );
+      final output = saved.location;
       await FixedTagUsageRecordStore().copyForDerivative(
         sourceBytes: _sourceBytes,
         outputBytes: result.bytes,
       );
-      Object? systemGalleryError;
-      if (PlatformCapabilities.current.supportsSystemGalleryExport) {
-        try {
-          await AndroidMediaStoreService.savePng(
-            bytes: result.bytes,
-            fileName: result.fileName,
-          );
-        } on Object catch (error, stackTrace) {
-          systemGalleryError = error;
-          AppLogger.e(
-            'Redacted copy saved but system gallery export failed',
-            error,
-            stackTrace,
-            'MosaicEditor',
-          );
-        }
-      }
-      if (!mounted) return;
-      final sourcePath = _sourcePath;
-      if (sourcePath != null) {
-        await MosaicDerivativeRegistry(
-          ref.read(localStorageServiceProvider),
-        ).register(outputPath: output, sourcePath: sourcePath);
-      }
       if (!mounted) return;
       if (_settings.rememberLastStyle) {
         await ref.read(mosaicSettingsProvider.notifier).saveDefaults(_settings);
       }
       if (!mounted) return;
-      final galleryRefreshError = await _refreshGalleryAfterSave();
-      if (!mounted) return;
-      if (systemGalleryError != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.mosaic_systemGalleryExportFailed),
-          ),
-        );
-      }
-      if (galleryRefreshError != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.mosaic_galleryRefreshFailed)),
-        );
-      }
       await _showSaved(result, output);
       if (mounted) Navigator.of(context).pop(output);
     } on MosaicCancelledException {
@@ -685,34 +639,6 @@ class _MosaicEditorScreenState extends ConsumerState<MosaicEditorScreen> {
       _renderToken = null;
       if (mounted) setState(() => _saving = false);
     }
-  }
-
-  Future<Object?> _refreshGalleryAfterSave() async {
-    Object? galleryRefreshError;
-    try {
-      final previousError = ref.read(localGalleryNotifierProvider).error;
-      await ref.read(localGalleryNotifierProvider.notifier).refresh();
-      if (!mounted) return null;
-      final refreshError = ref.read(localGalleryNotifierProvider).error;
-      if (refreshError != null && !identical(refreshError, previousError)) {
-        galleryRefreshError = refreshError;
-        AppLogger.e(
-          'Redacted copy saved but gallery refresh failed',
-          refreshError.details ?? refreshError.code.name,
-          null,
-          'MosaicEditor',
-        );
-      }
-    } on Object catch (error, stackTrace) {
-      galleryRefreshError = error;
-      AppLogger.e(
-        'Redacted copy saved but gallery refresh failed',
-        error,
-        stackTrace,
-        'MosaicEditor',
-      );
-    }
-    return galleryRefreshError;
   }
 
   Future<void> _showSaved(MosaicRenderResult result, String output) async {
@@ -784,7 +710,6 @@ class _MosaicEditorScreenState extends ConsumerState<MosaicEditorScreen> {
     if (selected == null || !mounted) return;
     _sourceBytes = selected.bytes;
     _sourceFileName = selected.fileName;
-    _sourcePath = selected.path;
     _undo.clear();
     _redo.clear();
     _regions = <MosaicRegion>[_newCenteredRegion()];

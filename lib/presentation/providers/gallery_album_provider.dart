@@ -19,7 +19,7 @@ class GalleryAlbumState {
   /// 全部相簿（树形展示顺序）
   final List<GalleryAlbum> albums;
 
-  /// 当前选中的相簿（null=全部，'favorites'=收藏相簿）
+  /// 当前选中的相簿（null=不限相簿）
   final String? selectedAlbumId;
 
   final bool isLoading;
@@ -113,7 +113,7 @@ class GalleryAlbumNotifier extends _$GalleryAlbumNotifier {
     state = state.copyWith(clearSelectedAlbumId: true);
   }
 
-  /// 选择相簿并联动图库过滤（null=全部，'favorites'=收藏相簿）
+  /// 选择相簿并联动图库过滤（null 或旧的 'favorites' 表示不限相簿）
   Future<void> selectAlbum(String? albumId) async {
     state = state.copyWith(
       selectedAlbumId: albumId,
@@ -124,19 +124,9 @@ class GalleryAlbumNotifier extends _$GalleryAlbumNotifier {
       ref.read(galleryCategoryNotifierProvider.notifier).selectCategory(null);
     }
     final gallery = ref.read(localGalleryNotifierProvider.notifier);
-    if (albumId == 'favorites') {
-      await gallery.setSelectedCategory(null, null);
-      // 每个 setter 各触发一次过滤：先清相簿，避免中间态落在“相簿 ∩ 收藏”
-      await gallery.setSelectedAlbum(null);
-      await gallery.setShowFavoritesOnly(true);
-    } else if (albumId != null) {
-      await gallery.setShowFavoritesOnly(false);
-      await gallery.setSelectedCategory(null, null);
-      await gallery.setSelectedAlbum(albumId);
-    } else {
-      await gallery.setShowFavoritesOnly(false);
-      await gallery.setSelectedAlbum(null);
-    }
+    // 图库只放收藏，收藏条件始终生效；旧的“收藏”相簿等同于不限相簿。
+    if (albumId != null) await gallery.setSelectedCategory(null, null);
+    await gallery.setSelectedAlbum(albumId == 'favorites' ? null : albumId);
   }
 
   /// 创建相簿

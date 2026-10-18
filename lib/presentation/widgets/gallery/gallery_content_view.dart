@@ -23,6 +23,7 @@ import 'local_image_card_3d.dart';
 import '../common/image_detail/image_detail_viewer.dart';
 import '../common/image_detail/image_detail_data.dart';
 import '../common/shimmer_skeleton.dart';
+import 'gallery_favorite_toggle.dart';
 import 'gallery_grid.dart';
 import 'gallery_state_views.dart';
 import 'library_scroll_actions.dart';
@@ -550,11 +551,10 @@ class _LocalGalleryStateAdapter implements GalleryState<LocalImageRecord> {
   int get currentPage => _state.currentPage;
 
   @override
-  bool get hasFilters => _state.hasFilters;
+  bool get hasFilters => _state.hasUserFilters;
 
   @override
-  List<LocalImageRecord> get filteredFiles =>
-      _state.hasFilters ? _state.currentImages : const [];
+  List<LocalImageRecord> get filteredFiles => _state.currentImages;
 }
 
 /// 本地选择状态适配器
@@ -649,9 +649,11 @@ class LocalGalleryContentView extends ConsumerWidget {
                   LocalImageContextAction.reuseSeed,
                 )
               : null,
-          onFavoriteToggle: (data) => ref
-              .read(localGalleryNotifierProvider.notifier)
-              .toggleFavorite((data as LocalImageDetailData).record.path),
+          onFavoriteToggle: (data) => toggleGalleryFavorite(
+            context,
+            ref.read(localGalleryNotifierProvider.notifier),
+            (data as LocalImageDetailData).record.path,
+          ),
           onSendToImg2Img: (data) async {
             try {
               final bytes = await data.getImageBytes();
@@ -709,9 +711,11 @@ class LocalGalleryContentView extends ConsumerWidget {
         priority: config.isVisible ? 1 : 5,
         onTap: config.selectionMode ? config.onSelectionToggle : config.onTap,
         onLongPress: config.onLongPress,
-        onFavoriteToggle: () => ref
-            .read(localGalleryNotifierProvider.notifier)
-            .toggleFavorite(record.path),
+        onFavoriteToggle: () => toggleGalleryFavorite(
+          context,
+          ref.read(localGalleryNotifierProvider.notifier),
+          record.path,
+        ),
         onSendAction: onSendAction != null
             ? (action) => onSendAction!(record, action)
             : null,
@@ -724,9 +728,11 @@ class LocalGalleryContentView extends ConsumerWidget {
       onEnterSelection: (record) => ref
           .read(localGallerySelectionNotifierProvider.notifier)
           .enterAndSelect(record.path),
-      onFavoriteToggle: (record) => ref
-          .read(localGalleryNotifierProvider.notifier)
-          .toggleFavorite(record.path),
+      onFavoriteToggle: (record) => toggleGalleryFavorite(
+        context,
+        ref.read(localGalleryNotifierProvider.notifier),
+        record.path,
+      ),
       onContextMenu: onContextMenu,
       onDeleted: onDeleted,
       onClearFilters: () =>

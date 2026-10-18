@@ -49,6 +49,21 @@ void main() {
     });
   });
 
+  test('查询相册里是否还有某张图时传递 URI，缺省按不存在处理', () async {
+    final calls = <MethodCall>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          calls.add(call);
+          return calls.length == 1;
+        });
+    const uri = 'content://media/external/images/media/42';
+
+    expect(await AndroidMediaStoreService.imageExists(uri), isTrue);
+    expect(await AndroidMediaStoreService.imageExists(uri), isFalse);
+    expect(calls.first.method, 'imageExists');
+    expect(calls.first.arguments, {'uri': uri});
+  });
+
   test('不存在的源文件不会调用 Android MediaStore', () async {
     var called = false;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

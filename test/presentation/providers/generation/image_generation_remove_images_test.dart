@@ -11,18 +11,23 @@ import 'package:nai_launcher/data/models/image/image_params.dart';
 import 'package:nai_launcher/data/models/image/image_stream_chunk.dart';
 import 'package:nai_launcher/presentation/providers/image_generation_provider.dart';
 import 'package:nai_launcher/presentation/providers/local_gallery_provider.dart';
+import 'package:nai_launcher/presentation/providers/system_album_provider.dart';
 import 'package:nai_launcher/presentation/services/generation_history_storage_service.dart';
+
+import '../../../helpers/memory_system_album.dart';
 
 void main() {
   late Directory directory;
   late ProviderContainer container;
   late _RecordingGalleryNotifier gallery;
   late _RecordingHistoryStorage historyStorage;
+  late MemoryAlbumTarget album;
 
   setUp(() async {
     directory = await Directory.systemTemp.createTemp('nai_remove_images_');
     gallery = _RecordingGalleryNotifier();
     historyStorage = _RecordingHistoryStorage();
+    album = MemoryAlbumTarget();
   });
 
   tearDown(() async {
@@ -42,6 +47,7 @@ void main() {
         generationHistoryStorageServiceProvider.overrideWithValue(
           historyStorage,
         ),
+        systemAlbumProvider.overrideWithValue(memorySystemAlbum(album)),
       ],
     );
     return container.read(imageGenerationNotifierProvider.notifier);
@@ -53,7 +59,7 @@ void main() {
     return file.path;
   }
 
-  test('从当前批次、历史与中央预览移除，并删除关联的图库文件', () async {
+  test('从当前批次、历史与中央预览移除，收藏进图库的文件保留', () async {
     final linkedPath = await savedFile('linked.png');
     final removed = _image('removed').copyWithFilePath(linkedPath);
     final kept = _image('kept');
@@ -80,18 +86,15 @@ void main() {
     expect(state.completionPreviews.keys, ['kept']);
     expect(state.errorMessage, 'previous failure');
     expect(result.removedCount, 1);
-    expect(result.files.deletedPaths, [linkedPath]);
-    expect(result.files.failures, isEmpty);
-    expect(await File(linkedPath).exists(), isFalse);
-    expect(gallery.removals, [
-      [linkedPath],
-    ]);
+    // 图库只放收藏，只有取消收藏才删文件。
+    expect(await File(linkedPath).exists(), isTrue);
+    expect(gallery.removals, isEmpty);
     expect(gallery.refreshCount, 0);
     await historyStorage.flush();
     expect(historyStorage.lastOrder, ['kept']);
   });
 
-  test('只移除记录、没有关联文件时不触碰图库', () async {
+  test('只移除记录时不触碰图库', () async {
     final notifier = notifierWith(
       ImageGenerationState(history: [_image('a'), _image('b')]),
     );
@@ -103,26 +106,8 @@ void main() {
       ['b'],
     );
     expect(result.removedCount, 1);
-    expect(result.files.deletedPaths, isEmpty);
     expect(gallery.removals, isEmpty);
     expect(gallery.refreshCount, 0);
-  });
-
-  test('仍被其他结果引用的文件保留', () async {
-    final sharedPath = await savedFile('shared.png');
-    final notifier = notifierWith(
-      ImageGenerationState(
-        history: [
-          _image('a').copyWithFilePath(sharedPath),
-          _image('b').copyWithFilePath(sharedPath),
-        ],
-      ),
-    );
-
-    final result = await notifier.removeImages(['a']);
-
-    expect(result.files.deletedPaths, isEmpty);
-    expect(await File(sharedPath).exists(), isTrue);
   });
 
   test('未知 id 不改动状态', () async {
@@ -135,7 +120,7 @@ void main() {
     expect(container.read(imageGenerationNotifierProvider), same(initial));
   });
 
-  test('删除后才回写的保存路径会连文件一起清掉，不再挂回记录', () async {
+  test('删除后才回写的收藏路径不再挂回记录，收藏的文件保留', () async {
     final notifier = notifierWith(
       ImageGenerationState(history: [_image('a'), _image('b')]),
     );
@@ -143,15 +128,17 @@ void main() {
     final latePath = await savedFile('late.png');
 
     notifier.updateImageFilePath('a', latePath);
-    await _eventually(() async => !await File(latePath).exists());
 
     final state = container.read(imageGenerationNotifierProvider);
     expect(state.findImageById('a'), isNull);
-    expect(await File(latePath).exists(), isFalse);
+    expect(await File(latePath).exists(), isTrue);
+    expect(gallery.removals, isEmpty);
   });
 
-  test('保存途中被删除的结果，保存完成后删掉刚写入的文件', () async {
+  test('排队保存期间被删除的结果不再写进系统相册', () async {
     final notifier = notifierWith(const ImageGenerationState());
+    // 收藏写入同一张图时，自动保存排在它后面；排队期间删除这条结果。
+    final favoriteWrite = Completer<void>();
     final subscription = container.listen<ImageGenerationState>(
       imageGenerationNotifierProvider,
       (previous, next) {
@@ -159,7 +146,11 @@ void main() {
           return;
         }
         final id = next.history.first.id;
-        scheduleMicrotask(() => unawaited(notifier.removeImages([id])));
+        unawaited(notifier.queueImageSave(id, () => favoriteWrite.future));
+        scheduleMicrotask(() async {
+          await notifier.removeImages([id]);
+          favoriteWrite.complete();
+        });
       },
     );
     addTearDown(subscription.close);
@@ -168,12 +159,26 @@ void main() {
       _pngBytes,
       params: const ImageParams(seed: 123),
       saveToLocal: true,
-      saveDirectoryPath: directory.path,
       embedNaiMetadata: false,
     );
 
     expect(savedPath, isNull);
     expect(container.read(imageGenerationNotifierProvider).history, isEmpty);
+    expect(album.images, isEmpty);
+  });
+
+  test('保存只写系统相册，返回相册里的位置', () async {
+    final notifier = notifierWith(const ImageGenerationState());
+
+    final savedPath = await notifier.registerExternalImage(
+      _pngBytes,
+      params: const ImageParams(seed: 123),
+      saveToLocal: true,
+      embedNaiMetadata: false,
+    );
+
+    expect(savedPath, album.images.keys.single);
+    expect(gallery.admissions, isEmpty);
     final remaining = await directory
         .list(recursive: true)
         .where((entity) => entity is File)
@@ -188,14 +193,6 @@ final _pngBytes = Uint8List.fromList(
 
 GeneratedImage _image(String id) =>
     GeneratedImage(id: id, bytes: _pngBytes, width: 2, height: 2);
-
-Future<void> _eventually(Future<bool> Function() condition) async {
-  for (var attempt = 0; attempt < 100; attempt++) {
-    if (await condition()) return;
-    await Future<void>.delayed(const Duration(milliseconds: 10));
-  }
-  fail('condition was not met');
-}
 
 class _SeededImageGenerationNotifier extends ImageGenerationNotifier {
   _SeededImageGenerationNotifier(this.initial);
@@ -212,6 +209,7 @@ class _SeededImageGenerationNotifier extends ImageGenerationNotifier {
 class _RecordingGalleryNotifier extends LocalGalleryNotifier {
   var refreshCount = 0;
   final removals = <List<String>>[];
+  final admissions = <List<String>>[];
 
   @override
   LocalGalleryState build() => const LocalGalleryState(isInitialized: true);
@@ -226,7 +224,10 @@ class _RecordingGalleryNotifier extends LocalGalleryNotifier {
   @override
   Future<GalleryIndexAdmission> addNewlySavedImages(
     List<String> filePaths,
-  ) async => GalleryIndexAdmission.added;
+  ) async {
+    admissions.add(filePaths);
+    return GalleryIndexAdmission.added;
+  }
 }
 
 class _RecordingHistoryStorage extends GenerationHistoryStorageService {
@@ -235,7 +236,7 @@ class _RecordingHistoryStorage extends GenerationHistoryStorageService {
   List<String>? lastOrder;
 
   @override
-  Future<void> persistImages({
+  Future<Map<String, String>> persistImages({
     required Iterable<GeneratedImage> changedImages,
     required List<String> order,
   }) {

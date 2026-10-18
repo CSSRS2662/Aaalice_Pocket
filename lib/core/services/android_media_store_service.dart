@@ -46,6 +46,14 @@ class AndroidMediaStoreService {
     );
   }
 
+  /// Whether the image an earlier save published at [uri] is still in the
+  /// shared collection; false when the user removed it.
+  static Future<bool> imageExists(String uri) async {
+    if (!PlatformCapabilities.current.isAndroid) return false;
+    return await _channel.invokeMethod<bool>('imageExists', {'uri': uri}) ??
+        false;
+  }
+
   static Future<String?> saveImageFromPath({
     required String sourcePath,
     required String fileName,

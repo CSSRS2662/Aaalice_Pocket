@@ -6,13 +6,11 @@ import '../../../core/utils/localization_extension.dart';
 import '../../providers/local_gallery_provider.dart';
 import 'gallery_scope_controls.dart';
 
-/// 本地图库的快捷范围栏：全部 / 收藏一键切换，日期与分类以可清除的条件
-/// 显示当前取值。只负责呈现与转发，真实的过滤逻辑由调用方提供。
+/// 本地图库的快捷范围栏：日期与分类以可清除的条件显示当前取值。图库只放
+/// 收藏，没有全部 / 收藏切换。只负责呈现与转发，真实的过滤逻辑由调用方提供。
 class LocalGalleryScopeBar extends ConsumerWidget {
   const LocalGalleryScopeBar({
     super.key,
-    required this.onShowAll,
-    required this.onShowFavorites,
     required this.onPickDateRange,
     required this.onClearDateRange,
     required this.onOpenCollections,
@@ -20,11 +18,9 @@ class LocalGalleryScopeBar extends ConsumerWidget {
     this.collectionLabel,
   });
 
-  /// 当前选中的分类或相簿名称；未选或正在看收藏时为 null。
+  /// 当前选中的分类或相簿名称；未选时为 null。
   final String? collectionLabel;
 
-  final VoidCallback onShowAll;
-  final VoidCallback onShowFavorites;
   final VoidCallback onPickDateRange;
   final VoidCallback onClearDateRange;
   final VoidCallback onOpenCollections;
@@ -46,20 +42,12 @@ class LocalGalleryScopeBar extends ConsumerWidget {
     final criteria = ref.watch(
       localGalleryNotifierProvider.select((state) => state.filterCriteria),
     );
-    final favorites = criteria.showFavoritesOnly;
     final hasDate = criteria.dateStart != null || criteria.dateEnd != null;
-    final collection = favorites ? null : collectionLabel;
+    final collection = collectionLabel;
 
     return GalleryScopeRow(
       key: const ValueKey('local-gallery-scope-bar'),
       children: [
-        GalleryScopeToggle(
-          favorites: favorites,
-          onShowAll: onShowAll,
-          onShowFavorites: onShowFavorites,
-          allKey: const ValueKey('local-gallery-scope-all'),
-          favoritesKey: const ValueKey('local-gallery-scope-favorites'),
-        ),
         GalleryFilterChipButton(
           key: const ValueKey('local-gallery-date-chip'),
           clearKey: const ValueKey('local-gallery-date-clear'),

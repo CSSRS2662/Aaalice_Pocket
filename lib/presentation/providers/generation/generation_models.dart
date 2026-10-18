@@ -9,6 +9,7 @@ import '../../../data/models/gallery/nai_image_metadata.dart';
 import '../../../data/models/fixed_tag/fixed_tag_usage_snapshot.dart';
 import '../../../data/models/image/image_stream_chunk.dart';
 import '../../../data/models/image/image_postprocess_phase.dart';
+import 'generated_image_file_cache.dart';
 
 enum GeneratedImageKind { completed, failedStreamSnapshot }
 
@@ -82,7 +83,16 @@ class ImageComparisonSource {
 /// 生成的图像（带唯一ID）
 class GeneratedImage {
   final String id;
-  final Uint8List bytes;
+
+  /// The PNG, either kept in memory or read from [storedPath] on demand
+  /// through [GeneratedImageFileCache].
+  Uint8List get bytes =>
+      _memoryBytes ?? GeneratedImageFileCache.read(storedPath!);
+  final Uint8List? _memoryBytes;
+
+  /// File that holds the PNG of a history image whose bytes are not kept in
+  /// memory; null for images held in memory.
+  final String? storedPath;
   final DateTime createdAt;
   final int width;
   final int height;
@@ -105,7 +115,7 @@ class GeneratedImage {
 
   GeneratedImage({
     required this.id,
-    required this.bytes,
+    required Uint8List bytes,
     required this.width,
     required this.height,
     DateTime? createdAt,
@@ -116,7 +126,45 @@ class GeneratedImage {
     this.comparisonSource,
     this.preserveOriginalBytesOnSave = false,
     this.filePath,
-  }) : createdAt = createdAt ?? DateTime.now();
+  }) : _memoryBytes = bytes,
+       storedPath = null,
+       createdAt = createdAt ?? DateTime.now();
+
+  /// A history image whose PNG stays in [storedPath] until it is used.
+  GeneratedImage.stored({
+    required this.id,
+    required String this.storedPath,
+    required this.width,
+    required this.height,
+    required this.createdAt,
+    this.kind = GeneratedImageKind.completed,
+    this.metadata,
+    this.fixedTagUsageSnapshot,
+    this.postprocessError,
+    this.comparisonSource,
+    this.preserveOriginalBytesOnSave = false,
+    this.filePath,
+  }) : _memoryBytes = null;
+
+  GeneratedImage._copy(
+    GeneratedImage source, {
+    required Uint8List? memoryBytes,
+    required this.storedPath,
+    required this.filePath,
+  }) : id = source.id,
+       _memoryBytes = memoryBytes,
+       width = source.width,
+       height = source.height,
+       createdAt = source.createdAt,
+       kind = source.kind,
+       metadata = source.metadata,
+       fixedTagUsageSnapshot = source.fixedTagUsageSnapshot,
+       postprocessError = source.postprocessError,
+       comparisonSource = source.comparisonSource,
+       preserveOriginalBytesOnSave = source.preserveOriginalBytesOnSave;
+
+  /// Whether the PNG is read from [storedPath] rather than held in memory.
+  bool get isStored => _memoryBytes == null;
 
   /// 创建新的生成图像（自动生成ID）
   factory GeneratedImage.create(
@@ -146,22 +194,20 @@ class GeneratedImage {
   }
 
   /// 创建已保存到文件的图像副本
-  GeneratedImage copyWithFilePath(String path) {
-    return GeneratedImage(
-      id: id,
-      bytes: bytes,
-      width: width,
-      height: height,
-      createdAt: createdAt,
-      kind: kind,
-      metadata: metadata,
-      fixedTagUsageSnapshot: fixedTagUsageSnapshot,
-      comparisonSource: comparisonSource,
-      preserveOriginalBytesOnSave: preserveOriginalBytesOnSave,
-      filePath: path,
-      postprocessError: postprocessError,
-    );
-  }
+  GeneratedImage copyWithFilePath(String path) => GeneratedImage._copy(
+    this,
+    memoryBytes: _memoryBytes,
+    storedPath: storedPath,
+    filePath: path,
+  );
+
+  /// The same image with its PNG read from [path] instead of memory.
+  GeneratedImage withStoredFile(String path) => GeneratedImage._copy(
+    this,
+    memoryBytes: null,
+    storedPath: path,
+    filePath: filePath,
+  );
 
   /// 获取宽高比
   double get aspectRatio => width / height;

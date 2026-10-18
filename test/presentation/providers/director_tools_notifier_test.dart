@@ -206,8 +206,6 @@ class _Registrar extends ImageGenerationNotifier {
     int? height,
     Uint8List? comparisonSourceImage,
     bool saveToLocal = false,
-    String? saveDirectoryPath,
-    bool syncToGalleryIndex = true,
     bool addToDisplay = false,
     bool replaceCurrentDisplay = false,
     bool embedNaiMetadata = true,

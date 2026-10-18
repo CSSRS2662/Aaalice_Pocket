@@ -136,6 +136,10 @@ class _RecordingGalleryService extends Mock implements LocalGalleryService {
   @override
   FilterCriteria get currentFilter => const FilterCriteria();
 
+  // 图库只放收藏：初始化先把收藏条件交给查询服务，再加载首页。
+  @override
+  Future<void> applyFilter(FilterCriteria criteria) async {}
+
   @override
   Future<GalleryIndexAdmission> addNewImageImmediately(
     String filePath, {
