@@ -50,45 +50,59 @@ class SteppedSlider extends StatelessWidget {
     final current = value.clamp(min, max).toDouble();
     final l10n = context.l10n;
     final onChanged = this.onChanged;
-    return Row(
-      children: [
-        _StepButton(
-          key: _key('decrease'),
-          icon: Icons.remove_rounded,
-          label: l10n.common_decrease,
-          onStep: onChanged != null && current > min
-              ? () => onChanged(_snap(value - step))
-              : null,
-        ),
-        Expanded(
-          child: ThemedSlider(
-            value: current,
-            min: min,
-            max: max,
-            divisions: divisions,
-            onChanged: onChanged,
+    final buttonExtent = context.interactionPolicy.minimumControlExtent;
+    return LayoutBuilder(
+      builder: (context, constraints) => Row(
+        children: [
+          _StepButton(
+            key: _key('decrease'),
+            icon: Icons.remove_rounded,
+            label: l10n.common_decrease,
+            onStep: onChanged != null && current > min
+                ? () => onChanged(_snap(value - step))
+                : null,
           ),
-        ),
-        _StepButton(
-          key: _key('increase'),
-          icon: Icons.add_rounded,
-          label: l10n.common_increase,
-          onStep: onChanged != null && current < max
-              ? () => onChanged(_snap(value + step))
-              : null,
-        ),
-        const SizedBox(width: 4),
-        EditableDoubleField(
-          key: _key('value'),
-          value: current,
-          min: min,
-          max: max,
-          decimals: decimals,
-          width: 56,
-          enabled: onChanged != null,
-          onChanged: (typed) => onChanged?.call(_snap(typed)),
-        ),
-      ],
+          Expanded(
+            child: ThemedSlider(
+              value: current,
+              min: min,
+              max: max,
+              divisions: divisions,
+              onChanged: onChanged,
+            ),
+          ),
+          _StepButton(
+            key: _key('increase'),
+            icon: Icons.add_rounded,
+            label: l10n.common_increase,
+            onStep: onChanged != null && current < max
+                ? () => onChanged(_snap(value + step))
+                : null,
+          ),
+          const SizedBox(width: 4),
+          // Large text widens the field; keep at least half the row for the
+          // track so the row never overflows.
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: constraints.hasBoundedWidth
+                  ? ((constraints.maxWidth - buttonExtent * 2 - 4) / 2)
+                        .clamp(0, double.infinity)
+                        .toDouble()
+                  : double.infinity,
+            ),
+            child: EditableDoubleField(
+              key: _key('value'),
+              value: current,
+              min: min,
+              max: max,
+              decimals: decimals,
+              width: 56,
+              enabled: onChanged != null,
+              onChanged: (typed) => onChanged?.call(_snap(typed)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

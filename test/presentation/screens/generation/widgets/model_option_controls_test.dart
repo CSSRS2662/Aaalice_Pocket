@@ -14,9 +14,9 @@ import 'package:nai_launcher/data/services/vibe_library_storage_service.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/providers/generation/generation_params_notifier.dart';
 import 'package:nai_launcher/presentation/screens/generation/widgets/generation_param_sections.dart';
-import 'package:nai_launcher/presentation/screens/generation/widgets/generation_toggle_button.dart';
 import 'package:nai_launcher/presentation/widgets/common/themed_dropdown.dart';
-import 'package:nai_launcher/presentation/widgets/common/themed_slider.dart';
+import 'package:nai_launcher/presentation/screens/generation/widgets/variety_plus_section.dart';
+import 'package:nai_launcher/presentation/widgets/common/stepped_slider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -82,6 +82,7 @@ void main() {
                   SamplerSection(),
                   NoiseScheduleSection(),
                   CfgScaleSection(),
+                  VarietyPlusSection(),
                   AdvancedSamplingOptions(),
                 ],
               ),
@@ -100,13 +101,19 @@ void main() {
   double titleCenter(WidgetTester tester) =>
       tester.getCenter(find.text('模型')).dy;
 
-  ThemedSlider stepsSlider(WidgetTester tester) => tester
-      .widgetList<ThemedSlider>(find.byType(ThemedSlider))
-      .singleWhere((slider) => slider.max == 50);
+  SteppedSlider steppedSlider(WidgetTester tester, String idPrefix) => tester
+      .widgetList<SteppedSlider>(find.byType(SteppedSlider))
+      .singleWhere((slider) => slider.idPrefix == idPrefix);
 
-  ThemedSlider cfgRescaleSlider(WidgetTester tester) => tester
-      .widgetList<ThemedSlider>(find.byType(ThemedSlider))
-      .singleWhere((slider) => slider.max == 1);
+  SteppedSlider stepsSlider(WidgetTester tester) =>
+      steppedSlider(tester, 'generation-steps');
+
+  SteppedSlider cfgRescaleSlider(WidgetTester tester) =>
+      steppedSlider(tester, 'generation-cfg-rescale');
+
+  Switch varietyPlusSwitch(WidgetTester tester) => tester.widget<Switch>(
+    find.byKey(const ValueKey('generation-variety-plus-switch')),
+  );
 
   testWidgets('V5 Full shows mode and effort, starting on the full model', (
     tester,
@@ -143,7 +150,7 @@ void main() {
     );
     expect(modelDropdown.value, ImageModels.animeDiffusionV5Full);
 
-    expect(find.text('步数: 14'), findsOneWidget);
+    expect(stepsSlider(tester).value, 14);
     expect(stepsSlider(tester).onChanged, isNull);
     final dropdowns = tester
         .widgetList<ThemedDropdown<String>>(find.byType(ThemedDropdown<String>))
@@ -155,11 +162,7 @@ void main() {
     );
     expect(cfgRescaleSlider(tester).onChanged, isNull);
     expect(find.textContaining('节约档'), findsNothing);
-    final varietyPlus = tester.widget<GenerationToggleButton>(
-      find.widgetWithText(GenerationToggleButton, 'Variety+'),
-    );
-    expect(varietyPlus.onChanged, isNull);
-    expect(varietyPlus.isEnabled, isFalse);
+    expect(varietyPlusSwitch(tester).onChanged, isNull);
 
     await tester.tap(find.text('标准'));
     await tester.pump();

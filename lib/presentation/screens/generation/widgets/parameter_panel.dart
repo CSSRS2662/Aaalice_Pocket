@@ -12,6 +12,7 @@ import 'generation_param_sections.dart';
 import 'prompt_input_footer.dart';
 import 'variety_plus_section.dart';
 import 'img2img_panel.dart';
+import 'model_option_controls.dart';
 import 'precise_reference_panel.dart';
 import 'reverse_prompt_panel.dart';
 import 'unified_reference_panel.dart';
@@ -118,7 +119,9 @@ class ParameterPanel extends ConsumerWidget {
         const ModelSection(),
 
         const SizedBox(height: 16),
-      ],
+      ] else
+        // 手机在顶栏选模型，模式与档位单独放在最前。
+        const _ModelOptionsSection(),
 
       // 尺寸设置
       const SizeSection(),
@@ -215,6 +218,30 @@ class _GenerationOutputSettingsSection extends ConsumerWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// 手机参数页的模式与档位：当前模型有可切换项时才显示。
+class _ModelOptionsSection extends ConsumerWidget {
+  const _ModelOptionsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final applies = ref.watch(
+      generationParamsNotifierProvider.select(ModelOptionControls.appliesTo),
+    );
+    if (!applies) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ParamSectionTitle(context.l10n.generation_model),
+          const SizedBox(height: 8),
+          const ModelOptionControls(alignment: MainAxisAlignment.start),
+        ],
+      ),
     );
   }
 }

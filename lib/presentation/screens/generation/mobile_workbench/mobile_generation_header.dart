@@ -140,10 +140,10 @@ class MobileModelMenu extends ConsumerWidget {
     final model = ref.watch(
       generationParamsNotifierProvider.select((params) => params.model),
     );
-    // 测试期的 custom 键归一到正式 ID，保证当前模型一定在候选项里。
-    final current = ImageModels.migrateLegacyModel(model);
+    // 测试期的 custom 键与节约档变体都归到菜单条目，保证当前模型一定在候选项里。
+    final current = ImageModels.selectorModel(model);
     final colors = Theme.of(context).colorScheme;
-    final pillLabel = label ?? MobileGenerationHeader.shortModelLabel(model);
+    final pillLabel = label ?? MobileGenerationHeader.shortModelLabel(current);
     return MenuAnchor(
       alignmentOffset: const Offset(0, 6),
       menuChildren: [
@@ -158,9 +158,12 @@ class MobileModelMenu extends ConsumerWidget {
               color: id == current ? colors.primary : colors.onSurfaceVariant,
             ),
             trailingIcon: _CheckMark(selected: id == current),
-            onPressed: () => ref
-                .read(generationParamsNotifierProvider.notifier)
-                .updateModel(id),
+            // 重选同一条目不能把节约档改回标准档。
+            onPressed: id == current
+                ? null
+                : () => ref
+                      .read(generationParamsNotifierProvider.notifier)
+                      .updateModel(id),
             child: Text(
               MobileGenerationHeader.shortModelLabel(id),
               style: TextStyle(

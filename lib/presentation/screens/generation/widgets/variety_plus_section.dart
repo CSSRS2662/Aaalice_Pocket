@@ -7,7 +7,7 @@ import '../../../providers/image_generation_provider.dart';
 import 'generation_param_sections.dart';
 
 /// Variety+ 单独成节：标题与开关一行，下方简述作用。模型不支持时不显示；
-/// 节约档接管时显示为停用，并说明原因。
+/// 节约档接管时显示为停用，提示气泡说明原因。
 class VarietyPlusSection extends ConsumerWidget {
   const VarietyPlusSection({super.key});
 
@@ -28,7 +28,7 @@ class VarietyPlusSection extends ConsumerWidget {
     void toggle(bool value) => ref
         .read(generationParamsNotifierProvider.notifier)
         .updateVarietyPlus(value);
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.only(top: 16),
       child: MergeSemantics(
         child: InkWell(
@@ -44,9 +44,7 @@ class VarietyPlusSection extends ConsumerWidget {
                     const ParamSectionTitle('Variety+'),
                     const SizedBox(height: 4),
                     Text(
-                      available
-                          ? context.l10n.generation_varietyPlusDescription
-                          : context.l10n.generation_effortUnavailableHint,
+                      context.l10n.generation_varietyPlusDescription,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -64,6 +62,11 @@ class VarietyPlusSection extends ConsumerWidget {
           ),
         ),
       ),
+    );
+    if (available) return row;
+    return Tooltip(
+      message: context.l10n.generation_effortUnavailableHint,
+      child: row,
     );
   }
 }

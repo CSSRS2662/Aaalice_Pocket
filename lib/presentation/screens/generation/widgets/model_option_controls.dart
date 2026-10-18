@@ -12,7 +12,18 @@ import 'generation_segmented_toggle.dart';
 
 /// 模型标题行右侧的模式与档位切换，按当前模型能力显示。
 class ModelOptionControls extends ConsumerWidget {
-  const ModelOptionControls({super.key});
+  const ModelOptionControls({
+    super.key,
+    this.alignment = MainAxisAlignment.end,
+  });
+
+  /// 桌面放在模型标题行右侧；手机参数页单独成行时靠左。
+  final MainAxisAlignment alignment;
+
+  /// 当前模型是否有可切换的模式或档位。
+  static bool appliesTo(ImageParams params) =>
+      params.capabilities.hasFurryMode ||
+      ImageModels.effortOf(params.model) != null;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,7 +43,7 @@ class ModelOptionControls extends ConsumerWidget {
     final l10n = context.l10n;
     return HorizontalSegmentedControl(
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: alignment,
         spacing: 8,
         children: [
           if (data.hasFurryMode)

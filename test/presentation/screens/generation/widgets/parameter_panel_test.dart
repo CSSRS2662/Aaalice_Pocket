@@ -322,6 +322,13 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      // The mode and effort row above may push the toggle past the first
+      // lazily built screen.
+      await tester.scrollUntilVisible(
+        toggle,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(toggle, findsOneWidget);
       expect(tester.getSize(toggle).height, greaterThanOrEqualTo(44));
       final container = ProviderScope.containerOf(tester.element(toggle));
