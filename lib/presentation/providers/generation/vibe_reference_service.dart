@@ -53,7 +53,7 @@ final class VibeReferenceService {
     final pending = <Uint8List>{
       for (final reference in references)
         if (reference.rawImageData case final raw?)
-          if (raw.length >= FileHashCalculator.backgroundHashMinBytes &&
+          if (raw.length >= FileHashCalculator.backgroundHashThresholdBytes &&
               _imageHashes[raw] == null)
             raw,
     };
