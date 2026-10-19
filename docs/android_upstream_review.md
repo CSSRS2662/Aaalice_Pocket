@@ -1,12 +1,13 @@
 # Android 分支与上游的分叉清单
 
-本文件记录 `android-custom` 相对上游有意保留的差异，以及每次合并上游时的处理规则。合并前先读此表，合并后更新“最近一次合并”。
+本文件记录 `android-custom` 相对上游有意保留的差异，以及从上游移植改动时的处理规则。移植前先读此表，移植后更新“最近一次移植”。
 
 ## 分支与基线
 
 - 上游：`Aaalice233/Aaalice_NAI_Launcher`，2026-09-15 起由协作者接手维护，仍在持续更新。
-- `main` 只跟随 `upstream/main`；全部定制在 `android-custom`。
-- 每次合并前创建 `backup/android-custom-before-upstream-YYYYMMDD`，在独立本地分支合并验证后再快进 `android-custom`。
+- 自 2026-10-19 起不再整体合并上游：逐条审阅上游提交，只移植对手机端改动小、收益大的修复与功能，以 `cherry-pick -x` 保留来源；上游以后出了对手机有用的功能，看它改了什么再移植。
+- 前端设计与界面以本分支为准：上游新增或修改的界面与本分支设计冲突时保留本分支，只吸收不改变外观的行为修复（溢出、滚动、命中区、限额提示等）；断言上游专属界面的测试改写，不为测试改本分支界面。
+- 全部定制在 `android-custom`。每次移植前创建 `backup/android-custom-before-port-YYYYMMDD`，在独立本地分支移植验证后再快进 `android-custom`。
 - `android-custom` 只在发布大版本时以快进方式推送到 fork（`CSSRS2662/Aaalice_Pocket`）的 `main`，推送前确认，不强制推送；自用小版本的提交只留在本地。
 - 工具链以 `tool/android_build_environment.lock.json` 为准；上游升级 Flutter 时同步更新该文件。
 
@@ -40,25 +41,24 @@
 | 智能体模型 | ChatGPT（Codex）订阅登录：服务商预设 `chatgptCodex` 与协议 `openaiCodexResponses`，设备码与浏览器登录、令牌刷新、`OpenAiCodexResponsesAdapter`、智能体顶栏额度胶囊；模型目录生成脚本与 lock 加入 `openai-codex`，目录跟随 pi-ai 1.3.0（含 GPT-6），输入框的模型 / 推理强度入口带 Codex 快速模式（`service_tier: priority`，只存本机），生成器按 1.3.0 的规则从各模型档位表推出 Gemini 档位与 Mistral 的 reasoning_effort；Kimi Coding 改为 Chat Completions（`/coding/v1`），旧的默认 Anthropic 配置读取时迁移；详见 [chatgpt_codex.md](chatgpt_codex.md) | 上游新增或修改 `ProviderProtocol` / `ProviderPreset` 的 switch 时补上 Codex 分支；上游重新生成模型目录时保留 `openai-codex` 与其 lock 哈希；上游改 `OpenAiResponsesAdapter` 时保留 `agentEndpoint` 等可覆写钩子 |
 | 构建 | `scripts/build_android_apk.ps1` 按锁定文件核对工具链；真机迭代参数 `-TargetPlatform android-arm64 -InstallToDevice -FallbackDirectory`（只编 arm64、校验后直接覆盖安装）；依赖指纹忽略 `version:` 行 | 保留；CI 中的包名检查使用新包名 |
 
-## 最近一次合并（2026-09-26）
+## 最近一次移植（2026-10-19）
 
-- 上游 `6ba6700f..d1437760`：20 个提交（#295、#316–#329），751 个文件；Flutter 升级到 3.47.5 / Dart 3.13.4。
-- 冲突 13 个文件，按上表处理；另修复 3 处不显示为冲突的悬空引用：旧路径 import、已删除的更新 provider、`CommunityLinks.github`。
-- 与上游重复的实现：生成图收藏前的存盘逻辑改用上游 `GeneratedImageFileLink.ensureSaved`，删除本分支的 `ensureImageSaved`。
-- 设计取舍：提示词分组原先写进 PNG，改为旁路记录库，与上游 #320 的固定词记录方案一致。
-- MCP 服务端、DLSSNR 等桌面能力仍由能力矩阵在 Android 隐藏，桌面代码不删除。
-- 验证：`flutter analyze` 无错误和警告，仅剩合并前已有的 2 条 `onReorder` 弃用提示；按 Git 改动选出的 661 个测试文件逐批运行。
-- 合并后失败的 13 个非环境用例，在合并前的 fork（同一 Flutter 版本）上逐一复现，合并没有引入新失败；其中 11 个已修复（首帧后发布分区快照、删除失去引用的文案、按品牌与菜单更新测试期望）。
-- 仍失败：3 个上游用例需要 Windows 符号链接权限，属环境限制；2 个 fork 窄屏用例见下文“已知注意事项”。
+- 已审阅到上游 `f92ead23`（2026-10-17，4.3.0 之后）。基线仍是最后一次整体合并的 `d1437760`；版本号不随移植改为 4.3.0。
+- 343 个候选提交按时间顺序逐条处理：直接合入 146、解决冲突后合入 34、部分移植 5；跳过 22（依赖被排除的改造、纯重构或本分支已改写的区域），只改测试且冲突的 23 个保留本分支测试，另有 4 个合入后因依赖暂缓内容而撤回。
+- 合入的主要内容：V5 节约 / 标准档位与动漫 / 兽人模式、移除已保存账号、DIY 与随机词库的大批规则修复和窄屏布局、表单标题与页脚的自适应固定、共享输入框清空按钮命中区、智能体按确认请求执行、水印自动选位与自动灰阶、重绘编辑器工具栏与蒙版修复、本地 tagger 缓存与子目录扫描。
+- 暂缓（第五批，约 70 个）：元数据读写、哈希、缓存、isolate 与保存命名，以及依赖它们的 EXIF 方向、队列快照异步编码、拖放与导出、对比视图、PixAI tagger、文件名清洗等；之后单独移植。
+- 整类排除：桌面键鼠交互、读屏滑块改造（#330 / #346：`NamedSlider`、`LabeledSliderRows`、`LabeledControlRows`、`InputSurfaceDecoration`）、模型服务页（#360）、pi-ai 1.0 目录（本分支已独立升到 1.3.0）、同步到系统相册开关与另存为（与本分支保存模型冲突）、智能体全自动权限与直接放大 / 增强、统计面板删除。依赖这些组件的上游改动按本分支现有组件手动落位：DIY 条件分支与随机词库概率继续用 `SteppedSlider` / `Slider`，概率编辑在窄屏把标签与读数移到滑块上方。
+- 保留本分支界面的冲突：手机工作台（返回键逐层退出多选、参数抽屉相关改动不移植）、外观设置的主题模式弹窗、智能体服务商与连接表单的固定标题与页脚、参数面板的分节结构（只吸收“没有高级选项时不显示空分组”）。
+- 验证：每步后 `flutter analyze` 无问题；全量测试 1074 个文件分 27 组运行，仅 `skill_archive_service_test` 的 2 个 Windows 符号链接用例失败（环境限制）。
 
-## 合并流程
+## 移植流程
 
-1. 工作区干净，创建备份分支；`git fetch upstream`。
-2. 新建本地分支执行 `git merge upstream/main`，按上表解决冲突。
-3. 检查上游移动或删除的文件：旧 import 路径、已删除符号不会显示为冲突，但会导致编译失败；上游的分层测试禁止 `lib/core`、`lib/data` 引用 presentation。
-4. `flutter pub get --enforce-lockfile`；生成输入变化时运行 `build_runner`，ARB 变化时运行 `flutter gen-l10n`。
-5. `flutter analyze`、受影响测试、`scripts/build_android_apk.ps1`，需要时真机验证。
-6. 更新本文件，再快进 `android-custom`。不要把旧备份分支整体合并回来。
+1. 工作区干净，创建备份分支与本地移植分支；`git fetch upstream`。
+2. 列出上次审阅点之后的上游提交，按收益与改动面分为合入、暂缓、排除三类；排除项写明原因。
+3. 按时间顺序 `cherry-pick -x`；README 与 CHANGELOG 保留本分支，生成文件取上游后按需重新生成。冲突中的界面部分保留本分支。
+4. 每次停下都运行 `flutter analyze`：干净合入的提交也可能引用被跳过或暂缓提交里的符号（如新组件、新文案键、新测试夹具），此时撤回该提交或补上缺失的小文件。
+5. 对改到本分支改过的界面文件的提交逐个看 diff，确认没有覆盖本分支设计。
+6. 全量测试分组运行；更新本文件，再快进 `android-custom`。
 
 ## 已知注意事项
 
