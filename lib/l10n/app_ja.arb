@@ -6328,6 +6328,26 @@
       "height": {"type": "int"}
     }
   },
+  "editor_outputSizeChip": "出力 {width}×{height}",
+  "@editor_outputSizeChip": {
+    "placeholders": {
+      "width": {"type": "int"},
+      "height": {"type": "int"}
+    }
+  },
+  "editor_focusedInpaintChip": "フォーカス",
+  "editor_focusExit": "フォーカスを終了",
+  "editor_toolAllSettings": "すべての設定",
+  "editor_toolShortColorFill": "色で",
+  "editor_toolShortClosedFill": "閉領域",
+  "editor_toolShortFill": "塗り",
+  "editor_toolShortMagicWand": "ワンド",
+  "editor_toolShortColorPicker": "スポイト",
+  "editor_toolShortCloneStamp": "クローン",
+  "editor_toolShortSelection": "選択",
+  "editor_frameShortExtend": "拡張",
+  "editor_frameShortReset": "リセット",
+  "editor_frameShortCrop": "切り抜き",
   "editor_frameRequestFree": "無料",
   "editor_frameRequestCost": "約 {cost} Anlas",
   "@editor_frameRequestCost": {

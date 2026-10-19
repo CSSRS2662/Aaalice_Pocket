@@ -20,6 +20,7 @@ void main() {
           viewSize: viewSize,
           textScale: scale,
           toolId: 'eraser',
+          openToolSettings: true,
         );
         final scenario = '$viewSize x$scale';
         expect(tester.takeException(), isNull, reason: scenario);

@@ -16,6 +16,7 @@ void main() {
           viewSize: viewSize,
           textScale: scale,
           toolId: 'color_picker',
+          openToolSettings: true,
         );
         await _expectColorPickerSettingsUsable(
           tester,

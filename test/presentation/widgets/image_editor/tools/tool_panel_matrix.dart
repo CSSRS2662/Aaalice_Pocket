@@ -9,7 +9,7 @@ import '../image_editor_workspace_harness.dart';
 /// en 按两倍字宽施加溢出压力，ja 字宽接近真实且译文最长
 const toolPanelLocales = ['en', 'ja'];
 
-// 手机横屏下工作区把设置区压到 96px 高，控件只能靠滚动到达
+// 手机横屏下完整设置面板只有半屏高，控件只能靠滚动到达
 const _shortLandscape = Size(780, 360);
 
 /// 工具设置面板验收的一个场景
@@ -60,6 +60,7 @@ void testToolPanelMatrix(
             textScale: textScale,
             locale: locale,
             toolId: toolId,
+            openToolSettings: true,
           );
           expect(tester.takeException(), isNull, reason: '$scenario');
           await verify(tester, scenario);
@@ -70,9 +71,14 @@ void testToolPanelMatrix(
   }
 }
 
-/// 设置面板根：面板标题所在的列
-Finder toolPanel(String title) =>
-    find.ancestor(of: find.text(title), matching: find.byType(Column)).first;
+/// 设置面板根：面板标题所在的列；移动端只在「全部参数」里找，选项条也会显示工具名
+Finder toolPanel(String title) {
+  final sheet = find.byKey(const ValueKey('editor-tool-settings-sheet'));
+  final text = sheet.evaluate().isEmpty
+      ? find.text(title)
+      : find.descendant(of: sheet, matching: find.text(title));
+  return find.ancestor(of: text, matching: find.byType(Column)).first;
+}
 
 /// 标签只在字宽可信的语言下断言单行完整，数值在所有语言下都断言
 void expectPanelTextsSingleLine(

@@ -12401,6 +12401,50 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String editor_outputSizeChip(int width, int height) {
+    return '输出 $width×$height';
+  }
+
+  @override
+  String get editor_focusedInpaintChip => '聚焦重绘';
+
+  @override
+  String get editor_focusExit => '退出聚焦重绘';
+
+  @override
+  String get editor_toolAllSettings => '全部参数';
+
+  @override
+  String get editor_toolShortColorFill => '按色';
+
+  @override
+  String get editor_toolShortClosedFill => '封闭';
+
+  @override
+  String get editor_toolShortFill => '填充';
+
+  @override
+  String get editor_toolShortMagicWand => '魔棒';
+
+  @override
+  String get editor_toolShortColorPicker => '吸色';
+
+  @override
+  String get editor_toolShortCloneStamp => '仿制';
+
+  @override
+  String get editor_toolShortSelection => '选区';
+
+  @override
+  String get editor_frameShortExtend => '扩展';
+
+  @override
+  String get editor_frameShortReset => '重置';
+
+  @override
+  String get editor_frameShortCrop => '裁切';
+
+  @override
   String get editor_frameRequestFree => '免费';
 
   @override
@@ -28119,6 +28163,50 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String editor_frameRequestReadout(int width, int height) {
     return '傳送: $width x $height';
   }
+
+  @override
+  String editor_outputSizeChip(int width, int height) {
+    return '輸出 $width×$height';
+  }
+
+  @override
+  String get editor_focusedInpaintChip => '聚焦重繪';
+
+  @override
+  String get editor_focusExit => '退出聚焦重繪';
+
+  @override
+  String get editor_toolAllSettings => '全部參數';
+
+  @override
+  String get editor_toolShortColorFill => '按色';
+
+  @override
+  String get editor_toolShortClosedFill => '封閉';
+
+  @override
+  String get editor_toolShortFill => '填充';
+
+  @override
+  String get editor_toolShortMagicWand => '魔棒';
+
+  @override
+  String get editor_toolShortColorPicker => '吸色';
+
+  @override
+  String get editor_toolShortCloneStamp => '仿製';
+
+  @override
+  String get editor_toolShortSelection => '選區';
+
+  @override
+  String get editor_frameShortExtend => '擴展';
+
+  @override
+  String get editor_frameShortReset => '重置';
+
+  @override
+  String get editor_frameShortCrop => '裁切';
 
   @override
   String get editor_frameRequestFree => '免費';

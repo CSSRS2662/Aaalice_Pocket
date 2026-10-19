@@ -22521,6 +22521,90 @@ abstract class AppLocalizations {
   /// **'Request: {width} x {height}'**
   String editor_frameRequestReadout(int width, int height);
 
+  /// No description provided for @editor_outputSizeChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Output {width}×{height}'**
+  String editor_outputSizeChip(int width, int height);
+
+  /// No description provided for @editor_focusedInpaintChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Focused inpaint'**
+  String get editor_focusedInpaintChip;
+
+  /// No description provided for @editor_focusExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit focused inpaint'**
+  String get editor_focusExit;
+
+  /// No description provided for @editor_toolAllSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'All settings'**
+  String get editor_toolAllSettings;
+
+  /// No description provided for @editor_toolShortColorFill.
+  ///
+  /// In en, this message translates to:
+  /// **'By color'**
+  String get editor_toolShortColorFill;
+
+  /// No description provided for @editor_toolShortClosedFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get editor_toolShortClosedFill;
+
+  /// No description provided for @editor_toolShortFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill'**
+  String get editor_toolShortFill;
+
+  /// No description provided for @editor_toolShortMagicWand.
+  ///
+  /// In en, this message translates to:
+  /// **'Wand'**
+  String get editor_toolShortMagicWand;
+
+  /// No description provided for @editor_toolShortColorPicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Picker'**
+  String get editor_toolShortColorPicker;
+
+  /// No description provided for @editor_toolShortCloneStamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Clone'**
+  String get editor_toolShortCloneStamp;
+
+  /// No description provided for @editor_toolShortSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get editor_toolShortSelection;
+
+  /// No description provided for @editor_frameShortExtend.
+  ///
+  /// In en, this message translates to:
+  /// **'Extend'**
+  String get editor_frameShortExtend;
+
+  /// No description provided for @editor_frameShortReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get editor_frameShortReset;
+
+  /// No description provided for @editor_frameShortCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop'**
+  String get editor_frameShortCrop;
+
   /// No description provided for @editor_frameRequestFree.
   ///
   /// In en, this message translates to:

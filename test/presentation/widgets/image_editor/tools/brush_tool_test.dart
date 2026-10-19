@@ -49,7 +49,12 @@ void main() {
   for (final viewSize in editorPanelViewSizes) {
     for (final scale in const [1.0, 3.0]) {
       testWidgets('$viewSize ${scale}x 文字下笔刷预设完整可点且不溢出', (tester) async {
-        await pumpEditorWorkspace(tester, viewSize: viewSize, textScale: scale);
+        await pumpEditorWorkspace(
+          tester,
+          viewSize: viewSize,
+          textScale: scale,
+          openToolSettings: true,
+        );
         final scenario = '$viewSize x$scale';
         expect(tester.takeException(), isNull, reason: scenario);
 

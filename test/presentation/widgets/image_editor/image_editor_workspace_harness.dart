@@ -22,6 +22,7 @@ Future<void> pumpEditorWorkspace(
   double textScale = 1,
   String locale = 'en',
   String? toolId,
+  bool openToolSettings = false,
   InteractionPolicy policy = const InteractionPolicy(
     modality: InteractionModality.pointer,
     touchAvailable: false,
@@ -68,4 +69,13 @@ Future<void> pumpEditorWorkspace(
     await tester.pumpAndSettle();
     expect(key.currentState!.debugCurrentToolId, toolId);
   }
+  if (openToolSettings) await openMobileToolSettings(tester);
+}
+
+/// 移动端布局的完整设置面板在「全部参数」里，桌面布局常驻右侧
+Future<void> openMobileToolSettings(WidgetTester tester) async {
+  final button = find.byKey(const ValueKey('editor-tool-settings-button'));
+  if (button.evaluate().isEmpty) return;
+  await tester.tap(button);
+  await tester.pumpAndSettle();
 }

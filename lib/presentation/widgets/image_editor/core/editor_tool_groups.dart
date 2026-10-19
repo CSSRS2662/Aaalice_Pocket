@@ -91,7 +91,7 @@ List<EditorToolSection> editorToolSections(EditorState state) {
     } else {
       for (final role in const [LayerRole.mask, LayerRole.image]) {
         if (tool.supportsRole(role) && presentRoles.contains(role)) {
-          add(_roleGroup(role), tool, role);
+          add(editorToolGroupForRole(role), tool, role);
         }
       }
     }
@@ -107,7 +107,7 @@ List<EditorToolSection> editorToolSections(EditorState state) {
   ];
 }
 
-EditorToolGroup _roleGroup(LayerRole role) => switch (role) {
+EditorToolGroup editorToolGroupForRole(LayerRole role) => switch (role) {
   LayerRole.mask => EditorToolGroup.inpaint,
   LayerRole.image => EditorToolGroup.edit,
 };
@@ -148,7 +148,7 @@ EditorToolGroup editorToolGroupOf(EditorState state, EditorTool tool) {
     return _sharedToolGroup(tool, rolesEnabled: rolesEnabled);
   }
   return rolesEnabled
-      ? _roleGroup(state.activeLayerRole)
+      ? editorToolGroupForRole(state.activeLayerRole)
       : EditorToolGroup.edit;
 }
 
@@ -168,11 +168,9 @@ EditorToolEntry displayedEntryOf(EditorState state, EditorToolSlot slot) {
   final selected = entries.indexWhere(
     (entry) => isEditorToolEntrySelected(state, entry),
   );
-  final index = state.toolbarSlotMemory.displayedIndex(
-    slot.key,
-    [for (final entry in entries) entry.tool.id],
-    selectedIndex: selected < 0 ? null : selected,
-  );
+  final index = state.toolbarSlotMemory.displayedIndex(slot.key, [
+    for (final entry in entries) entry.tool.id,
+  ], selectedIndex: selected < 0 ? null : selected);
   return entries[index];
 }
 
@@ -227,6 +225,27 @@ String editorToolLabel(BuildContext context, EditorTool tool, LayerRole? role) {
     'move' => l10n.editor_toolMove,
     ClosedRegionFillTool.toolId => l10n.editor_fillClosedRegion,
     _ => tool.name,
+  };
+}
+
+/// 移动端工具栏图标下的短名；当前编辑的是蒙版还是图片由顶栏开关表明
+String editorToolShortLabel(
+  BuildContext context,
+  EditorTool tool,
+  LayerRole? role,
+) {
+  final l10n = context.l10n;
+  if (tool.family == EditorToolFamily.selection) {
+    return l10n.editor_toolShortSelection;
+  }
+  return switch (tool.id) {
+    'fill' when role == LayerRole.mask => l10n.editor_toolShortColorFill,
+    'fill' => l10n.editor_toolShortFill,
+    'magic_wand' => l10n.editor_toolShortMagicWand,
+    'color_picker' => l10n.editor_toolShortColorPicker,
+    'clone_stamp' => l10n.editor_toolShortCloneStamp,
+    ClosedRegionFillTool.toolId => l10n.editor_toolShortClosedFill,
+    _ => editorToolLabel(context, tool, null),
   };
 }
 

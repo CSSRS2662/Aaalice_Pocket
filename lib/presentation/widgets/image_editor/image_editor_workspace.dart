@@ -41,9 +41,12 @@ import 'tools/frame_tool.dart';
 import 'tools/tool_base.dart';
 import 'canvas/editor_canvas.dart';
 import 'widgets/toolbar/desktop_toolbar.dart';
-import 'widgets/toolbar/editor_overflow_menu.dart';
 import 'widgets/toolbar/editor_view_menu.dart';
-import 'widgets/toolbar/mobile_toolbar.dart';
+import 'widgets/toolbar/editor_toolbar_tools.dart';
+import 'widgets/mobile/focused_inpaint_bar.dart';
+import 'widgets/mobile/mobile_canvas_controls.dart';
+import 'widgets/mobile/mobile_editor_layout.dart';
+import 'widgets/mobile/mobile_editor_more_sheet.dart';
 import 'widgets/panels/layer_panel.dart';
 import 'widgets/panels/color_panel.dart';
 import 'widgets/panels/canvas_size_dialog.dart';
@@ -685,7 +688,7 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
                 !hasLargeText;
             return useDesktopLayout
                 ? _buildDesktopLayout(availableWidth: constraints.maxWidth)
-                : _buildMobileLayout(availableWidth: constraints.maxWidth);
+                : _buildMobileLayout();
           },
         ),
       ),
@@ -1111,7 +1114,9 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
 
   /// 送出区域 [region] 对应的画面：图片层没改过时沿用原图字节与原图区域，
   /// 改过则把区域内全部可见图片层重新合成，区域本身即新的原图区域
-  Future<({Uint8List bytes, Rect rect})> _resolveSourceImage(Rect region) async {
+  Future<({Uint8List bytes, Rect rect})> _resolveSourceImage(
+    Rect region,
+  ) async {
     if (!_imageSource.hasChanges) {
       final bytes = _sourceLayerBytes;
       final rect = _frameController.sourceRect;
@@ -1371,7 +1376,12 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
       _state.clearActiveLayerWithHistory();
       return;
     }
+    _resetMasks();
+  }
 
+  /// 删掉所有蒙版层并换上一张空蒙版；聚焦重绘时回到框选
+  void _resetMasks() {
+    if (!_isInpaintMode) return;
     _removeAllMaskLayers();
     _state.clearSelection(saveHistory: false);
     _state.clearPreview();
@@ -1560,7 +1570,7 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
     return trimmed.isEmpty ? 'dropped_image.png' : trimmed;
   }
 
-  Widget _buildCanvasArea() {
+  Widget _buildCanvasArea({bool showFocusedCard = true}) {
     final focusAreaRect = _focusedInpaintEnabled
         ? _focusedSelectionState.resolveActiveRect(
             previewPath: _state.previewPath,
@@ -1643,7 +1653,7 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
               ),
             ),
           ),
-        if (_isInpaintMode)
+        if (_isInpaintMode && showFocusedCard)
           Positioned(top: 16, left: 16, child: _buildFocusedSelectionCard()),
         Positioned.fill(
           child: MagicWandProgressOverlay(controller: _magicWandController),
@@ -2181,14 +2191,6 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
     );
   }
 
-  Widget _buildMobileCompressionAction() {
-    return IconButton(
-      icon: const Icon(Icons.compress),
-      onPressed: _showCompressionSheet,
-      tooltip: context.l10n.editor_compressionTooltip,
-    );
-  }
-
   Future<void> _showCompressionSheet() async {
     await AdaptivePresenter.showPanel<void>(
       context: context,
@@ -2401,15 +2403,7 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: _focusedSelectionState.hasCommittedRect
-                    ? () {
-                        _updateLayoutState(() {
-                          _focusedSelectionState.clear();
-                          _state.clearSelection(saveHistory: false);
-                          _state.clearPreview();
-                          _state.setToolById('rect_selection');
-                          _refreshCompressionPlan();
-                        });
-                      }
+                    ? _clearFocusedArea
                     : null,
                 icon: const Icon(Icons.clear, size: 16),
                 label: Text(context.l10n.editor_clearSelection),
@@ -2427,13 +2421,7 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
               min: 16,
               max: 192,
               divisions: 176,
-              onChanged: (value) {
-                _updateLayoutState(() {
-                  _minimumContextMegaPixels = value;
-                  _constrainCommittedFocusedSelection();
-                  _refreshCompressionPlan();
-                });
-              },
+              onChanged: _setMinimumContext,
             ),
             if (costEstimate != null) ...[
               const SizedBox(height: 8),
@@ -2488,6 +2476,24 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
         ],
       ),
     );
+  }
+
+  void _clearFocusedArea() {
+    _updateLayoutState(() {
+      _focusedSelectionState.clear();
+      _state.clearSelection(saveHistory: false);
+      _state.clearPreview();
+      _state.setToolById('rect_selection');
+      _refreshCompressionPlan();
+    });
+  }
+
+  void _setMinimumContext(double value) {
+    _updateLayoutState(() {
+      _minimumContextMegaPixels = value;
+      _constrainCommittedFocusedSelection();
+      _refreshCompressionPlan();
+    });
   }
 
   void _toggleFocusedInpaint() {
@@ -2650,127 +2656,184 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
   }
 
   /// 移动端布局
-  Widget _buildMobileLayout({required double availableWidth}) {
-    final compactActions = availableWidth < 520;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _editorTitle(),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+  Widget _buildMobileLayout() {
+    return MobileEditorLayout(
+      state: _state,
+      title: _editorTitle(),
+      canvas: _buildCanvasArea(showFocusedCard: false),
+      doneLabel: widget.completionLabel ?? context.l10n.editor_done,
+      onDone: () => unawaited(_exportAndClose()),
+      doneListenable: _frameController,
+      canDone: () => _canExportAndClose,
+      onShowLayers: _showMobileLayerSheet,
+      onShowMore: () => unawaited(
+        showEditorMoreSheet(context, sections: _mobileMoreSections()),
+      ),
+      banner: _isInpaintMode && _focusedInpaintEnabled
+          ? _buildMobileFocusBar()
+          : null,
+      canvasChips: _mobileCanvasChips(),
+      onShiftEdges: _isInpaintMode
+          ? () => unawaited(_showShiftEdgesDialog())
+          : null,
+    );
+  }
+
+  /// 画布左上角：输出尺寸与聚焦重绘开关
+  List<Widget> _mobileCanvasChips() {
+    final l10n = context.l10n;
+    final target = _activeCompressionTarget;
+    final size =
+        _clampedRequestSize ?? (width: target.width, height: target.height);
+    return [
+      if (_compressionPlan != null)
+        EditorCanvasChip(
+          key: const ValueKey('editor-output-chip'),
+          icon: Icons.photo_size_select_large,
+          label: l10n.editor_outputSizeChip(size.width, size.height),
+          tooltip: l10n.editor_compressionTooltip,
+          onTap: () => unawaited(_showCompressionSheet()),
         ),
+      if (_isInpaintMode)
+        EditorCanvasChip(
+          key: const ValueKey('editor-focus-chip'),
+          icon: Icons.filter_center_focus,
+          label: l10n.editor_focusedInpaintChip,
+          selected: _focusedInpaintEnabled,
+          onTap: _toggleFocusedInpaint,
+        ),
+    ];
+  }
+
+  /// 聚焦重绘的步骤条，跟随当前工具与选区刷新
+  Widget _buildMobileFocusBar() {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        _state.toolChangeNotifier,
+        _state.selectionManager,
+        _state.layerManager.activeLayerNotifier,
+      ]),
+      builder: (context, _) {
+        final l10n = context.l10n;
+        final hasArea = _focusedSelectionState.hasCommittedRect;
+        final estimate = _resolveFocusedInpaintCostEstimate();
+        final summary = estimate != null
+            ? l10n.editor_focusRequestSummary(
+                estimate.geometry.contextCrop.width,
+                estimate.geometry.contextCrop.height,
+                estimate.geometry.requestWidth,
+                estimate.geometry.requestHeight,
+                estimate.cost,
+              )
+            : hasArea
+            ? l10n.editor_focusReadyHint
+            : l10n.editor_focusNeedsSelectionHint;
+        return FocusedInpaintBar(
+          step: _state.currentTool?.id == 'rect_selection'
+              ? FocusedInpaintStep.selectArea
+              : FocusedInpaintStep.paintMask,
+          hasArea: hasArea,
+          minimumContext: _minimumContextMegaPixels,
+          onMinimumContextChanged: _setMinimumContext,
+          summary: summary,
+          onStepSelected: _selectFocusedStep,
+          onClearArea: _clearFocusedArea,
+          onExit: _toggleFocusedInpaint,
+        );
+      },
+    );
+  }
+
+  void _selectFocusedStep(FocusedInpaintStep step) {
+    if (step == FocusedInpaintStep.paintMask &&
+        !_focusedSelectionState.hasCommittedRect) {
+      return;
+    }
+    final mask = _state.layerManager.preferredLayerFor(LayerRole.mask);
+    if (mask != null && !_state.isMaskLayerActive) {
+      _state.layerManager.setActiveLayer(mask.id);
+    }
+    _state.setToolById(
+      step == FocusedInpaintStep.selectArea ? 'rect_selection' : 'brush',
+    );
+  }
+
+  /// 顶栏「更多」：蒙版、当前图层与画布操作分组；视图操作在缩放胶囊里
+  List<EditorMenuSection> _mobileMoreSections() {
+    final l10n = context.l10n;
+    final target = _activeCompressionTarget;
+    final size =
+        _clampedRequestSize ?? (width: target.width, height: target.height);
+    final layers = _state.layerManager;
+    final activeImage = !_state.isMaskLayerActive;
+    return [
+      if (_isInpaintMode)
+        EditorMenuSection(
+          title: l10n.editor_maskLayerName,
+          actions: [
+            EditorMenuAction(
+              id: 'load-mask',
+              icon: Icons.upload_file,
+              label: l10n.editor_loadMask,
+              onSelected: () => unawaited(_loadMask()),
+            ),
+            EditorMenuAction(
+              id: 'reset-mask',
+              icon: Icons.layers_clear_outlined,
+              label: l10n.editor_resetMask,
+              enabled: layers.maskLayers.any((layer) => layer.hasContent),
+              onSelected: _resetMasks,
+            ),
+          ],
+        ),
+      if (activeImage)
+        EditorMenuSection(
+          title: l10n.editor_layers,
+          actions: [
+            EditorMenuAction(
+              id: 'clear-layer',
+              icon: Icons.delete_outline,
+              label: l10n.editor_clearLayer,
+              trailing: layers.activeLayer?.name,
+              enabled: canClearFromToolbar(_state),
+              onSelected: _state.clearActiveLayerWithHistory,
+            ),
+          ],
+        ),
+      EditorMenuSection(
+        title: l10n.editor_menuGroupCanvas,
         actions: [
-          if (!compactActions) _buildMobileCompressionAction(),
-          IconButton(
-            icon: const Icon(Icons.layers),
-            onPressed: _showMobileLayerSheet,
-            tooltip: context.l10n.editor_layers,
-          ),
-          if (!compactActions && _isInpaintMode)
-            IconButton(
-              icon: const Icon(Icons.upload_file),
-              onPressed: _loadMask,
-              tooltip: context.l10n.editor_loadMask,
+          if (_compressionPlan != null)
+            EditorMenuAction(
+              id: 'output-resolution',
+              icon: Icons.photo_size_select_large,
+              label: l10n.editor_compressionTitle,
+              trailing: '${size.width}×${size.height}',
+              onSelected: () => unawaited(_showCompressionSheet()),
             ),
-          if (!compactActions && _isInpaintMode)
-            IconButton(
-              icon: const Icon(Icons.open_in_full),
-              onPressed: _showShiftEdgesDialog,
-              tooltip: context.l10n.editor_shiftEdges,
+          if (_isInpaintMode) ...[
+            EditorMenuAction(
+              id: 'shift-edges',
+              icon: Icons.open_in_full,
+              label: l10n.editor_shiftEdges,
+              onSelected: () => unawaited(_showShiftEdgesDialog()),
             ),
-          if (!compactActions && _isInpaintMode)
-            ListenableBuilder(
-              listenable: _frameController,
-              builder: (context, _) => IconButton(
-                icon: const Icon(Icons.crop),
-                onPressed: _frameController.canCropToFrame
-                    ? _cropToFrame
-                    : null,
-                tooltip: context.l10n.editor_cropToFrame,
-              ),
+            EditorMenuAction(
+              id: 'crop-to-frame',
+              icon: Icons.crop,
+              label: l10n.editor_cropToFrame,
+              enabled: _frameController.canCropToFrame,
+              onSelected: () => unawaited(_cropToFrame()),
             ),
-          if (!compactActions && !_isInpaintMode)
-            IconButton(
-              icon: const Icon(Icons.tune_rounded),
-              onPressed: _showEffectsDialog,
-              tooltip: context.l10n.editor_effects,
+          ] else
+            EditorMenuAction(
+              id: 'effects',
+              icon: Icons.tune_rounded,
+              label: l10n.editor_effects,
+              onSelected: () => unawaited(_showEffectsDialog()),
             ),
-          _buildMobileOverflowMenu(includeCanvasActions: compactActions),
-          ListenableBuilder(
-            listenable: _frameController,
-            builder: (context, _) => IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: _canExportAndClose ? _exportAndClose : null,
-              tooltip: widget.completionLabel ?? context.l10n.editor_done,
-            ),
-          ),
         ],
       ),
-      body: SafeArea(
-        top: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) => Column(
-            children: [
-              // 画布区域
-              Expanded(child: _buildCanvasArea()),
-
-              // 横屏短窗口保留画布主区域，设置面板仍可独立滚动。
-              _buildMobileToolSettings(
-                maxHeight: constraints.maxHeight < 420 ? 96 : 150,
-              ),
-
-              // 底部工具栏
-              MobileToolbar(
-                state: _state,
-                onClear: _isInpaintMode ? _resetInpaintMask : null,
-                onLayersPressed: _showMobileLayerSheet,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// 视图分组始终可达；画布操作只在顶栏放不下时收进菜单
-  Widget _buildMobileOverflowMenu({required bool includeCanvasActions}) {
-    return EditorOverflowMenu(
-      state: _state,
-      canvasActions: includeCanvasActions ? _mobileCanvasMenuActions : null,
-    );
-  }
-
-  List<EditorMenuAction> _mobileCanvasMenuActions() {
-    final l10n = context.l10n;
-    return [
-      EditorMenuAction(
-        icon: Icons.compress,
-        label: l10n.editor_compressionTooltip,
-        onSelected: () => unawaited(_showCompressionSheet()),
-      ),
-      if (_isInpaintMode) ...[
-        EditorMenuAction(
-          icon: Icons.upload_file,
-          label: l10n.editor_loadMask,
-          onSelected: () => unawaited(_loadMask()),
-        ),
-        EditorMenuAction(
-          icon: Icons.open_in_full,
-          label: l10n.editor_shiftEdges,
-          onSelected: () => unawaited(_showShiftEdgesDialog()),
-        ),
-        EditorMenuAction(
-          icon: Icons.crop,
-          label: l10n.editor_cropToFrame,
-          enabled: _frameController.canCropToFrame,
-          onSelected: () => unawaited(_cropToFrame()),
-        ),
-      ] else
-        EditorMenuAction(
-          icon: Icons.tune_rounded,
-          label: l10n.editor_effects,
-          onSelected: () => unawaited(_showEffectsDialog()),
-        ),
     ];
   }
 
@@ -2944,24 +3007,6 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
         }
         return SingleChildScrollView(
           child: tool.buildSettingsPanel(context, _state),
-        );
-      },
-    );
-  }
-
-  /// 移动端工具设置
-  /// 使用 toolChangeNotifier 实现细粒度监听
-  Widget _buildMobileToolSettings({required double maxHeight}) {
-    return ValueListenableBuilder<EditorTool?>(
-      valueListenable: _state.toolChangeNotifier,
-      builder: (context, tool, _) {
-        if (tool == null) return const SizedBox.shrink();
-
-        return Container(
-          constraints: BoxConstraints(maxHeight: maxHeight),
-          child: SingleChildScrollView(
-            child: tool.buildSettingsPanel(context, _state),
-          ),
         );
       },
     );

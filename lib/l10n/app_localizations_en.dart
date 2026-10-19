@@ -12940,6 +12940,50 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String editor_outputSizeChip(int width, int height) {
+    return 'Output $width×$height';
+  }
+
+  @override
+  String get editor_focusedInpaintChip => 'Focused inpaint';
+
+  @override
+  String get editor_focusExit => 'Exit focused inpaint';
+
+  @override
+  String get editor_toolAllSettings => 'All settings';
+
+  @override
+  String get editor_toolShortColorFill => 'By color';
+
+  @override
+  String get editor_toolShortClosedFill => 'Closed';
+
+  @override
+  String get editor_toolShortFill => 'Fill';
+
+  @override
+  String get editor_toolShortMagicWand => 'Wand';
+
+  @override
+  String get editor_toolShortColorPicker => 'Picker';
+
+  @override
+  String get editor_toolShortCloneStamp => 'Clone';
+
+  @override
+  String get editor_toolShortSelection => 'Select';
+
+  @override
+  String get editor_frameShortExtend => 'Extend';
+
+  @override
+  String get editor_frameShortReset => 'Reset';
+
+  @override
+  String get editor_frameShortCrop => 'Crop';
+
+  @override
   String get editor_frameRequestFree => 'Free';
 
   @override

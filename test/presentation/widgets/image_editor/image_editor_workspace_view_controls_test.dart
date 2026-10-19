@@ -81,26 +81,33 @@ void main() {
     });
   }
 
-  testWidgets('compact overflow menu groups canvas and view actions', (
+  testWidgets('compact more sheet groups layer and canvas actions', (
     tester,
   ) async {
     await pumpEditorWorkspace(tester, viewSize: const Size(320, 720));
     await tester.tap(find.byTooltip('More'));
     await tester.pumpAndSettle();
 
-    final canvasHeader = tester.getRect(_sectionHeader('Canvas'));
-    final compression = tester.getRect(find.text('Choose output resolution'));
-    final viewHeader = tester.getRect(_sectionHeader('View'));
-    final firstView = tester.getRect(_menuItem(EditorViewAction.values.first));
+    Finder inSheet(String text) => find.descendant(
+      of: find.byKey(const ValueKey('editor-more-sheet')),
+      matching: find.text(text),
+    );
+    final layerHeader = tester.getRect(inSheet('Layers'));
+    final clearLayer = tester.getRect(_moreItem('clear-layer'));
+    final canvasHeader = tester.getRect(inSheet('Canvas'));
+    final resolution = tester.getRect(_moreItem('output-resolution'));
 
-    expect(canvasHeader.bottom, lessThanOrEqualTo(compression.top));
-    expect(compression.bottom, lessThanOrEqualTo(viewHeader.top));
-    expect(viewHeader.bottom, lessThanOrEqualTo(firstView.top));
+    expect(layerHeader.bottom, lessThanOrEqualTo(clearLayer.top));
+    expect(clearLayer.bottom, lessThanOrEqualTo(canvasHeader.top));
+    expect(canvasHeader.bottom, lessThanOrEqualTo(resolution.top));
     expect(
-      viewHeader.top - compression.bottom,
+      canvasHeader.top - clearLayer.bottom,
       greaterThan(0),
       reason: '组标题与上一组之间要有留白，不能看起来属于上一组',
     );
+    expect(_moreItem('effects'), findsOneWidget);
+    // 视图操作只在缩放胶囊里，不在「更多」里重复
+    expect(_menuItem(EditorViewAction.resetView), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -149,16 +156,19 @@ void main() {
     }
   });
 
-  testWidgets('wider mobile layouts keep only the view group in the menu', (
+  testWidgets('mobile canvas chips show the output size and view menu', (
     tester,
   ) async {
     await pumpEditorWorkspace(tester, viewSize: const Size(600, 760));
-    expect(find.byTooltip('Choose output resolution'), findsOneWidget);
+    final output = find.byKey(const ValueKey('editor-output-chip'));
+    expect(
+      find.descendant(of: output, matching: find.text('Output 512×512')),
+      findsOneWidget,
+    );
+    expect(output.hitTestable(), findsOneWidget);
 
-    await tester.tap(find.byTooltip('More'));
+    await tester.tap(find.byKey(const ValueKey('editor-zoom-chip')));
     await tester.pumpAndSettle();
-
-    expect(_sectionHeader('Canvas'), findsNothing);
     expect(_sectionHeader('View'), findsOneWidget);
     expect(_menuItem(EditorViewAction.resetView), findsOneWidget);
   });
@@ -283,6 +293,8 @@ final _orientationSlot = find.byKey(
   const ValueKey('editor-view-slot-orientation'),
 );
 
+Finder _moreItem(String id) => find.byKey(ValueKey('editor-more-$id'));
+
 Finder _flyoutItem(EditorViewAction action) =>
     find.byKey(ValueKey('editor-view-flyout-${action.name}'));
 
@@ -322,7 +334,7 @@ class _ViewControlDriver {
 
   Finder get _menuButton => desktop
       ? find.byKey(const ValueKey('editor-view-zoom-menu'))
-      : find.byTooltip('More');
+      : find.byKey(const ValueKey('editor-zoom-chip'));
 
   CanvasController get _controller => _editorState(tester).canvasController;
 

@@ -535,7 +535,7 @@ class _BrushPresetButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final presetName = _localizedPresetName(context);
+    final presetName = brushPresetLabel(context, presetIndex);
     final foreground = isSelected
         ? theme.colorScheme.onPrimaryContainer
         : theme.colorScheme.onSurfaceVariant;
@@ -612,27 +612,20 @@ class _BrushPresetButton extends StatelessWidget {
       ),
     );
   }
+}
 
-  String _localizedPresetName(BuildContext context) {
-    switch (presetIndex) {
-      case 0:
-        return context.l10n.brushPreset_pencil;
-      case 1:
-        return context.l10n.brushPreset_fine;
-      case 2:
-        return context.l10n.brushPreset_standard;
-      case 3:
-        return context.l10n.brushPreset_soft;
-      case 4:
-        return context.l10n.brushPreset_airbrush;
-      case 5:
-        return context.l10n.brushPreset_marker;
-      case 6:
-        return context.l10n.brushPreset_thick;
-      case 7:
-        return context.l10n.brushPreset_smudge;
-      default:
-        return preset.name;
-    }
-  }
+/// 内置笔刷预设的本地化名称；工具面板与移动端选项条共用
+String brushPresetLabel(BuildContext context, int index) {
+  final l10n = context.l10n;
+  return switch (index) {
+    0 => l10n.brushPreset_pencil,
+    1 => l10n.brushPreset_fine,
+    2 => l10n.brushPreset_standard,
+    3 => l10n.brushPreset_soft,
+    4 => l10n.brushPreset_airbrush,
+    5 => l10n.brushPreset_marker,
+    6 => l10n.brushPreset_thick,
+    7 => l10n.brushPreset_smudge,
+    _ => defaultBrushPresets[index].name,
+  };
 }

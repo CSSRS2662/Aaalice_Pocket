@@ -201,7 +201,10 @@ void main() {
         expectSingleLineUntruncated(tester, label, reason: '$scenario');
       }
 
-      final status = find.text(l10n.editor_cloneStampPickingHint);
+      final status = find.descendant(
+        of: panel,
+        matching: find.text(l10n.editor_cloneStampPickingHint),
+      );
       await tester.ensureVisible(status);
       await tester.pumpAndSettle();
       expect(

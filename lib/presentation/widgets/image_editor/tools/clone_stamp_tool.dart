@@ -415,7 +415,7 @@ class _CloneSourceControls extends StatelessWidget {
               container: true,
               liveRegion: true,
               child: Text(
-                _statusText(context),
+                cloneStampSourceStatus(context, tool),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -427,14 +427,15 @@ class _CloneSourceControls extends StatelessWidget {
       },
     );
   }
+}
 
-  String _statusText(BuildContext context) {
-    if (tool.isPickingSource) return context.l10n.editor_cloneStampPickingHint;
-    final source = tool.sourcePoint;
-    if (source == null) return context.l10n.editor_cloneStampNoSourceHint;
-    return context.l10n.editor_cloneStampSourceReadout(
-      source.dx.round(),
-      source.dy.round(),
-    );
-  }
+/// 源点状态：正在选点、尚未设置，或已设置的坐标；工具面板与移动端选项条共用
+String cloneStampSourceStatus(BuildContext context, CloneStampTool tool) {
+  if (tool.isPickingSource) return context.l10n.editor_cloneStampPickingHint;
+  final source = tool.sourcePoint;
+  if (source == null) return context.l10n.editor_cloneStampNoSourceHint;
+  return context.l10n.editor_cloneStampSourceReadout(
+    source.dx.round(),
+    source.dy.round(),
+  );
 }

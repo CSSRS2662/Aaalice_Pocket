@@ -12607,6 +12607,50 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String editor_outputSizeChip(int width, int height) {
+    return '出力 $width×$height';
+  }
+
+  @override
+  String get editor_focusedInpaintChip => 'フォーカス';
+
+  @override
+  String get editor_focusExit => 'フォーカスを終了';
+
+  @override
+  String get editor_toolAllSettings => 'すべての設定';
+
+  @override
+  String get editor_toolShortColorFill => '色で';
+
+  @override
+  String get editor_toolShortClosedFill => '閉領域';
+
+  @override
+  String get editor_toolShortFill => '塗り';
+
+  @override
+  String get editor_toolShortMagicWand => 'ワンド';
+
+  @override
+  String get editor_toolShortColorPicker => 'スポイト';
+
+  @override
+  String get editor_toolShortCloneStamp => 'クローン';
+
+  @override
+  String get editor_toolShortSelection => '選択';
+
+  @override
+  String get editor_frameShortExtend => '拡張';
+
+  @override
+  String get editor_frameShortReset => 'リセット';
+
+  @override
+  String get editor_frameShortCrop => '切り抜き';
+
+  @override
   String get editor_frameRequestFree => '無料';
 
   @override

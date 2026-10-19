@@ -107,7 +107,9 @@ void main() {
         if (size.width < 600) {
           await tester.tap(find.byTooltip('More'));
           await tester.pumpAndSettle();
-          await tester.tap(find.text('Choose output resolution'));
+          await tester.tap(
+            find.byKey(const ValueKey('editor-more-output-resolution')),
+          );
         } else {
           await tester.tap(find.byTooltip('Choose output resolution'));
         }
@@ -234,13 +236,43 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull, reason: reason);
       expect(key.currentState!.debugCurrentToolId, FrameTool.toolId);
-      expect(find.byType(FrameToolPanel), findsOneWidget, reason: reason);
 
       final desktop = find.byType(DesktopToolbar).evaluate().isNotEmpty;
       final frameTool = find.byTooltip(desktop ? 'Frame (C)' : 'Frame');
       await tester.ensureVisible(frameTool);
       await tester.pumpAndSettle();
       expect(frameTool.hitTestable(), findsOneWidget, reason: reason);
+
+      if (!desktop) {
+        // 选项条直接给出重置与裁切，完整面板与「更多」里也能到达
+        for (final action in const [
+          'editor-frame-reset',
+          'editor-frame-crop',
+        ]) {
+          final control = find.byKey(ValueKey(action));
+          await tester.ensureVisible(control);
+          await tester.pumpAndSettle();
+          expect(
+            control.hitTestable(),
+            findsOneWidget,
+            reason: '$action $reason',
+          );
+        }
+        await tester.tap(find.byTooltip('More'));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('editor-more-crop-to-frame')),
+          findsOneWidget,
+          reason: reason,
+        );
+        await tester.tap(find.byTooltip('Close'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const ValueKey('editor-tool-settings-button')),
+        );
+        await tester.pumpAndSettle();
+      }
+      expect(find.byType(FrameToolPanel), findsOneWidget, reason: reason);
 
       for (final label in const ['Reset Frame', 'Crop to Frame']) {
         final panelAction = find.descendant(
@@ -256,20 +288,10 @@ void main() {
         );
       }
 
-      if (!desktop && scenario.size.width < 520) {
-        await tester.tap(find.byTooltip('More'));
+      if (!desktop) {
+        await tester.tap(find.byTooltip('Close'));
         await tester.pumpAndSettle();
-        expect(
-          find.descendant(
-            of: find.byWidgetPredicate((widget) => widget is PopupMenuItem),
-            matching: find.text('Crop to Frame'),
-          ),
-          findsOneWidget,
-          reason: reason,
-        );
-        await tester.tapAt(Offset.zero);
-        await tester.pumpAndSettle();
-      } else if (desktop && scenario.size.width >= 1280) {
+      } else if (scenario.size.width >= 1280) {
         expect(
           find.widgetWithText(TextButton, 'Crop to Frame').hitTestable(),
           findsOneWidget,
@@ -286,9 +308,7 @@ void main() {
     }
   });
 
-  testWidgets('frame tool shortcut only works in inpaint mode', (
-    tester,
-  ) async {
+  testWidgets('frame tool shortcut only works in inpaint mode', (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     tester.view.devicePixelRatio = 1;

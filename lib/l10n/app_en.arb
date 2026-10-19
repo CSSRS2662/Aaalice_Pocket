@@ -6303,6 +6303,26 @@
       "height": {"type": "int"}
     }
   },
+  "editor_outputSizeChip": "Output {width}×{height}",
+  "@editor_outputSizeChip": {
+    "placeholders": {
+      "width": {"type": "int"},
+      "height": {"type": "int"}
+    }
+  },
+  "editor_focusedInpaintChip": "Focused inpaint",
+  "editor_focusExit": "Exit focused inpaint",
+  "editor_toolAllSettings": "All settings",
+  "editor_toolShortColorFill": "By color",
+  "editor_toolShortClosedFill": "Closed",
+  "editor_toolShortFill": "Fill",
+  "editor_toolShortMagicWand": "Wand",
+  "editor_toolShortColorPicker": "Picker",
+  "editor_toolShortCloneStamp": "Clone",
+  "editor_toolShortSelection": "Select",
+  "editor_frameShortExtend": "Extend",
+  "editor_frameShortReset": "Reset",
+  "editor_frameShortCrop": "Crop",
   "editor_frameRequestFree": "Free",
   "editor_frameRequestCost": "~{cost} Anlas",
   "@editor_frameRequestCost": {

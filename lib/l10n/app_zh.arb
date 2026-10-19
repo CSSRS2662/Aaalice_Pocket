@@ -6372,6 +6372,26 @@
       "height": {"type": "int"}
     }
   },
+  "editor_outputSizeChip": "输出 {width}×{height}",
+  "@editor_outputSizeChip": {
+    "placeholders": {
+      "width": {"type": "int"},
+      "height": {"type": "int"}
+    }
+  },
+  "editor_focusedInpaintChip": "聚焦重绘",
+  "editor_focusExit": "退出聚焦重绘",
+  "editor_toolAllSettings": "全部参数",
+  "editor_toolShortColorFill": "按色",
+  "editor_toolShortClosedFill": "封闭",
+  "editor_toolShortFill": "填充",
+  "editor_toolShortMagicWand": "魔棒",
+  "editor_toolShortColorPicker": "吸色",
+  "editor_toolShortCloneStamp": "仿制",
+  "editor_toolShortSelection": "选区",
+  "editor_frameShortExtend": "扩展",
+  "editor_frameShortReset": "重置",
+  "editor_frameShortCrop": "裁切",
   "editor_frameRequestFree": "免费",
   "editor_frameRequestCost": "约 {cost} Anlas",
   "@editor_frameRequestCost": {
