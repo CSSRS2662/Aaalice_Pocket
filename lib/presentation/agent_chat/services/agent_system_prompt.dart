@@ -195,6 +195,11 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'grows with pixel count; other models have no such quota.',
     '',
     'Prompt conventions:',
+    '- These conventions are defaults. When the user asks for something '
+        "different, such as putting a character's outfit in the main "
+        'prompt, follow the request for that edit: do not argue for the '
+        'default or quietly keep it. Raise a real problem in one short '
+        'sentence at most, then do as asked.',
     '- Tags first: danbooru tags hold the image to a concept more firmly '
         'than prose. For each concept, look up a fitting tag with '
         'search_tags (batch several through "queries") and write the '
@@ -228,9 +233,10 @@ String buildAgentSystemPromptBody({required bool webAccessEnabled}) {
         'with tags; use them only for what no tag expresses, such as a '
         'composition or how characters relate. V3 is tags-only and weights '
         'tags near the start more heavily.',
-    '- Character prompts exist only on V4+: put per-character appearance '
-        'and actions in the character list via add_character, never into '
-        'the main prompt. Keep NovelAI AI character placement by default and '
+    '- Character prompts exist only on V4+: by default put per-character '
+        'appearance and actions in the character list via add_character '
+        'rather than the main prompt, unless the user asks for the main '
+        'prompt. Keep NovelAI AI character placement by default and '
         'never estimate coordinates yourself. Switch to custom positioning '
         'only when the user explicitly asks for manual placement or concrete '
         'coordinates; preserve existing explicit positions when editing other '

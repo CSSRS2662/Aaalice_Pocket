@@ -44,6 +44,7 @@ class CharacterToolbox {
           'gender': {
             'type': 'string',
             'enum': ['female', 'male', 'other'],
+            'description': _genderNote,
           },
           'prompt': {'type': 'string'},
           'negative_prompt': {'type': 'string'},
@@ -90,7 +91,7 @@ class CharacterToolbox {
           'gender': {
             'type': 'string',
             'enum': ['female', 'male', 'other'],
-            'description': 'Default: female.',
+            'description': _genderNote,
           },
           'prompt': {'type': 'string'},
           'negative_prompt': {'type': 'string'},
@@ -272,8 +273,35 @@ class CharacterToolbox {
     }
     final gender = _parseGender(args['gender']);
     if (gender != null) updated = updated.copyWith(gender: gender);
-    if (args.containsKey('prompt') && positiveSections == null) {
-      updated = updated.copyWith(prompt: (args['prompt'] as String?) ?? '');
+    // The first tag sets the gender the panel shows and NovelAI reads. A new
+    // gender rewrites it; a rewritten prompt keeps the current gender.
+    final promptChanged =
+        args.containsKey('prompt') || positiveSections != null;
+    final currentGender = target.effectiveGender;
+    final leadGender =
+        gender ??
+        (promptChanged && currentGender != CharacterGender.other
+            ? currentGender
+            : null);
+    var positive = positiveSections;
+    if (args.containsKey('prompt') && positive == null) {
+      final prompt = (args['prompt'] as String?) ?? '';
+      updated = updated.copyWith(
+        prompt: leadGender == null
+            ? prompt
+            : CharacterPrompt.leadingWithGender(prompt, leadGender),
+      );
+    } else if (leadGender != null && positive != null) {
+      positive = _sectionsWithGender(positive, leadGender);
+    } else if (gender != null) {
+      final stored = sectionState.stored(target, negative: false);
+      if (stored != null) {
+        positive = _sectionsWithGender(stored, gender);
+      } else {
+        updated = updated.copyWith(
+          prompt: CharacterPrompt.leadingWithGender(updated.prompt, gender),
+        );
+      }
     }
     if (args.containsKey('negative_prompt') && negativeSections == null) {
       updated = updated.copyWith(
@@ -292,10 +320,10 @@ class CharacterToolbox {
     }
     updated = _applyPositionChange(updated, positionChange);
     // Sections are stored before the character, so an open editor shows them.
-    if (positiveSections != null || negativeSections != null) {
+    if (positive != null || negativeSections != null) {
       updated = sectionState.storeSections(
         updated,
-        positive: positiveSections,
+        positive: positive,
         negative: negativeSections,
       );
     }
@@ -358,10 +386,14 @@ class CharacterToolbox {
       );
     }
     final sectionState = CharacterSectionState(_ref);
+    final gender = _parseGender(args['gender']) ?? CharacterGender.female;
     final List<PromptGroupSectionSnapshot>? positiveSections;
     final List<PromptGroupSectionSnapshot>? negativeSections;
     try {
-      positiveSections = sectionState.sectionsFromArgs(args, negative: false);
+      final asked = sectionState.sectionsFromArgs(args, negative: false);
+      positiveSections = asked == null
+          ? null
+          : _sectionsWithGender(asked, gender);
       negativeSections = sectionState.sectionsFromArgs(args, negative: true);
     } on PromptSectionEditException catch (error) {
       return agentToolError(error.code, error.message);
@@ -387,11 +419,14 @@ class CharacterToolbox {
       notifier.setGlobalAiChoice(false);
     }
     final result = await notifier.addCharacterPersisted(
-      _parseGender(args['gender']) ?? CharacterGender.female,
+      gender,
       name: name,
       prompt: positiveSections != null
           ? CharacterSectionState.joinEnabled(positiveSections)
-          : (args['prompt'] as String?) ?? '',
+          : CharacterPrompt.leadingWithGender(
+              (args['prompt'] as String?) ?? '',
+              gender,
+            ),
       negativePrompt: negativeSections != null
           ? CharacterSectionState.joinEnabled(negativeSections)
           : args.containsKey('negative_prompt')
@@ -658,6 +693,37 @@ class CharacterToolbox {
     if (args.containsKey('gender')) _parseGender(args['gender']);
   }
 
+  /// [sections] with the first included text section led by [gender]'s
+  /// tag, which is the first tag of the joined prompt.
+  static List<PromptGroupSectionSnapshot> _sectionsWithGender(
+    List<PromptGroupSectionSnapshot> sections,
+    CharacterGender gender,
+  ) {
+    var index = sections.indexWhere(
+      (section) =>
+          section.enabled &&
+          section.fixedTagId == null &&
+          section.text.trim().isNotEmpty,
+    );
+    if (index < 0) {
+      index = sections.indexWhere((section) => section.fixedTagId == null);
+    }
+    if (index < 0) return sections;
+    final section = sections[index];
+    final text = CharacterPrompt.leadingWithGender(section.text, gender);
+    if (text == section.text && section.enabled) return sections;
+    return [
+      ...sections.take(index),
+      PromptGroupSectionSnapshot(
+        id: section.id,
+        text: text,
+        collapsed: section.collapsed,
+        keepInMain: section.keepInMain,
+      ),
+      ...sections.skip(index + 1),
+    ];
+  }
+
   CharacterGender? _parseGender(Object? raw) => switch (raw) {
     null => null,
     'female' => CharacterGender.female,
@@ -690,6 +756,12 @@ class _PromptToolValidationException implements Exception {
   final String code;
   final String message;
 }
+
+const _genderNote =
+    'Default for a new character: female. A woman or girl is female, a man '
+    'or boy is male; other is only for characters without a gender. The app '
+    'starts the prompt with girl or boy to match, so do not add a gender tag '
+    'that contradicts it.';
 
 const _characterSectionsNote =
     'When get_prompt_state reports character_editor_mode grouped, keep the '

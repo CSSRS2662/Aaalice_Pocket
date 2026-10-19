@@ -367,4 +367,67 @@ void main() {
     final prefixes = (result['projection'] as Map)['positive_prefixes'] as List;
     expect([for (final p in prefixes) (p as FixedTagEntry).id], ['light']);
   });
+
+  group('the first tag follows the character gender', () {
+    test('add_character starts a female prompt with girl', () async {
+      final container = _setUp(grouped: false);
+      final result = await _run(container, 'add_character', {
+        'name': 'Miku',
+        'gender': 'female',
+        'prompt': 'hatsune miku, twintails, school uniform',
+      });
+      final miku = result['character'] as Map;
+      expect(miku['prompt'], 'girl, hatsune miku, twintails, school uniform');
+      final created = _character(container, miku['id'] as String);
+      expect(created.effectiveGender, CharacterGender.female);
+    });
+
+    test('add_character moves an existing 1girl to the front', () async {
+      final container = _setUp(grouped: false);
+      final result = await _run(container, 'add_character', {
+        'name': 'Miku',
+        'prompt': 'hatsune miku, 1girl, twintails',
+      });
+      expect(
+        (result['character'] as Map)['prompt'],
+        '1girl, hatsune miku, twintails',
+      );
+    });
+
+    test('add_character leads the first section in grouped mode', () async {
+      final container = _setUp();
+      final result = await _run(container, 'add_character', {
+        'name': 'Rin',
+        'gender': 'female',
+        'prompt_sections': [
+          {'text': 'kagamine rin'},
+          {'text': 'sailor collar'},
+        ],
+      });
+      final rin = result['character'] as Map;
+      expect(rin['prompt'], 'girl, kagamine rin, sailor collar');
+      final sections = rin['positive_sections'] as List;
+      expect((sections.first as Map)['text'], 'girl, kagamine rin');
+    });
+
+    test('update_character with a new gender rewrites the first tag', () async {
+      final container = _setUp(grouped: false, storeAliceSections: false);
+      await _run(container, 'update_character', {
+        'id': 'alice',
+        'gender': 'male',
+      });
+      final alice = _character(container, 'alice');
+      expect(alice.prompt, 'boy, red eyes, silver hair');
+      expect(alice.effectiveGender, CharacterGender.male);
+    });
+
+    test('a rewritten prompt keeps the current gender', () async {
+      final container = _setUp(grouped: false, storeAliceSections: false);
+      await _run(container, 'update_character', {
+        'id': 'alice',
+        'prompt': 'red eyes, maid',
+      });
+      expect(_character(container, 'alice').prompt, 'girl, red eyes, maid');
+    });
+  });
 }

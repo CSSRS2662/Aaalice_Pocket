@@ -289,6 +289,49 @@ class CharacterPrompt with _$CharacterPrompt {
     return CharacterGender.other;
   }
 
+  /// 让 [prompt] 的首个 tag 表达 [gender]：女性以 girl、男性以 boy 开头。
+  ///
+  /// 提示词里已有同性别 tag（girl/1girl、boy/1boy）时把它移到最前，不重复
+  /// 添加；首 tag 是另一性别时改写成目标性别；「其他」去掉开头的性别 tag。
+  /// 用于没有经过面板性别按钮写入的提示词（如智能体），保证面板配色与发送给
+  /// NovelAI 的角色提示词一致。
+  static String leadingWithGender(String prompt, CharacterGender gender) {
+    const female = {'girl', '1girl'};
+    const male = {'boy', '1boy'};
+    final tags = [
+      for (final tag in prompt.split(','))
+        if (tag.trim().isNotEmpty) tag.trim(),
+    ];
+    final wanted = switch (gender) {
+      CharacterGender.female => female,
+      CharacterGender.male => male,
+      CharacterGender.other => const <String>{},
+    };
+    final opposite = switch (gender) {
+      CharacterGender.female => male,
+      CharacterGender.male => female,
+      CharacterGender.other => const {...female, ...male},
+    };
+    if (tags.isNotEmpty && opposite.contains(tags.first.toLowerCase())) {
+      final numbered = tags.first.startsWith('1');
+      tags.removeAt(0);
+      if (gender != CharacterGender.other) {
+        final base = gender == CharacterGender.female ? 'girl' : 'boy';
+        tags.insert(0, numbered ? '1$base' : base);
+      }
+      return tags.join(', ');
+    }
+    if (gender == CharacterGender.other) return prompt;
+    final index = tags.indexWhere((tag) => wanted.contains(tag.toLowerCase()));
+    if (index == 0) return prompt;
+    if (index > 0) {
+      tags.insert(0, tags.removeAt(index));
+    } else {
+      tags.insert(0, gender == CharacterGender.female ? 'girl' : 'boy');
+    }
+    return tags.join(', ');
+  }
+
   /// 改写提示词首个性别 tag，使 [effectiveGender] 变为 [target]。
   ///
   /// 其余 tag 及顺序不变；原首 tag 带数字前缀（1girl/1boy）时保留前缀，
