@@ -74,6 +74,7 @@ class AutocompleteServices {
     this.rankingSignals,
     this.tagCategory,
     this.relatedCategoryCounts,
+    this.typedCategoryCounts,
   });
 
   final List<CompletionSource> localSources;
@@ -97,6 +98,11 @@ class AutocompleteServices {
   /// on the cards that narrow the suggestions to a category.
   final Future<Map<TagCategory, int>> Function(CompletionQuery query)?
   relatedCategoryCounts;
+
+  /// How many local tags each category holds among the matches of a typed
+  /// query, shown on the header buttons that narrow the list.
+  final Future<Map<TagCategory, int>> Function(CompletionQuery query)?
+  typedCategoryCounts;
 
   CompletionOrchestrator createOrchestrator() => CompletionOrchestrator(
     localSources: localSources,

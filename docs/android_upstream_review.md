@@ -13,10 +13,10 @@
 
 ## 版本号与发布
 
-- 格式为 `<上游版本>-custom.<N>[.<M>]+<构建号>`，如 `4.2.1-custom.21.1+66`；构建号每次打包加 1，安装包名为 `Aaalice_Pocket_<版本名>_arm64.apk`。
-- `custom.<N>` 是发布版：只有决定发布时，才把上次发布以来的全部改动合为一次大版本升级（如 `custom.21` → `custom.22`），连同代码一起推送，打 `pocket-v<版本名>` 标签，在 GitHub Releases 发布。标签不用 `v` 开头，避免触发上游继承的 Release 工作流，也不与上游标签重名。
-- 其余每次改动后的打包都是自用小版本，不发布也不推送代码：在最近的发布版后加 `.<M>`，从 1 起逐次加 1（`custom.21.1`、`custom.21.2`……`custom.21.10`），到下次发布时并入 `custom.22`。
-- 合并上游的新版本（如 4.3.0）后重置序号，版本名变为 `4.3.0-custom.1`。
+- 自 2026-10-19 起使用本分支自己的版本号，不再跟随上游的 `4.x.x-custom.N`（最后一个旧格式发布版是 `4.2.1-custom.23`）。格式为 `<X.Y.Z>[-dev.<N>]+<构建号>`；构建号每次打包加 1、持续递增，保证覆盖安装；安装包名为 `Aaalice_Pocket_<版本名>_arm64.apk`。
+- `X.Y.Z` 是发布版：下一个发布版为 `1.0.0`，之后 `1.1.0`、`1.2.0`……（只修问题的发布递增 Z）。只有决定发布时才连同代码一起推送，打 `pocket-v<版本名>` 标签，在 GitHub Releases 发布。标签不用 `v` 开头，避免触发上游继承的 Release 工作流，也不与上游标签重名。
+- 两次发布之间的打包都是自用包，不发布也不推送代码：首个发布版之前用 `0.9.0-dev.1`、`0.9.0-dev.2`……；发布 `1.0.0` 后自用包从 `1.1.0-dev.1` 起，发布时去掉 `-dev.N`。
+- 从上游移植改动不影响版本号。
 
 ## 有意分叉与合并规则
 
@@ -27,7 +27,7 @@
 | 社区入口 | 导航与“更多”面板不显示 GitHub/Discord | `CommunityLinks` 常量保留，上游其他代码仍在引用 |
 | 网络 | 共享连接工厂；Android 不使用应用级代理，交给系统/VPN | 保留工厂；上游的请求形态（浏览器请求头、JS 兼容 JSON）叠加在工厂创建的 Dio 上 |
 | 设置 | Android 隐藏“网络”“快捷键”分类 | 保留，按能力矩阵判断 |
-| 补全 | 中文否定与多关键词扩展；E5 语义补全（多视图 int8 包：基线文档 + AME 译名/别名/注释，标签取最高分，`E5VectorIndex`）；随包 AME 中文词库 `AmeZhLexicon` 提供中文别名反查并作为翻译的最后一级兜底；非 AI 搜索增强（`lib/core/autocomplete/lexical/`：同音/模糊音、全拼、自然码双拼、首字母、近似中文、中文拆词匹配英文 tag、英文纠错与词形，上下文共现与本机使用习惯排序），上下文联想（`RelatedTagScorer` 按光标前后最多 6 个词综合共现与提升度、冲突降权；`TagPairHistory` 本机搭配学习；只在选中补全、分词与联想键后续联想，`showRelated` 只看所选词；`CompletionExclusionScope` 排除其他分区与固定词；联想弹窗的漏斗按角色、作品、一般筛选：`RelatedCategoryFilter` 与 `CompletionQuery.relatedCategories`，筛选时读主导词的全部共现行，在线相关标签按同一规则过滤），数据由 `tool/search_lexicon/` 从固定版本的 MIT 来源生成，本机索引在后台构建；智能体 `search_tags` 经 `AgentTagLookup` 复用同一联想流程（不联网），相关标签可按角色、作品、一般分类筛选 | `e5CompletionSourceProvider` 放在 `e5_completion_source.dart`；只在上游的 `autocompleteServicesProvider` 中补 `semanticSource`、`supplementalSources`、`rankingSignals`、`tagCategory`、`relatedCategoryCounts` 五行；上游修改 `CompletionRanker` 时保留新增匹配方式的优先级（全部在字面匹配之后）与 `boosts` 参数；上游修改 `FastTagService` 时保留 `lexicon` 参数与其在搜索、解析末尾的位置；上游修改 `PromptTokenParser` 的权重语法剥离、`AliasParser`、`PromptLiteralScanner`、`PromptEditDocument` 的圆括号处理或 `SdToNaiConverter` 时，保留“标签自带符号不算语法”的规则（`_tagBounds`、颜文字的尖括号与圆括号、`名称_(xxx:1999)` 限定词）及对应测试 |
+| 补全 | 中文否定与多关键词扩展；E5 语义补全（多视图 int8 包：基线文档 + AME 译名/别名/注释，标签取最高分，`E5VectorIndex`）；随包 AME 中文词库 `AmeZhLexicon` 提供中文别名反查并作为翻译的最后一级兜底；非 AI 搜索增强（`lib/core/autocomplete/lexical/`：同音/模糊音、全拼、自然码双拼、首字母、近似中文、中文拆词匹配英文 tag、英文纠错与词形，上下文共现与本机使用习惯排序），上下文联想（`RelatedTagScorer` 按光标前后最多 6 个词综合共现与提升度、冲突降权；`TagPairHistory` 本机搭配学习；只在选中补全、分词与联想键后续联想，`showRelated` 只看所选词；`CompletionExclusionScope` 排除其他分区与固定词；补全弹窗重做为按匹配顺序换行、两端对齐的注音词块（`CompletionTile` / `CompletionRowsLayout`，Roboto Condensed），标题栏不回显输入、直接放分类按钮多选筛选（`CompletionCategoryFilter`：联想经 `CompletionQuery.relatedCategories` 读主导词的全部共现行，打字补全经 `typedCategories` 在基础词库与中文词典中按分类查询，在线结果同样过滤），底栏来源状态兼作来源圆点图例），数据由 `tool/search_lexicon/` 从固定版本的 MIT 来源生成，本机索引在后台构建；智能体 `search_tags` 经 `AgentTagLookup` 复用同一联想流程（不联网），相关标签可按角色、作品、一般分类筛选 | `e5CompletionSourceProvider` 放在 `e5_completion_source.dart`；只在上游的 `autocompleteServicesProvider` 中补 `semanticSource`、`supplementalSources`、`rankingSignals`、`tagCategory`、`relatedCategoryCounts`、`typedCategoryCounts` 六行；上游修改 `CompletionRanker` 时保留新增匹配方式的优先级（全部在字面匹配之后）与 `boosts` 参数；上游修改 `FastTagService` 时保留 `lexicon` 参数与其在搜索、解析末尾的位置；上游修改 `PromptTokenParser` 的权重语法剥离、`AliasParser`、`PromptLiteralScanner`、`PromptEditDocument` 的圆括号处理或 `SdToNaiConverter` 时，保留“标签自带符号不算语法”的规则（`_tagBounds`、颜文字的尖括号与圆括号、`名称_(xxx:1999)` 限定词）及对应测试 |
 | Prompt | 分组编辑（`PromptGroupGrid` 等高卡片网格：轻击在 `showPromptGroupEditSheet` 底部面板编辑、长按拖动排序、长按菜单、× 两次点按删除并可撤销；编辑页顶行按宽度收纳 Tag 切换与“更多”，底栏末端为“联想”（hub）与“分词”（剪刀）键，补全弹窗底栏同有剪刀胶囊，分词共用 `PromptTokenParser.insertSeparator`；`PromptTagModeToggle` 改为与正负切换同款的单键）、权重滑条、移动端工作台、长按权重工具条；移动端“角色 / 固定词 / 质量词”合为 `PromptRoleSegmentGroup`，各按钮新增 `segment` 呈现；智能体提示词约定 tag 优先（先 `search_tags`）、V4 起写 `x.x::tags::`（-3 到 3）、排除内容用正面负权重、负面提示词保持通用，并说明固定词自动加入与 `<词库名>` 引用；`PromptTag` 的权重范围与权重工具条统一为 -3 到 3，负权重写回数值语法；每个对话可设本机保存的对话提示词（`AgentChatSessionInstructions`，组装为 `<conversation_instructions>`，不进 Harness 会话文件）；智能体按分区读写：`get_prompt_state` 返回分区，`edit_prompt_sections` / `remove_prompt_section` 改单个分区（带 `character_id` 时改角色分区），分区模式下写提示词不合并分区，写入经 `PromptSectionState` 走分区恢复请求；角色工具拆在 `character_toolbox.dart`，角色分区经 `CharacterSectionState`，另有角色库工具 | 保留；上游修改这些按钮的桌面外观时照常合并，`segment` 分支保持不变；上游改智能体提示词或角色工具时保留分区分支，角色工具改动落到 `character_toolbox.dart` |
 | 分组持久化 | `PromptGroupRecordStore` 按结果图内容哈希记录分区，不写进 PNG；复用参数时按标签比对（`PromptGroupRestoreRequest.samePromptTags`）后恢复，请求用后即清 | 与上游固定词记录一致；解析时在 `ImageMetadataService` 挂载，旧版写进 PNG 的 `aaalice_prompt_groups` 仍可读取且优先 |
 | 图片菜单 | “保存 → 复用参数 → 复用种子 → 收藏”开头（本轮图不含复用参数），无 Krita/Discord 项；本地画廊、智能体图片与在线画廊 AI TAG 图都能直接复用种子（`reuseImageSeed`）；收藏状态按文件共享（`imageFavoriteStatusProvider`，只由 `LocalGalleryNotifier` 写入），成功切换不弹提示；“更多 → 读取图片元数据”选图后打开拖放与分享导入共用的图片用途对话框，先显示提示词与参数，首项“复用参数”（`drop_extractMetadata`）进入 `ImageMetadataImportWorkflow` | 与上游新增的复制、删除等操作合并，危险操作排在最后；存盘复用上游 `GeneratedImageFileLink`；上游新增收藏入口时走 `LocalGalleryNotifier.toggleFavorite` 或 `toggleGeneratedImageFavorite` |
@@ -43,7 +43,7 @@
 
 ## 最近一次移植（2026-10-19）
 
-- 已审阅到上游 `f92ead23`（2026-10-17，4.3.0 之后）。基线仍是最后一次整体合并的 `d1437760`；版本号不随移植改为 4.3.0。
+- 已审阅到上游 `f92ead23`（2026-10-17，4.3.0 之后）。基线仍是最后一次整体合并的 `d1437760`。
 - 343 个候选提交按时间顺序逐条处理：直接合入 146、解决冲突后合入 34、部分移植 5；跳过 22（依赖被排除的改造、纯重构或本分支已改写的区域），只改测试且冲突的 23 个保留本分支测试，另有 4 个合入后因依赖暂缓内容而撤回。
 - 合入的主要内容：V5 节约 / 标准档位与动漫 / 兽人模式、移除已保存账号、DIY 与随机词库的大批规则修复和窄屏布局、表单标题与页脚的自适应固定、共享输入框清空按钮命中区、智能体按确认请求执行、水印自动选位与自动灰阶、重绘编辑器工具栏与蒙版修复、本地 tagger 缓存与子目录扫描。
 - 暂缓（第五批，约 70 个）：元数据读写、哈希、缓存、isolate 与保存命名，以及依赖它们的 EXIF 方向、队列快照异步编码、拖放与导出、对比视图、PixAI tagger、文件名清洗等；之后单独移植。

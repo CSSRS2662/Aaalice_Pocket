@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 
 import '../../../core/autocomplete/autocomplete_settings.dart';
 import '../../../core/autocomplete/cooccurrence_data_pack_service.dart';
@@ -7,28 +6,18 @@ import '../../../core/autocomplete/completion_models.dart';
 import '../../../core/autocomplete/zh_dictionary_service.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../adaptive/interaction_policy.dart';
-import 'completion_match_note.dart';
-import 'related_category_filter.dart';
-
-const double autocompleteCandidateExtent = 35;
-
-double effectiveAutocompleteCandidateExtent(BuildContext context) {
-  final minimum = context.interactionPolicy.touchAvailable
-      ? context.interactionPolicy.minimumControlExtent
-      : autocompleteCandidateExtent;
-  final scaledFontSize = MediaQuery.textScalerOf(context).scale(13);
-  final scaleFactor = scaledFontSize / 13;
-  final scaledContentHeight = scaleFactor > 1.3
-      ? scaledFontSize * 2.4 + 18
-      : scaledFontSize * 1.35 + 16;
-  return scaledContentHeight > minimum ? scaledContentHeight : minimum;
-}
+import 'completion_candidate_rows.dart';
+import 'completion_category_filter.dart';
+import 'completion_footer.dart';
+import 'completion_header.dart';
+import 'completion_tile_layout.dart';
 
 /// Compact completion popup inspired by editor command palettes.
 ///
-/// The header is reserved for query context and actual keyboard commands. The
-/// footer reports source health, while the middle remains a dense, scannable
-/// table of candidates.
+/// The header holds the category buttons and the popup actions, the footer
+/// reports source health (and is the legend of the source dots), and the
+/// middle shows the candidates as wrapped, justified rows of compact tiles
+/// in match order.
 class CompletionOverlay extends StatelessWidget {
   const CompletionOverlay({
     super.key,
@@ -46,15 +35,14 @@ class CompletionOverlay extends StatelessWidget {
     required this.onSelected,
     required this.onClose,
     required this.onOpenSettings,
+    required this.measurer,
+    required this.geometry,
     this.tagSections = const {},
     this.onInsertSeparator,
     this.isRelatedPinned = false,
     this.onToggleRelatedPin,
-    this.relatedFilter,
+    this.categoryFilter,
   });
-
-  /// Space kept around the category cards floating over the list.
-  static const double _filterPanelMargin = 4;
 
   final CompletionState state;
   final int selectedIndex;
@@ -71,6 +59,12 @@ class CompletionOverlay extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback onOpenSettings;
 
+  /// Measures tiles; kept by the field so sizes survive rebuilds.
+  final CompletionTileMeasurer measurer;
+
+  /// Receives the row layout, which the field uses for scrolling.
+  final CompletionListGeometry geometry;
+
   /// Sections (1-based) of a grouped prompt that already hold each tag.
   final Map<String, List<int>> tagSections;
 
@@ -79,52 +73,22 @@ class CompletionOverlay extends StatelessWidget {
   final bool isRelatedPinned;
   final VoidCallback? onToggleRelatedPin;
 
-  /// Narrows related suggestions to categories; the funnel shows when given.
-  final RelatedCategoryFilter? relatedFilter;
+  /// Narrows the list to categories; the header buttons show when given.
+  final CompletionCategoryFilter? categoryFilter;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-    final interactionPolicy = context.interactionPolicy;
-    final touchInput = interactionPolicy.touchAvailable;
-    final candidateExtent = effectiveAutocompleteCandidateExtent(context);
-    final scaledHeader = MediaQuery.textScalerOf(context).scale(14) * 1.35 + 14;
-    final headerExtent = scaledHeader > (touchInput ? 56.0 : 36.0)
-        ? scaledHeader
-        : (touchInput ? 56.0 : 36.0);
-    final scaledFooter = MediaQuery.textScalerOf(context).scale(11) * 1.35 + 16;
-    final footerExtent = scaledFooter > (touchInput ? 48.0 : 31.0)
-        ? scaledFooter
-        : (touchInput ? 48.0 : 31.0);
-    final showFooter =
-        maxHeight >= headerExtent + candidateExtent + footerExtent;
-    final scrollHeader = maxHeight < headerExtent + candidateExtent;
-    final filter = state.query?.relatedTag == null ? null : relatedFilter;
-    // The category cards float over the list, under the header: tall where
-    // the list leaves room for them, one line otherwise. A popup too short
-    // to float anything shows them as a row after its header instead.
-    final bodyRoom = maxHeight - headerExtent - (showFooter ? footerExtent : 0);
-    final compactCards =
-        bodyRoom <
-        RelatedCategoryFilterPanel.extentOf(context, compact: false) +
-            _filterPanelMargin * 2;
-    final floatingCards = filter != null && filter.open && !scrollHeader
-        ? filter
-        : null;
-    final cardsRoom = floatingCards != null
-        ? RelatedCategoryFilterPanel.extentOf(context, compact: compactCards) +
-              _filterPanelMargin * 2
-        : 0.0;
-    final inlineCards = filter != null && filter.open && scrollHeader
-        ? RelatedCategoryFilterPanel(
-            filter: filter,
-            compact: true,
-            floating: false,
-          )
-        : null;
-    final header = _CompletionHeader(
-      query: _displayQuery(context, state.query),
+    final touchInput = context.interactionPolicy.touchAvailable;
+    final headerExtent = CompletionHeader.extentOf(context);
+    final footerExtent = CompletionFooter.extentOf(context);
+    // One row of tiles with the list padding.
+    final rowExtent = (touchInput ? 44.0 : 40.0) + 12;
+    final showFooter = maxHeight >= headerExtent + rowExtent + footerExtent;
+    final scrollHeader = maxHeight < headerExtent + rowExtent;
+    final filter = categoryFilter;
+    final header = CompletionHeader(
       resultCount: state.candidates.length,
       related: state.query?.relatedTag != null,
       isRelatedPinned: isRelatedPinned,
@@ -191,101 +155,55 @@ class CompletionOverlay extends StatelessWidget {
               color: popupSurface,
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxHeight),
-                child: Stack(
-                  fit: StackFit.passthrough,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (!scrollHeader) header,
-                        Flexible(
-                          child: ConstrainedBox(
-                            // Room for the cards over a short or empty list.
-                            constraints: BoxConstraints(minHeight: cardsRoom),
-                            child: state.candidates.isEmpty
-                                ? SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        if (floatingCards != null)
-                                          SizedBox(height: cardsRoom),
-                                        _EmptyCompletionBody(
-                                          state: state,
-                                          onClearFilter:
-                                              filter != null && filter.active
-                                              ? filter.onClear
-                                              : null,
-                                        ),
-                                        if (scrollHeader) header,
-                                        if (inlineCards != null) inlineCards,
-                                      ],
-                                    ),
-                                  )
-                                : NotificationListener<ScrollStartNotification>(
-                                    // Browsing the list puts the cards away.
-                                    onNotification: (notification) {
-                                      if (notification.dragDetails != null) {
-                                        floatingCards?.onTogglePanel();
-                                      }
-                                      return false;
-                                    },
-                                    child: _CandidateList(
-                                      state: state,
-                                      selectedIndex: selectedIndex,
-                                      scrollController: scrollController,
-                                      touchCompact: touchCompact,
-                                      showAliases: showAliases,
-                                      showTranslations: showTranslations,
-                                      showCategory: showCategory,
-                                      showCount: showCount,
-                                      showMatchNote: settings.showMatchNotes,
-                                      tagSections: tagSections,
-                                      onSelected: onSelected,
-                                      // When the keyboard leaves very little
-                                      // room, candidates stay first; header
-                                      // actions remain reachable in the same
-                                      // scrollable surface.
-                                      trailing: [
-                                        if (scrollHeader) header,
-                                        if (inlineCards != null) inlineCards,
-                                      ],
-                                    ),
+                    if (!scrollHeader) header,
+                    Flexible(
+                      child: state.candidates.isEmpty
+                          ? SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _EmptyCompletionBody(
+                                    state: state,
+                                    onClearFilter:
+                                        filter != null && filter.active
+                                        ? filter.onClear
+                                        : null,
                                   ),
-                          ),
-                        ),
-                        if (showFooter)
-                          _CompletionFooter(
-                            state: state,
-                            settings: settings,
-                            dictionaryState: dictionaryState,
-                            cooccurrenceDataPackState:
-                                cooccurrenceDataPackState,
-                            onOpenSettings: onOpenSettings,
-                            onInsertSeparator: onInsertSeparator,
-                          ),
-                      ],
-                    ),
-                    if (floatingCards != null)
-                      Positioned(
-                        top: headerExtent + _filterPanelMargin,
-                        left: 8,
-                        right: 8,
-                        bottom:
-                            (showFooter ? footerExtent : 0) +
-                            _filterPanelMargin,
-                        child: Align(
-                          alignment: AlignmentDirectional.topEnd,
-                          // Shrinks rather than clips when even the one-line
-                          // cards do not fit.
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: AlignmentDirectional.topEnd,
-                            child: RelatedCategoryFilterPanel(
-                              filter: floatingCards,
-                              compact: compactCards,
+                                  if (scrollHeader) header,
+                                ],
+                              ),
+                            )
+                          : CompletionCandidateRows(
+                              state: state,
+                              selectedIndex: selectedIndex,
+                              scrollController: scrollController,
+                              touchCompact: touchCompact,
+                              showAliases: showAliases,
+                              showTranslations: showTranslations,
+                              showCategory: showCategory,
+                              showCount: showCount,
+                              showMatchNote: settings.showMatchNotes,
+                              tagSections: tagSections,
+                              measurer: measurer,
+                              geometry: geometry,
+                              onSelected: onSelected,
+                              // When the keyboard leaves very little room,
+                              // candidates stay first; header actions remain
+                              // reachable in the same scrollable surface.
+                              trailing: [if (scrollHeader) header],
                             ),
-                          ),
-                        ),
+                    ),
+                    if (showFooter)
+                      CompletionFooter(
+                        state: state,
+                        settings: settings,
+                        dictionaryState: dictionaryState,
+                        cooccurrenceDataPackState: cooccurrenceDataPackState,
+                        onOpenSettings: onOpenSettings,
+                        onInsertSeparator: onInsertSeparator,
                       ),
                   ],
                 ),
@@ -296,103 +214,6 @@ class CompletionOverlay extends StatelessWidget {
       },
     );
   }
-
-  static String _displayQuery(BuildContext context, CompletionQuery? query) {
-    if (query == null) return '';
-    if (query.token.isNotEmpty) return query.token;
-    final relatedTag = query.relatedTag ?? '';
-    // Suggestions that fit several written tags say so.
-    if (relatedTag.isEmpty || query.contextTags.isEmpty) return relatedTag;
-    return context.l10n.autocomplete_relatedWithContext(
-      relatedTag,
-      query.contextTags.length + 1,
-    );
-  }
-}
-
-/// The scrolling candidate rows, followed by [trailing] in the same
-/// scrollable surface.
-class _CandidateList extends StatelessWidget {
-  const _CandidateList({
-    required this.state,
-    required this.selectedIndex,
-    required this.scrollController,
-    required this.touchCompact,
-    required this.showAliases,
-    required this.showTranslations,
-    required this.showCategory,
-    required this.showCount,
-    required this.showMatchNote,
-    required this.tagSections,
-    required this.onSelected,
-    this.trailing = const [],
-  });
-
-  final CompletionState state;
-  final int selectedIndex;
-  final ScrollController scrollController;
-  final bool touchCompact;
-  final bool showAliases;
-  final bool showTranslations;
-  final bool showCategory;
-  final bool showCount;
-  final bool showMatchNote;
-  final Map<String, List<int>> tagSections;
-  final ValueChanged<int> onSelected;
-  final List<Widget> trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final candidateExtent = effectiveAutocompleteCandidateExtent(context);
-    final long = state.candidates.length > 9;
-    return Scrollbar(
-      key: const ValueKey('autocomplete-popup-scrollbar'),
-      controller: scrollController,
-      thumbVisibility: long,
-      trackVisibility: long,
-      interactive: !touchCompact,
-      thickness: touchCompact ? 4 : 8,
-      radius: const Radius.circular(8),
-      child: CustomScrollView(
-        key: const ValueKey('autocomplete-popup-list'),
-        controller: scrollController,
-        shrinkWrap: true,
-        scrollCacheExtent: ScrollCacheExtent.pixels(candidateExtent * 10),
-        slivers: [
-          SliverPadding(
-            padding: EdgeInsets.only(right: touchCompact ? 6 : 14),
-            sliver: SliverFixedExtentList(
-              itemExtent: candidateExtent,
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final candidate = state.candidates[index];
-                  return _CompletionTile(
-                    key: ValueKey(
-                      'autocomplete-candidate-${candidate.stableId}',
-                    ),
-                    candidate: candidate,
-                    selected: index == selectedIndex,
-                    showAliases: showAliases,
-                    showTranslations: showTranslations,
-                    showCategory: showCategory,
-                    showCount: showCount,
-                    showMatchNote: showMatchNote,
-                    sections: candidate.isExisting
-                        ? tagSections[candidate.canonicalTag]
-                        : null,
-                    onTap: () => onSelected(index),
-                  );
-                },
-                childCount: state.candidates.length,
-                addAutomaticKeepAlives: false,
-              ),
-            ),
-          ),
-          for (final row in trailing) SliverToBoxAdapter(child: row),
-        ],
-      ),
-    );
-  }
 }
 
 class _EmptyCompletionBody extends StatelessWidget {
@@ -400,8 +221,8 @@ class _EmptyCompletionBody extends StatelessWidget {
 
   final CompletionState state;
 
-  /// Clears the categories related suggestions are narrowed to; given while
-  /// some are chosen, so an empty list says why and offers the way out.
+  /// Clears the categories the list is narrowed to; given while some are
+  /// chosen, so an empty list says why and offers the way out.
   final VoidCallback? onClearFilter;
 
   @override
@@ -448,6 +269,8 @@ class _EmptyCompletionBody extends StatelessWidget {
     bool related,
     String? error,
   ) {
+    final l10n = context.l10n;
+    final filtered = onClearFilter != null;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18),
       child: Row(
@@ -467,7 +290,7 @@ class _EmptyCompletionBody extends StatelessWidget {
             Icon(
               error != null
                   ? Icons.error_outline_rounded
-                  : related && onClearFilter != null
+                  : filtered
                   ? Icons.filter_alt_off_outlined
                   : Icons.manage_search_rounded,
               size: 18,
@@ -482,15 +305,17 @@ class _EmptyCompletionBody extends StatelessWidget {
               child: Text(
                 loading
                     ? related
-                          ? context.l10n.autocomplete_relatedLoading
-                          : context.l10n.autocomplete_loading
-                    : error == null
+                          ? l10n.autocomplete_relatedLoading
+                          : l10n.autocomplete_loading
+                    : error != null
+                    ? l10n.autocomplete_statusError
+                    : filtered
                     ? related
-                          ? onClearFilter == null
-                                ? context.l10n.autocomplete_relatedEmpty
-                                : context.l10n.autocomplete_relatedFilterEmpty
-                          : context.l10n.autocomplete_empty
-                    : context.l10n.autocomplete_statusError,
+                          ? l10n.autocomplete_relatedFilterEmpty
+                          : l10n.autocomplete_filterEmpty
+                    : related
+                    ? l10n.autocomplete_relatedEmpty
+                    : l10n.autocomplete_empty,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -502,1337 +327,6 @@ class _EmptyCompletionBody extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CompletionHeader extends StatelessWidget {
-  const _CompletionHeader({
-    required this.query,
-    required this.resultCount,
-    required this.related,
-    required this.isRelatedPinned,
-    required this.onToggleRelatedPin,
-    required this.onOpenSettings,
-    required this.onClose,
-    this.onInsertSeparator,
-    this.filter,
-  });
-
-  final String query;
-  final int resultCount;
-  final bool related;
-  final bool isRelatedPinned;
-  final VoidCallback? onToggleRelatedPin;
-
-  /// The funnel that narrows related suggestions to categories.
-  final RelatedCategoryFilter? filter;
-  final VoidCallback? onOpenSettings;
-  final VoidCallback? onInsertSeparator;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final touchInput = context.interactionPolicy.touchAvailable;
-    final minimumHeight = touchInput ? 56.0 : 36.0;
-    final scaledHeight = MediaQuery.textScalerOf(context).scale(14) * 1.35 + 14;
-    final headerHeight = scaledHeight > minimumHeight
-        ? scaledHeight
-        : minimumHeight;
-    return Container(
-      key: const ValueKey('autocomplete-popup-header'),
-      height: headerHeight,
-      padding: EdgeInsets.fromLTRB(
-        8,
-        touchInput ? 3 : 5,
-        4,
-        touchInput ? 3 : 5,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHigh,
-        border: Border(
-          bottom: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final touchCompact = touchInput && constraints.maxWidth < 600;
-          final showTitle = constraints.maxWidth >= 440;
-          final showFullShortcuts = constraints.maxWidth >= 650;
-          final showCompactShortcuts = constraints.maxWidth >= 540;
-          final buttonExtent = touchInput
-              ? context.interactionPolicy.minimumControlExtent
-              : 28.0;
-          final buttons = [
-            onOpenSettings != null,
-            filter != null,
-            related && onToggleRelatedPin != null,
-            true,
-          ].where((shown) => shown).length;
-          // Where the buttons leave little room, the count gives way to the
-          // tag being read.
-          final showCount =
-              constraints.maxWidth -
-                  buttons * buttonExtent -
-                  (onInsertSeparator == null ? 0 : 60) >=
-              120;
-          return Row(
-            children: [
-              if (showTitle) ...[
-                Container(
-                  width: 3,
-                  height: 17,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                        blurRadius: 6,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  related
-                      ? context.l10n.autocomplete_relatedHeaderTitle
-                      : context.l10n.autocomplete_headerTitle,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-              Expanded(
-                child: Container(
-                  key: const ValueKey('autocomplete-popup-query'),
-                  height: headerHeight - (touchInput ? 6 : 10),
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: Color.alphaBlend(
-                      theme.colorScheme.onSurface.withValues(alpha: 0.07),
-                      theme.colorScheme.surfaceContainerHigh,
-                    ),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Text(
-                    query,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              if (showCount) ...[
-                const SizedBox(width: 9),
-                Semantics(
-                  label: context.l10n.autocomplete_resultsCount(resultCount),
-                  child: Text(
-                    touchCompact
-                        ? '$resultCount'
-                        : context.l10n.autocomplete_resultsCount(resultCount),
-                    key: const ValueKey('autocomplete-popup-result-count'),
-                    maxLines: 1,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ),
-              ],
-              SizedBox(width: touchCompact ? 4 : 9),
-              if (!touchCompact) ...[
-                if (showFullShortcuts)
-                  const _KeyboardHints()
-                else if (showCompactShortcuts)
-                  const _KeyboardHints(compact: true)
-                else
-                  Tooltip(
-                    message: _shortcutDescription(context),
-                    child: Icon(
-                      Icons.keyboard_alt_outlined,
-                      size: 16,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                const SizedBox(width: 2),
-              ],
-              if (onInsertSeparator case final split?) ...[
-                _SplitButton(onPressed: split),
-                const SizedBox(width: 4),
-              ],
-              if (onOpenSettings != null)
-                _NonFocusableIconButton(
-                  key: const ValueKey('autocomplete-popup-settings'),
-                  tooltip: context.l10n.autocomplete_openSettings,
-                  icon: Icons.settings_rounded,
-                  onPressed: onOpenSettings!,
-                ),
-              if (filter case final filter?)
-                RelatedCategoryFilterButton(filter: filter),
-              if (related && onToggleRelatedPin != null)
-                _NonFocusableIconButton(
-                  key: const ValueKey('autocomplete-popup-related-pin'),
-                  tooltip: isRelatedPinned
-                      ? context.l10n.autocomplete_relatedUnpin
-                      : context.l10n.autocomplete_relatedPin,
-                  icon: isRelatedPinned
-                      ? Icons.push_pin_rounded
-                      : Icons.push_pin_outlined,
-                  active: isRelatedPinned,
-                  onPressed: onToggleRelatedPin!,
-                ),
-              _NonFocusableIconButton(
-                key: const ValueKey('autocomplete-popup-close'),
-                tooltip: context.l10n.autocomplete_actionClose,
-                icon: Icons.close_rounded,
-                onPressed: onClose,
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  static String _shortcutDescription(BuildContext context) =>
-      '↑↓ ${context.l10n.autocomplete_actionSelect} · '
-      'Enter/Tab ${context.l10n.autocomplete_actionConfirm} · '
-      'Esc ${context.l10n.autocomplete_actionClose}';
-}
-
-class _KeyboardHints extends StatelessWidget {
-  const _KeyboardHints({this.compact = false});
-
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final mutedStyle = theme.textTheme.labelSmall?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-      fontSize: 10.5,
-    );
-    final keyStyle = mutedStyle?.copyWith(
-      color: theme.colorScheme.onSurface,
-      fontWeight: FontWeight.w600,
-    );
-    final content = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: compact
-          ? [
-              Text('↑↓', style: keyStyle),
-              Text(' · ', style: mutedStyle),
-              Text('Enter/Tab', style: keyStyle),
-              Text(' · ', style: mutedStyle),
-              Text('Esc', style: keyStyle),
-            ]
-          : [
-              Text('↑↓', style: keyStyle),
-              const SizedBox(width: 3),
-              Text(context.l10n.autocomplete_actionSelect, style: mutedStyle),
-              Text(' · ', style: mutedStyle),
-              Text('Enter/Tab', style: keyStyle),
-              const SizedBox(width: 3),
-              Text(context.l10n.autocomplete_actionConfirm, style: mutedStyle),
-              Text(' · ', style: mutedStyle),
-              Text('Esc', style: keyStyle),
-              const SizedBox(width: 3),
-              Text(context.l10n.autocomplete_actionClose, style: mutedStyle),
-            ],
-    );
-    return Tooltip(
-      message: _CompletionHeader._shortcutDescription(context),
-      child: ClipRect(
-        child: SizedBox(
-          width: compact ? 105 : 218,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: content,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CompletionTile extends StatelessWidget {
-  const _CompletionTile({
-    super.key,
-    required this.candidate,
-    required this.selected,
-    required this.showAliases,
-    required this.showTranslations,
-    required this.showCategory,
-    required this.showCount,
-    this.showMatchNote = true,
-    this.sections,
-    required this.onTap,
-  });
-
-  final CompletionCandidate candidate;
-  final bool selected;
-  final bool showAliases;
-  final bool showTranslations;
-  final bool showCategory;
-  final bool showCount;
-  final bool showMatchNote;
-
-  /// Sections of a grouped prompt that already hold this tag.
-  final List<int>? sections;
-  final VoidCallback onTap;
-
-  Widget? _matchNote(BuildContext context) {
-    if (!showMatchNote) return null;
-    final label = completionMatchNoteLabel(context, candidate);
-    if (label == null) return null;
-    return CompletionMatchNote(label: label, hint: candidate.matchHint);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final categoryColor = _categoryColor(context, candidate.category);
-    final secondary = <String>[
-      if (showTranslations && candidate.translation?.isNotEmpty == true)
-        candidate.translation!,
-      if (!showTranslations &&
-          showAliases &&
-          candidate.matchedAlias?.isNotEmpty == true)
-        context.l10n.autocomplete_aliasMatch(candidate.matchedAlias!),
-    ];
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: candidate.isExisting ? null : onTap,
-        child: Container(
-          height: effectiveAutocompleteCandidateExtent(context),
-          decoration: BoxDecoration(
-            color: selected
-                ? categoryColor.withValues(
-                    alpha: theme.brightness == Brightness.dark ? 0.27 : 0.13,
-                  )
-                : Colors.transparent,
-            border: Border(
-              bottom: BorderSide(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
-              ),
-              left: BorderSide(
-                color: selected ? categoryColor : Colors.transparent,
-                width: 2,
-              ),
-            ),
-          ),
-          padding: const EdgeInsets.only(left: 7, right: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Opacity(
-                  opacity: candidate.isExisting ? 0.46 : 1,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      if (constraints.maxWidth < 480) {
-                        return _buildCompactContent(
-                          context,
-                          theme,
-                          categoryColor,
-                          secondary,
-                        );
-                      }
-                      return _buildWideContent(
-                        context,
-                        theme,
-                        categoryColor,
-                        secondary,
-                      );
-                    },
-                  ),
-                ),
-              ),
-              // Stays clear on the faded row: where the tag already is.
-              if (sections case final numbers? when numbers.isNotEmpty) ...[
-                const SizedBox(width: 8),
-                _SectionBadge(sections: numbers),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCompactContent(
-    BuildContext context,
-    ThemeData theme,
-    Color categoryColor,
-    List<String> secondary,
-  ) {
-    final hasSecondary =
-        secondary.isNotEmpty || (showTranslations && candidate.isTranslating);
-    final note = _matchNote(context);
-    return Row(
-      children: [
-        if (showCategory) ...[
-          _buildCategoryIcon(context, categoryColor, size: 16),
-          const SizedBox(width: 8),
-        ],
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      candidate.canonicalTag,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: categoryColor,
-                        fontWeight: FontWeight.w600,
-                        height: 1.05,
-                      ),
-                    ),
-                  ),
-                  if (showCount) ...[
-                    const SizedBox(width: 8),
-                    _buildMetric(context, theme, width: 52),
-                  ],
-                ],
-              ),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  if (note != null) ...[note, const SizedBox(width: 6)],
-                  Expanded(
-                    child: hasSecondary
-                        ? _CandidateSecondary(
-                            values: secondary,
-                            isTranslating:
-                                showTranslations && candidate.isTranslating,
-                            translationMissing: false,
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                  const SizedBox(width: 6),
-                  _SourceBadges(sources: candidate.sources, compact: true),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWideContent(
-    BuildContext context,
-    ThemeData theme,
-    Color categoryColor,
-    List<String> secondary,
-  ) {
-    final note = _matchNote(context);
-    return Row(
-      children: [
-        if (showCategory) ...[
-          _buildCategoryIcon(context, categoryColor),
-          const SizedBox(width: 8),
-        ],
-        Expanded(
-          flex: showTranslations ? 5 : 8,
-          child: Text(
-            candidate.canonicalTag,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: categoryColor,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.05,
-            ),
-          ),
-        ),
-        if (note != null) ...[const SizedBox(width: 8), note],
-        if (showTranslations) ...[
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 4,
-            child: _CandidateSecondary(
-              values: secondary,
-              isTranslating: candidate.isTranslating,
-              translationMissing: candidate.translation?.isNotEmpty != true,
-            ),
-          ),
-        ],
-        if (showCount) ...[
-          const SizedBox(width: 8),
-          _buildMetric(context, theme),
-        ],
-        const SizedBox(width: 8),
-        _SourceBadges(sources: candidate.sources),
-      ],
-    );
-  }
-
-  Widget _buildCategoryIcon(
-    BuildContext context,
-    Color categoryColor, {
-    double size = 15,
-  }) {
-    return Tooltip(
-      message: _categoryLabel(context, candidate.category),
-      child: Icon(
-        _categoryIcon(candidate.category),
-        key: ValueKey('autocomplete-category-${candidate.category.name}'),
-        size: size,
-        color: categoryColor,
-      ),
-    );
-  }
-
-  Widget _buildMetric(
-    BuildContext context,
-    ThemeData theme, {
-    double width = 54,
-  }) {
-    return Tooltip(
-      message: _metricTooltip(context, candidate),
-      child: SizedBox(
-        width: width,
-        child: Text(
-          _metricLabel(candidate),
-          maxLines: 1,
-          textAlign: TextAlign.right,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: _metricColor(context),
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-      ),
-    );
-  }
-
-  static IconData _categoryIcon(TagCategory category) => switch (category) {
-    TagCategory.general => Icons.sell_rounded,
-    TagCategory.artist => Icons.brush_rounded,
-    TagCategory.copyright => Icons.copyright_rounded,
-    TagCategory.character => Icons.person_rounded,
-    TagCategory.meta => Icons.tune_rounded,
-    TagCategory.contributor => Icons.badge_rounded,
-    TagCategory.species => Icons.pets_rounded,
-    TagCategory.lore => Icons.auto_stories_rounded,
-    TagCategory.library => Icons.collections_bookmark_rounded,
-  };
-
-  static String _categoryLabel(BuildContext context, TagCategory category) =>
-      switch (category) {
-        TagCategory.general => context.l10n.autocomplete_categoryGeneral,
-        TagCategory.artist => context.l10n.autocomplete_categoryArtist,
-        TagCategory.copyright => context.l10n.autocomplete_categoryCopyright,
-        TagCategory.character => context.l10n.autocomplete_categoryCharacter,
-        TagCategory.meta => context.l10n.autocomplete_categoryMeta,
-        TagCategory.contributor =>
-          context.l10n.autocomplete_categoryContributor,
-        TagCategory.species => context.l10n.autocomplete_categorySpecies,
-        TagCategory.lore => context.l10n.autocomplete_categoryLore,
-        TagCategory.library => context.l10n.autocomplete_categoryLibrary,
-      };
-
-  static Color _categoryColor(BuildContext context, TagCategory category) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return switch ((category, dark)) {
-      (TagCategory.general, true) => const Color(0xff62b9f0),
-      (TagCategory.general, false) => const Color(0xff176d9f),
-      (TagCategory.artist, true) => const Color(0xffff7b78),
-      (TagCategory.artist, false) => const Color(0xffb52c2a),
-      (TagCategory.copyright, true) => const Color(0xffd083e0),
-      (TagCategory.copyright, false) => const Color(0xff7b4389),
-      (TagCategory.character, true) => const Color(0xff7bd27e),
-      (TagCategory.character, false) => const Color(0xff2b7834),
-      (TagCategory.meta, true) => const Color(0xffffb85c),
-      (TagCategory.meta, false) => const Color(0xff925b08),
-      (TagCategory.contributor, true) => const Color(0xffff9d66),
-      (TagCategory.contributor, false) => const Color(0xffa84f1d),
-      (TagCategory.species, true) => const Color(0xff5ed6c4),
-      (TagCategory.species, false) => const Color(0xff167568),
-      (TagCategory.lore, true) => const Color(0xff9fa8ff),
-      (TagCategory.lore, false) => const Color(0xff4d56a8),
-      (TagCategory.library, true) => const Color(0xff64d4c5),
-      (TagCategory.library, false) => const Color(0xff167568),
-    };
-  }
-
-  static Color _metricColor(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xff66bdf3)
-      : const Color(0xff176d9f);
-
-  static String _metricLabel(CompletionCandidate candidate) {
-    final score = candidate.relatedScore;
-    if (score != null) {
-      final percent = score * 100;
-      return percent >= 10
-          ? '${percent.toStringAsFixed(0)}%'
-          : '${percent.toStringAsFixed(1)}%';
-    }
-    return candidate.postCount > 0 ? _compactCount(candidate.postCount) : '';
-  }
-
-  static String _metricTooltip(
-    BuildContext context,
-    CompletionCandidate candidate,
-  ) {
-    final score = candidate.relatedScore;
-    if (score == null) return _compactCount(candidate.postCount);
-    return context.l10n.autocomplete_relatedMetric(
-      candidate.cooccurrenceCount ?? 0,
-      '${(score * 100).toStringAsFixed(2)}%',
-    );
-  }
-
-  static String _compactCount(int value) {
-    if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
-    if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
-    return '$value';
-  }
-}
-
-class _CandidateSecondary extends StatelessWidget {
-  const _CandidateSecondary({
-    required this.values,
-    required this.isTranslating,
-    required this.translationMissing,
-  });
-
-  final List<String> values;
-  final bool isTranslating;
-  final bool translationMissing;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final displayValues = <String>[
-      if (translationMissing && !isTranslating)
-        context.l10n.autocomplete_missingTranslation,
-      ...values,
-    ];
-    return Row(
-      children: [
-        SizedBox(
-          width: 14,
-          height: 14,
-          child: Center(
-            child: isTranslating
-                ? SizedBox(
-                    width: 11,
-                    height: 11,
-                    child: CircularProgressIndicator(
-                      value: MediaQuery.disableAnimationsOf(context)
-                          ? 0.75
-                          : null,
-                      strokeWidth: 1.5,
-                      color: theme.colorScheme.primary,
-                    ),
-                  )
-                : Icon(
-                    translationMissing
-                        ? Icons.translate_rounded
-                        : Icons.menu_book_rounded,
-                    size: 14,
-                    color: theme.colorScheme.onSurfaceVariant.withValues(
-                      alpha: translationMissing ? 0.48 : 0.82,
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            isTranslating && values.isEmpty
-                ? context.l10n.autocomplete_translating
-                : displayValues.join(' · '),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant.withValues(
-                alpha: translationMissing ? 0.62 : 1,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SourceBadges extends StatelessWidget {
-  const _SourceBadges({required this.sources, this.compact = false});
-
-  final Set<CompletionSourceKind> sources;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final ordered = sources.toList()
-      ..sort((left, right) => left.index.compareTo(right.index));
-    final visible = ordered.take(compact ? 1 : 4).toList();
-    final textScale = MediaQuery.textScalerOf(context).scale(8) / 8;
-    final compactWidth = 64 * textScale.clamp(1.0, 1.35).toDouble();
-    return SizedBox(
-      width: compact ? compactWidth : 112,
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var index = 0; index < visible.length; index++) ...[
-              if (index > 0) const SizedBox(width: 3),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                decoration: BoxDecoration(
-                  color: _sourceColor(
-                    theme,
-                    visible[index],
-                  ).withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                child: Text(
-                  _sourceLabel(visible[index]),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: _sourceColor(theme, visible[index]),
-                    fontSize: 8,
-                    height: 1.1,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-            if (ordered.length > visible.length) ...[
-              const SizedBox(width: 3),
-              Text(
-                '+${ordered.length - visible.length}',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 8.5,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  static String _sourceLabel(CompletionSourceKind source) => switch (source) {
-    CompletionSourceKind.base => 'BASE',
-    CompletionSourceKind.zhDictionary => 'ZH',
-    CompletionSourceKind.danbooruApi => 'API',
-    CompletionSourceKind.cooccurrence => 'REL',
-    CompletionSourceKind.ai => 'AI',
-    CompletionSourceKind.library => 'LIB',
-  };
-
-  static Color _sourceColor(ThemeData theme, CompletionSourceKind source) {
-    final dark = theme.brightness == Brightness.dark;
-    return switch (source) {
-      CompletionSourceKind.base => theme.colorScheme.onSurfaceVariant,
-      CompletionSourceKind.zhDictionary =>
-        dark ? const Color(0xff72ca7b) : const Color(0xff2e7d32),
-      CompletionSourceKind.danbooruApi =>
-        dark ? const Color(0xff64b5f6) : const Color(0xff1565c0),
-      CompletionSourceKind.cooccurrence =>
-        dark ? const Color(0xffffb75f) : const Color(0xff9a5900),
-      CompletionSourceKind.ai =>
-        dark ? const Color(0xffce82dc) : const Color(0xff7b1fa2),
-      CompletionSourceKind.library =>
-        dark ? const Color(0xff64d4c5) : const Color(0xff167568),
-    };
-  }
-}
-
-class _CompletionFooter extends StatelessWidget {
-  const _CompletionFooter({
-    required this.state,
-    required this.settings,
-    required this.dictionaryState,
-    required this.cooccurrenceDataPackState,
-    required this.onOpenSettings,
-    this.onInsertSeparator,
-  });
-
-  final CompletionState state;
-  final AutocompleteSettings settings;
-  final ZhDictionaryState dictionaryState;
-  final CooccurrenceDataPackState cooccurrenceDataPackState;
-  final VoidCallback onOpenSettings;
-  final VoidCallback? onInsertSeparator;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final minimumHeight = context.interactionPolicy.touchAvailable
-        ? context.interactionPolicy.minimumControlExtent
-        : 31.0;
-    final scaledHeight = MediaQuery.textScalerOf(context).scale(11) * 1.35 + 16;
-    final footerHeight = scaledHeight > minimumHeight
-        ? scaledHeight
-        : minimumHeight;
-    return Container(
-      key: const ValueKey('autocomplete-popup-footer'),
-      height: footerHeight,
-      padding: const EdgeInsets.only(left: 9),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHigh,
-        border: Border(
-          top: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 560;
-          final veryCompact = constraints.maxWidth < 430;
-          final related = state.query?.relatedTag != null;
-          final statuses = <_StatusDescriptor>[
-            if (related)
-              _relatedStatus(context)
-            else if (!veryCompact)
-              _baseStatus(context),
-            _dictionaryStatus(context),
-            _onlineStatus(context),
-            if (!compact || settings.llmTranslationEnabled) _aiStatus(context),
-          ];
-          return Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    for (var index = 0; index < statuses.length; index++) ...[
-                      if (index > 0) const SizedBox(width: 13),
-                      Flexible(
-                        child: _StatusIndicator(
-                          key: ValueKey(statuses[index].key),
-                          descriptor: statuses[index],
-                          compact: compact,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (onInsertSeparator case final split?) ...[
-                const SizedBox(width: 8),
-                _SplitButton(onPressed: split),
-                const SizedBox(width: 6),
-              ],
-              Container(
-                height: 19,
-                width: 1,
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.46),
-              ),
-              _NonFocusableIconButton(
-                key: const ValueKey('autocomplete-popup-settings'),
-                tooltip: context.l10n.autocomplete_openSettings,
-                icon: Icons.settings_rounded,
-                onPressed: onOpenSettings,
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  _StatusDescriptor _baseStatus(BuildContext context) => _StatusDescriptor(
-    key: 'autocomplete-status-base',
-    icon: Icons.storage_rounded,
-    label: context.l10n.autocomplete_statusBase,
-    value: context.l10n.autocomplete_statusReady,
-    tone: _StatusTone.ready,
-    tooltip:
-        '${context.l10n.autocomplete_baseCatalog}: ${context.l10n.autocomplete_statusReady}',
-  );
-
-  _StatusDescriptor _relatedStatus(BuildContext context) {
-    if (!settings.relatedTagsEnabled) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-related',
-        icon: Icons.hub_outlined,
-        label: context.l10n.autocomplete_statusRelated,
-        value: context.l10n.autocomplete_statusDisabled,
-        tone: _StatusTone.inactive,
-      );
-    }
-    if (state.isLocalLoading) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-related',
-        icon: Icons.hub_outlined,
-        label: context.l10n.autocomplete_statusRelated,
-        value: context.l10n.autocomplete_statusSearching,
-        tone: _StatusTone.loading,
-        loading: true,
-      );
-    }
-    if (state.localError?.isNotEmpty == true) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-related',
-        icon: Icons.hub_outlined,
-        label: context.l10n.autocomplete_statusRelated,
-        value: context.l10n.autocomplete_statusError,
-        tone: _StatusTone.error,
-        tooltip: state.localError,
-      );
-    }
-    if (!cooccurrenceDataPackState.hasInstalledData) {
-      final downloading =
-          cooccurrenceDataPackState.status ==
-          CooccurrenceDataPackStatus.downloading;
-      return _StatusDescriptor(
-        key: 'autocomplete-status-related',
-        icon: downloading ? Icons.downloading_rounded : Icons.cloud_outlined,
-        label: context.l10n.autocomplete_statusRelated,
-        value: context.l10n.autocomplete_statusOnlineOnly,
-        tone: downloading ? _StatusTone.loading : _StatusTone.inactive,
-        loading: downloading,
-        tooltip: context.l10n.autocomplete_statusOnlineOnlyTooltip,
-      );
-    }
-    final localCount = state.candidates
-        .where(
-          (candidate) =>
-              candidate.sources.contains(CompletionSourceKind.cooccurrence),
-        )
-        .length;
-    return _StatusDescriptor(
-      key: 'autocomplete-status-related',
-      icon: Icons.hub_rounded,
-      label: context.l10n.autocomplete_statusRelated,
-      value: '$localCount',
-      tone: _StatusTone.ready,
-      tooltip: context.l10n.autocomplete_sourceRelated,
-    );
-  }
-
-  _StatusDescriptor _dictionaryStatus(BuildContext context) {
-    if (dictionaryState.isBusy) {
-      final progress = (dictionaryState.progress * 100).round().clamp(0, 100);
-      return _StatusDescriptor(
-        key: 'autocomplete-status-dictionary',
-        icon: Icons.translate_rounded,
-        label: context.l10n.autocomplete_statusDictionary,
-        value: context.l10n.autocomplete_statusDownloading(progress),
-        tone: _StatusTone.loading,
-        loading: true,
-      );
-    }
-    if (dictionaryState.error?.isNotEmpty == true) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-dictionary',
-        icon: Icons.translate_rounded,
-        label: context.l10n.autocomplete_statusDictionary,
-        value: context.l10n.autocomplete_statusError,
-        tone: _StatusTone.error,
-        tooltip: dictionaryState.error,
-      );
-    }
-    if (!dictionaryState.isInstalled) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-dictionary',
-        icon: Icons.translate_rounded,
-        label: context.l10n.autocomplete_statusDictionary,
-        value: context.l10n.autocomplete_statusNotInstalled,
-        tone: _StatusTone.warning,
-        tooltip: context.l10n.autocomplete_zhNotInstalled,
-      );
-    }
-    if (dictionaryState.updateAvailable) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-dictionary',
-        icon: Icons.translate_rounded,
-        label: context.l10n.autocomplete_statusDictionary,
-        value: context.l10n.autocomplete_statusUpdateAvailable,
-        tone: _StatusTone.warning,
-      );
-    }
-    final translatedCount = state.candidates
-        .where((candidate) => candidate.translation?.isNotEmpty == true)
-        .length;
-    final totalCount = state.candidates.length;
-    return _StatusDescriptor(
-      key: 'autocomplete-status-dictionary',
-      icon: Icons.translate_rounded,
-      label: context.l10n.autocomplete_statusDictionary,
-      value: totalCount == 0
-          ? context.l10n.autocomplete_statusReady
-          : '$translatedCount/$totalCount',
-      tone: _StatusTone.ready,
-      tooltip: totalCount == 0
-          ? context.l10n.autocomplete_entryCount(dictionaryState.tagCount)
-          : context.l10n.autocomplete_translationCoverage(
-              translatedCount,
-              totalCount,
-            ),
-    );
-  }
-
-  _StatusDescriptor _onlineStatus(BuildContext context) {
-    if (!settings.danbooruEnabled) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-online',
-        icon: Icons.public_rounded,
-        label: context.l10n.autocomplete_statusOnline,
-        value: context.l10n.autocomplete_statusDisabled,
-        tone: _StatusTone.inactive,
-      );
-    }
-    if (state.isRemoteLoading) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-online',
-        icon: Icons.public_rounded,
-        label: context.l10n.autocomplete_statusOnline,
-        value: context.l10n.autocomplete_statusSearching,
-        tone: _StatusTone.loading,
-        loading: true,
-      );
-    }
-    if (state.remoteError?.isNotEmpty == true) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-online',
-        icon: Icons.public_off_rounded,
-        label: context.l10n.autocomplete_statusOnline,
-        value: context.l10n.autocomplete_statusError,
-        tone: _StatusTone.error,
-        tooltip: state.remoteError,
-      );
-    }
-    return _StatusDescriptor(
-      key: 'autocomplete-status-online',
-      icon: Icons.public_rounded,
-      label: context.l10n.autocomplete_statusOnline,
-      value: context.l10n.autocomplete_statusReady,
-      tone: _StatusTone.ready,
-      tooltip: context.l10n.autocomplete_danbooruPrivacy,
-    );
-  }
-
-  _StatusDescriptor _aiStatus(BuildContext context) {
-    if (!settings.llmTranslationEnabled) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-ai',
-        icon: Icons.auto_awesome_outlined,
-        label: context.l10n.autocomplete_statusAi,
-        value: context.l10n.autocomplete_statusDisabled,
-        tone: _StatusTone.inactive,
-      );
-    }
-    if (state.candidates.any((candidate) => candidate.isTranslating)) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-ai',
-        icon: Icons.auto_awesome_rounded,
-        label: context.l10n.autocomplete_statusAi,
-        value: context.l10n.autocomplete_statusTranslating,
-        tone: _StatusTone.loading,
-        loading: true,
-      );
-    }
-    if (state.translationError?.isNotEmpty == true) {
-      return _StatusDescriptor(
-        key: 'autocomplete-status-ai',
-        icon: Icons.auto_awesome_outlined,
-        label: context.l10n.autocomplete_statusAi,
-        value: context.l10n.autocomplete_statusError,
-        tone: _StatusTone.error,
-        tooltip: state.translationError,
-      );
-    }
-    return _StatusDescriptor(
-      key: 'autocomplete-status-ai',
-      icon: Icons.auto_awesome_rounded,
-      label: context.l10n.autocomplete_statusAi,
-      value: context.l10n.autocomplete_statusReady,
-      tone: _StatusTone.ready,
-    );
-  }
-}
-
-enum _StatusTone { ready, loading, warning, error, inactive }
-
-class _StatusDescriptor {
-  const _StatusDescriptor({
-    required this.key,
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.tone,
-    this.loading = false,
-    this.tooltip,
-  });
-
-  final String key;
-  final IconData icon;
-  final String label;
-  final String value;
-  final _StatusTone tone;
-  final bool loading;
-  final String? tooltip;
-}
-
-class _StatusIndicator extends StatelessWidget {
-  const _StatusIndicator({
-    super.key,
-    required this.descriptor,
-    required this.compact,
-  });
-
-  final _StatusDescriptor descriptor;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final toneColor = switch (descriptor.tone) {
-      _StatusTone.ready => const Color(0xff4fb77b),
-      _StatusTone.loading => theme.colorScheme.primary,
-      _StatusTone.warning => const Color(0xffd99a3b),
-      _StatusTone.error => theme.colorScheme.error,
-      _StatusTone.inactive => theme.colorScheme.outline,
-    };
-    final tooltip = descriptor.tooltip?.isNotEmpty == true
-        ? '${descriptor.label}: ${descriptor.value}\n${descriptor.tooltip}'
-        : '${descriptor.label}: ${descriptor.value}';
-    return Tooltip(
-      message: tooltip,
-      child: Semantics(
-        label: '${descriptor.label}: ${descriptor.value}',
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (descriptor.loading)
-              SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(
-                  value: MediaQuery.disableAnimationsOf(context) ? 0.75 : null,
-                  strokeWidth: 1.7,
-                  color: toneColor,
-                ),
-              )
-            else
-              Icon(descriptor.icon, size: 14, color: toneColor),
-            const SizedBox(width: 5),
-            Flexible(
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    if (!compact)
-                      TextSpan(
-                        text: '${descriptor.label} ',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    TextSpan(
-                      text: descriptor.value,
-                      style: TextStyle(
-                        color: descriptor.tone == _StatusTone.error
-                            ? theme.colorScheme.error
-                            : theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontSize: 10.5,
-                  height: 1,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Where an already written tag sits in a grouped prompt: the section icon
-/// and the section numbers, counted like the cards (left to right, top to
-/// bottom). Three numbers at most; the tooltip lists them all.
-class _SectionBadge extends StatelessWidget {
-  const _SectionBadge({required this.sections});
-
-  static const int _shown = 3;
-
-  final List<int> sections;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final description = context.l10n.autocomplete_duplicateInSections(
-      sections.join('、'),
-    );
-    final label = [
-      sections.take(_shown).join(' · '),
-      if (sections.length > _shown) '+${sections.length - _shown}',
-    ].join(' ');
-    return Tooltip(
-      message: description,
-      child: Semantics(
-        label: description,
-        excludeSemantics: true,
-        child: Container(
-          key: const ValueKey('autocomplete-candidate-sections'),
-          constraints: const BoxConstraints(minHeight: 22),
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-          decoration: BoxDecoration(
-            color: colors.secondaryContainer,
-            borderRadius: BorderRadius.circular(11),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.view_agenda_outlined,
-                size: 13,
-                color: colors.onSecondaryContainer,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: colors.onSecondaryContainer,
-                  fontWeight: FontWeight.w700,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A tonal 分词 pill (scissors) that ends the tag being written with a
-/// comma, standing in for the editor's own key while the popup covers it.
-/// Like the other popup controls it never takes focus from the field.
-class _SplitButton extends StatelessWidget {
-  const _SplitButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Focus(
-      canRequestFocus: false,
-      descendantsAreFocusable: false,
-      child: Tooltip(
-        message: context.l10n.prompt_insertComma,
-        child: TextButton(
-          key: const ValueKey('autocomplete-popup-split'),
-          onPressed: onPressed,
-          style: TextButton.styleFrom(
-            minimumSize: const Size(56, 32),
-            tapTargetSize: MaterialTapTargetSize.padded,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            backgroundColor: colors.secondaryContainer,
-            foregroundColor: colors.onSecondaryContainer,
-            shape: const StadiumBorder(),
-          ),
-          child: const Icon(Icons.content_cut_rounded, size: 20),
-        ),
-      ),
-    );
-  }
-}
-
-class _NonFocusableIconButton extends StatefulWidget {
-  const _NonFocusableIconButton({
-    super.key,
-    required this.tooltip,
-    required this.icon,
-    required this.onPressed,
-    this.active = false,
-  });
-
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onPressed;
-  final bool active;
-
-  @override
-  State<_NonFocusableIconButton> createState() =>
-      _NonFocusableIconButtonState();
-}
-
-class _NonFocusableIconButtonState extends State<_NonFocusableIconButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final precisePointerAvailable =
-        context.interactionPolicy.precisePointerAvailable;
-    return Focus(
-      canRequestFocus: false,
-      descendantsAreFocusable: false,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: precisePointerAvailable
-            ? (_) => setState(() => _hovered = true)
-            : null,
-        onExit: precisePointerAvailable
-            ? (_) => setState(() => _hovered = false)
-            : null,
-        child: AnimatedContainer(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 120),
-          curve: Curves.easeOut,
-          decoration: BoxDecoration(
-            color: _hovered || widget.active
-                ? colors.primary.withValues(alpha: widget.active ? 0.2 : 0.16)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: IconButton(
-            tooltip: widget.tooltip,
-            visualDensity: context.interactionPolicy.touchAvailable
-                ? VisualDensity.standard
-                : VisualDensity.compact,
-            constraints: BoxConstraints.tightFor(
-              width: context.interactionPolicy.touchAvailable
-                  ? context.interactionPolicy.minimumControlExtent
-                  : 28,
-              height: context.interactionPolicy.touchAvailable
-                  ? context.interactionPolicy.minimumControlExtent
-                  : 28,
-            ),
-            padding: EdgeInsets.zero,
-            iconSize: context.interactionPolicy.touchAvailable ? 20 : 16,
-            color: _hovered || widget.active
-                ? colors.primary
-                : colors.onSurfaceVariant,
-            onPressed: widget.onPressed,
-            icon: Icon(widget.icon),
-          ),
-        ),
       ),
     );
   }

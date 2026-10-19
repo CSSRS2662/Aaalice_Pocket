@@ -41,6 +41,13 @@ files Google Fonts serves for the family; they are stored under
 `fonts/manrope/`, and their source, checksums and the complete license text are
 retained under `licenses/fonts/manrope/`. The font is not downloaded at runtime.
 
+Tags, counts and source codes in the completion popup use
+[Roboto Condensed](https://fonts.google.com/specimen/Roboto+Condensed), the condensed
+width of Roboto by Christian Robertson, bundled under the Apache License 2.0.
+The regular weight is the file Flutter ships in its Material fonts artifact; it
+is stored under `fonts/roboto_condensed/`, and its source, checksum and the
+complete license text are retained under `licenses/fonts/roboto_condensed/`.
+
 ## Bundled Watermark Fonts
 
 The watermark editor uses a curated, platform-independent font set so previews

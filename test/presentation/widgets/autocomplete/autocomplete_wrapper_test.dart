@@ -101,7 +101,10 @@ void main() {
     await _typeCurrentText(tester, controller);
 
     expect(find.text('blue_eyes'), findsOneWidget);
-    expect(find.text('BASE'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('autocomplete-source-dot-base')),
+      findsOneWidget,
+    );
     expect(baseSource.lastLimit, CompletionResultLimits.all);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -483,9 +486,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 30));
 
-    expect(find.text('Tag autocomplete'), findsOneWidget);
+    expect(_typedPopup, findsOneWidget);
     expect(find.text('blue_eyes'), findsOneWidget);
-    expect(find.text('Related tags'), findsNothing);
+    expect(_relatedPopup, findsNothing);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
@@ -539,16 +542,16 @@ void main() {
       await tester.tap(find.byType(TextField));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 30));
-      expect(find.text('Tag autocomplete'), findsOneWidget);
+      expect(_typedPopup, findsOneWidget);
 
       controller.selection = const TextSelection.collapsed(offset: 1);
       await tester.pump();
-      expect(find.text('Tag autocomplete'), findsOneWidget);
+      expect(_typedPopup, findsOneWidget);
 
       source.complete();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 30));
-      expect(find.text('Tag autocomplete'), findsOneWidget);
+      expect(_typedPopup, findsOneWidget);
       expect(find.text('No matching tags found'), findsOneWidget);
     },
   );
@@ -605,7 +608,7 @@ void main() {
       await tester.tapAt(tester.getTopLeft(field) + const Offset(20, 20));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 30));
-      expect(find.text('Tag autocomplete'), findsOneWidget);
+      expect(_typedPopup, findsOneWidget);
 
       await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -702,7 +705,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 30));
     expect(source.relatedTags, isEmpty);
-    expect(find.text('Related tags'), findsNothing);
+    expect(_relatedPopup, findsNothing);
 
     handle.continueAfterSeparator();
     await tester.pump();
@@ -755,16 +758,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 30));
     expect(source.relatedTags.last, 'outdoors');
     expect(source.contexts.last, ['night']);
-    expect(find.text('Related tags'), findsOneWidget);
+    expect(_relatedPopup, findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  const filterFunnel = ValueKey('autocomplete-popup-related-filter');
-  const filterPanel = ValueKey('autocomplete-related-filter-panel');
-  const characterCard = ValueKey('autocomplete-related-filter-character');
-  const generalCard = ValueKey('autocomplete-related-filter-general');
+  const characterButton = ValueKey('autocomplete-popup-category-character');
+  const generalButton = ValueKey('autocomplete-popup-category-general');
 
-  testWidgets('the funnel narrows related tags to the chosen categories', (
+  testWidgets('header buttons narrow related tags to the chosen categories', (
     tester,
   ) async {
     final controller = TextEditingController(text: 'some_series, ');
@@ -799,26 +800,22 @@ void main() {
     await settle();
     expect(find.text('halo'), findsOneWidget);
     expect(find.text('heroine'), findsOneWidget);
-    expect(find.byKey(filterPanel), findsNothing);
-    expect(counted, isEmpty);
-
-    await tester.tap(find.byKey(filterFunnel));
-    await settle();
+    // The buttons are always there and count as the popup opens.
     expect(counted, ['some_series']);
     expect(
-      find.descendant(of: find.byKey(filterPanel), matching: find.text('41')),
+      find.descendant(of: find.byKey(generalButton), matching: find.text('41')),
       findsOneWidget,
     );
 
-    await tester.tap(find.byKey(characterCard));
+    await tester.tap(find.byKey(characterButton));
     await settle();
     expect(source.categories.last, {TagCategory.character});
     expect(find.text('heroine'), findsOneWidget);
     expect(find.text('rival'), findsOneWidget);
     expect(find.text('halo'), findsNothing);
     expect(find.text('spin_off'), findsNothing);
-    // The cards stay up for a second choice: either category lists.
-    await tester.tap(find.byKey(generalCard));
+    // Either chosen category lists.
+    await tester.tap(find.byKey(generalButton));
     await settle();
     expect(source.categories.last, {
       TagCategory.character,
@@ -826,8 +823,12 @@ void main() {
     });
     expect(find.text('halo'), findsOneWidget);
     expect(find.text('spin_off'), findsNothing);
+    // The counts belong to the tag and are not fetched again.
+    expect(counted, ['some_series']);
 
-    await tester.longPress(find.byKey(filterFunnel));
+    await tester.tap(find.byKey(characterButton));
+    await settle();
+    await tester.tap(find.byKey(generalButton));
     await settle();
     expect(source.categories.last, isEmpty);
     expect(find.text('spin_off'), findsOneWidget);
@@ -857,15 +858,9 @@ void main() {
     }
 
     Future<void> onlyCharacters() async {
-      await tester.tap(find.byKey(filterFunnel));
-      await settle();
-      await tester.tap(find.byKey(characterCard));
+      await tester.tap(find.byKey(characterButton));
       await settle();
       expect(source.categories.last, {TagCategory.character});
-      // The cards float over the first rows; put them away to pick one.
-      await tester.tap(find.byKey(filterFunnel));
-      await settle();
-      expect(find.byKey(filterPanel), findsNothing);
     }
 
     handle.suggestNext();
@@ -878,7 +873,6 @@ void main() {
     expect(controller.text, startsWith('some_series, heroine'));
     expect(source.relatedTags.last, 'heroine');
     expect(source.categories.last, isEmpty);
-    expect(find.byKey(filterPanel), findsNothing);
     expect(find.text('halo'), findsOneWidget);
 
     // A pinned tag keeps its popup, and what it was narrowed to.
@@ -892,7 +886,6 @@ void main() {
     expect(controller.text, contains('rival'));
     expect(source.relatedTags.last, 'heroine');
     expect(source.categories.last, {TagCategory.character});
-    expect(find.byKey(filterPanel), findsNothing);
 
     // Every character is written now: the empty list offers the way out.
     expect(find.text('halo'), findsNothing);
@@ -902,6 +895,96 @@ void main() {
     await settle();
     expect(source.categories.last, isEmpty);
     expect(find.text('halo'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('header buttons narrow typed tags and count each category', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: 'blu');
+    controller.selection = const TextSelection.collapsed(offset: 3);
+    final focusNode = FocusNode();
+    final source = _CategorisedTypedSource();
+    final counted = <String>[];
+    addTearDown(() {
+      controller.dispose();
+      focusNode.dispose();
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          autocompleteServicesProvider.overrideWithValue(
+            AutocompleteServices(
+              localSources: [source],
+              dictionaryTranslations: const _NoTranslations(),
+              llmTranslations: const _NoTranslations(),
+              danbooru: _NoDanbooru(),
+              typedCategoryCounts: (query) async {
+                counted.add(query.token);
+                return const {TagCategory.general: 7, TagCategory.artist: 2};
+              },
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: AutocompleteWrapper(
+              controller: controller,
+              focusNode: focusNode,
+              child: TextField(controller: controller, focusNode: focusNode),
+            ),
+          ),
+        ),
+      ),
+    );
+    focusNode.requestFocus();
+    await tester.pump();
+    await _typeCurrentText(tester, controller);
+    Future<void> settle() async {
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 30));
+    }
+
+    expect(find.text('blue_eyes'), findsOneWidget);
+    expect(find.text('blue_artist'), findsOneWidget);
+    expect(counted, isNotEmpty);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('autocomplete-popup-category-general')),
+        matching: find.text('7'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('autocomplete-popup-category-artist')),
+    );
+    await settle();
+    expect(source.categories.last, {TagCategory.artist});
+    expect(find.text('blue_artist'), findsOneWidget);
+    expect(find.text('blue_eyes'), findsNothing);
+
+    // The filter lasts while typing on in the same popup.
+    controller.value = const TextEditingValue(
+      text: 'blue',
+      selection: TextSelection.collapsed(offset: 4),
+    );
+    await settle();
+    expect(source.categories.last, {TagCategory.artist});
+
+    // Closing the popup lifts it.
+    await tester.tap(find.byKey(const ValueKey('autocomplete-popup-close')));
+    await settle();
+    controller.value = const TextEditingValue(
+      text: 'blue_',
+      selection: TextSelection.collapsed(offset: 5),
+    );
+    await settle();
+    expect(source.categories.last, isEmpty);
+    expect(find.text('blue_eyes'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -982,7 +1065,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 30));
 
     expect(source.lastLimit, isNotNull);
-    expect(find.text('Tag autocomplete'), findsOneWidget);
+    expect(_typedPopup, findsOneWidget);
   });
 
   testWidgets(
@@ -1040,7 +1123,7 @@ void main() {
       expect(selectedText, controller.text);
       expect(source.tokens, hasLength(queryCountBeforeSelection + 2));
       expect(source.relatedTags.last, 'blue_eyes');
-      expect(find.text('Related tags'), findsOneWidget);
+      expect(_relatedPopup, findsOneWidget);
       expect(find.text('halo'), findsOneWidget);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -1049,7 +1132,7 @@ void main() {
 
       expect(controller.text, 'masterpiece, blue_eyes, halo');
       expect(source.relatedTags.last, 'halo');
-      expect(find.text('Related tags'), findsOneWidget);
+      expect(_relatedPopup, findsOneWidget);
       expect(find.text('smile'), findsOneWidget);
     },
   );
@@ -1102,7 +1185,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 30));
-      expect(find.text('Related tags'), findsOneWidget);
+      expect(_relatedPopup, findsOneWidget);
       expect(
         find.byKey(const ValueKey('autocomplete-popup-empty')),
         findsOneWidget,
@@ -1113,19 +1196,19 @@ void main() {
         activeMatchIndex: -1,
       );
       await tester.pump();
-      expect(find.text('Related tags'), findsOneWidget);
+      expect(_relatedPopup, findsOneWidget);
 
       // The real prompt stack can synchronize the selection after applying a
       // completion. That delayed caret notification must not cancel an active
       // related query; actual pointer/keyboard movement has its own close path.
       controller.selection = const TextSelection.collapsed(offset: 2);
       await tester.pump();
-      expect(find.text('Related tags'), findsOneWidget);
+      expect(_relatedPopup, findsOneWidget);
 
       source.completeRelated();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 30));
-      expect(find.text('Related tags'), findsOneWidget);
+      expect(_relatedPopup, findsOneWidget);
       expect(
         find.byKey(const ValueKey('autocomplete-popup-empty')),
         findsOneWidget,
@@ -1578,18 +1661,30 @@ void main() {
     expect(scrollController.offset, 0);
     expect(tester.getRect(popup), initialPopupRect);
 
-    for (var i = 0; i < 10; i++) {
+    // Keep moving until the selection leaves the first screen of rows.
+    var selected = 2;
+    while (scrollController.offset == 0 && selected < 29) {
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      selected++;
+      await tester.pumpAndSettle();
     }
-    await tester.pumpAndSettle();
 
     expect(tester.getRect(popup), initialPopupRect);
     expect(scrollController.offset, greaterThan(0));
-    expect(
-      scrollController.offset,
-      lessThan(12 * 35),
-      reason: 'the selected row must not be aligned to the top edge',
+    final list = tester.getRect(
+      find.byKey(const ValueKey('autocomplete-popup-list')),
     );
+    final tile = tester.getRect(
+      find.byKey(
+        ValueKey(
+          'autocomplete-candidate-tag_${selected.toString().padLeft(2, '0')}',
+        ),
+      ),
+    );
+    // Scrolled just enough: the selected row sits at the bottom edge rather
+    // than being aligned to the top.
+    expect(tile.bottom, lessThanOrEqualTo(list.bottom + 0.5));
+    expect(tile.top, greaterThan(list.top + tile.height));
   });
 
   testWidgets('the handle shows related tags without a keyboard', (
@@ -1643,7 +1738,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 30));
     await tester.pump();
 
-    expect(find.text('Related tags'), findsOneWidget);
+    expect(_relatedPopup, findsOneWidget);
     expect(find.text('halo'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -1691,7 +1786,7 @@ void main() {
     focusNode.requestFocus();
     await tester.pump();
     await _typeCurrentText(tester, controller);
-    expect(find.text('Tag autocomplete'), findsOneWidget);
+    expect(_typedPopup, findsOneWidget);
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     expect(HardwareKeyboard.instance.isControlPressed, isTrue);
@@ -1705,7 +1800,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 30));
     await tester.pump();
 
-    expect(find.text('Related tags'), findsOneWidget);
+    expect(_relatedPopup, findsOneWidget);
     expect(find.text('halo'), findsOneWidget);
   });
 
@@ -1767,9 +1862,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 30));
       await tester.pump();
 
-      expect(find.text('Tag autocomplete'), findsOneWidget);
+      expect(_typedPopup, findsOneWidget);
       expect(find.text('大慈树王 (原神)'), findsOneWidget);
-      expect(find.text('Related tags'), findsNothing);
+      expect(_relatedPopup, findsNothing);
     },
   );
 
@@ -1820,7 +1915,7 @@ void main() {
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump(const Duration(milliseconds: 30));
 
-      expect(find.text('Related tags'), findsOneWidget);
+      expect(_relatedPopup, findsOneWidget);
       expect(find.text('halo'), findsOneWidget);
       expect(find.text('smile'), findsOneWidget);
 
@@ -1896,7 +1991,15 @@ void main() {
     expect(librarySource.queries, ['']);
     expect(find.text('角色立绘'), findsOneWidget);
     expect(find.text('常用角色提示词'), findsOneWidget);
-    expect(find.text('LIB'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('autocomplete-source-dot-library')),
+      findsOneWidget,
+    );
+    // Library lookups have no category buttons.
+    expect(
+      find.byKey(const ValueKey('autocomplete-popup-categories')),
+      findsNothing,
+    );
 
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
@@ -2358,4 +2461,45 @@ class _MemoryCache extends AutocompleteCacheDatabase {
     String key,
     List<Map<String, dynamic>> payload,
   ) async {}
+}
+
+/// A typed-tag popup: its header offers the artist category.
+final _typedPopup = find.byKey(
+  const ValueKey('autocomplete-popup-category-artist'),
+);
+
+/// A related popup: its header carries the pin.
+final _relatedPopup = find.byKey(
+  const ValueKey('autocomplete-popup-related-pin'),
+);
+
+class _CategorisedTypedSource implements CompletionSource {
+  final List<Set<TagCategory>> categories = [];
+
+  static const _rows = [
+    CompletionCandidate(
+      canonicalTag: 'blue_eyes',
+      category: TagCategory.general,
+      postCount: 5000,
+      matchKind: CompletionMatchKind.englishPrefix,
+      sources: {CompletionSourceKind.base},
+    ),
+    CompletionCandidate(
+      canonicalTag: 'blue_artist',
+      category: TagCategory.artist,
+      postCount: 40,
+      matchKind: CompletionMatchKind.englishPrefix,
+      sources: {CompletionSourceKind.base},
+    ),
+  ];
+
+  @override
+  Future<List<CompletionCandidate>> search(CompletionQuery query) async {
+    categories.add(query.typedCategories);
+    final scope = query.typedCategoryScope;
+    return [
+      for (final row in _rows)
+        if (scope == null || scope.contains(row.category)) row,
+    ];
+  }
 }

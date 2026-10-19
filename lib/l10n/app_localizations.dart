@@ -22863,6 +22863,18 @@ abstract class AppLocalizations {
   /// **'Semantic'**
   String get autocomplete_matchSemantic;
 
+  /// No description provided for @autocomplete_matchSeal.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind, select, homophone{Hom.} fuzzyPinyin{Snd.} pinyin{Py.} shuangpin{Sp.} initials{Ini.} approximate{≈} crossLingual{Spl.} spellCorrected{Fix.} englishVariant{Frm.} semantic{Sem.} other{?}}'**
+  String autocomplete_matchSeal(String kind);
+
+  /// No description provided for @autocomplete_filterEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags match the filter'**
+  String get autocomplete_filterEmpty;
+
   /// No description provided for @autocomplete_translationCoverage.
   ///
   /// In en, this message translates to:
@@ -23275,18 +23287,6 @@ abstract class AppLocalizations {
   /// **'Offline related tags'**
   String get autocomplete_sourceRelated;
 
-  /// No description provided for @autocomplete_headerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Tag autocomplete'**
-  String get autocomplete_headerTitle;
-
-  /// No description provided for @autocomplete_relatedHeaderTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Related tags'**
-  String get autocomplete_relatedHeaderTitle;
-
   /// No description provided for @autocomplete_loading.
   ///
   /// In en, this message translates to:
@@ -23317,41 +23317,11 @@ abstract class AppLocalizations {
   /// **'{count} co-occurrences · relevance {score}'**
   String autocomplete_relatedMetric(int count, String score);
 
-  /// No description provided for @autocomplete_relatedWithContext.
-  ///
-  /// In en, this message translates to:
-  /// **'{tag} and context ({count} tags)'**
-  String autocomplete_relatedWithContext(String tag, int count);
-
   /// No description provided for @autocomplete_duplicateInSections.
   ///
   /// In en, this message translates to:
   /// **'Already in section {sections}'**
   String autocomplete_duplicateInSections(String sections);
-
-  /// No description provided for @autocomplete_relatedFilter.
-  ///
-  /// In en, this message translates to:
-  /// **'Filter by category; long-press to clear'**
-  String get autocomplete_relatedFilter;
-
-  /// No description provided for @autocomplete_relatedFilterCharacter.
-  ///
-  /// In en, this message translates to:
-  /// **'Character'**
-  String get autocomplete_relatedFilterCharacter;
-
-  /// No description provided for @autocomplete_relatedFilterSeries.
-  ///
-  /// In en, this message translates to:
-  /// **'Series'**
-  String get autocomplete_relatedFilterSeries;
-
-  /// No description provided for @autocomplete_relatedFilterGeneral.
-  ///
-  /// In en, this message translates to:
-  /// **'General'**
-  String get autocomplete_relatedFilterGeneral;
 
   /// No description provided for @autocomplete_relatedFilterCount.
   ///

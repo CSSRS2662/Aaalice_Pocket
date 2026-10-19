@@ -183,15 +183,16 @@ class AmeZhLexiconIndex {
       }
     }
 
-    final filter = query.categoryFilter;
+    final scope = query.typedCategoryScope;
     final ids =
         hits.keys
             .where(
               (id) =>
-                  filter == null ||
-                  (TagCategory.fromCatalog(_categories[id]) ??
-                          TagCategory.general) ==
-                      filter,
+                  scope == null ||
+                  scope.contains(
+                    TagCategory.fromCatalog(_categories[id]) ??
+                        TagCategory.general,
+                  ),
             )
             .toList()
           ..sort((a, b) {

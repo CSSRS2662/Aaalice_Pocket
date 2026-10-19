@@ -6587,6 +6587,9 @@
   "autocomplete_matchSpellCorrected": "糾錯",
   "autocomplete_matchEnglishVariant": "詞形",
   "autocomplete_matchSemantic": "語義",
+  "autocomplete_matchSeal": "{kind, select, homophone{同} fuzzyPinyin{音} pinyin{拼} shuangpin{雙} initials{首} approximate{似} crossLingual{拆} spellCorrected{糾} englishVariant{形} semantic{義} other{?}}",
+  "@autocomplete_matchSeal": {"placeholders": {"kind": {"type": "String"}}},
+  "autocomplete_filterEmpty": "沒有符合篩選的標籤",
   "autocomplete_translationCoverage": "漢化覆蓋：{translated}/{total}",
   "@autocomplete_translationCoverage": {
     "placeholders": {
@@ -6760,8 +6763,6 @@
   "autocomplete_remove": "移除",
   "autocomplete_removeConfirm": "移除已安裝的中文漢化詞庫？之後仍可重新安裝。",
   "autocomplete_sourceRelated": "離線相關標籤",
-  "autocomplete_headerTitle": "標籤補全",
-  "autocomplete_relatedHeaderTitle": "相關標籤",
   "autocomplete_loading": "正在查詢本地詞庫與線上標籤…",
   "autocomplete_empty": "沒有找到匹配的標籤",
   "autocomplete_relatedLoading": "正在查詢本地共現庫與線上相關標籤…",
@@ -6777,14 +6778,8 @@
       }
     }
   },
-  "autocomplete_relatedWithContext": "{tag} 等 {count} 個詞",
-  "@autocomplete_relatedWithContext": {"placeholders": {"tag": {"type": "String"}, "count": {"type": "int"}}},
   "autocomplete_duplicateInSections": "已在分區 {sections} 中",
   "@autocomplete_duplicateInSections": {"placeholders": {"sections": {"type": "String"}}},
-  "autocomplete_relatedFilter": "篩選分類，長按清除",
-  "autocomplete_relatedFilterCharacter": "角色",
-  "autocomplete_relatedFilterSeries": "作品",
-  "autocomplete_relatedFilterGeneral": "一般",
   "autocomplete_relatedFilterCount": "{category}，{count} 條",
   "@autocomplete_relatedFilterCount": {"placeholders": {"category": {"type": "String"}, "count": {"type": "int"}}},
   "autocomplete_relatedFilterEmpty": "沒有符合篩選的相關標籤",

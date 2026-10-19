@@ -59,7 +59,11 @@ class TagCatalogRepository implements CompletionSource {
         normalized.length == 1 && CompletionResultLimits.isAll(query.limit)
         ? CompletionResultLimits.oneCharacter
         : query.limit;
-    final categoryValues = _catalogCategoryValues(query.categoryFilter);
+    final scope = query.typedCategoryScope;
+    final categoryValues = _scopeCategoryValues(scope);
+    // A scope with no catalog category (the prefix and the chosen categories
+    // exclude each other, or only library entries) lists nothing here.
+    if (scope != null && categoryValues.isEmpty) return const [];
     final categoryClause = categoryValues.isEmpty
         ? ''
         : 'AND t.category IN (${List.filled(categoryValues.length, '?').join(',')})';
@@ -335,9 +339,8 @@ class TagCatalogRepository implements CompletionSource {
       final tag = row['tag'] as String;
       final record = records[tag];
       final category = record?.category ?? TagCategory.general;
-      if (query.categoryFilter != null && query.categoryFilter != category) {
-        continue;
-      }
+      final scope = query.typedCategoryScope;
+      if (scope != null && !scope.contains(category)) continue;
       final rank = (row['match_rank'] as num).toInt();
       candidates.add(
         CompletionCandidate(
@@ -421,6 +424,40 @@ class TagCatalogRepository implements CompletionSource {
     };
   }
 
+  /// How many catalog tags each category holds among the matches of a typed
+  /// [query], shown on the header buttons that narrow the list. Counts stop
+  /// at [cap] matches so short prefixes stay cheap.
+  Future<Map<TagCategory, int>> typedCategoryCounts(
+    CompletionQuery query, {
+    int cap = 20000,
+  }) async {
+    final normalized = query.token.trim().toLowerCase();
+    if (normalized.isEmpty || query.isChinese) return const {};
+    await initialize();
+    final expression = _ftsExpression(normalized);
+    if (expression.isEmpty) return const {};
+    final rows = await _database!.rawQuery(
+      '''
+      SELECT category, COUNT(*) AS n FROM (
+        SELECT DISTINCT t.id, t.category
+        FROM tag_search f
+        JOIN tags t ON t.id = f.tag_id
+        WHERE tag_search MATCH ?
+        LIMIT ?
+      )
+      GROUP BY category
+      ''',
+      [expression, cap],
+    );
+    final counts = <TagCategory, int>{};
+    for (final row in rows) {
+      final category = TagCategory.fromCatalog(row['category'] as int);
+      if (category == null) continue;
+      counts[category] = (counts[category] ?? 0) + (row['n'] as int);
+    }
+    return counts;
+  }
+
   Future<Map<TagCategory, int>> categoryCounts() async {
     await initialize();
     final rows = await _database!.rawQuery(
@@ -480,6 +517,11 @@ class TagCatalogRepository implements CompletionSource {
   static int _rowMatchPriority(Map<String, Object?> row, String query) {
     return _matchKind(row['term'] as String, row['kind'] as int, query).index;
   }
+
+  static List<int> _scopeCategoryValues(Set<TagCategory>? scope) => [
+    if (scope != null)
+      for (final category in scope) ..._catalogCategoryValues(category),
+  ];
 
   static List<int> _catalogCategoryValues(TagCategory? category) =>
       switch (category) {

@@ -206,8 +206,8 @@ class CompletionOrchestrator extends ChangeNotifier {
         !isRelatedQuery &&
         effectiveQuery.isChinese &&
         effectiveQuery.token.trim().runes.length >= 2 &&
-        (effectiveQuery.categoryFilter == null ||
-            effectiveQuery.categoryFilter == TagCategory.general) &&
+        (effectiveQuery.typedCategoryScope?.contains(TagCategory.general) ??
+            true) &&
         _semanticSource != null;
     final canSupplement =
         !isLibraryAlias &&
@@ -686,18 +686,15 @@ class CompletionOrchestrator extends ChangeNotifier {
     List<CompletionCandidate> candidates,
     CompletionQuery query,
   ) {
-    final category = query.categoryFilter;
-    // Related rows also keep to the categories the user narrowed them to.
-    final chosen = query.relatedTag != null && query.token.isEmpty
-        ? query.relatedCategories
-        : const <TagCategory>{};
-    if (category == null && chosen.isEmpty) return candidates;
+    final related = query.relatedTag != null && query.token.isEmpty;
+    // Typed rows keep to the prefix filter and the chosen categories; related
+    // rows to the categories the user narrowed them to.
+    final scope = related
+        ? (query.relatedCategories.isEmpty ? null : query.relatedCategories)
+        : query.typedCategoryScope;
+    if (scope == null) return candidates;
     return candidates
-        .where(
-          (candidate) =>
-              (category == null || candidate.category == category) &&
-              (chosen.isEmpty || chosen.contains(candidate.category)),
-        )
+        .where((candidate) => scope.contains(candidate.category))
         .toList(growable: false);
   }
 

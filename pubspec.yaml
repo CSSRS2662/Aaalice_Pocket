@@ -202,6 +202,11 @@ flutter:
           weight: 700
         - asset: fonts/manrope/Manrope-ExtraBold.ttf
           weight: 800
+    # Tags, counts and source codes in the completion popup.
+    - family: Roboto Condensed
+      fonts:
+        - asset: fonts/roboto_condensed/RobotoCondensed-Regular.ttf
+          weight: 400
     - family: Great Vibes
       fonts:
         - asset: fonts/watermark/GreatVibes-Regular.ttf

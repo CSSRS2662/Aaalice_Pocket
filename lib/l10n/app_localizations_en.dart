@@ -13136,6 +13136,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autocomplete_matchSemantic => 'Semantic';
 
   @override
+  String autocomplete_matchSeal(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'homophone': 'Hom.',
+      'fuzzyPinyin': 'Snd.',
+      'pinyin': 'Py.',
+      'shuangpin': 'Sp.',
+      'initials': 'Ini.',
+      'approximate': '≈',
+      'crossLingual': 'Spl.',
+      'spellCorrected': 'Fix.',
+      'englishVariant': 'Frm.',
+      'semantic': 'Sem.',
+      'other': '?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get autocomplete_filterEmpty => 'No tags match the filter';
+
+  @override
   String autocomplete_translationCoverage(int translated, int total) {
     return 'Translation coverage: $translated/$total';
   }
@@ -13402,12 +13423,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autocomplete_sourceRelated => 'Offline related tags';
 
   @override
-  String get autocomplete_headerTitle => 'Tag autocomplete';
-
-  @override
-  String get autocomplete_relatedHeaderTitle => 'Related tags';
-
-  @override
   String get autocomplete_loading =>
       'Searching the local catalog and online tags…';
 
@@ -13427,27 +13442,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String autocomplete_relatedWithContext(String tag, int count) {
-    return '$tag and context ($count tags)';
-  }
-
-  @override
   String autocomplete_duplicateInSections(String sections) {
     return 'Already in section $sections';
   }
-
-  @override
-  String get autocomplete_relatedFilter =>
-      'Filter by category; long-press to clear';
-
-  @override
-  String get autocomplete_relatedFilterCharacter => 'Character';
-
-  @override
-  String get autocomplete_relatedFilterSeries => 'Series';
-
-  @override
-  String get autocomplete_relatedFilterGeneral => 'General';
 
   @override
   String autocomplete_relatedFilterCount(String category, int count) {

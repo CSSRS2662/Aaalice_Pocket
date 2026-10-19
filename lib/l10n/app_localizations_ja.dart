@@ -12797,6 +12797,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get autocomplete_matchSemantic => '意味';
 
   @override
+  String autocomplete_matchSeal(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'homophone': '同',
+      'fuzzyPinyin': '音',
+      'pinyin': '拼',
+      'shuangpin': '双',
+      'initials': '頭',
+      'approximate': '似',
+      'crossLingual': '分',
+      'spellCorrected': '修',
+      'englishVariant': '形',
+      'semantic': '意',
+      'other': '?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get autocomplete_filterEmpty => 'フィルターに一致するタグはありません';
+
+  @override
   String autocomplete_translationCoverage(int translated, int total) {
     return '翻訳カバー率：$translated/$total';
   }
@@ -13051,12 +13072,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get autocomplete_sourceRelated => 'オフライン関連タグ';
 
   @override
-  String get autocomplete_headerTitle => 'タグ補完';
-
-  @override
-  String get autocomplete_relatedHeaderTitle => '関連タグ';
-
-  @override
   String get autocomplete_loading => 'ローカルカタログとオンラインタグを検索中…';
 
   @override
@@ -13074,26 +13089,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String autocomplete_relatedWithContext(String tag, int count) {
-    return '$tag など $count 語';
-  }
-
-  @override
   String autocomplete_duplicateInSections(String sections) {
     return 'セクション $sections に記入済み';
   }
-
-  @override
-  String get autocomplete_relatedFilter => 'カテゴリで絞り込み（長押しで解除）';
-
-  @override
-  String get autocomplete_relatedFilterCharacter => 'キャラクター';
-
-  @override
-  String get autocomplete_relatedFilterSeries => '作品';
-
-  @override
-  String get autocomplete_relatedFilterGeneral => '一般';
 
   @override
   String autocomplete_relatedFilterCount(String category, int count) {

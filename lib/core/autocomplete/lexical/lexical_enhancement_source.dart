@@ -70,10 +70,12 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
     } else {
       return const [];
     }
-    final filter = query.categoryFilter;
-    return filter == null
+    final scope = query.typedCategoryScope;
+    return scope == null
         ? rows
-        : rows.where((row) => row.category == filter).toList(growable: false);
+        : rows
+              .where((row) => scope.contains(row.category))
+              .toList(growable: false);
   }
 
   // ------------------------------------------------------------ Chinese

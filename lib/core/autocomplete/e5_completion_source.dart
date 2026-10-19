@@ -36,8 +36,7 @@ class E5CompletionSource implements CompletionSource {
         query.token.trim().runes.length < 2 ||
         query.kind != CompletionQueryKind.tag ||
         query.relatedTag != null ||
-        (query.categoryFilter != null &&
-            query.categoryFilter != TagCategory.general)) {
+        !(query.typedCategoryScope?.contains(TagCategory.general) ?? true)) {
       return const [];
     }
     final text = query.token.trim();

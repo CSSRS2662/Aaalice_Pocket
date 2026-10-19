@@ -344,9 +344,16 @@ class ZhDictionaryService extends ChangeNotifier
         token.runes.length == 1 && CompletionResultLimits.isAll(query.limit)
         ? CompletionResultLimits.oneCharacter
         : query.limit;
-    final categoryClause = query.categoryFilter == null
+    final scope = query.typedCategoryScope;
+    final scopeValues = [
+      if (scope != null)
+        for (final category in scope)
+          if (category != TagCategory.library) category.value,
+    ];
+    if (scope != null && scopeValues.isEmpty) return const [];
+    final categoryClause = scopeValues.isEmpty
         ? ''
-        : 'AND category = ?';
+        : 'AND category IN (${List.filled(scopeValues.length, '?').join(',')})';
     final rows = await _database!.rawQuery(
       '''
       SELECT name, category, cn_name, post_count,
@@ -373,7 +380,7 @@ class ZhDictionaryService extends ChangeNotifier
         '%$escaped%',
         ...variants.map((value) => '%${_escapeLike(value)}%'),
         ...keywords.map((value) => '%${_escapeLike(value)}%'),
-        if (query.categoryFilter != null) query.categoryFilter!.value,
+        ...scopeValues,
         requestedLimit,
       ],
     );

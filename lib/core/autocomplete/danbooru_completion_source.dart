@@ -57,8 +57,13 @@ class DanbooruCompletionSource implements CompletionSource {
   Future<List<CompletionCandidate>> search(CompletionQuery query) async {
     final token = query.token.trim().toLowerCase();
     if (query.isChinese || token.length < 2) return const [];
+    final scope = query.typedCategoryScope;
+    if (scope != null && scope.isEmpty) return const [];
+    // The API filters one category; several are narrowed after the fetch.
+    final apiCategory = scope != null && scope.length == 1 ? scope.single : null;
     final key =
-        'tags:$token:${query.categoryFilter?.value ?? 'all'}:${query.limit}';
+        'tags:$token:${scope == null ? 'all' : (scope.map((c) => c.value).toList()..sort()).join('+')}'
+        ':${query.limit}';
     final now = DateTime.now();
     final memory = _memory[key];
     if (memory != null &&
@@ -102,8 +107,7 @@ class DanbooruCompletionSource implements CompletionSource {
             'search[hide_empty]': 'yes',
             'search[is_deprecated]': 'no',
             'search[order]': 'count',
-            if (query.categoryFilter != null)
-              'search[category]': query.categoryFilter!.value,
+            if (apiCategory != null) 'search[category]': apiCategory.value,
             'limit': pageSize,
             if (page > 1) 'page': page,
           },

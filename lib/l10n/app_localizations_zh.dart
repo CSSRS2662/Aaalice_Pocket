@@ -12587,6 +12587,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_matchSemantic => '语义';
 
   @override
+  String autocomplete_matchSeal(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'homophone': '同',
+      'fuzzyPinyin': '音',
+      'pinyin': '拼',
+      'shuangpin': '双',
+      'initials': '首',
+      'approximate': '似',
+      'crossLingual': '拆',
+      'spellCorrected': '纠',
+      'englishVariant': '形',
+      'semantic': '义',
+      'other': '?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get autocomplete_filterEmpty => '没有符合筛选的标签';
+
+  @override
   String autocomplete_translationCoverage(int translated, int total) {
     return '汉化覆盖：$translated/$total';
   }
@@ -12833,12 +12854,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_sourceRelated => '离线相关标签';
 
   @override
-  String get autocomplete_headerTitle => '标签补全';
-
-  @override
-  String get autocomplete_relatedHeaderTitle => '相关标签';
-
-  @override
   String get autocomplete_loading => '正在查询本地词库与在线标签…';
 
   @override
@@ -12856,26 +12871,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String autocomplete_relatedWithContext(String tag, int count) {
-    return '$tag 等 $count 个词';
-  }
-
-  @override
   String autocomplete_duplicateInSections(String sections) {
     return '已在分区 $sections 中';
   }
-
-  @override
-  String get autocomplete_relatedFilter => '筛选分类，长按清除';
-
-  @override
-  String get autocomplete_relatedFilterCharacter => '角色';
-
-  @override
-  String get autocomplete_relatedFilterSeries => '作品';
-
-  @override
-  String get autocomplete_relatedFilterGeneral => '一般';
 
   @override
   String autocomplete_relatedFilterCount(String category, int count) {
@@ -28309,6 +28307,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_matchSemantic => '語義';
 
   @override
+  String autocomplete_matchSeal(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'homophone': '同',
+      'fuzzyPinyin': '音',
+      'pinyin': '拼',
+      'shuangpin': '雙',
+      'initials': '首',
+      'approximate': '似',
+      'crossLingual': '拆',
+      'spellCorrected': '糾',
+      'englishVariant': '形',
+      'semantic': '義',
+      'other': '?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get autocomplete_filterEmpty => '沒有符合篩選的標籤';
+
+  @override
   String autocomplete_translationCoverage(int translated, int total) {
     return '漢化覆蓋：$translated/$total';
   }
@@ -28555,12 +28574,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_sourceRelated => '離線相關標籤';
 
   @override
-  String get autocomplete_headerTitle => '標籤補全';
-
-  @override
-  String get autocomplete_relatedHeaderTitle => '相關標籤';
-
-  @override
   String get autocomplete_loading => '正在查詢本地詞庫與線上標籤…';
 
   @override
@@ -28578,26 +28591,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String autocomplete_relatedWithContext(String tag, int count) {
-    return '$tag 等 $count 個詞';
-  }
-
-  @override
   String autocomplete_duplicateInSections(String sections) {
     return '已在分區 $sections 中';
   }
-
-  @override
-  String get autocomplete_relatedFilter => '篩選分類，長按清除';
-
-  @override
-  String get autocomplete_relatedFilterCharacter => '角色';
-
-  @override
-  String get autocomplete_relatedFilterSeries => '作品';
-
-  @override
-  String get autocomplete_relatedFilterGeneral => '一般';
 
   @override
   String autocomplete_relatedFilterCount(String category, int count) {

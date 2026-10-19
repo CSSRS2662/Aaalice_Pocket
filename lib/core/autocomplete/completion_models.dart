@@ -122,6 +122,7 @@ class CompletionQuery {
     this.relatedTag,
     this.contextTags = const [],
     this.relatedCategories = const {},
+    this.typedCategories = const {},
     this.categoryFilter,
     this.kind = CompletionQueryKind.tag,
   });
@@ -142,12 +143,29 @@ class CompletionQuery {
   /// Categories a related query is narrowed to by the user; empty leaves the
   /// usual rules in charge.
   final Set<TagCategory> relatedCategories;
+
+  /// Categories typed matches are narrowed to by the user; empty lists every
+  /// category. Applies together with [categoryFilter].
+  final Set<TagCategory> typedCategories;
   final TagCategory? categoryFilter;
   final CompletionQueryKind kind;
 
   static final RegExp _chineseCharacter = RegExp(r'[\u3400-\u9fff]');
 
   bool get isChinese => _chineseCharacter.hasMatch(token);
+
+  /// The categories typed matches may come from: the `artist:` prefix and the
+  /// user's choice both apply. Null lists every category; an empty set means
+  /// the two exclude each other and nothing matches.
+  Set<TagCategory>? get typedCategoryScope {
+    final prefix = categoryFilter;
+    if (prefix != null) {
+      return typedCategories.isEmpty || typedCategories.contains(prefix)
+          ? {prefix}
+          : const {};
+    }
+    return typedCategories.isEmpty ? null : typedCategories;
+  }
   bool get isEnglish => !isChinese;
 
   CompletionQuery copyWith({
@@ -162,6 +180,7 @@ class CompletionQuery {
     bool clearRelatedTag = false,
     List<String>? contextTags,
     Set<TagCategory>? relatedCategories,
+    Set<TagCategory>? typedCategories,
     TagCategory? categoryFilter,
     bool clearCategoryFilter = false,
     CompletionQueryKind? kind,
@@ -177,6 +196,7 @@ class CompletionQuery {
       relatedTag: clearRelatedTag ? null : relatedTag ?? this.relatedTag,
       contextTags: contextTags ?? this.contextTags,
       relatedCategories: relatedCategories ?? this.relatedCategories,
+      typedCategories: typedCategories ?? this.typedCategories,
       categoryFilter: clearCategoryFilter
           ? null
           : categoryFilter ?? this.categoryFilter,

@@ -24,7 +24,9 @@ import 'autocomplete_overlay_handle.dart';
 import 'autocomplete_utils.dart';
 import 'completion_exclusion_scope.dart';
 import 'completion_overlay.dart';
-import 'related_category_filter.dart';
+import 'completion_candidate_rows.dart';
+import 'completion_category_filter.dart';
+import 'completion_tile_layout.dart';
 
 /// Unified local-first autocomplete shared by every tag and prompt field.
 class AutocompleteWrapper extends ConsumerStatefulWidget {
@@ -160,11 +162,26 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
   /// tag clears them, a pinned tag keeps them.
   Set<TagCategory> _relatedFilter = const {};
   String? _relatedFilterTag;
-  bool _relatedFilterOpen = false;
 
-  /// Related tags per category for the open cards; null until counted.
+  /// Related tags per category of [_relatedCountsTag] for the header
+  /// buttons; null until counted.
   Map<TagCategory, int>? _relatedCounts;
+  String? _relatedCountsTag;
   Object? _relatedCountsRequest;
+
+  /// Categories typed matches are narrowed to; they last until the popup
+  /// closes.
+  Set<TagCategory> _typedFilter = const {};
+
+  /// Local matches per category of the typed query; null until counted or
+  /// when the token is Chinese.
+  Map<TagCategory, int>? _typedCounts;
+  Object? _typedCountsRequest;
+
+  /// Tile sizes survive rebuilds; the row layout drives keyboard scrolling
+  /// and on-screen translation.
+  final CompletionTileMeasurer _tileMeasurer = CompletionTileMeasurer();
+  final CompletionListGeometry _listGeometry = CompletionListGeometry();
 
   FocusNode get _focusNode => widget.focusNode ?? _ownedFocusNode!;
 
@@ -224,14 +241,14 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     if (!position.hasContentDimensions || position.viewportDimension <= 0) {
       return;
     }
-    final itemExtent = effectiveAutocompleteCandidateExtent(context);
-    final firstIndex = (position.pixels / itemExtent).floor();
-    final lastIndex =
-        ((position.pixels + position.viewportDimension - 0.5) / itemExtent)
-            .floor();
+    final visible = _listGeometry.visibleIndices(
+      position.pixels,
+      position.viewportDimension,
+    );
+    if (visible == null) return;
     orchestrator.translateVisibleCandidates(
-      firstIndex: firstIndex,
-      lastIndex: lastIndex,
+      firstIndex: visible.first,
+      lastIndex: visible.last,
       settings: ref.read(autocompleteSettingsProvider),
     );
   }
@@ -524,6 +541,11 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     } else if (_relatedFilter.isNotEmpty) {
       query = query.copyWith(relatedCategories: _relatedFilter);
     }
+    if (query.relatedTag == null &&
+        query.kind == CompletionQueryKind.tag &&
+        _typedFilter.isNotEmpty) {
+      query = query.copyWith(typedCategories: _typedFilter);
+    }
     final scope = CompletionExclusionScope.maybeOf(context);
     _tagSections = const {};
     if (query.relatedTag != null) {
@@ -568,6 +590,7 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
           ? fallbackQuery
           : null,
     );
+    _countCategories(query);
   }
 
   static bool _sameRelatedTag(String? a, String? b) {
@@ -580,18 +603,43 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
   void _resetRelatedFilter() {
     _relatedFilter = const {};
     _relatedFilterTag = null;
-    _relatedFilterOpen = false;
-    _relatedCounts = null;
-    _relatedCountsRequest = null;
   }
 
-  void _toggleRelatedFilterPanel() {
-    // Working the cards makes a quiet popup an ordinary one: it stays up
-    // while the list reloads or comes back empty.
-    _continuation = false;
-    _relatedFilterOpen = !_relatedFilterOpen;
-    if (_relatedFilterOpen) unawaited(_countRelatedCategories());
-    _overlayEntry?.markNeedsBuild();
+  void _resetTypedFilter() {
+    _typedFilter = const {};
+    _typedCounts = null;
+    _typedCountsRequest = null;
+  }
+
+  /// The header buttons for the popup of [query]: related suggestions narrow
+  /// to their three categories, typed tags to the common ones. Library
+  /// lookups have none.
+  CompletionCategoryFilter? _categoryFilterFor(
+    CompletionQuery? query,
+    AutocompleteSettings settings,
+  ) {
+    if (query == null) return null;
+    if (query.relatedTag != null) {
+      return CompletionCategoryFilter(
+        categories: CompletionCategoryFilter.relatedCategories,
+        chosen: _relatedFilter,
+        counts: _sameRelatedTag(query.relatedTag, _relatedCountsTag)
+            ? _relatedCounts
+            : null,
+        listsOnlineRows: settings.danbooruEnabled,
+        onToggleCategory: _toggleRelatedCategory,
+        onClear: () => _narrowRelatedTo(const {}),
+      );
+    }
+    if (query.kind != CompletionQueryKind.tag) return null;
+    return CompletionCategoryFilter(
+      categories: CompletionCategoryFilter.typedCategories,
+      chosen: _typedFilter,
+      counts: _typedCounts,
+      listsOnlineRows: settings.danbooruEnabled,
+      onToggleCategory: _toggleTypedCategory,
+      onClear: () => _narrowTypedTo(const {}),
+    );
   }
 
   void _toggleRelatedCategory(TagCategory category) {
@@ -607,6 +655,8 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     final current = orchestrator?.state.query;
     final tag = current?.relatedTag;
     if (orchestrator == null || current == null || tag == null) return;
+    // Narrowing makes a quiet popup an ordinary one: it stays up while the
+    // list reloads or comes back empty.
     _continuation = false;
     _relatedFilter = categories;
     _relatedFilterTag = categories.isEmpty ? null : tag;
@@ -618,20 +668,83 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     );
   }
 
-  Future<void> _countRelatedCategories() async {
-    final query = _orchestrator?.state.query;
+  void _toggleTypedCategory(TagCategory category) {
+    final next = {..._typedFilter};
+    if (!next.remove(category)) next.add(category);
+    _narrowTypedTo(next);
+  }
+
+  /// Lists the typed matches again, narrowed to [categories]; none lifts the
+  /// filter. An empty narrowed list stays up to say why.
+  void _narrowTypedTo(Set<TagCategory> categories) {
+    final orchestrator = _orchestrator;
+    final current = orchestrator?.state.query;
+    if (orchestrator == null ||
+        current == null ||
+        current.relatedTag != null ||
+        current.kind != CompletionQueryKind.tag) {
+      return;
+    }
+    _continuation = false;
+    _keepEmptyQueryVisible = true;
+    _typedFilter = categories;
+    _selectedId = null;
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    orchestrator.query(
+      current.copyWith(typedCategories: categories),
+      ref.read(autocompleteSettingsProvider),
+    );
+    _overlayEntry?.markNeedsBuild();
+  }
+
+  /// Counts for the header buttons of the popup [query] opens.
+  void _countCategories(CompletionQuery query) {
+    if (query.relatedTag != null) {
+      unawaited(_countRelatedCategories(query));
+    } else if (query.kind == CompletionQueryKind.tag) {
+      unawaited(_countTypedCategories(query));
+    }
+  }
+
+  Future<void> _countRelatedCategories(CompletionQuery query) async {
     final count = ref.read(autocompleteServicesProvider).relatedCategoryCounts;
-    if (query?.relatedTag == null || count == null) return;
+    final tag = query.relatedTag;
+    if (tag == null || count == null) return;
+    // The counts belong to the tag; a pinned or repeated tag keeps them.
+    if (_relatedCounts != null && _sameRelatedTag(tag, _relatedCountsTag)) {
+      return;
+    }
     final request = _relatedCountsRequest = Object();
     _relatedCounts = null;
+    _relatedCountsTag = tag;
     Map<TagCategory, int>? counts;
     try {
-      counts = await count(query!);
+      counts = await count(query);
     } catch (_) {
-      // Cards without counts still narrow the list.
+      // Buttons without counts still narrow the list.
     }
     if (!mounted || !identical(request, _relatedCountsRequest)) return;
     _relatedCounts = counts;
+    _overlayEntry?.markNeedsBuild();
+  }
+
+  Future<void> _countTypedCategories(CompletionQuery query) async {
+    final count = ref.read(autocompleteServicesProvider).typedCategoryCounts;
+    final request = _typedCountsRequest = Object();
+    // Chinese tokens match through the dictionaries, which the catalog
+    // counts do not cover: show the buttons without numbers.
+    if (count == null || query.isChinese || query.token.trim().isEmpty) {
+      _typedCounts = null;
+      return;
+    }
+    Map<TagCategory, int>? counts;
+    try {
+      counts = await count(query);
+    } catch (_) {
+      // Buttons without counts still narrow the list.
+    }
+    if (!mounted || !identical(request, _typedCountsRequest)) return;
+    _typedCounts = counts;
     _overlayEntry?.markNeedsBuild();
   }
 
@@ -841,14 +954,11 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
           onToggleRelatedPin: _orchestrator!.state.query?.relatedTag == null
               ? null
               : _toggleRelatedPin,
-          relatedFilter: RelatedCategoryFilter(
-            chosen: _relatedFilter,
-            open: _relatedFilterOpen,
-            counts: _relatedCounts,
-            listsOnlineRows: settings.danbooruEnabled,
-            onTogglePanel: _toggleRelatedFilterPanel,
-            onToggleCategory: _toggleRelatedCategory,
-            onClear: () => _narrowRelatedTo(const {}),
+          measurer: _tileMeasurer,
+          geometry: _listGeometry,
+          categoryFilter: _categoryFilterFor(
+            _orchestrator!.state.query,
+            settings,
           ),
         ),
       ),
@@ -944,9 +1054,10 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     final position = _scrollController.position;
     if (!position.hasContentDimensions) return;
 
-    final itemExtent = effectiveAutocompleteCandidateExtent(context);
-    final itemTop = _selectedIndex * itemExtent;
-    final itemBottom = itemTop + itemExtent;
+    final span = _listGeometry.spanOf(_selectedIndex);
+    if (span == null) return;
+    final itemTop = span.top;
+    final itemBottom = span.bottom;
     final viewportTop = position.pixels;
     final viewportBottom = viewportTop + position.viewportDimension;
     double? target;
@@ -1108,10 +1219,10 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
   void _dismissOverlay([String reason = 'query replaced']) {
     _keepEmptyQueryVisible = false;
     _continuation = false;
-    // The cards go with the popup; what they narrowed stays only for a
-    // pinned tag, whose popup comes straight back.
-    _relatedFilterOpen = false;
+    // What the header buttons narrowed goes with the popup; a pinned tag,
+    // whose popup comes straight back, keeps its related filter.
     if (_pinnedRelatedTag == null) _resetRelatedFilter();
+    _resetTypedFilter();
     final state = _orchestrator?.state;
     if (_overlayEntry != null || state?.query != null) {
       AppLogger.d(
