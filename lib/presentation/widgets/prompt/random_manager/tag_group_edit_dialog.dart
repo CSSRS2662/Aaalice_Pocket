@@ -795,6 +795,7 @@ class _TagGroupEditDialogState extends ConsumerState<TagGroupEditDialog>
   void _showConditionalBranchDialog({int? initialBranchIndex}) {
     final options = _diyOptions;
     _showDiyConfigForm(
+      icon: Icons.call_split,
       title: AppLocalizations.of(context)!.randomManager_conditionalBranch,
       child: ConditionalBranchPanel(
         config: _editingTagGroup.conditionalBranchConfig,
@@ -816,6 +817,7 @@ class _TagGroupEditDialogState extends ConsumerState<TagGroupEditDialog>
   /// 显示依赖配置编辑面板
   void _showDependencyConfigDialog() {
     _showDiyConfigForm(
+      icon: Icons.link,
       title: AppLocalizations.of(context)!.randomManager_dependencyConfig,
       child: DependencyConfigPanel(
         config: _editingTagGroup.dependencyConfig,
@@ -835,6 +837,7 @@ class _TagGroupEditDialogState extends ConsumerState<TagGroupEditDialog>
   /// 显示可见性规则编辑面板
   void _showVisibilityRuleDialog() {
     _showDiyConfigForm(
+      icon: Icons.visibility,
       title: AppLocalizations.of(context)!.randomManager_visibilityRules,
       child: VisibilityRulePanel(
         rules: _editingTagGroup.visibilityRules,
@@ -854,6 +857,7 @@ class _TagGroupEditDialogState extends ConsumerState<TagGroupEditDialog>
   /// 显示时间条件编辑面板
   void _showTimeConditionDialog() {
     _showDiyConfigForm(
+      icon: Icons.calendar_today,
       title: AppLocalizations.of(context)!.randomManager_timeCondition,
       child: TimeConditionPanel(
         condition: _editingTagGroup.timeCondition,
@@ -872,6 +876,7 @@ class _TagGroupEditDialogState extends ConsumerState<TagGroupEditDialog>
   void _showPostProcessRuleDialog() {
     final options = _diyOptions;
     _showDiyConfigForm(
+      icon: Icons.build,
       title: AppLocalizations.of(context)!.randomManager_postProcessRules,
       child: PostProcessRulePanel(
         rules: _editingTagGroup.postProcessRules,
@@ -889,6 +894,7 @@ class _TagGroupEditDialogState extends ConsumerState<TagGroupEditDialog>
   }
 
   Future<void> _showDiyConfigForm({
+    required IconData icon,
     required String title,
     required Widget child,
   }) {
@@ -899,7 +905,7 @@ class _TagGroupEditDialogState extends ConsumerState<TagGroupEditDialog>
       titleBuilder: (panelContext) => Row(
         children: [
           Icon(
-            ability.icon,
+            icon,
             color: Theme.of(panelContext).colorScheme.secondary,
             size: 20,
           ),
