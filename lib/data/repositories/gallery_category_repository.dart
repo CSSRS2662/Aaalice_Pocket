@@ -9,7 +9,6 @@ import 'package:synchronized/synchronized.dart';
 import '../../core/database/datasources/gallery_data_source.dart';
 import '../../core/storage/local_storage_service.dart';
 import '../../core/utils/app_logger.dart';
-import '../../core/utils/file_name_sanitizer.dart';
 import '../models/gallery/gallery_category.dart';
 
 /// 画廊分类仓库
@@ -719,8 +718,10 @@ class GalleryCategoryRepository {
     }
   }
 
-  String _sanitizeFolderName(String name) =>
-      FileNameSanitizer.segment(name.replaceAll(RegExp(r'\s+'), ' '));
+  String _sanitizeFolderName(String name) => name
+      .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
 
   Future<bool> _isFolderEmpty(String folderPath) async {
     try {
