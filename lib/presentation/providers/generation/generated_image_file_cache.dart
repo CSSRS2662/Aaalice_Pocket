@@ -43,6 +43,26 @@ abstract final class GeneratedImageFileCache {
 
   static bool isCached(String path) => _cache.containsKey(path);
 
+  /// The cached bytes of [path], without touching the file.
+  static Uint8List? peek(String path) => _touch(path);
+
+  /// The bytes of [path], read off the UI thread when they are not cached;
+  /// empty when the file cannot be read, like [read].
+  static Future<Uint8List> load(String path) async {
+    final cached = _touch(path);
+    if (cached != null) return cached;
+    await prefetch([path]);
+    final loaded = _touch(path);
+    if (loaded != null) return loaded;
+    try {
+      // Evicted again before we looked: keep these bytes for the caller.
+      return _put(path, await File(path).readAsBytes());
+    } on Object catch (error) {
+      AppLogger.w('History image $path is unreadable: $error', 'History');
+      return Uint8List(0);
+    }
+  }
+
   /// Caches [bytes] already in memory as the content of [path].
   static void remember(String path, Uint8List bytes) => _put(path, bytes);
 

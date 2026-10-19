@@ -38,6 +38,27 @@ void main() {
     expect(GeneratedImageFileCache.read(p.join(directory.path, 'x.png')), []);
   });
 
+  test('peek 只看缓存，不读文件', () async {
+    final path = await file('b.png', [4, 5]);
+
+    expect(GeneratedImageFileCache.peek(path), isNull);
+    expect(GeneratedImageFileCache.isCached(path), isFalse);
+  });
+
+  test('load 在后台读文件并留在缓存里', () async {
+    final path = await file('c.png', [6, 7, 8]);
+
+    expect(await GeneratedImageFileCache.load(path), [6, 7, 8]);
+    expect(GeneratedImageFileCache.peek(path), [6, 7, 8]);
+  });
+
+  test('load 读不到文件时返回空字节', () async {
+    expect(
+      await GeneratedImageFileCache.load(p.join(directory.path, 'y.png')),
+      isEmpty,
+    );
+  });
+
   test('预读在后台把文件放进缓存', () async {
     final path = await file('b.png', [4, 5]);
 
