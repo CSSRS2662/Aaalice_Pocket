@@ -220,7 +220,13 @@ class _DistributionSummary extends StatelessWidget {
       (total, option) => total + option.weight,
     );
 
+    final metricStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: colors.onSurfaceVariant,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _SegmentBar(
           values: countCategories.map((item) => item.weight).toList(),
@@ -233,37 +239,31 @@ class _DistributionSummary extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Row(
+        // 每项人数与权重整体换行，窄屏放大文字时不截断
+        Wrap(
+          key: const ValueKey('random-manager-algorithm-summary'),
+          spacing: 12,
+          runSpacing: 2,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Expanded(
-              child: Text(
-                countCategories
-                    .take(4)
-                    .map(
-                      (category) =>
-                          '${context.l10n.characterCountLabel(category)} ${category.weight}',
-                    )
-                    .join('  ·  '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
-            if (genderTotal > 0) ...[
-              const SizedBox(width: 8),
-              Icon(Icons.wc_rounded, size: 14, color: colors.onSurfaceVariant),
-              const SizedBox(width: 3),
+            for (final category in countCategories.take(4))
               Text(
-                genderTotal.toString(),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+                '${context.l10n.characterCountLabel(category)} ${category.weight}',
+                style: metricStyle,
               ),
-            ],
+            if (genderTotal > 0)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.wc_rounded,
+                    size: 14,
+                    color: colors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(genderTotal.toString(), style: metricStyle),
+                ],
+              ),
           ],
         ),
       ],
@@ -444,11 +444,13 @@ class _SectionLabel extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: colors.onSurfaceVariant),
         const SizedBox(width: 6),
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );
