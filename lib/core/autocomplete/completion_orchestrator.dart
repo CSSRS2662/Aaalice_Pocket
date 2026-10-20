@@ -21,6 +21,8 @@ class CompletionOrchestrator extends ChangeNotifier {
     List<SupplementalCompletionSource> supplementalSources = const [],
     CompletionRankingSignals? rankingSignals,
     Future<TagCategory?> Function(String tag)? tagCategory,
+    Future<List<CompletionCandidate>> Function(List<CompletionCandidate> rows)?
+    foldRenamedTags,
     Duration llmDebounceDuration = const Duration(milliseconds: 400),
   }) : _localSources = localSources,
        _tagLookupSources = tagLookupSources,
@@ -34,6 +36,7 @@ class CompletionOrchestrator extends ChangeNotifier {
        _supplementalSources = supplementalSources,
        _rankingSignals = rankingSignals,
        _tagCategory = tagCategory,
+       _foldRenamedTags = foldRenamedTags,
        _llmDebounceDuration = llmDebounceDuration;
 
   final List<CompletionSource> _localSources;
@@ -49,6 +52,15 @@ class CompletionOrchestrator extends ChangeNotifier {
   /// The catalog category of a tag, to hold online related rows to the rule
   /// the local ones follow.
   final Future<TagCategory?> Function(String tag)? _tagCategory;
+
+  /// Moves rows under renamed Danbooru names onto the current tag.
+  final Future<List<CompletionCandidate>> Function(
+    List<CompletionCandidate> rows,
+  )?
+  _foldRenamedTags;
+
+  Future<List<CompletionCandidate>> _fold(List<CompletionCandidate> rows) =>
+      _foldRenamedTags?.call(rows) ?? Future.value(rows);
   Timer? _semanticDebounce;
 
   /// Context and habit boosts of the current query, used by every merge.
@@ -163,8 +175,14 @@ class CompletionOrchestrator extends ChangeNotifier {
         }
       }),
     );
-    final localBatches = localResults.map(
-      (result) => _filterCategory(result.candidates, effectiveQuery),
+    // Library aliases are entry names, not tags.
+    final localBatches = await Future.wait(
+      localResults.map(
+        (result) async => _filterCategory(
+          isLibraryAlias ? result.candidates : await _fold(result.candidates),
+          effectiveQuery,
+        ),
+      ),
     );
     final localErrors = localResults
         .map((result) => result.error)
@@ -260,7 +278,9 @@ class CompletionOrchestrator extends ChangeNotifier {
       if (!_isCurrent(sequence)) return;
       // Use the same current dictionary/locale policy as lexical completion.
       // The frozen index labels describe its corpus, not user translation state.
-      rows = rows.map((row) => row.copyWith(clearTranslation: true)).toList();
+      rows = await _fold(
+        rows.map((row) => row.copyWith(clearTranslation: true)).toList(),
+      );
       rows = await _applyDictionaryTranslations(
         rows,
         query,
@@ -326,7 +346,9 @@ class CompletionOrchestrator extends ChangeNotifier {
       }),
     );
     if (!_isCurrent(sequence)) return;
-    var rows = batches.expand((batch) => batch).toList(growable: false);
+    var rows = await _fold(
+      batches.expand((batch) => batch).toList(growable: false),
+    );
     rows = await _applyDictionaryTranslations(rows, query, sequence, settings);
     rows = await _applyCachedLlmTranslations(rows, query, sequence, settings);
     if (!_isCurrent(sequence)) return;

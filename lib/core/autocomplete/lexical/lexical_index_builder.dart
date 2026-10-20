@@ -19,6 +19,7 @@ class LexicalIndexBuildInput {
     required this.ameLexiconGz,
     required this.pinyinGz,
     required this.crossLingualGz,
+    this.pocketLexiconGz,
     this.zhDictionaryPath,
   });
 
@@ -27,6 +28,9 @@ class LexicalIndexBuildInput {
   final String catalogPath;
   final String? zhDictionaryPath;
   final Uint8List ameLexiconGz;
+
+  /// This project's names for otherwise untranslated tags, AME row format.
+  final Uint8List? pocketLexiconGz;
   final Uint8List pinyinGz;
   final Uint8List crossLingualGz;
 }
@@ -109,11 +113,13 @@ Future<Map<String, int>> buildLexicalIndex(LexicalIndexBuildInput input) async {
     }
   }
 
-  // Bundled AME lexicon (MIT): labels and Chinese aliases.
-  final ame =
-      (jsonDecode(utf8.decode(gzip.decode(input.ameLexiconGz)))
-              as Map)['entries']
-          as List;
+  // Bundled AME lexicon (MIT) and this project's supplement: labels and
+  // Chinese aliases.
+  final ame = [
+    for (final lexicon in [input.ameLexiconGz, ?input.pocketLexiconGz])
+      ...((jsonDecode(utf8.decode(gzip.decode(lexicon))) as Map)['entries']
+          as List),
+  ];
   for (final row in ame.cast<List>()) {
     final category = TagCategory.fromCatalog(row[1] as int)?.value;
     if (category == null) continue;

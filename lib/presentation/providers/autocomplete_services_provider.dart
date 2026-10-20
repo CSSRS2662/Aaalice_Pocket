@@ -56,5 +56,6 @@ final autocompleteServicesProvider = Provider<AutocompleteServices>((ref) {
         ref.read(cooccurrenceCompletionSourceProvider).categoryCounts(query),
     typedCategoryCounts: (query) =>
         ref.read(tagCatalogRepositoryProvider).typedCategoryCounts(query),
+    foldRenamedTags: ref.watch(tagRenameFolderProvider).fold,
   );
 });

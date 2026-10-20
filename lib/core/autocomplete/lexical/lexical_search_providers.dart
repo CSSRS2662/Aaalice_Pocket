@@ -63,6 +63,7 @@ final lexicalSearchIndexProvider = Provider<LexicalSearchIndex>((ref) {
   final dictionary = ref.watch(zhDictionaryServiceProvider.notifier);
   Future<String>? catalogVersion;
   Future<Uint8List>? ameBytes;
+  Future<Uint8List?>? pocketBytes;
   final index = LexicalSearchIndex(
     resolveSources: () async {
       try {
@@ -76,6 +77,9 @@ final lexicalSearchIndexProvider = Provider<LexicalSearchIndex>((ref) {
           catalogPath: AssetDatabaseManager.instance.tagCatalogDbPath,
           catalogVersion: await (catalogVersion ??= _catalogVersion()),
           ameLexiconGz: await (ameBytes ??= _assetBytes(AmeZhLexicon.assetKey)),
+          pocketLexiconGz: await (pocketBytes ??= _assetBytes(
+            AmeZhLexicon.pocketAssetKey,
+          ).then<Uint8List?>((bytes) => bytes, onError: (_) => null)),
           pinyinGz: pinyin,
           crossLingualGz: words,
           zhDictionaryPath: dictionary.installedDatabasePath,
@@ -84,6 +88,7 @@ final lexicalSearchIndexProvider = Provider<LexicalSearchIndex>((ref) {
       } catch (_) {
         catalogVersion = null;
         ameBytes = null;
+        pocketBytes = null;
         return null;
       }
     },

@@ -6,6 +6,8 @@ import 'package:nai_launcher/core/autocomplete/autocomplete_settings.dart';
 import 'package:nai_launcher/core/autocomplete/completion_models.dart';
 import 'package:nai_launcher/core/autocomplete/completion_orchestrator.dart';
 import 'package:nai_launcher/core/autocomplete/danbooru_completion_source.dart';
+import 'package:nai_launcher/core/autocomplete/tag_catalog_repository.dart';
+import 'package:nai_launcher/core/autocomplete/tag_rename_folder.dart';
 
 void main() {
   testWidgets(
@@ -792,6 +794,56 @@ void main() {
     sharedLlm.scopes[1].completeActive({'negative_tag': '负面标签'});
     await Future<void>.delayed(Duration.zero);
     expect(second.state.candidates.single.translation, '负面标签');
+  });
+
+  testWidgets('rows under a renamed Danbooru name fold into the current tag', (
+    tester,
+  ) async {
+    final folder = TagRenameFolder(
+      () async => const {
+        'black_shoes': TagCatalogRecord(
+          canonicalTag: 'black_footwear',
+          category: TagCategory.general,
+          postCount: 287208,
+        ),
+      },
+    );
+    final orchestrator = CompletionOrchestrator(
+      localSources: [
+        _Source([
+          _candidate('black_shoes', CompletionSourceKind.zhDictionary).copyWith(
+            matchKind: CompletionMatchKind.chineseExact,
+            translation: '黑色鞋子',
+          ),
+        ]),
+      ],
+      dictionaryTranslations: _Translations({'black_footwear': '黑色鞋子'}),
+      llmTranslations: _Translations(const {}),
+      danbooru: _FakeDanbooru(),
+      semanticSource: _Source([
+        _candidate(
+          'black_shoes',
+          CompletionSourceKind.base,
+        ).copyWith(matchKind: CompletionMatchKind.fullText, semanticScore: .9),
+      ]),
+      foldRenamedTags: folder.fold,
+    );
+    addTearDown(orchestrator.dispose);
+    await folder.ready();
+    const settings = AutocompleteSettings(danbooruEnabled: false);
+
+    final pending = orchestrator.query(_query('黑色鞋子'), settings);
+    await tester.pump();
+    await pending;
+    await tester.pump(const Duration(milliseconds: 251));
+    await tester.pump();
+
+    final rows = orchestrator.state.candidates;
+    expect(rows.map((row) => row.canonicalTag), ['black_footwear']);
+    expect(rows.single.postCount, 287208);
+    expect(rows.single.matchKind, CompletionMatchKind.chineseExact);
+    expect(rows.single.matchedAlias, 'black_shoes');
+    expect(rows.single.translation, '黑色鞋子');
   });
 }
 

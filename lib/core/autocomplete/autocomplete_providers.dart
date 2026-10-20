@@ -20,6 +20,7 @@ export 'fast_tag_service_provider.dart'
     show
         fastTagServiceProvider,
         tagCatalogRepositoryProvider,
+        tagRenameFolderProvider,
         zhDictionaryServiceProvider;
 
 final autocompleteCacheDatabaseProvider = Provider<AutocompleteCacheDatabase>((
@@ -75,6 +76,7 @@ class AutocompleteServices {
     this.tagCategory,
     this.relatedCategoryCounts,
     this.typedCategoryCounts,
+    this.foldRenamedTags,
   });
 
   final List<CompletionSource> localSources;
@@ -104,6 +106,10 @@ class AutocompleteServices {
   final Future<Map<TagCategory, int>> Function(CompletionQuery query)?
   typedCategoryCounts;
 
+  /// Moves rows under renamed Danbooru names onto the current tag.
+  final Future<List<CompletionCandidate>> Function(List<CompletionCandidate>)?
+  foldRenamedTags;
+
   CompletionOrchestrator createOrchestrator() => CompletionOrchestrator(
     localSources: localSources,
     tagLookupSources: tagLookupSources,
@@ -115,6 +121,7 @@ class AutocompleteServices {
     supplementalSources: supplementalSources,
     rankingSignals: rankingSignals,
     tagCategory: tagCategory,
+    foldRenamedTags: foldRenamedTags,
   );
 }
 

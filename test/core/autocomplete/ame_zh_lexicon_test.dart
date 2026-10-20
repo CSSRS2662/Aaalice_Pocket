@@ -149,4 +149,67 @@ void main() {
       isTrue,
     );
   });
+
+  test('多个词库合并为一个索引，同一标签以先列出的为准', () {
+    List<int> gz(List<List<Object?>> rows) =>
+        gzip.encode(utf8.encode(jsonEncode({'version': 1, 'entries': rows})));
+    final merged = AmeZhLexiconIndex.decodeAll([
+      Uint8List.fromList(gz(_rows)),
+      Uint8List.fromList(
+        gz([
+          ['braid', 0, 1, '另一个译名', <String>[]],
+          [
+            'night_sky',
+            0,
+            55380,
+            '夜空',
+            <String>['夜晚的天空'],
+          ],
+        ]),
+      ),
+    ]);
+
+    expect(merged.length, _rows.length + 1);
+    expect(merged.resolve(['braid', 'night_sky']), {
+      'braid': '辫子',
+      'night_sky': '夜空',
+    });
+    expect(merged.search(_query('夜晚的天空')).single.matchedAlias, '夜晚的天空');
+  });
+
+  test('本项目补充词库与清单一致，只收录其他来源都没有中文的标签', () {
+    final manifest =
+        jsonDecode(
+              File('assets/zh_lexicon/pocket_manifest.json').readAsStringSync(),
+            )
+            as Map;
+    final file = manifest['file'] as Map;
+    final bytes = File(AmeZhLexicon.pocketAssetKey).readAsBytesSync();
+    expect(bytes.length, file['bytes']);
+    expect(sha256.convert(bytes).toString(), file['sha256']);
+    expect(manifest['source']['license'], 'MIT');
+    final source = File(manifest['source']['path'] as String).readAsBytesSync();
+    expect(
+      sha256.convert(source).toString(),
+      manifest['source']['sha256'],
+      reason: '修改译名后运行 tool/zh_lexicon/build_pocket_lexicon.dart',
+    );
+
+    final pocket = AmeZhLexiconIndex.decode(bytes);
+    expect(pocket.length, manifest['entries']);
+    expect(pocket.resolve(['black_footwear', 'night_sky']), {
+      'black_footwear': '黑色鞋子',
+      'night_sky': '夜空',
+    });
+    final ame = AmeZhLexiconIndex.decode(
+      File(AmeZhLexicon.assetKey).readAsBytesSync(),
+    );
+    final rows =
+        (jsonDecode(utf8.decode(gzip.decode(bytes))) as Map)['entries'] as List;
+    final shared = [
+      for (final row in rows.cast<List>())
+        if (ame.resolve([row[0] as String]).isNotEmpty) row[0],
+    ];
+    expect(shared, isEmpty);
+  });
 }

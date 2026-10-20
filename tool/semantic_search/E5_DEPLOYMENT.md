@@ -121,3 +121,25 @@ deliberately corrupted-pack recovery and category-filter UI scenarios remain
 pending. Do not substitute emulator or offline scores for these checks. The
 emulator's separate Chinese display dictionary is not installed; semantic
 retrieval still works, but its footer says the dictionary is not installed.
+
+## Pocket views (2026-10-20)
+
+Tags that no bundled source translates had a single English view, and Chinese
+queries ranked them beyond the first 2,000 tags (106 of 114 test queries).
+`append_pocket_views_test.dart` adds the project's own Chinese name and aliases
+(`assets/zh_lexicon/pocket_lexicon.json.gz`) as extra views of those tags and
+fills their empty label: 997 views for 830 tags, 118,508 rows in total. It
+encodes with the bundled model through the app's tokenizer (`passage: ` prefix,
+mean pooling, L2, the same per-row int8 quantisation) and first re-encodes 64
+base views: the Python-built pack and the app runtime agree at about 0.997
+cosine for every text (worst 0.990), with no score bias against queries
+(median +0.0007 over 60 labelled tags). The manifest's `pocket` section records
+the added views, the original labels and the hashes of the pack without them,
+so a rerun strips and re-adds them byte for byte. After `prepare_e5_pack.py`
+regenerates the pack, run the append again:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/run_flutter_tests.ps1 -Path tool/semantic_search/append_pocket_views_test.dart
+```
+
+It loads the onnxruntime plugin DLL from the pub cache and runs on Windows.

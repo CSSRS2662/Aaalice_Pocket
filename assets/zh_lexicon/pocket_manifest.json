@@ -1,0 +1,16 @@
+{
+  "source": {
+    "name": "Aaalice Pocket translations",
+    "path": "tool/zh_lexicon/pocket_translations.json",
+    "license": "MIT",
+    "sha256": "8705166e93c57b4d39b75b6d82d75e639cef0f6502371178cc1614c04cb1a74c"
+  },
+  "catalog_sha256": "9b9693af5f6cfafda2ed8d85488b0a6c3741b0c589da935291b20dff439a2288",
+  "format": "[tag, catalog_category, post_count, zh_label, [cjk_aliases]]",
+  "entries": 841,
+  "file": {
+    "name": "pocket_lexicon.json.gz",
+    "bytes": 18169,
+    "sha256": "ecbb58523be6fad101f38ab06396ab8105e18f6fa33e422d07cc644d363859cb"
+  }
+}

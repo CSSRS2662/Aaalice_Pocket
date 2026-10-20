@@ -118,6 +118,7 @@ class _MemoryStorage extends Fake implements LocalStorageService {
 void main() {
   late Directory directory;
   late LexicalSearchIndex index;
+  late LexicalIndexSources sources;
   late SearchLexicon lexicon;
   late _FakeCatalog catalog;
   var settings = const AutocompleteSettings();
@@ -159,17 +160,29 @@ void main() {
     final ameGz = Uint8List.fromList(
       gzip.encode(utf8.encode(jsonEncode({'entries': _ame}))),
     );
+    sources = LexicalIndexSources(
+      indexPath: '${directory.path}/index/lexical_index.db',
+      catalogPath: catalogPath,
+      catalogVersion: 'fixture',
+      ameLexiconGz: ameGz,
+      pocketLexiconGz: Uint8List.fromList(
+        gzip.encode(
+          utf8.encode(
+            jsonEncode({
+              'entries': [
+                ['night_sky', 0, 55380, '夜空', <String>[]],
+              ],
+            }),
+          ),
+        ),
+      ),
+      pinyinGz: pinyinGz,
+      crossLingualGz: wordsGz,
+    );
     index = LexicalSearchIndex(
       databaseFactory: databaseFactoryFfi,
       build: buildLexicalIndex,
-      resolveSources: () async => LexicalIndexSources(
-        indexPath: '${directory.path}/index/lexical_index.db',
-        catalogPath: catalogPath,
-        catalogVersion: 'fixture',
-        ameLexiconGz: ameGz,
-        pinyinGz: pinyinGz,
-        crossLingualGz: wordsGz,
-      ),
+      resolveSources: () async => sources,
     );
     expect(await index.ready(), isNotNull);
   });
@@ -182,6 +195,23 @@ void main() {
   setUp(() {
     settings = const AutocompleteSettings();
     catalog = _FakeCatalog();
+  });
+
+  test('本项目补充词库的译名同样建入拼音索引并参与指纹', () async {
+    final rows = await source().supplement(_query('yekong'), const []);
+    expect(rows.first.canonicalTag, 'night_sky');
+    expect(rows.first.matchKind, CompletionMatchKind.pinyin);
+    expect(rows.first.translation, '夜空');
+
+    final withoutPocket = LexicalIndexSources(
+      indexPath: sources.indexPath,
+      catalogPath: sources.catalogPath,
+      catalogVersion: sources.catalogVersion,
+      ameLexiconGz: sources.ameLexiconGz,
+      pinyinGz: sources.pinyinGz,
+      crossLingualGz: sources.crossLingualGz,
+    );
+    expect(withoutPocket.fingerprint, isNot(sources.fingerprint));
   });
 
   test('同音中文命中衬衫，以读音开头的标签排在后面', () async {
@@ -335,21 +365,18 @@ void main() {
     });
 
     test('语义结果排在拼音、拆词等词法增强之后', () {
-      final sorted = CompletionRanker.mergeAndSort(
-        [
-          const CompletionCandidate(
-            canonicalTag: 'semantic',
-            category: TagCategory.general,
-            postCount: 9000000,
-            matchKind: CompletionMatchKind.fullText,
-            sources: {CompletionSourceKind.base},
-            semanticScore: 0.99,
-          ),
-          row('initials', CompletionMatchKind.pinyinInitials),
-          row('split', CompletionMatchKind.crossLingual),
-        ],
-        query: _query('坐在椅子上'),
-      );
+      final sorted = CompletionRanker.mergeAndSort([
+        const CompletionCandidate(
+          canonicalTag: 'semantic',
+          category: TagCategory.general,
+          postCount: 9000000,
+          matchKind: CompletionMatchKind.fullText,
+          sources: {CompletionSourceKind.base},
+          semanticScore: 0.99,
+        ),
+        row('initials', CompletionMatchKind.pinyinInitials),
+        row('split', CompletionMatchKind.crossLingual),
+      ], query: _query('坐在椅子上'));
       expect(sorted.map((row) => row.canonicalTag), [
         'split',
         'initials',

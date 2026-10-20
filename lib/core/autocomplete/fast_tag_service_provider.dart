@@ -6,12 +6,23 @@ import 'ame_zh_lexicon.dart';
 import 'fast_tag_service.dart';
 import 'e5_translation_resolver.dart';
 import 'tag_catalog_repository.dart';
+import 'tag_rename_folder.dart';
 import 'zh_dictionary_service.dart';
 
 final tagCatalogRepositoryProvider = Provider<TagCatalogRepository>((ref) {
   final repository = TagCatalogRepository();
   ref.onDispose(() => unawaited(repository.dispose()));
   return repository;
+});
+
+/// Renamed Danbooru tags shown under their current names.
+final tagRenameFolderProvider = Provider<TagRenameFolder>((ref) {
+  final folder = TagRenameFolder(
+    ref.watch(tagCatalogRepositoryProvider).renamedTags,
+  );
+  // Load ahead of the first query; folding starts once the map is ready.
+  unawaited(folder.ready());
+  return folder;
 });
 
 final zhDictionaryServiceProvider = ChangeNotifierProvider<ZhDictionaryService>(
@@ -43,6 +54,7 @@ final fastTagServiceProvider = Provider<FastTagService>((ref) {
     dictionary: ref.watch(zhDictionaryServiceProvider.notifier),
     fallbackTranslations: ref.watch(e5TranslationResolverProvider),
     lexicon: ref.watch(ameZhLexiconProvider),
+    renames: ref.watch(tagRenameFolderProvider),
   );
 });
 

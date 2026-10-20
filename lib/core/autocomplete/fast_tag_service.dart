@@ -2,6 +2,7 @@ import 'ame_zh_lexicon.dart';
 import 'completion_models.dart';
 import 'completion_ranker.dart';
 import 'tag_catalog_repository.dart';
+import 'tag_rename_folder.dart';
 import 'zh_dictionary_service.dart';
 
 /// Reusable local tag search and translation boundary.
@@ -15,15 +16,18 @@ class FastTagService implements CompletionSource, TranslationResolver {
     required ZhDictionaryService dictionary,
     TranslationResolver? fallbackTranslations,
     AmeZhLexicon? lexicon,
+    TagRenameFolder? renames,
   }) : _catalog = catalog,
        _dictionary = dictionary,
        _fallbackTranslations = fallbackTranslations,
-       _lexicon = lexicon;
+       _lexicon = lexicon,
+       _renames = renames;
 
   final TagCatalogRepository _catalog;
   final ZhDictionaryService _dictionary;
   final TranslationResolver? _fallbackTranslations;
   final AmeZhLexicon? _lexicon;
+  final TagRenameFolder? _renames;
 
   @override
   Future<List<CompletionCandidate>> search(CompletionQuery query) async {
@@ -33,17 +37,23 @@ class FastTagService implements CompletionSource, TranslationResolver {
     ]);
     final dictionaryResults = await _searchOptionalDictionary(query);
     final lexiconResults = await _searchLexicon(query);
-    return CompletionRanker.mergeAndSort([
+    final rows = [
       ...bundledBatches.expand((batch) => batch),
       ...dictionaryResults,
       ...lexiconResults,
-    ], query: query);
+    ];
+    // Old names merge into the current tag before ranking.
+    return CompletionRanker.mergeAndSort(
+      await _renames?.fold(rows) ?? rows,
+      query: query,
+    );
   }
 
   /// Resolves reviewed corrections before ffdkj and bundled gap-fillers after
   /// it. A later ffdkj update can therefore replace an ordinary fallback but
   /// cannot reintroduce a confirmed mistranslation. The bundled AME lexicon
-  /// only fills what every other source left empty.
+  /// only fills what every other source left empty. A renamed tag that is
+  /// still untranslated borrows the label of its old name.
   @override
   Future<Map<String, String>> resolve(
     List<String> canonicalTags, {
@@ -58,7 +68,32 @@ class FastTagService implements CompletionSource, TranslationResolver {
         .toSet()
         .toList(growable: false);
     if (normalized.isEmpty) return const {};
+    final resolved = await _resolveNames(normalized, locale: locale);
+    final missing = normalized.where((tag) => !resolved.containsKey(tag));
+    final renames = _renames;
+    if (renames == null || missing.isEmpty) return resolved;
+    final formerNames = await renames.formerNames(missing);
+    if (formerNames.isEmpty) return resolved;
+    final labels = await _resolveNames(
+      formerNames.values.expand((names) => names).toSet().toList(),
+      locale: locale,
+    );
+    for (final MapEntry(key: tag, value: names) in formerNames.entries) {
+      for (final name in names) {
+        final label = labels[name];
+        if (label != null) {
+          resolved[tag] = label;
+          break;
+        }
+      }
+    }
+    return resolved;
+  }
 
+  Future<Map<String, String>> _resolveNames(
+    List<String> normalized, {
+    required String locale,
+  }) async {
     final overrides = await _catalog.resolveTranslations(
       normalized,
       mode: BundledTranslationMode.override,

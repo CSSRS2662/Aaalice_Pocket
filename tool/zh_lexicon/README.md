@@ -18,4 +18,12 @@ tool/.tmp/semantic-search/venv/Scripts/python.exe -m unittest discover -s tool/z
 
 输出是确定性的（gzip `mtime=0`），`assets/zh_lexicon/manifest.json` 记录源文件、目录库哈希与条目数，`test/core/autocomplete/ame_zh_lexicon_test.dart` 会校验随包文件与清单一致。
 
+## 本项目补充译名（Pocket）
+
+`pocket_translations.json` 是本项目自己写的简体中文名（MIT），只收录随包目录、ffdkj 与 AME 都没有中文的 Danbooru 通用与元标签（2026-10 共 841 条，含常用的 `night_sky`、各色 `*_footwear`、`*_gemstone` 等）。每条一个推荐名 `zh`，`aliases` 写常见的其他说法；拿不准含义的标签宁可不收。
+
+- `dart run tool/zh_lexicon/build_pocket_lexicon.dart` 离线生成 `assets/zh_lexicon/pocket_lexicon.json.gz`（与 AME 同一行格式，只保留含汉字的别名）和 `pocket_manifest.json`；已被其他随包来源翻译的标签会被拒绝。
+- 运行时 `AmeZhLexicon` 把它与 AME 合并（同一标签以 AME 为准），词法索引通过 `pocketLexiconGz` 一并建入拼音与近似匹配。
+- 改动译名后还要运行 `tool/semantic_search/append_pocket_views_test.dart`，把中文名与别名追加为 E5 视图（见 `tool/semantic_search/E5_DEPLOYMENT.md`）。
+
 DanbooruSearchOnline 的 `tags_enhanced.csv` 为 GPL-3.0，与本项目的 MIT 许可不兼容，只用于 `tool/.tmp` 内的离线对照评测，不进入任何随应用分发的文件。

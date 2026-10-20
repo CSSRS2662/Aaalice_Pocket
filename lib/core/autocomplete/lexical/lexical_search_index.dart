@@ -19,6 +19,7 @@ class LexicalIndexSources {
     required this.ameLexiconGz,
     required this.pinyinGz,
     required this.crossLingualGz,
+    this.pocketLexiconGz,
     this.zhDictionaryPath,
     this.zhDictionaryVersion,
   });
@@ -29,6 +30,7 @@ class LexicalIndexSources {
   final Uint8List ameLexiconGz;
   final Uint8List pinyinGz;
   final Uint8List crossLingualGz;
+  final Uint8List? pocketLexiconGz;
   final String? zhDictionaryPath;
   final String? zhDictionaryVersion;
 
@@ -38,6 +40,7 @@ class LexicalIndexSources {
     shortDigest(ameLexiconGz),
     shortDigest(pinyinGz),
     shortDigest(crossLingualGz),
+    if (pocketLexiconGz case final pocket?) 'pocket:${shortDigest(pocket)}',
     zhDictionaryPath == null ? 'nozh' : 'zh:${zhDictionaryVersion ?? '?'}',
   ].join('|');
 }
@@ -177,6 +180,7 @@ class LexicalSearchIndex {
           catalogPath: sources.catalogPath,
           zhDictionaryPath: sources.zhDictionaryPath,
           ameLexiconGz: sources.ameLexiconGz,
+          pocketLexiconGz: sources.pocketLexiconGz,
           pinyinGz: sources.pinyinGz,
           crossLingualGz: sources.crossLingualGz,
         ),

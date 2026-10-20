@@ -207,6 +207,55 @@ class TagCatalogRepository implements CompletionSource {
     return result;
   }
 
+  /// Danbooru tags renamed or merged into another Danbooru tag, by old name.
+  ///
+  /// Only aliases that are no longer Danbooru tags of their own count: the
+  /// merged catalog also holds e621 aliases between live Danbooru tags
+  /// (`school_uniform` → `serafuku`), and those must stay apart. An old name
+  /// may survive as an e621 namesake (`black_shoes`); it still folds into the
+  /// Danbooru tag. Names aliased to several tags are left alone.
+  Future<Map<String, TagCatalogRecord>> renamedTags() =>
+      _renamed ??= _loadRenamedTags().onError<Object>((error, stack) {
+        _renamed = null;
+        Error.throwWithStackTrace(error, stack);
+      });
+
+  Future<Map<String, TagCatalogRecord>>? _renamed;
+
+  Future<Map<String, TagCatalogRecord>> _loadRenamedTags() async {
+    await initialize();
+    final rows = await _database!.rawQuery('''
+      SELECT LOWER(a.alias) AS alias, t.name, t.category, t.post_count
+      FROM aliases a
+      JOIN tags t ON t.id = a.tag_id
+      LEFT JOIN tags s ON s.name = a.alias
+      WHERE t.category IN (0, 1, 3, 4, 5)
+        AND (s.id IS NULL OR s.category NOT IN (0, 1, 3, 4, 5))
+        AND LOWER(a.alias) <> LOWER(t.name)
+    ''');
+    final targets = <String, TagCatalogRecord>{};
+    final ambiguous = <String>{};
+    for (final row in rows) {
+      final alias = row['alias'] as String;
+      final category = TagCategory.fromCatalog(
+        (row['category'] as num).toInt(),
+      );
+      if (category == null) continue;
+      final record = TagCatalogRecord(
+        canonicalTag: row['name'] as String,
+        category: category,
+        postCount: (row['post_count'] as num).toInt(),
+      );
+      final existing = targets[alias];
+      if (existing != null && existing.canonicalTag != record.canonicalTag) {
+        ambiguous.add(alias);
+      }
+      targets[alias] = record;
+    }
+    ambiguous.forEach(targets.remove);
+    return targets;
+  }
+
   Future<Map<String, TagCatalogRecord>> recordsByCanonicalTag(
     Iterable<String> canonicalTags,
   ) async {
@@ -481,6 +530,7 @@ class TagCatalogRepository implements CompletionSource {
     await _opening;
     await _database?.close();
     _database = null;
+    _renamed = null;
   }
 
   static String _ftsExpression(String value) {

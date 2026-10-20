@@ -8,35 +8,51 @@ import 'chinese_query_variants.dart';
 import 'completion_models.dart';
 
 /// Bundled Chinese names and aliases from amenorira/danbooru-tags-data-zh
-/// (MIT), mapped onto the bundled catalog by `tool/zh_lexicon`.
+/// (MIT), mapped onto the bundled catalog by `tool/zh_lexicon`, together with
+/// the names this project wrote for tags no other source translates
+/// (`pocket_lexicon.json.gz`, same row format).
 ///
 /// It adds Chinese reverse-lookup keys (for example community nicknames) and
 /// only fills translations after reviewed corrections, the installed ffdkj
 /// dictionary and the E5 labels. Search rows leave `translation` empty so the
 /// shared resolver precedence decides what is displayed.
 class AmeZhLexicon implements CompletionSource, TranslationResolver {
+  /// [loadBytes] and [decode] replace the bundled pair with one lexicon.
   AmeZhLexicon({
     Future<Uint8List> Function()? loadBytes,
     Future<AmeZhLexiconIndex> Function(Uint8List bytes)? decode,
-  }) : _loadBytes = loadBytes ?? _loadAsset,
-       _decode = decode ?? _decodeInBackground;
+  }) : _load = loadBytes == null && decode == null
+           ? _loadBundled
+           : (() async => (decode ?? _decodeInBackground)(
+               await (loadBytes ?? () => _loadAsset(assetKey))(),
+             ));
 
   static const assetKey = 'assets/zh_lexicon/ame_lexicon.json.gz';
 
-  final Future<Uint8List> Function() _loadBytes;
-  final Future<AmeZhLexiconIndex> Function(Uint8List bytes) _decode;
+  /// This project's reviewed names for tags without any other Chinese label.
+  static const pocketAssetKey = 'assets/zh_lexicon/pocket_lexicon.json.gz';
+
+  final Future<AmeZhLexiconIndex> Function() _load;
   Future<AmeZhLexiconIndex>? _index;
   DateTime? _retryAfter;
 
-  static Future<Uint8List> _loadAsset() async {
-    final data = await rootBundle.load(assetKey);
+  static Future<Uint8List> _loadAsset(String key) async {
+    final data = await rootBundle.load(key);
     return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
   }
 
   static Future<AmeZhLexiconIndex> _decodeInBackground(Uint8List bytes) =>
       compute(AmeZhLexiconIndex.decode, bytes);
 
-  Future<AmeZhLexiconIndex> _load() async => _decode(await _loadBytes());
+  static Future<AmeZhLexiconIndex> _loadBundled() async {
+    final sources = [await _loadAsset(assetKey)];
+    try {
+      sources.add(await _loadAsset(pocketAssetKey));
+    } catch (_) {
+      // The supplement only adds names; AME alone stays usable.
+    }
+    return compute(AmeZhLexiconIndex.decodeAll, sources);
+  }
 
   Future<AmeZhLexiconIndex> _ensure() async {
     final retryAfter = _retryAfter;
@@ -128,11 +144,20 @@ class AmeZhLexiconIndex {
     );
   }
 
-  static AmeZhLexiconIndex decode(Uint8List gzipped) {
-    final data = jsonDecode(utf8.decode(gzip.decode(gzipped))) as Map;
-    return AmeZhLexiconIndex.fromRows(
-      (data['entries'] as List).cast<List<Object?>>(),
-    );
+  static AmeZhLexiconIndex decode(Uint8List gzipped) => decodeAll([gzipped]);
+
+  /// Several lexicons in one index; a tag keeps the row of the first source
+  /// that lists it.
+  static AmeZhLexiconIndex decodeAll(List<Uint8List> sources) {
+    final seen = <String>{};
+    final rows = <List<Object?>>[];
+    for (final gzipped in sources) {
+      final data = jsonDecode(utf8.decode(gzip.decode(gzipped))) as Map;
+      for (final row in (data['entries'] as List).cast<List<Object?>>()) {
+        if (seen.add(row[0] as String)) rows.add(row);
+      }
+    }
+    return AmeZhLexiconIndex.fromRows(rows);
   }
 
   final List<String> _tags;

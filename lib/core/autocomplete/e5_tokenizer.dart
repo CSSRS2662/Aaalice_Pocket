@@ -23,9 +23,14 @@ class E5Tokenizer {
 
   late final SentencePieceTokenizer _tokenizer;
 
-  List<int> encodeQuery(String query) {
+  List<int> encodeQuery(String query) => _encode('query: ', query);
+
+  /// Document side of E5, as the bundled vectors were encoded.
+  List<int> encodePassage(String passage) => _encode('passage: ', passage);
+
+  List<int> _encode(String prefix, String text) {
     final normalized = unicode
-        .nfkc('query: ${String.fromCharCodes(query.trim().runes.take(2048))}')
+        .nfkc('$prefix${String.fromCharCodes(text.trim().runes.take(2048))}')
         .replaceAll(RegExp(r'\s+'), ' ');
     final ids = <int>[];
     for (final word in normalized.split(' ')) {
