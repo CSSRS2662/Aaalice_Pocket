@@ -9,7 +9,8 @@ import 'completion_tile_layout.dart';
 /// The popup header: category buttons that narrow the list at the start,
 /// then the result count, keyboard hints where there is room, and the
 /// popup actions. The field already shows what is being completed, so the
-/// header does not repeat it.
+/// header does not repeat it. When the footer does not fit, its settings
+/// button, 分词 key and multi-select actions move here.
 class CompletionHeader extends StatelessWidget {
   const CompletionHeader({
     super.key,
@@ -21,6 +22,7 @@ class CompletionHeader extends StatelessWidget {
     required this.onClose,
     this.onInsertSeparator,
     this.filter,
+    this.pickActions,
   });
 
   final int resultCount;
@@ -31,6 +33,13 @@ class CompletionHeader extends StatelessWidget {
   final VoidCallback? onOpenSettings;
   final VoidCallback? onInsertSeparator;
   final VoidCallback onClose;
+
+  /// The multi-select actions, while that mode is on and the footer is
+  /// hidden.
+  final Widget? pickActions;
+
+  /// Room the multi-select actions take from the count and the hints.
+  static const double _pickActionsReserve = 150;
 
   /// Height of the header for the current input and text scale.
   static double extentOf(BuildContext context) {
@@ -83,7 +92,8 @@ class CompletionHeader extends StatelessWidget {
           final reserved =
               buttons * buttonExtent +
               categories +
-              (onInsertSeparator == null ? 0 : 64);
+              (onInsertSeparator == null ? 0 : buttonExtent) +
+              (pickActions == null ? 0 : _pickActionsReserve);
           final showCount = constraints.maxWidth - reserved >= 36;
           final showFullShortcuts =
               !touchCompact && constraints.maxWidth - reserved >= 280;
@@ -104,6 +114,23 @@ class CompletionHeader extends StatelessWidget {
                         ),
                 ),
               ),
+              if (pickActions case final picks?) ...[
+                // Shares the row with the category buttons; narrows only
+                // when enlarged text leaves no room.
+                Expanded(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: SizedBox(
+                        height: constraints.maxHeight,
+                        child: picks,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
               if (showCount) ...[
                 Semantics(
                   label: context.l10n.autocomplete_resultsCount(resultCount),
@@ -125,10 +152,6 @@ class CompletionHeader extends StatelessWidget {
                 const _KeyboardHints()
               else if (showCompactShortcuts)
                 const _KeyboardHints(compact: true),
-              if (onInsertSeparator case final split?) ...[
-                CompletionSplitButton(onPressed: split),
-                const SizedBox(width: 4),
-              ],
               if (onOpenSettings != null)
                 CompletionPopupIconButton(
                   key: const ValueKey('autocomplete-popup-settings'),
@@ -136,6 +159,8 @@ class CompletionHeader extends StatelessWidget {
                   icon: Icons.settings_rounded,
                   onPressed: onOpenSettings!,
                 ),
+              if (onInsertSeparator case final split?)
+                CompletionSplitButton(onPressed: split),
               if (related && onToggleRelatedPin != null)
                 CompletionPopupIconButton(
                   key: const ValueKey('autocomplete-popup-related-pin'),

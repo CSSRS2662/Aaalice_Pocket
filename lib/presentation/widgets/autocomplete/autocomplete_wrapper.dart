@@ -26,6 +26,7 @@ import 'completion_exclusion_scope.dart';
 import 'completion_overlay.dart';
 import 'completion_candidate_rows.dart';
 import 'completion_category_filter.dart';
+import 'completion_multi_selection.dart';
 import 'completion_tile_layout.dart';
 
 /// Unified local-first autocomplete shared by every tag and prompt field.
@@ -183,6 +184,9 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
   final CompletionTileMeasurer _tileMeasurer = CompletionTileMeasurer();
   final CompletionListGeometry _listGeometry = CompletionListGeometry();
 
+  /// Tags picked in multi-select; it ends with the popup.
+  final CompletionMultiSelection _picks = CompletionMultiSelection();
+
   FocusNode get _focusNode => widget.focusNode ?? _ownedFocusNode!;
 
   bool get _hasInputFocus => _focusNode.hasFocus || _descendantHasFocus;
@@ -199,6 +203,7 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     widget.controller.addListener(_onTextChanged);
     _focusNode.addListener(_onFocusChanged);
     _scrollController.addListener(_onCompletionScrolled);
+    _picks.addListener(_onPicksChanged);
     widget.overlayHandle?.bindRelated(_showRelatedTags);
     widget.overlayHandle?.bindSuggestNext(_suggestNext);
     WidgetsBinding.instance.addPostFrameCallback((_) => _initializeUnified());
@@ -371,6 +376,15 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     _wasComposing = isComposing;
 
     if (_applyingSuggestion) return;
+    if (_picks.active && textChanged && _typedLineBreak(previousValue, value)) {
+      // Soft keyboards may deliver Enter as a typed line break: take it
+      // back and write the picks, as the Enter key does.
+      _applyingSuggestion = true;
+      widget.controller.value = previousValue;
+      _applyingSuggestion = false;
+      _insertPicks();
+      return;
+    }
     _scheduleCursorMetricsUpdate();
     if (textChanged) widget.onChanged?.call(text);
 
@@ -422,6 +436,20 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
   int _cursorPosition(TextEditingValue value) => value.selection.isValid
       ? value.selection.extentOffset
       : value.text.length;
+
+  /// Whether [next] is [previous] with one line break typed at its caret.
+  static bool _typedLineBreak(
+    TextEditingValue previous,
+    TextEditingValue next,
+  ) {
+    final selection = previous.selection;
+    if (!selection.isValid || !selection.isCollapsed) return false;
+    final caret = selection.extentOffset;
+    final text = previous.text;
+    return next.selection.isCollapsed &&
+        next.selection.extentOffset == caret + 1 &&
+        next.text == '${text.substring(0, caret)}\n${text.substring(caret)}';
+  }
 
   void _onFocusChanged() => _handleEffectiveFocusChanged();
 
@@ -776,6 +804,9 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     if (!mounted) return;
     final state = _orchestrator!.state;
     final candidates = state.candidates;
+    // Picks are written in the syntax they were made for: completing a
+    // library reference instead ends them.
+    if (_picks.active && state.query?.kind != _picks.kind) _picks.end();
     final hasVisibleState =
         candidates.isNotEmpty ||
         !_continuation &&
@@ -831,7 +862,7 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     final entry = OverlayEntry(builder: _buildOverlay);
     _overlayEntry = entry;
     Overlay.of(context, rootOverlay: true).insert(entry);
-    widget.overlayHandle?.attach(_closeOverlay);
+    widget.overlayHandle?.attach(_stepBack);
   }
 
   Widget _buildOverlay(BuildContext overlayContext) {
@@ -940,7 +971,11 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
               (widget.config?.showTranslation ?? true),
           showCategory: widget.config?.showCategory ?? true,
           showCount: widget.config?.showCount ?? true,
-          onSelected: _selectIndex,
+          onSelected: _tapIndex,
+          onLongPressed: _longPressIndex,
+          pickedIds: _picks.pickedIds,
+          onCancelPicks: _picks.end,
+          onInsertPicks: _insertPicks,
           onClose: _closeOverlay,
           onOpenSettings: _openAutocompleteSettings,
           // On touch the popup may cover the editor's own 分词 key.
@@ -1006,7 +1041,7 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
       return KeyEventResult.ignored;
     }
     if (event.logicalKey == LogicalKeyboardKey.escape) {
-      if (event is KeyDownEvent) _closeOverlay();
+      if (event is KeyDownEvent) _stepBack();
       return KeyEventResult.handled;
     }
     final movesTextCaret =
@@ -1017,6 +1052,19 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     if (movesTextCaret) {
       if (event is KeyDownEvent) _dismissOverlay('keyboard caret move');
       return KeyEventResult.ignored;
+    }
+    if (_picks.active) {
+      // Enter or Tab writes the picks; the arrows, which choose a single
+      // insert, do nothing rather than move the caret away.
+      if (event.logicalKey == LogicalKeyboardKey.enter ||
+          event.logicalKey == LogicalKeyboardKey.tab) {
+        if (event is KeyDownEvent) _insertPicks();
+        return KeyEventResult.handled;
+      }
+      return event.logicalKey == LogicalKeyboardKey.arrowDown ||
+              event.logicalKey == LogicalKeyboardKey.arrowUp
+          ? KeyEventResult.handled
+          : KeyEventResult.ignored;
     }
     final candidates = _orchestrator?.state.candidates ?? const [];
     if (candidates.isEmpty) return KeyEventResult.ignored;
@@ -1080,24 +1128,73 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     _scrollController.jumpTo(boundedTarget);
   }
 
-  void _selectIndex(int index) {
-    final state = _orchestrator?.state;
-    if (state?.query == null ||
-        index < 0 ||
-        index >= state!.candidates.length) {
-      return;
+  CompletionCandidate? _candidateAt(int index) {
+    final candidates = _orchestrator?.state.candidates ?? const [];
+    return index < 0 || index >= candidates.length ? null : candidates[index];
+  }
+
+  /// A tap inserts the tile, or picks and drops it in multi-select.
+  void _tapIndex(int index) {
+    if (!_picks.active) {
+      _selectIndex(index);
+    } else if (_candidateAt(index) case final candidate?) {
+      _picks.toggle(candidate);
     }
-    final candidate = state.candidates[index];
-    if (candidate.isExisting) return;
-    final query = state.query!;
+  }
+
+  /// A long press starts multi-select with the tile picked, or picks and
+  /// drops it like a tap once the mode is on.
+  void _longPressIndex(int index) {
+    final candidate = _candidateAt(index);
+    final query = _orchestrator?.state.query;
+    if (candidate == null || query == null) return;
+    if (_picks.active) {
+      _picks.toggle(candidate);
+    } else {
+      _picks.start(candidate, query.kind);
+    }
+  }
+
+  void _onPicksChanged() {
+    _overlayEntry?.markNeedsBuild();
+    // The Back handler follows the mode.
+    if (mounted) setState(() {});
+  }
+
+  /// Back and Escape: leave multi-select first, then close the popup.
+  void _stepBack() {
+    if (_picks.active) {
+      _picks.end();
+    } else {
+      _closeOverlay();
+    }
+  }
+
+  /// Writes the picks in the order they were picked and leaves the mode.
+  void _insertPicks() {
+    final picks = _picks.picked;
+    _picks.end();
+    if (picks.isNotEmpty) _insert(picks);
+  }
+
+  void _selectIndex(int index) {
+    final candidate = _candidateAt(index);
+    if (candidate == null || candidate.isExisting) return;
+    _insert([candidate]);
+  }
+
+  void _insert(List<CompletionCandidate> candidates) {
+    final query = _orchestrator?.state.query;
+    if (query == null) return;
     final settings = ref.read(autocompleteSettingsProvider);
-    final completedTag = query.kind == CompletionQueryKind.tag
-        ? candidate.canonicalTag
-        : null;
-    final applied = PromptTokenParser.apply(
+    final tags = [for (final candidate in candidates) candidate.canonicalTag];
+    final completedTags = query.kind == CompletionQueryKind.tag
+        ? tags
+        : const <String>[];
+    final applied = PromptTokenParser.applyAll(
       text: widget.controller.text,
       query: query,
-      canonicalTag: candidate.canonicalTag,
+      canonicalTags: tags,
       autoInsertComma:
           settings.autoInsertComma && (widget.config?.autoInsertComma ?? true),
       replaceUnderscores:
@@ -1113,24 +1210,28 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     _scheduleCursorMetricsUpdate();
     widget.onChanged?.call(applied.text);
     widget.onSuggestionSelected?.call(applied.text);
-    if (completedTag != null && settings.personalRankingEnabled) {
-      unawaited(ref.read(tagUsageHistoryProvider).record(completedTag));
+    if (settings.personalRankingEnabled) {
+      for (final tag in completedTags) {
+        unawaited(ref.read(tagUsageHistoryProvider).record(tag));
+      }
     }
-    if (completedTag != null && settings.pairLearningEnabled) {
+    if (completedTags.isNotEmpty && settings.pairLearningEnabled) {
       final insertAt = query.replacementRange.start;
-      final previous = PromptTokenParser.contextTags(
+      var previous = PromptTokenParser.contextTags(
         text: query.fullText.substring(0, insertAt),
         cursorPosition: insertAt,
         max: 3,
         splitOnSpaces: widget.config?.treatSpacesAsSeparators ?? false,
       );
-      unawaited(
-        ref.read(tagPairHistoryProvider).record(previous, completedTag),
-      );
+      // Each pick follows the ones written before it, nearest first.
+      for (final tag in completedTags) {
+        unawaited(ref.read(tagPairHistoryProvider).record(previous, tag));
+        previous = [tag, ...previous.take(2)];
+      }
     }
     _selectedId = null;
     _dismissOverlay();
-    final nextRelatedTag = _pinnedRelatedTag ?? completedTag;
+    final nextRelatedTag = _pinnedRelatedTag ?? completedTags.lastOrNull;
     if (settings.relatedTagsEnabled && nextRelatedTag != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _hasInputFocus) {
@@ -1243,7 +1344,8 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     final entry = _overlayEntry;
     if (entry == null) return;
     _overlayEntry = null;
-    widget.overlayHandle?.detach(_closeOverlay);
+    widget.overlayHandle?.detach(_stepBack);
+    _picks.end();
     entry.remove();
     entry.dispose();
   }
@@ -1271,7 +1373,9 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     widget.overlayHandle?.unbindSuggestNext(_suggestNext);
     widget.controller.removeListener(_onTextChanged);
     _focusNode.removeListener(_onFocusChanged);
+    _picks.removeListener(_onPicksChanged);
     _removeOverlay();
+    _picks.dispose();
     _ownedFocusNode?.dispose();
     _disposeOrchestrator();
     _scrollController.dispose();
@@ -1299,21 +1403,30 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
     ref.listen(zhDictionaryServiceProvider, (_, __) {
       _overlayEntry?.markNeedsBuild();
     });
+    // Back leaves multi-select before anything else, unless the editor
+    // around the field steps the popup back itself.
+    final hostHandlesBack = widget.overlayHandle?.hostHandlesBack ?? false;
     return SizedBox(
       key: _anchorKey,
-      child: Focus(
-        onFocusChange: _onDescendantFocusChanged,
-        onKeyEvent: _onKeyEvent,
-        child: Listener(
-          onPointerDown: _onPointerDown,
-          onPointerUp: _onPointerUp,
-          onPointerCancel: _onPointerCancel,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (_) {
-              _scheduleCursorMetricsUpdate();
-              return false;
-            },
-            child: widget.child,
+      child: PopScope<void>(
+        canPop: hostHandlesBack || !_picks.active,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && !hostHandlesBack) _picks.end();
+        },
+        child: Focus(
+          onFocusChange: _onDescendantFocusChanged,
+          onKeyEvent: _onKeyEvent,
+          child: Listener(
+            onPointerDown: _onPointerDown,
+            onPointerUp: _onPointerUp,
+            onPointerCancel: _onPointerCancel,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (_) {
+                _scheduleCursorMetricsUpdate();
+                return false;
+              },
+              child: widget.child,
+            ),
           ),
         ),
       ),

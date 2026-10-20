@@ -49,6 +49,8 @@ class CompletionCandidateRows extends StatelessWidget {
     required this.measurer,
     required this.geometry,
     required this.onSelected,
+    this.onLongPressed,
+    this.pickedIds,
     this.trailing = const [],
   });
 
@@ -67,6 +69,11 @@ class CompletionCandidateRows extends StatelessWidget {
   final CompletionTileMeasurer measurer;
   final CompletionListGeometry geometry;
   final ValueChanged<int> onSelected;
+  final ValueChanged<int>? onLongPressed;
+
+  /// Tiles picked in multi-select, by stable id; null outside that mode,
+  /// which also hides the keyboard selection.
+  final Set<String>? pickedIds;
   final List<Widget> trailing;
 
   @override
@@ -106,6 +113,7 @@ class CompletionCandidateRows extends StatelessWidget {
           ..layout = layout
           ..top = padding.top;
         final heat = _heatOf(state.candidates);
+        final picked = pickedIds;
         final rows = layout.rows;
         final long = rows.length > 5;
         return Scrollbar(
@@ -154,9 +162,16 @@ class CompletionCandidateRows extends StatelessWidget {
                                   ),
                                   content: contents[index],
                                   metrics: metrics,
-                                  selected: index == selectedIndex,
+                                  selected:
+                                      picked == null && index == selectedIndex,
+                                  picked: picked?.contains(
+                                    state.candidates[index].stableId,
+                                  ),
                                   heat: heat?.call(state.candidates[index]),
                                   onTap: () => onSelected(index),
+                                  onLongPress: onLongPressed == null
+                                      ? null
+                                      : () => onLongPressed!(index),
                                 ),
                               ),
                             ],

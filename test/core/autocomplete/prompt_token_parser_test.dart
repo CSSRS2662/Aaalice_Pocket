@@ -61,6 +61,44 @@ void main() {
       );
     });
 
+    test('writes several picked tags as one run in the same syntax', () {
+      final braced = PromptTokenParser.parse(
+        text: '{{long hair}}, smile',
+        cursorPosition: 7,
+        limit: 20,
+        locale: 'en',
+      );
+      final typed = PromptTokenParser.applyAll(
+        text: braced.fullText,
+        query: braced,
+        canonicalTags: ['very_long_hair', 'blue_hair', '^_^'],
+        autoInsertComma: true,
+        replaceUnderscores: true,
+      );
+      expect(typed.text, '{{very long hair, blue hair, ^_^}}, smile');
+      expect(
+        typed.cursorPosition,
+        '{{very long hair, blue hair, ^_^}}, '.length,
+      );
+
+      final related = PromptTokenParser.parseRelated(
+        text: 'blue_eyes, ',
+        cursorPosition: 11,
+        limit: 20,
+        locale: 'en',
+      )!;
+      expect(
+        PromptTokenParser.applyAll(
+          text: related.fullText,
+          query: related,
+          canonicalTags: ['long_hair', 'smile'],
+          autoInsertComma: true,
+          replaceUnderscores: false,
+        ).text,
+        'blue_eyes, long_hair, smile, ',
+      );
+    });
+
     test('supports space-separated tag search when explicitly enabled', () {
       final query = PromptTokenParser.parse(
         text: 'foot_focus lo',

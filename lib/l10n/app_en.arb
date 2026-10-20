@@ -3448,6 +3448,23 @@
   "autocomplete_actionSelect": "Select",
   "autocomplete_actionConfirm": "Confirm",
   "autocomplete_actionClose": "Close",
+  "autocomplete_insertPicked": "Insert {count}",
+  "@autocomplete_insertPicked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autocomplete_insertPickedTooltip": "Insert the {count} picked tags",
+  "@autocomplete_insertPickedTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autocomplete_leaveMultiSelect": "Leave multi-select",
   "autocomplete_categoryCharacter": "Character",
   "autocomplete_categoryCopyright": "Copyright",
   "autocomplete_categoryArtist": "Artist",

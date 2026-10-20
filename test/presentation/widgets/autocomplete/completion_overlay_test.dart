@@ -10,6 +10,7 @@ import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
 import 'package:nai_launcher/presentation/widgets/autocomplete/completion_candidate_rows.dart';
 import 'package:nai_launcher/presentation/widgets/autocomplete/completion_category_filter.dart';
 import 'package:nai_launcher/presentation/widgets/autocomplete/completion_overlay.dart';
+import 'package:nai_launcher/presentation/widgets/autocomplete/completion_popup_buttons.dart';
 import 'package:nai_launcher/presentation/widgets/autocomplete/completion_tile.dart';
 import 'package:nai_launcher/presentation/widgets/autocomplete/completion_tile_layout.dart';
 
@@ -70,11 +71,20 @@ Future<CompletionListGeometry> _pumpOverlay(
   VoidCallback? onOpenSettings,
   bool isRelatedPinned = false,
   VoidCallback? onToggleRelatedPin,
+  VoidCallback? onInsertSeparator,
+  Set<String>? pickedIds,
+  VoidCallback? onCancelPicks,
+  VoidCallback? onInsertPicks,
 }) async {
   final geometry = CompletionListGeometry();
   final Widget overlay = CompletionOverlay(
     state: state,
     selectedIndex: 0,
+    onInsertSeparator: onInsertSeparator,
+    pickedIds: pickedIds,
+    onLongPressed: (_) {},
+    onCancelPicks: onCancelPicks ?? () {},
+    onInsertPicks: onInsertPicks ?? () {},
     maxHeight: maxHeight,
     scrollController: scrollController,
     settings: settings,
@@ -121,6 +131,12 @@ Future<CompletionListGeometry> _pumpOverlay(
 }
 
 Finder _tile(String tag) => find.byKey(ValueKey('autocomplete-candidate-$tag'));
+
+const _touch = InteractionPolicy(
+  modality: InteractionModality.touch,
+  touchAvailable: true,
+  precisePointerAvailable: false,
+);
 
 void main() {
   testWidgets('tiles keep every piece of candidate information', (
@@ -367,6 +383,196 @@ void main() {
     expect((surface.decoration as BoxDecoration).border, isNotNull);
     expect(tester.takeException(), isNull);
     debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('footer statuses are dots and icons; the split key ends it', (
+    tester,
+  ) async {
+    final scrollController = ScrollController();
+    addTearDown(scrollController.dispose);
+    var splits = 0;
+    await _pumpOverlay(
+      tester,
+      width: 344,
+      scrollController: scrollController,
+      policy: _touch,
+      onInsertSeparator: () => splits++,
+      state: CompletionState(
+        query: _typedQuery,
+        candidates: [_candidate('blue_eyes', translation: '蓝色眼睛')],
+      ),
+    );
+
+    for (final status in ['base', 'dictionary', 'online']) {
+      expect(
+        find.byKey(ValueKey('autocomplete-status-$status-dot')),
+        findsOne,
+        reason: status,
+      );
+    }
+    // The words live in the tooltips only.
+    expect(find.text('就绪'), findsNothing);
+    expect(find.text('本地'), findsNothing);
+    expect(find.text('1/1'), findsNothing);
+
+    final footer = tester.getRect(
+      find.byKey(const ValueKey('autocomplete-popup-footer')),
+    );
+    final split = find.byKey(const ValueKey('autocomplete-popup-split'));
+    final settings = tester.getRect(
+      find.byKey(const ValueKey('autocomplete-popup-settings')),
+    );
+    expect(tester.getRect(split).right, moreOrLessEquals(footer.right));
+    expect(settings.right, lessThan(tester.getRect(split).left));
+    // A plain icon button on the bar's colour, not a tonal pill.
+    expect(
+      find.descendant(of: split, matching: find.byType(TextButton)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: split, matching: find.byType(IconButton)),
+      findsOne,
+    );
+    await tester.tap(split);
+    expect(splits, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('picks carry a ring; the pick actions sit on the footer centre', (
+    tester,
+  ) async {
+    final scrollController = ScrollController();
+    addTearDown(scrollController.dispose);
+    var inserts = 0;
+    var cancels = 0;
+    await _pumpOverlay(
+      tester,
+      width: 400,
+      scrollController: scrollController,
+      policy: _touch,
+      onInsertSeparator: () {},
+      pickedIds: const {'blue_sky', 'blush'},
+      onInsertPicks: () => inserts++,
+      onCancelPicks: () => cancels++,
+      state: CompletionState(
+        query: _typedQuery,
+        candidates: [
+          _candidate('blue_eyes'),
+          _candidate('blue_sky'),
+          _candidate('blush'),
+        ],
+      ),
+    );
+
+    final colors = Theme.of(tester.element(_tile('blue_eyes'))).colorScheme;
+    Material tileMaterial(String tag) => tester.widget<Material>(
+      find.descendant(of: _tile(tag), matching: find.byType(Material)).first,
+    );
+    // The keyboard selection is hidden while picking.
+    expect(tileMaterial('blue_eyes').color, isNot(colors.primaryContainer));
+    final picked = tileMaterial('blue_sky');
+    expect(picked.color, colors.primaryContainer);
+    expect(
+      (picked.shape! as RoundedRectangleBorder).side.width,
+      CompletionTile.pickedRingWidth,
+    );
+
+    final footer = tester.getRect(
+      find.byKey(const ValueKey('autocomplete-popup-footer')),
+    );
+    final actions = tester.getRect(find.byType(CompletionPickActions));
+    expect(actions.center.dx, moreOrLessEquals(footer.center.dx, epsilon: 1));
+    expect(find.text('插入 2'), findsOne);
+    await tester.tap(find.byKey(const ValueKey('autocomplete-pick-insert')));
+    await tester.tap(find.byKey(const ValueKey('autocomplete-pick-cancel')));
+    expect((inserts, cancels), (1, 1));
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final (width, scale) in [(320.0, 1.0), (320.0, 3.0)]) {
+    testWidgets(
+      'pick actions fit a ${width.toInt()}px footer at ${scale}x text',
+      (tester) async {
+        final scrollController = ScrollController();
+        addTearDown(scrollController.dispose);
+        await _pumpOverlay(
+          tester,
+          width: width,
+          textScale: scale,
+          scrollController: scrollController,
+          policy: _touch,
+          settings: const AutocompleteSettings(llmTranslationEnabled: true),
+          onInsertSeparator: () {},
+          pickedIds: const {'blue_eyes'},
+          state: CompletionState(
+            query: _typedQuery,
+            candidates: [_candidate('blue_eyes')],
+          ),
+        );
+
+        final split = tester.getRect(
+          find.byKey(const ValueKey('autocomplete-popup-split')),
+        );
+        final settings = tester.getRect(
+          find.byKey(const ValueKey('autocomplete-popup-settings')),
+        );
+        final actions = tester.getRect(find.byType(CompletionPickActions));
+        expect(actions.right, lessThanOrEqualTo(settings.left));
+        expect(split.left, greaterThanOrEqualTo(settings.right));
+        // Statuses that do not fit before the actions are left out.
+        for (final status in ['base', 'dictionary', 'online', 'ai']) {
+          final indicator = find.byKey(ValueKey('autocomplete-status-$status'));
+          if (indicator.evaluate().isEmpty) continue;
+          expect(
+            tester.getRect(indicator).right,
+            lessThanOrEqualTo(actions.left),
+            reason: status,
+          );
+        }
+        // At 3x text the pick actions take the whole room of the
+        // statuses (they are in the tooltips as well).
+        if (scale == 1) {
+          expect(
+            find.byKey(const ValueKey('autocomplete-status-base')),
+            findsOne,
+          );
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('a hidden footer moves the pick actions into the header', (
+    tester,
+  ) async {
+    final scrollController = ScrollController();
+    addTearDown(scrollController.dispose);
+    await _pumpOverlay(
+      tester,
+      width: 344,
+      maxHeight: 140,
+      scrollController: scrollController,
+      policy: _touch,
+      onInsertSeparator: () {},
+      pickedIds: const {'blue_eyes'},
+      state: CompletionState(
+        query: _typedQuery,
+        candidates: [_candidate('blue_eyes')],
+      ),
+    );
+
+    expect(
+      find.byKey(const ValueKey('autocomplete-popup-footer')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('autocomplete-popup-header')),
+        matching: find.byType(CompletionPickActions),
+      ),
+      findsOne,
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('mixed input leaves a 600px popup in non-compact layout', (
@@ -744,15 +950,27 @@ void main() {
       ),
     );
 
-    expect(
-      find.textContaining('Downloading 42%', findRichText: true),
-      findsOne,
+    // The footer shows each state as a spinner; the words are in its tooltip.
+    Finder inStatus(String name, Finder matching) => find.descendant(
+      of: find.byKey(ValueKey('autocomplete-status-$name')),
+      matching: matching,
     );
-    expect(find.textContaining('Searching', findRichText: true), findsOne);
-    expect(
-      find.textContaining('Translating', findRichText: true),
-      findsWidgets,
-    );
+    for (final (name, words) in [
+      ('dictionary', 'Downloading 42%'),
+      ('online', 'Searching'),
+      ('ai', 'Translating'),
+    ]) {
+      expect(
+        tester.widget<Tooltip>(inStatus(name, find.byType(Tooltip))).message,
+        contains(words),
+      );
+      expect(
+        inStatus(name, find.byType(CircularProgressIndicator)),
+        findsOne,
+        reason: name,
+      );
+    }
+    expect(find.text('Downloading 42%'), findsNothing);
     expect(find.text('solo'), findsOne);
   });
 }

@@ -3,6 +3,13 @@ import 'package:flutter/foundation.dart';
 /// Lets an enclosing editor consume Back before ending the active edit, and
 /// ask for related tags without a keyboard shortcut.
 class AutocompleteOverlayHandle extends ChangeNotifier {
+  AutocompleteOverlayHandle({this.hostHandlesBack = false});
+
+  /// The editor passes Back to [dismiss] itself while the popup [isOpen],
+  /// so the popup adds no Back handler of its own (one Back would otherwise
+  /// leave multi-select and close the popup at once).
+  final bool hostHandlesBack;
+
   VoidCallback? _dismiss;
   VoidCallback? _showRelated;
   void Function({required bool quiet})? _suggestNext;
@@ -46,5 +53,6 @@ class AutocompleteOverlayHandle extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Steps the popup back: leaves multi-select first, then closes it.
   void dismiss() => _dismiss?.call();
 }

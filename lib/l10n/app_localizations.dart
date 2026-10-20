@@ -13288,6 +13288,24 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get autocomplete_actionClose;
 
+  /// No description provided for @autocomplete_insertPicked.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert {count}'**
+  String autocomplete_insertPicked(int count);
+
+  /// No description provided for @autocomplete_insertPickedTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert the {count} picked tags'**
+  String autocomplete_insertPickedTooltip(int count);
+
+  /// No description provided for @autocomplete_leaveMultiSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave multi-select'**
+  String get autocomplete_leaveMultiSelect;
+
   /// No description provided for @autocomplete_categoryCharacter.
   ///
   /// In en, this message translates to:

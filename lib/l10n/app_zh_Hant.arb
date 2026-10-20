@@ -3503,6 +3503,23 @@
   "autocomplete_actionSelect": "選擇",
   "autocomplete_actionConfirm": "確認",
   "autocomplete_actionClose": "關閉",
+  "autocomplete_insertPicked": "插入 {count}",
+  "@autocomplete_insertPicked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autocomplete_insertPickedTooltip": "插入選取的 {count} 個標籤",
+  "@autocomplete_insertPickedTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autocomplete_leaveMultiSelect": "退出多選",
   "autocomplete_categoryCharacter": "角色",
   "autocomplete_categoryCopyright": "版權",
   "autocomplete_categoryArtist": "藝術家",

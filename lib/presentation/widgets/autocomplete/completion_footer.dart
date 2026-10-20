@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../core/autocomplete/autocomplete_settings.dart';
@@ -9,9 +11,11 @@ import '../../adaptive/interaction_policy.dart';
 import 'completion_popup_buttons.dart';
 import 'completion_source_style.dart';
 
-/// The popup footer: the state of each completion source, which doubles as
-/// the legend of the source dots on the candidate tiles, then the 分词 pill
-/// and the settings button.
+/// The popup footer: the state of each completion source as a dot and an
+/// icon, which double as the legend of the source dots on the candidate
+/// tiles (the words are in the tooltips); the multi-select actions centred
+/// on the bar while that mode is on; then the settings button and the 分词
+/// key at the end.
 class CompletionFooter extends StatelessWidget {
   const CompletionFooter({
     super.key,
@@ -21,6 +25,7 @@ class CompletionFooter extends StatelessWidget {
     required this.cooccurrenceDataPackState,
     required this.onOpenSettings,
     this.onInsertSeparator,
+    this.pickActions,
   });
 
   final CompletionState state;
@@ -29,6 +34,9 @@ class CompletionFooter extends StatelessWidget {
   final CooccurrenceDataPackState cooccurrenceDataPackState;
   final VoidCallback onOpenSettings;
   final VoidCallback? onInsertSeparator;
+
+  /// The multi-select actions; given while that mode is on.
+  final Widget? pickActions;
 
   /// Height of the footer for the current input and text scale.
   static double extentOf(BuildContext context) {
@@ -43,10 +51,10 @@ class CompletionFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final footerHeight = extentOf(context);
+    final pickActions = this.pickActions;
     return Container(
       key: const ValueKey('autocomplete-popup-footer'),
       height: footerHeight,
-      padding: const EdgeInsets.only(left: 9),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHigh,
         border: Border(
@@ -70,39 +78,51 @@ class CompletionFooter extends StatelessWidget {
             if (!compact || settings.llmTranslationEnabled) _aiStatus(context),
             if (listsLibrary) _libraryLegend(context),
           ];
-          return Row(
+          return CustomMultiChildLayout(
+            delegate: _FooterLayout(),
             children: [
-              Expanded(
+              LayoutId(
+                id: _FooterSlot.statuses,
+                child: _StatusRow(statuses: statuses),
+              ),
+              if (pickActions != null)
+                LayoutId(
+                  id: _FooterSlot.picks,
+                  // Only narrows when enlarged text leaves no room; the
+                  // height is the bar's, so the buttons are never scaled
+                  // for their touch padding.
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: SizedBox(
+                      height: constraints.maxHeight,
+                      child: pickActions,
+                    ),
+                  ),
+                ),
+              LayoutId(
+                id: _FooterSlot.actions,
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    for (var index = 0; index < statuses.length; index++) ...[
-                      if (index > 0) const SizedBox(width: 13),
-                      Flexible(
-                        child: _StatusIndicator(
-                          key: ValueKey(statuses[index].key),
-                          descriptor: statuses[index],
-                          compact: compact,
+                    CompletionPopupIconButton(
+                      key: const ValueKey('autocomplete-popup-settings'),
+                      tooltip: context.l10n.autocomplete_openSettings,
+                      icon: Icons.settings_rounded,
+                      onPressed: onOpenSettings,
+                    ),
+                    if (onInsertSeparator case final split?) ...[
+                      Container(
+                        height: 19,
+                        width: 1,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.46,
                         ),
                       ),
+                      CompletionSplitButton(onPressed: split),
                     ],
                   ],
                 ),
-              ),
-              if (onInsertSeparator case final split?) ...[
-                const SizedBox(width: 8),
-                CompletionSplitButton(onPressed: split),
-                const SizedBox(width: 6),
-              ],
-              Container(
-                height: 19,
-                width: 1,
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.46),
-              ),
-              CompletionPopupIconButton(
-                key: const ValueKey('autocomplete-popup-settings'),
-                tooltip: context.l10n.autocomplete_openSettings,
-                icon: Icons.settings_rounded,
-                onPressed: onOpenSettings,
               ),
             ],
           );
@@ -379,15 +399,100 @@ class _StatusDescriptor {
   final String? tooltip;
 }
 
+enum _FooterSlot { statuses, picks, actions }
+
+/// Places the actions at the end, the multi-select actions on the centre of
+/// the bar (moved left only as far as the actions need) and the statuses in
+/// the room left at the start.
+class _FooterLayout extends MultiChildLayoutDelegate {
+  static const double leadingInset = 9;
+  static const double gap = 8;
+
+  @override
+  void performLayout(Size size) {
+    double centred(Size child) => (size.height - child.height) / 2;
+    final actions = layoutChild(
+      _FooterSlot.actions,
+      BoxConstraints.loose(size),
+    );
+    final actionsLeft = size.width - actions.width;
+    positionChild(_FooterSlot.actions, Offset(actionsLeft, centred(actions)));
+    var statusesEnd = actionsLeft - gap;
+    if (hasChild(_FooterSlot.picks)) {
+      final room = math.max(0.0, actionsLeft - gap - leadingInset);
+      final picks = layoutChild(
+        _FooterSlot.picks,
+        BoxConstraints.loose(Size(room, size.height)),
+      );
+      final left = math.max(
+        leadingInset,
+        math.min(
+          (size.width - picks.width) / 2,
+          actionsLeft - gap - picks.width,
+        ),
+      );
+      positionChild(_FooterSlot.picks, Offset(left, centred(picks)));
+      statusesEnd = left - gap;
+    }
+    final statuses = layoutChild(
+      _FooterSlot.statuses,
+      BoxConstraints.loose(
+        Size(math.max(0.0, statusesEnd - leadingInset), size.height),
+      ),
+    );
+    positionChild(
+      _FooterSlot.statuses,
+      Offset(leadingInset, centred(statuses)),
+    );
+  }
+
+  @override
+  bool shouldRelayout(_FooterLayout oldDelegate) => false;
+}
+
+/// As many statuses as fit, in order; each is a dot and an icon of fixed
+/// width, so the rest are left out rather than squeezed.
+class _StatusRow extends StatelessWidget {
+  const _StatusRow({required this.statuses});
+
+  final List<_StatusDescriptor> statuses;
+
+  static const double gap = 11;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fitting =
+            ((constraints.maxWidth + gap) / (_StatusIndicator.width + gap))
+                .floor()
+                .clamp(0, statuses.length);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var index = 0; index < fitting; index++) ...[
+              if (index > 0) const SizedBox(width: gap),
+              _StatusIndicator(
+                key: ValueKey(statuses[index].key),
+                descriptor: statuses[index],
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _StatusIndicator extends StatelessWidget {
-  const _StatusIndicator({
-    super.key,
-    required this.descriptor,
-    required this.compact,
-  });
+  const _StatusIndicator({super.key, required this.descriptor});
 
   final _StatusDescriptor descriptor;
-  final bool compact;
+
+  static const double _dotGap = 3;
+  static const double _iconSize = 14;
+  static const double width =
+      CompletionSourceDots.dotSize + _dotGap + _iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -418,49 +523,21 @@ class _StatusIndicator extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 3),
-            if (descriptor.loading)
-              SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(
-                  value: MediaQuery.disableAnimationsOf(context) ? 0.75 : null,
-                  strokeWidth: 1.7,
-                  color: toneColor,
-                ),
-              )
-            else
-              Icon(descriptor.icon, size: 14, color: toneColor),
-            const SizedBox(width: 5),
-            Flexible(
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    if (!compact)
-                      TextSpan(
-                        text: '${descriptor.label} ',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+            const SizedBox(width: _dotGap),
+            SizedBox.square(
+              dimension: _iconSize,
+              child: descriptor.loading
+                  ? Padding(
+                      padding: const EdgeInsets.all(1),
+                      child: CircularProgressIndicator(
+                        value: MediaQuery.disableAnimationsOf(context)
+                            ? 0.75
+                            : null,
+                        strokeWidth: 1.7,
+                        color: toneColor,
                       ),
-                    TextSpan(
-                      text: descriptor.value,
-                      style: TextStyle(
-                        color: descriptor.tone == _StatusTone.error
-                            ? theme.colorScheme.error
-                            : theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontSize: 10.5,
-                  height: 1,
-                ),
-              ),
+                    )
+                  : Icon(descriptor.icon, size: _iconSize, color: toneColor),
             ),
           ],
         ),

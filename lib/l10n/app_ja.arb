@@ -3400,6 +3400,23 @@
   "autocomplete_actionSelect": "選択してください",
   "autocomplete_actionConfirm": "確認",
   "autocomplete_actionClose": "閉じる",
+  "autocomplete_insertPicked": "{count} 件を挿入",
+  "@autocomplete_insertPicked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autocomplete_insertPickedTooltip": "選んだ {count} 件のタグを挿入",
+  "@autocomplete_insertPickedTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autocomplete_leaveMultiSelect": "複数選択を終了",
   "autocomplete_categoryCharacter": "キャラクター",
   "autocomplete_categoryCopyright": "著作権",
   "autocomplete_categoryArtist": "アーティスト",

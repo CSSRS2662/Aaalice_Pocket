@@ -68,7 +68,9 @@ class _TagEditorViewState extends ConsumerState<TagEditorView> {
   final OverlayPortalController _overlay = OverlayPortalController();
   final _toolbarRevision = ValueNotifier<int>(0);
   bool _toolbarRefreshPending = false;
-  final AutocompleteOverlayHandle _autocomplete = AutocompleteOverlayHandle();
+  final AutocompleteOverlayHandle _autocomplete = AutocompleteOverlayHandle(
+    hostHandlesBack: true,
+  );
   late final ScrollController _scroll;
   PromptTranslationController? _translations;
   TagTranslationLookup? _lookup;

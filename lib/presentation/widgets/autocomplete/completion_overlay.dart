@@ -10,6 +10,7 @@ import 'completion_candidate_rows.dart';
 import 'completion_category_filter.dart';
 import 'completion_footer.dart';
 import 'completion_header.dart';
+import 'completion_popup_buttons.dart';
 import 'completion_tile_layout.dart';
 
 /// Compact completion popup inspired by editor command palettes.
@@ -42,6 +43,10 @@ class CompletionOverlay extends StatelessWidget {
     this.isRelatedPinned = false,
     this.onToggleRelatedPin,
     this.categoryFilter,
+    this.onLongPressed,
+    this.pickedIds,
+    this.onCancelPicks,
+    this.onInsertPicks,
   });
 
   final CompletionState state;
@@ -76,6 +81,14 @@ class CompletionOverlay extends StatelessWidget {
   /// Narrows the list to categories; the header buttons show when given.
   final CompletionCategoryFilter? categoryFilter;
 
+  /// A long press on a tile: starts multi-select or picks in it.
+  final ValueChanged<int>? onLongPressed;
+
+  /// Tiles picked in multi-select, by stable id; null outside it.
+  final Set<String>? pickedIds;
+  final VoidCallback? onCancelPicks;
+  final VoidCallback? onInsertPicks;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -88,6 +101,15 @@ class CompletionOverlay extends StatelessWidget {
     final showFooter = maxHeight >= headerExtent + rowExtent + footerExtent;
     final scrollHeader = maxHeight < headerExtent + rowExtent;
     final filter = categoryFilter;
+    final picked = pickedIds;
+    final pickActions =
+        picked == null || onCancelPicks == null || onInsertPicks == null
+        ? null
+        : CompletionPickActions(
+            count: picked.length,
+            onCancel: onCancelPicks!,
+            onInsert: onInsertPicks!,
+          );
     final header = CompletionHeader(
       resultCount: state.candidates.length,
       related: state.query?.relatedTag != null,
@@ -96,6 +118,7 @@ class CompletionOverlay extends StatelessWidget {
       filter: filter,
       onOpenSettings: showFooter ? null : onOpenSettings,
       onInsertSeparator: showFooter ? null : onInsertSeparator,
+      pickActions: showFooter ? null : pickActions,
       onClose: onClose,
     );
     return LayoutBuilder(
@@ -190,6 +213,8 @@ class CompletionOverlay extends StatelessWidget {
                               measurer: measurer,
                               geometry: geometry,
                               onSelected: onSelected,
+                              onLongPressed: onLongPressed,
+                              pickedIds: picked,
                               // When the keyboard leaves very little room,
                               // candidates stay first; header actions remain
                               // reachable in the same scrollable surface.
@@ -204,6 +229,7 @@ class CompletionOverlay extends StatelessWidget {
                         cooccurrenceDataPackState: cooccurrenceDataPackState,
                         onOpenSettings: onOpenSettings,
                         onInsertSeparator: onInsertSeparator,
+                        pickActions: pickActions,
                       ),
                   ],
                 ),

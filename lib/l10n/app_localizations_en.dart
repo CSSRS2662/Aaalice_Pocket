@@ -7518,6 +7518,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autocomplete_actionClose => 'Close';
 
   @override
+  String autocomplete_insertPicked(int count) {
+    return 'Insert $count';
+  }
+
+  @override
+  String autocomplete_insertPickedTooltip(int count) {
+    return 'Insert the $count picked tags';
+  }
+
+  @override
+  String get autocomplete_leaveMultiSelect => 'Leave multi-select';
+
+  @override
   String get autocomplete_categoryCharacter => 'Character';
 
   @override

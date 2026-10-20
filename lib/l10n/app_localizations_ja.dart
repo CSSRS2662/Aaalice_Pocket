@@ -7328,6 +7328,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get autocomplete_actionClose => '閉じる';
 
   @override
+  String autocomplete_insertPicked(int count) {
+    return '$count 件を挿入';
+  }
+
+  @override
+  String autocomplete_insertPickedTooltip(int count) {
+    return '選んだ $count 件のタグを挿入';
+  }
+
+  @override
+  String get autocomplete_leaveMultiSelect => '複数選択を終了';
+
+  @override
   String get autocomplete_categoryCharacter => 'キャラクター';
 
   @override

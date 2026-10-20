@@ -391,12 +391,32 @@ class PromptTokenParser {
     required String canonicalTag,
     required bool autoInsertComma,
     required bool replaceUnderscores,
+  }) => applyAll(
+    text: text,
+    query: query,
+    canonicalTags: [canonicalTag],
+    autoInsertComma: autoInsertComma,
+    replaceUnderscores: replaceUnderscores,
+  );
+
+  /// Writes [canonicalTags] in the given order where [query] completes, as
+  /// one comma-separated run inside the same syntax as a single tag.
+  static ({String text, int cursorPosition}) applyAll({
+    required String text,
+    required CompletionQuery query,
+    required List<String> canonicalTags,
+    required bool autoInsertComma,
+    required bool replaceUnderscores,
   }) {
-    final tag = query.kind == CompletionQueryKind.libraryAlias
-        ? '<$canonicalTag>'
-        : replaceUnderscores && !_isEmoticon(canonicalTag)
-        ? canonicalTag.replaceAll('_', ' ')
-        : canonicalTag;
+    final tag = canonicalTags
+        .map(
+          (canonicalTag) => query.kind == CompletionQueryKind.libraryAlias
+              ? '<$canonicalTag>'
+              : replaceUnderscores && !_isEmoticon(canonicalTag)
+              ? canonicalTag.replaceAll('_', ' ')
+              : canonicalTag,
+        )
+        .join(', ');
     final range = query.replacementRange;
     final before = text.substring(0, range.start);
     var after = text.substring(range.end);

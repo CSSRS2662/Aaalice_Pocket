@@ -3485,6 +3485,23 @@
   "autocomplete_actionSelect": "选择",
   "autocomplete_actionConfirm": "确认",
   "autocomplete_actionClose": "关闭",
+  "autocomplete_insertPicked": "插入 {count}",
+  "@autocomplete_insertPicked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autocomplete_insertPickedTooltip": "插入选中的 {count} 个标签",
+  "@autocomplete_insertPickedTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autocomplete_leaveMultiSelect": "退出多选",
   "autocomplete_categoryCharacter": "角色",
   "autocomplete_categoryCopyright": "版权",
   "autocomplete_categoryArtist": "艺术家",

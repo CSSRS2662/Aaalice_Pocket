@@ -7200,6 +7200,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_actionClose => '关闭';
 
   @override
+  String autocomplete_insertPicked(int count) {
+    return '插入 $count';
+  }
+
+  @override
+  String autocomplete_insertPickedTooltip(int count) {
+    return '插入选中的 $count 个标签';
+  }
+
+  @override
+  String get autocomplete_leaveMultiSelect => '退出多选';
+
+  @override
   String get autocomplete_categoryCharacter => '角色';
 
   @override
@@ -22962,6 +22975,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get autocomplete_actionClose => '關閉';
+
+  @override
+  String autocomplete_insertPicked(int count) {
+    return '插入 $count';
+  }
+
+  @override
+  String autocomplete_insertPickedTooltip(int count) {
+    return '插入選取的 $count 個標籤';
+  }
+
+  @override
+  String get autocomplete_leaveMultiSelect => '退出多選';
 
   @override
   String get autocomplete_categoryCharacter => '角色';

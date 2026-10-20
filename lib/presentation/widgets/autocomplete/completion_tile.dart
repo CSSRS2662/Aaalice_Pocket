@@ -19,18 +19,29 @@ class CompletionTile extends StatelessWidget {
     required this.selected,
     required this.heat,
     required this.onTap,
+    this.picked,
+    this.onLongPress,
   });
 
   final CompletionTileContent content;
   final CompletionTileMetrics metrics;
+
+  /// The keyboard selection.
   final bool selected;
+
+  /// Whether the tile is picked in multi-select; null outside that mode.
+  final bool? picked;
 
   /// Popularity or relatedness against the list, 0 to 1; drawn as a thin
   /// bar along the bottom edge. Null draws none.
   final double? heat;
   final VoidCallback onTap;
 
+  /// Starts multi-select, or picks the tile while it is on.
+  final VoidCallback? onLongPress;
+
   static const double radius = 9;
+  static const double pickedRingWidth = 1.5;
   static const double heatBarHeight = 2;
 
   @override
@@ -67,18 +78,32 @@ class CompletionTile extends StatelessWidget {
     );
 
     final heat = this.heat;
+    final picked = this.picked;
     return Semantics(
       button: !existing,
-      selected: selected,
+      selected: picked == null ? selected : null,
+      checked: picked,
       enabled: !existing,
       label: _semanticLabel(context),
+      onTap: existing ? null : onTap,
+      onLongPress: existing ? null : onLongPress,
       excludeSemantics: true,
       child: Material(
-        color: selected ? colors.primaryContainer : controlSurfaceColor(colors),
-        borderRadius: BorderRadius.circular(radius),
+        color: (picked ?? selected)
+            ? colors.primaryContainer
+            : controlSurfaceColor(colors),
+        // A pick also carries a ring, so it never reads as the keyboard
+        // selection of a single insert.
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+          side: picked == true
+              ? BorderSide(color: colors.primary, width: pickedRingWidth)
+              : BorderSide.none,
+        ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: existing ? null : onTap,
+          onLongPress: existing ? null : onLongPress,
           child: Stack(
             children: [
               Positioned.fill(child: body),

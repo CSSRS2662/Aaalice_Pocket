@@ -3,35 +3,79 @@ import 'package:flutter/material.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../adaptive/interaction_policy.dart';
 
-/// A tonal 分词 pill (scissors) that ends the tag being written with a
-/// comma, standing in for the editor's own key while the popup covers it.
-/// Like the other popup controls it never takes focus from the field.
+/// The 分词 key (scissors) that ends the tag being written with a comma,
+/// standing in for the editor's own key while the popup covers it. It sits
+/// on the bar's own colour like the other popup buttons.
 class CompletionSplitButton extends StatelessWidget {
   const CompletionSplitButton({super.key, required this.onPressed});
 
   final VoidCallback onPressed;
 
   @override
+  Widget build(BuildContext context) => CompletionPopupIconButton(
+    key: const ValueKey('autocomplete-popup-split'),
+    tooltip: context.l10n.prompt_insertComma,
+    icon: Icons.content_cut_rounded,
+    onPressed: onPressed,
+  );
+}
+
+/// The multi-select actions: leave the mode, or write the [count] picks.
+/// Like the other popup controls they never take focus from the field.
+class CompletionPickActions extends StatelessWidget {
+  const CompletionPickActions({
+    super.key,
+    required this.count,
+    required this.onCancel,
+    required this.onInsert,
+  });
+
+  final int count;
+  final VoidCallback onCancel;
+  final VoidCallback onInsert;
+
+  @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final touch = context.interactionPolicy.touchAvailable;
+    final style = ButtonStyle(
+      minimumSize: WidgetStatePropertyAll(
+        Size(touch ? 48 : 0, touch ? 36 : 24),
+      ),
+      padding: WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: touch ? 12 : 10),
+      ),
+      tapTargetSize: touch
+          ? MaterialTapTargetSize.padded
+          : MaterialTapTargetSize.shrinkWrap,
+      visualDensity: touch ? VisualDensity.standard : VisualDensity.compact,
+    );
     return Focus(
       canRequestFocus: false,
       descendantsAreFocusable: false,
-      child: Tooltip(
-        message: context.l10n.prompt_insertComma,
-        child: TextButton(
-          key: const ValueKey('autocomplete-popup-split'),
-          onPressed: onPressed,
-          style: TextButton.styleFrom(
-            minimumSize: const Size(56, 32),
-            tapTargetSize: MaterialTapTargetSize.padded,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            backgroundColor: colors.secondaryContainer,
-            foregroundColor: colors.onSecondaryContainer,
-            shape: const StadiumBorder(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Tooltip(
+            message: l10n.autocomplete_leaveMultiSelect,
+            child: TextButton(
+              key: const ValueKey('autocomplete-pick-cancel'),
+              style: style,
+              onPressed: onCancel,
+              child: Text(l10n.common_cancel, maxLines: 1),
+            ),
           ),
-          child: const Icon(Icons.content_cut_rounded, size: 20),
-        ),
+          const SizedBox(width: 4),
+          Tooltip(
+            message: l10n.autocomplete_insertPickedTooltip(count),
+            child: FilledButton.tonal(
+              key: const ValueKey('autocomplete-pick-insert'),
+              style: style,
+              onPressed: onInsert,
+              child: Text(l10n.autocomplete_insertPicked(count), maxLines: 1),
+            ),
+          ),
+        ],
       ),
     );
   }
