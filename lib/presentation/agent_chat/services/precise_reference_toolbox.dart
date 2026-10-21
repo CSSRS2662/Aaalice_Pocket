@@ -9,6 +9,7 @@ import '../../../core/enums/precise_ref_type.dart';
 import '../../../data/models/precise_ref/precise_ref_library_entry.dart';
 import '../../providers/generation/generation_params_notifier.dart';
 import '../../providers/precise_ref_library_provider.dart';
+import '../models/agent_approval_change.dart';
 import 'agent_resource_resolver.dart';
 import 'defined_agent_tool.dart';
 import 'toolbox_json.dart';
@@ -150,6 +151,29 @@ class PreciseReferenceToolbox {
       },
       required: const ['entry_id'],
     ),
+    previewChanges: (params) async {
+      final current = await _entry(params['entry_id'] as String);
+      if (current == null) return const [];
+      String? number(String key) => params[key] is num
+          ? AgentApprovalChange.number(params[key] as num)
+          : null;
+      return AgentApprovalChange.between({
+        'name': (current.name, params['name'] as String?),
+        'type': (current.type.name, params['type'] as String?),
+        'strength': (
+          AgentApprovalChange.number(current.strength),
+          number('strength'),
+        ),
+        'fidelity': (
+          AgentApprovalChange.number(current.fidelity),
+          number('fidelity'),
+        ),
+        'favorite': (
+          '${current.isFavorite}',
+          (params['favorite'] as bool?)?.toString(),
+        ),
+      });
+    },
     executeFn: (_, params) async {
       final notifier = _ref.read(preciseRefLibraryNotifierProvider.notifier);
       await notifier.initialize();

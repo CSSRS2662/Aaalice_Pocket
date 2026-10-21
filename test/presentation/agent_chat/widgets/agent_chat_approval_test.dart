@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
+import 'package:nai_launcher/presentation/agent_chat/models/agent_approval_change.dart';
 import 'package:nai_launcher/presentation/agent_chat/widgets/agent_chat_approval.dart';
 import 'package:nai_launcher/presentation/themes/core/layered_surface_style.dart';
 import 'package:nai_launcher/presentation/themes/modules/color/palettes/pocket_palette.dart';
@@ -99,8 +100,12 @@ void main() {
           }
         }
         for (final button in [
-          tester.widget<OutlinedButton>(find.byType(OutlinedButton)),
-          tester.widget<FilledButton>(find.byType(FilledButton)),
+          tester.widget<FilledButton>(
+            find.byKey(const ValueKey('agent-chat-approval-deny')),
+          ),
+          tester.widget<FilledButton>(
+            find.byKey(const ValueKey('agent-chat-approval-allow')),
+          ),
         ]) {
           final style = button.style!;
           expect(
@@ -221,7 +226,7 @@ void main() {
         app(width: 360, child: approval(onResolve: decisions.add)),
       );
 
-      final allow = find.byType(FilledButton);
+      final allow = find.byKey(const ValueKey('agent-chat-approval-allow'));
       await tester.tap(allow);
       await tester.tap(allow);
       await tester.pump();
@@ -234,7 +239,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(OutlinedButton));
+      await tester.tap(find.byKey(const ValueKey('agent-chat-approval-deny')));
       expect(decisions, [isTrue, isFalse]);
     },
   );
@@ -257,5 +262,59 @@ void main() {
 
     expect(find.textContaining('cannot be undone'), findsOneWidget);
     expect(find.textContaining('Anlas'), findsNothing);
+  });
+
+  testWidgets('a rewrite shows its changes as a diff', (tester) async {
+    await tester.pumpWidget(
+      app(
+        width: 360,
+        child: AgentChatApprovalCard(
+          toolName: 'update_tag_library_entry',
+          args: const {'entry_id': 'entry-1', 'content': 'blue eyes, grin'},
+          estimatedAnlas: null,
+          fileTargets: const [],
+          changes: const [
+            AgentApprovalChange(
+              field: 'content',
+              before: 'blue eyes, smile',
+              after: 'blue eyes, grin',
+            ),
+            AgentApprovalChange(
+              field: 'favorite',
+              before: 'false',
+              after: 'true',
+            ),
+          ],
+          onResolve: (_) {},
+        ),
+      ),
+    );
+
+    expect(find.textContaining('Check the changes below'), findsOneWidget);
+    final content = tester.widget<RichText>(
+      find.descendant(
+        of: find.byKey(const ValueKey('agent-chat-approval-change-content')),
+        matching: find.byType(RichText),
+      ),
+    );
+    final spans = <TextSpan>[];
+    content.text.visitChildren((span) {
+      if (span is TextSpan && span.text != null) spans.add(span);
+      return true;
+    });
+    final removed = spans.singleWhere((span) => span.text == 'smile');
+    final added = spans.singleWhere((span) => span.text == 'grin');
+    expect(removed.style?.decoration, TextDecoration.lineThrough);
+    expect(added.style?.decoration, isNot(TextDecoration.lineThrough));
+    expect(added.style?.color, isNot(removed.style?.color));
+    expect(
+      spans.where((span) => span.text == 'blue eyes, ').single.style,
+      isNull,
+      reason: 'unchanged text keeps the body style',
+    );
+    // Switches read as the old value struck, then the new one.
+    expect(find.textContaining('No'), findsOneWidget);
+    expect(find.textContaining('Yes'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

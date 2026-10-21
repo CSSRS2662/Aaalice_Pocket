@@ -80,9 +80,10 @@ void main() {
         state: state,
       );
 
+      // Messages carry no timestamps; the answer keeps copy and retry.
       expect(
         find.byKey(const ValueKey('agent-assistant-message-time-1')),
-        findsOneWidget,
+        findsNothing,
       );
       for (final action in ['copy', 'retry']) {
         final finder = find.byKey(
@@ -91,14 +92,6 @@ void main() {
         expect(finder, findsOneWidget);
         expect(tester.getSize(finder), const Size(48, 48));
       }
-      final time = find.byKey(const ValueKey('agent-assistant-message-time-1'));
-      final actions = find.byKey(
-        const ValueKey('agent-assistant-message-actions-1'),
-      );
-      expect(
-        tester.getCenter(time).dy,
-        closeTo(tester.getCenter(actions).dy, 1),
-      );
       // 操作栏与同行时间戳同属消息附属信息，不得自带色面把自己抬成独立层级。
       // 按填充色而非部件类型断言：换一种容器铺色面同样要被挡住。
       final filledFooterSurfaces = tester
@@ -127,7 +120,7 @@ void main() {
         find.byKey(const ValueKey('agent-user-message-bubble-0')),
         findsOneWidget,
       );
-      expect(find.text('10:41'), findsOneWidget);
+      expect(find.text('10:41'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }
@@ -171,17 +164,16 @@ void main() {
           final text = tester.widget<Text>(textFinder);
           final bubbleRect = tester.getRect(bubble);
           final textRect = tester.getRect(textFinder);
-          final statusIcon = find.descendant(
-            of: bubble,
-            matching: find.byIcon(Icons.done_all_rounded),
-          );
-
           textHeights.add(textRect.height);
           expect(text.textAlign, TextAlign.left);
           expect(textRect.left, closeTo(bubbleRect.left + 12, 0.01));
+          // No delivered ticks: the bubble holds the message alone.
           expect(
-            tester.getRect(statusIcon).right,
-            closeTo(bubbleRect.right - 12, 0.01),
+            find.descendant(
+              of: bubble,
+              matching: find.byIcon(Icons.done_all_rounded),
+            ),
+            findsNothing,
           );
           expect(
             tester.getSize(
@@ -217,9 +209,21 @@ void main() {
       ),
     );
 
+    // Touch has no row of actions under the message; a long press opens
+    // them in a sheet.
     expect(
-      tester.getSize(find.byKey(const ValueKey('agent-user-message-copy-0'))),
-      const Size(48, 48),
+      find.byKey(const ValueKey('agent-user-message-copy-0')),
+      findsNothing,
+    );
+    await tester.longPress(
+      find.byKey(const ValueKey('agent-user-message-bubble-0')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('agent-user-message-copy-0')))
+          .height,
+      greaterThanOrEqualTo(48),
     );
     expect(tester.takeException(), isNull);
   });
@@ -403,20 +407,17 @@ void main() {
       find.byKey(const ValueKey('agent-user-message-bubble-0')),
       findsNothing,
     );
-    final delivery = find.byKey(
-      const ValueKey('agent-user-message-delivery-0'),
-    );
-    final resources = find.byKey(
-      const ValueKey('agent-user-message-resources-0'),
-    );
-    final copyAction = find.byKey(const ValueKey('agent-user-message-copy-0'));
-    expect(delivery, findsOneWidget);
-    expect(copyAction, findsOneWidget);
     expect(
-      tester.getTopRight(delivery).dx,
-      lessThan(tester.getTopRight(resources).dx),
+      find.byKey(const ValueKey('agent-user-message-delivery-0')),
+      findsNothing,
     );
-    expect(tester.getSize(copyAction).width, greaterThanOrEqualTo(48));
+    // Without a bubble, a long press on the references opens the actions
+    // (the name itself keeps its tooltip).
+    final card = tester.getRect(reference);
+    await tester.longPressAt(Offset(card.left + 8, card.center.dy));
+    await tester.pumpAndSettle();
+    final copyAction = find.byKey(const ValueKey('agent-user-message-copy-0'));
+    expect(copyAction, findsOneWidget);
     expect(tester.getSize(copyAction).height, greaterThanOrEqualTo(48));
     expect(find.textContaining('agent-resource-references'), findsNothing);
     expect(tester.takeException(), isNull);

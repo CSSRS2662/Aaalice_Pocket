@@ -1,21 +1,41 @@
 import 'agent_permission.dart';
 
+/// What full access still asks about before a tool runs; charging Anlas is
+/// decided separately from the estimate.
+enum FullAccessConfirmation {
+  /// Runs directly.
+  never,
+
+  /// Permanently deletes saved library data or rewrites its content.
+  always,
+
+  /// Asks only when the call unfavorites an image: the gallery holds
+  /// favorites only, so that deletes the image.
+  whenUnfavoriting,
+}
+
 class AgentToolPermissionDescriptor {
   const AgentToolPermissionDescriptor({
     required this.toolName,
     required this.domain,
     required this.operation,
     this.mayConsumeAnlas = false,
-    this.deletesStoredData = false,
+    this.fullAccessConfirmation = FullAccessConfirmation.never,
   });
 
   final String toolName;
   final AgentPermissionDomain domain;
   final AgentPermissionOperation operation;
   final bool mayConsumeAnlas;
+  final FullAccessConfirmation fullAccessConfirmation;
 
-  /// Permanently removes persisted user data, as opposed to page state.
-  final bool deletesStoredData;
+  /// Whether full access asks before this call with [args].
+  bool confirmsInFullAccess(Map<String, dynamic> args) =>
+      switch (fullAccessConfirmation) {
+        FullAccessConfirmation.never => false,
+        FullAccessConfirmation.always => true,
+        FullAccessConfirmation.whenUnfavoriting => args['favorite'] != true,
+      };
 }
 
 /// Complete, immutable permission metadata for a known set of tools.
@@ -41,16 +61,18 @@ class AgentToolPermissionCatalog {
     required String toolName,
     required AgentPermissionPolicy policy,
     int? estimatedAnlas,
+    Map<String, dynamic> args = const {},
   }) {
     final descriptor = descriptorFor(toolName);
     final policyDecision = policy.decide(
       descriptor.domain,
       descriptor.operation,
     );
-    // Full access skips ordinary write approval, never unrecoverable deletes.
+    // Full access skips ordinary write approval, but still asks before
+    // deleting images or library data and before rewriting library entries.
     final ordinaryDecision =
-        descriptor.deletesStoredData &&
-            policyDecision == AgentPermissionDecision.allow
+        policyDecision == AgentPermissionDecision.allow &&
+            descriptor.confirmsInFullAccess(args)
         ? AgentPermissionDecision.ask
         : policyDecision;
     if (ordinaryDecision == AgentPermissionDecision.block ||
@@ -173,15 +195,20 @@ AgentToolPermissionDescriptor describeAgentToolPermission(String toolName) {
     'clear_failed_generation_queue_tasks',
     'clear_completed_generation_queue_tasks',
   };
-  // Completed queue records live only in memory, so clearing them stays direct.
-  const storedDataDeletions = {
-    'delete_fixed_tag',
-    'delete_tag_library_entry',
-    'delete_tag_library_category',
-    'delete_precise_reference_entry',
-    'delete_vibe_library_entry',
-    'delete_generation_queue_task',
-    'clear_failed_generation_queue_tasks',
+  // What full access still asks about (the user's rules): deleting library
+  // data and rewriting library entries. New delete_ tools ask by default;
+  // queue tasks are work in progress, so removing them stays direct.
+  const directDeletions = {'delete_generation_queue_task'};
+  const libraryRewrites = {
+    'update_fixed_tag',
+    'update_tag_library_entry',
+    'update_tag_library_category',
+    'update_vibe_library_entry',
+    'update_precise_reference_entry',
+  };
+  const unfavoriting = {
+    'set_generated_image_favorite',
+    'toggle_local_gallery_favorite',
   };
 
   final domain = switch (toolName) {
@@ -276,9 +303,13 @@ AgentToolPermissionDescriptor describeAgentToolPermission(String toolName) {
     domain: domain,
     operation: operation,
     mayConsumeAnlas: charged.contains(toolName),
-    deletesStoredData:
-        storedDataDeletions.contains(toolName) ||
-        toolName.startsWith('delete_'),
+    fullAccessConfirmation: unfavoriting.contains(toolName)
+        ? FullAccessConfirmation.whenUnfavoriting
+        : libraryRewrites.contains(toolName) ||
+              (toolName.startsWith('delete_') &&
+                  !directDeletions.contains(toolName))
+        ? FullAccessConfirmation.always
+        : FullAccessConfirmation.never,
   );
 }
 

@@ -450,6 +450,37 @@
   "agentChat_sendEmptyHint": "輸入訊息或加入圖片後即可傳送",
   "agentChat_sendUnavailableHint": "AI 助手尚未準備好傳送訊息",
   "agentChat_stop": "停止",
+  "agentChat_steer": "引導目前工作",
+  "agentChat_steerTag": "引導",
+  "agentChat_sendAfterRun": "完成後再傳送",
+  "agentChat_inputHintRunning": "輸入文字，引導接下來的工作…",
+  "agentChat_steerNote": "你補充",
+  "agentChat_workStopped": "已停止",
+  "agentChat_workFailed": "出錯了",
+  "agentChat_doingTool": "正在{tool}…",
+  "@agentChat_doingTool": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "agentChat_changeEmpty": "（空）",
+  "agentChat_changeParent": "上級分類",
+  "agentChat_changeSource": "關聯詞庫條目",
+  "agentChat_changeType": "參考類型",
+  "agentChat_changeYes": "是",
+  "agentChat_changeNo": "否",
+  "agentChat_approvalCost": "預計消耗",
+  "agentChat_approvalRewriteDescription": "會改寫已儲存的內容，請核對下面的變更。",
+  "agentChat_workActions": "{count} 次操作",
+  "@agentChat_workActions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "agentChat_queued": "已排隊",
   "agentChat_queueSteering": "插入目前工作",
   "agentChat_queueFollowUp": "目前任務後繼續",
@@ -470,18 +501,7 @@
   "agentChat_jumpToLatest": "回到最新",
   "agentChat_toolGroupCount": "執行了 {count} 項操作",
   "@agentChat_toolGroupCount": {"placeholders": {"count": {"type": "int"}}},
-  "agentChat_working": "正在工作",
-  "agentChat_workingFor": "已工作 {duration}",
-  "@agentChat_workingFor": {"placeholders": {"duration": {"type": "String"}}},
   "agentChat_worked": "工作完成",
-  "agentChat_workedFor": "工作耗時 {duration}",
-  "@agentChat_workedFor": {"placeholders": {"duration": {"type": "String"}}},
-  "agentChat_workItemCount": "{count} 項",
-  "@agentChat_workItemCount": {"placeholders": {"count": {"type": "int"}}},
-  "agentChat_ranCommands": "執行了 {count} 條命令",
-  "@agentChat_ranCommands": {"placeholders": {"count": {"type": "int"}}},
-  "agentChat_exploredItems": "探索了 {count} 項資源",
-  "@agentChat_exploredItems": {"placeholders": {"count": {"type": "int"}}},
   "agentChat_earlierMessages": "更早的 {count} 則訊息",
   "@agentChat_earlierMessages": {"placeholders": {"count": {"type": "int"}}},
   "agentChat_loadEarlierMessages": "更早訊息",
@@ -556,8 +576,6 @@
   "agentChat_resourceAdded": "已新增至 Agent 輸入區",
   "agentChat_addResourceFailed": "新增引用失敗：{error}",
   "@agentChat_addResourceFailed": {"placeholders":{"error":{"type":"String"}}},
-  "agentChat_approvalEstimatedAnlas": "預計消耗：{cost} Anlas",
-  "@agentChat_approvalEstimatedAnlas": {"placeholders": {"cost": {"type": "int"}}},
   "agentChat_approvalFileTarget": "將寫入檔案：{path}",
   "@agentChat_approvalFileTarget": {"placeholders": {"path": {"type": "String"}}},
   "agentChat_needSetup": "未設定聊天模型。請先在設定中新增支援工具呼叫的供應商。",
@@ -604,7 +622,7 @@
   "agentChat_permissionAsk": "詢問模式",
   "agentChat_permissionAskDescription": "敏感操作執行前詢問",
   "agentChat_permissionFull": "完全存取",
-  "agentChat_permissionFullDescription": "僅刪除已存資料或消耗 Anlas 時詢問，可存取工作區外檔案",
+  "agentChat_permissionFullDescription": "直接執行；只在消耗 Anlas、刪除圖片、刪除或改寫庫條目時詢問",
   "agentChat_approvalTitle": "允許執行 {toolName}？",
   "@agentChat_approvalTitle": {
     "placeholders": {

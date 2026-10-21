@@ -12,6 +12,8 @@ import 'package:nai_launcher/presentation/agent_chat/widgets/agent_chat_panel_co
 import 'package:nai_launcher/presentation/agent_chat/widgets/agent_chat_panel_view_data.dart';
 import 'package:nai_launcher/presentation/agent_chat/widgets/agent_chat_tool_widgets.dart';
 import 'package:nai_launcher/presentation/agent_chat/widgets/agent_chat_turn.dart';
+import 'package:nai_launcher/presentation/agent_chat/widgets/agent_chat_work_process.dart';
+import 'package:nai_launcher/presentation/themes/core/layered_surface_style.dart';
 import 'package:nai_launcher/presentation/agent_settings/providers/agent_settings_provider.dart';
 import 'package:nai_launcher/data/models/prompt_assistant/prompt_assistant_models.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/providers/web_access_provider.dart';
@@ -130,7 +132,7 @@ void main() {
     },
   );
 
-  testWidgets('completed work collapses while final answer remains visible', (
+  testWidgets('finished work is a card of numbered stage summaries', (
     tester,
   ) async {
     final controller = AgentChatPanelController();
@@ -145,12 +147,17 @@ void main() {
       ),
     );
 
-    expect(find.text('Worked'), findsOneWidget);
-    expect(find.textContaining('Worked for'), findsNothing);
+    expect(find.text('Worked · 1 action'), findsOneWidget);
+    // A stage that said nothing is summed up by its tools, folded.
+    expect(find.text('Read file'), findsOneWidget);
     expect(find.text('The prompt is ready.'), findsOneWidget);
     expect(find.text('prompt contents'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('agent-turn-tool-item-call-1')),
+      findsNothing,
+    );
 
-    await tester.tap(find.byKey(const ValueKey('agent-turn-work-header-0')));
+    await tester.tap(find.byKey(const ValueKey('agent-work-summary-0-0')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Read file · prompt contents'), findsOneWidget);
     expect(find.text('Success'), findsNothing);
@@ -159,12 +166,6 @@ void main() {
     );
     expect(successIcon.icon, Icons.check_rounded);
     expect(successIcon.color, Colors.green.shade700);
-    final successDot = tester.widget<Container>(
-      find.byKey(const ValueKey('agent-turn-tool-dot-call-1')),
-    );
-    final successDotDecoration = successDot.decoration! as BoxDecoration;
-    expect(successDotDecoration.color, Colors.green.shade700);
-    expect(successDotDecoration.border, isNull);
     expect(
       find.byKey(const ValueKey('agent-turn-tool-result-call-1')),
       findsNothing,
@@ -188,6 +189,11 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('agent-tool-arguments-toggle')));
     await tester.pump();
     expect(find.textContaining('prompt.txt'), findsOneWidget);
+
+    // The header folds the whole card; the answer stays.
+    await tester.tap(find.byKey(const ValueKey('agent-work-header-0')));
+    await tester.pump();
+    expect(find.text('Read file'), findsNothing);
     expect(find.text('The prompt is ready.'), findsOneWidget);
   });
 
@@ -220,13 +226,66 @@ void main() {
         ),
       );
 
-      expect(find.text('I will inspect the repository.'), findsNothing);
-      await tester.tap(find.byKey(const ValueKey('agent-turn-work-header-0')));
-      await tester.pump();
       expect(find.text('I will inspect the repository.'), findsOneWidget);
       expect(find.text('Reasoning'), findsNothing);
     },
   );
+
+  test('stages open at each summary or guidance', () {
+    final items = [
+      AgentChatTurnItem.reasoning(
+        thinking: 'plan',
+        messageIndex: 1,
+        timestamp: 1,
+      ),
+      AgentChatTurnItem.narration(
+        narration: 'Look up tags.',
+        messageIndex: 1,
+        timestamp: 1,
+      ),
+      AgentChatTurnItem.tool(
+        call: const ToolCallContent(
+          id: 'a',
+          name: 'search_tags',
+          arguments: {},
+        ),
+        messageIndex: 1,
+        timestamp: 1,
+      ),
+      AgentChatTurnItem.steer(
+        steer: 'full body',
+        messageIndex: 2,
+        timestamp: 2,
+      ),
+      AgentChatTurnItem.narration(
+        narration: 'Switching.',
+        messageIndex: 3,
+        timestamp: 3,
+      ),
+      AgentChatTurnItem.tool(
+        call: const ToolCallContent(
+          id: 'b',
+          name: 'search_tags',
+          arguments: {},
+        ),
+        messageIndex: 3,
+        timestamp: 3,
+      ),
+    ];
+
+    final stages = agentChatWorkStages(items);
+    expect(stages, hasLength(2));
+    // Thinking before the summary stays in its stage.
+    expect(stages.first.narration, 'Look up tags.');
+    expect(stages.first.items.map((item) => item.kind), [
+      AgentChatTurnItemKind.reasoning,
+      AgentChatTurnItemKind.tool,
+    ]);
+    // What the agent says right after guidance belongs to it.
+    expect(stages.last.steer, 'full body');
+    expect(stages.last.narration, 'Switching.');
+    expect(stages.last.tools.single.call?.id, 'b');
+  });
 
   test('only explicit display tools expose media results', () {
     AgentChatTurnModel buildTurn(String toolName) =>
@@ -331,7 +390,7 @@ void main() {
       );
       expect(find.text('Here is the latest image.'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('agent-turn-work-header-0')));
+      await tester.tap(find.byKey(const ValueKey('agent-work-summary-0-0')));
       await tester.pump();
       await tester.tap(
         find.byKey(const ValueKey('agent-turn-tool-item-display-image-1')),
@@ -493,20 +552,25 @@ void main() {
       ),
     );
 
-    expect(find.text('Worked'), findsOneWidget);
+    expect(find.text('Worked · 1 action'), findsOneWidget);
     expect(find.textContaining('Generation submission failed'), findsNothing);
     expect(find.textContaining('private body'), findsNothing);
     expect(find.textContaining('private-id'), findsNothing);
-    final turnFinder = find.byKey(const ValueKey('agent-turn-work-0'));
-    final turn = tester.widget<Container>(turnFinder);
-    final turnTheme = Theme.of(tester.element(turnFinder));
+    // A recovered tool failure leaves the card on the neutral surface.
+    final processFinder = find.byKey(const ValueKey('agent-work-process-0'));
+    final card = tester.widget<Container>(
+      find
+          .descendant(of: processFinder, matching: find.byType(Container))
+          .first,
+    );
+    final theme = Theme.of(tester.element(processFinder));
     expect(
-      (turn.decoration! as BoxDecoration).color,
-      turnTheme.colorScheme.secondaryContainer.withValues(alpha: 0.48),
+      (card.decoration! as BoxDecoration).color,
+      sectionSurfaceColor(theme.colorScheme),
     );
     expect(find.byIcon(Icons.error_outline_rounded), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('agent-turn-work-header-0')));
+    await tester.tap(find.byKey(const ValueKey('agent-work-summary-0-0')));
     await tester.pump();
     expect(
       find.textContaining('Submit generation · Generation submission failed'),
@@ -516,17 +580,8 @@ void main() {
     final errorIcon = tester.widget<Icon>(
       find.byKey(const ValueKey('agent-turn-tool-status-failed-submit')),
     );
-    final errorTheme = Theme.of(
-      tester.element(find.byKey(const ValueKey('agent-turn-work-0'))),
-    );
     expect(errorIcon.icon, Icons.close_rounded);
-    expect(errorIcon.color, errorTheme.colorScheme.error);
-    final errorDot = tester.widget<Container>(
-      find.byKey(const ValueKey('agent-turn-tool-dot-failed-submit')),
-    );
-    final errorDotDecoration = errorDot.decoration! as BoxDecoration;
-    expect(errorDotDecoration.color, errorTheme.colorScheme.error);
-    expect(errorDotDecoration.border, isNull);
+    expect(errorIcon.color, theme.colorScheme.error);
     expect(find.textContaining('private body'), findsNothing);
     expect(find.textContaining('private-id'), findsNothing);
   });
@@ -567,7 +622,14 @@ void main() {
       ),
     );
 
-    expect(find.text('Working'), findsOneWidget);
+    // The footer says what happens now.
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('agent-work-live-0')),
+        matching: find.text('Read file…'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Reasoning'), findsWidgets);
     expect(
       find.byKey(const ValueKey('agent-tool-activity-live-call')),
@@ -577,41 +639,126 @@ void main() {
     expect(find.text('The current result'), findsOneWidget);
   });
 
+  testWidgets('live thinking folds on its own across live updates', (
+    tester,
+  ) async {
+    final controller = AgentChatPanelController();
+    addTearDown(controller.dispose);
+    AgentChatState runningState(String reasoning) => AgentChatState(
+      initialized: true,
+      routeReady: true,
+      status: AgentChatRunStatus.running,
+      messages: [UserMessage.text('Inspect it')],
+      streamingMessage: AssistantMessage(
+        content: [AssistantThinkingContent(reasoning)],
+        stopReason: StopReason.toolUse,
+      ),
+    );
+
+    await _pump(
+      tester,
+      controller: controller,
+      state: runningState('First live reasoning'),
+    );
+    expect(find.text('First live reasoning'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('agent-reasoning-toggle')));
+    await tester.pump();
+    expect(find.text('First live reasoning'), findsNothing);
+
+    await _pump(
+      tester,
+      controller: controller,
+      state: runningState('Updated live reasoning'),
+    );
+    await tester.pump();
+    expect(find.text('Updated live reasoning'), findsNothing);
+    expect(find.text('Thinking…'), findsOneWidget);
+  });
+
   testWidgets(
-    'manual turn collapse overrides running lifecycle across live updates',
+    'running stages fold earlier tools and show guidance where it landed',
     (tester) async {
       final controller = AgentChatPanelController();
       addTearDown(controller.dispose);
-      AgentChatState runningState(String reasoning) => AgentChatState(
-        initialized: true,
-        routeReady: true,
-        status: AgentChatRunStatus.running,
-        messages: [UserMessage.text('Inspect it')],
-        streamingMessage: AssistantMessage(
-          content: [AssistantThinkingContent(reasoning)],
-          stopReason: StopReason.toolUse,
+      await _pump(
+        tester,
+        controller: controller,
+        state: AgentChatState(
+          initialized: true,
+          routeReady: true,
+          status: AgentChatRunStatus.running,
+          messages: [
+            UserMessage.text('Write the prompt'),
+            AssistantMessage(
+              content: const [
+                AssistantTextContent('First I look up the tags.'),
+                ToolCallContent(
+                  id: 'tag-1',
+                  name: 'search_tags',
+                  arguments: {},
+                ),
+                ToolCallContent(
+                  id: 'tag-2',
+                  name: 'search_tags',
+                  arguments: {},
+                ),
+              ],
+              stopReason: StopReason.toolUse,
+            ),
+            ToolResultMessage(
+              toolCallId: 'tag-1',
+              toolName: 'search_tags',
+              content: const [ToolResultTextContent('{}')],
+            ),
+            ToolResultMessage(
+              toolCallId: 'tag-2',
+              toolName: 'search_tags',
+              content: const [ToolResultTextContent('{}')],
+            ),
+            UserMessage.text('make it full body'),
+            AssistantMessage(
+              content: const [
+                AssistantTextContent('Switching to a full-body shot.'),
+                ToolCallContent(
+                  id: 'tag-3',
+                  name: 'search_tags',
+                  arguments: {},
+                ),
+              ],
+              stopReason: StopReason.toolUse,
+            ),
+          ],
+          turns: [_runningTimeline(6)],
         ),
       );
 
-      await _pump(
-        tester,
-        controller: controller,
-        state: runningState('First live reasoning'),
+      // The first stage folds its tools into one line.
+      expect(find.text('First I look up the tags.'), findsOneWidget);
+      expect(find.text('Search tags ×2'), findsOneWidget);
+      // The guidance and the answer to it open the live stage.
+      expect(find.textContaining('You added'), findsOneWidget);
+      expect(find.textContaining('make it full body'), findsOneWidget);
+      expect(find.text('Switching to a full-body shot.'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('agent-turn-tool-item-tag-3')),
+        findsOneWidget,
       );
-      expect(find.text('First live reasoning'), findsOneWidget);
-
-      await tester.tap(find.byKey(const ValueKey('agent-turn-work-header-0')));
-      await tester.pump();
-      expect(find.text('First live reasoning'), findsNothing);
-
-      await _pump(
-        tester,
-        controller: controller,
-        state: runningState('Updated live reasoning'),
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('agent-work-live-0')),
+          matching: find.text('Search tags…'),
+        ),
+        findsOneWidget,
       );
+
+      await tester.tap(find.text('Search tags ×2'));
       await tester.pump();
-      expect(find.text('Updated live reasoning'), findsNothing);
-      expect(find.text('Working'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('agent-turn-tool-item-tag-1')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
     },
   );
 
@@ -795,4 +942,22 @@ final _commands = AgentChatPanelCommands(
   clearQueuedMessages: () async {},
   addPendingResource: (_) async {},
   removePendingResource: (_) async {},
+);
+
+AgentChatTurnTimeline _runningTimeline(int entries) => AgentChatTurnTimeline(
+  id: 'turn-live',
+  status: AgentChatTurnStatus.running,
+  firstSeq: 1,
+  lastSeq: entries,
+  items: [
+    for (var index = 0; index < entries; index++)
+      AgentChatTimelineItem(
+        id: 'entry:$index',
+        entryId: '$index',
+        seq: index + 1,
+        parentEntryId: index == 0 ? null : '${index - 1}',
+        kind: AgentChatTimelineItemKind.assistantMessage,
+        timestamp: null,
+      ),
+  ],
 );

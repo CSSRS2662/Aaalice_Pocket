@@ -8,6 +8,7 @@ import '../../../data/models/vibe/vibe_library_entry.dart';
 import '../../../data/models/vibe/vibe_reference.dart';
 import '../../providers/generation/generation_params_notifier.dart';
 import '../../providers/vibe_library_provider.dart';
+import '../models/agent_approval_change.dart';
 import 'agent_resource_resolver.dart';
 import 'defined_agent_tool.dart';
 import 'toolbox_json.dart';
@@ -178,6 +179,44 @@ class VibeLibraryToolbox {
       },
       required: const ['entry_id'],
     ),
+    previewChanges: (params) async {
+      final current = await _entry(params['entry_id'] as String);
+      if (current == null) return const [];
+      final categories = _ref.read(vibeLibraryNotifierProvider).categories;
+      String category(String? id) => id == null
+          ? ''
+          : categories.where((item) => item.id == id).firstOrNull?.name ?? id;
+      String? number(String key) => params[key] is num
+          ? AgentApprovalChange.number(params[key] as num)
+          : null;
+      return AgentApprovalChange.between({
+        'name': (current.name, params['name'] as String?),
+        'strength': (
+          AgentApprovalChange.number(current.strength),
+          number('strength'),
+        ),
+        'information_extracted': (
+          AgentApprovalChange.number(current.infoExtracted),
+          number('information_extracted'),
+        ),
+        'category': (
+          category(current.categoryId),
+          params.containsKey('category_id')
+              ? category(params['category_id'] as String?)
+              : null,
+        ),
+        'tags': (
+          current.tags.join(', '),
+          params['tags'] is List
+              ? (params['tags'] as List).map((tag) => '$tag').join(', ')
+              : null,
+        ),
+        'favorite': (
+          '${current.isFavorite}',
+          (params['favorite'] as bool?)?.toString(),
+        ),
+      });
+    },
     executeFn: (_, params) async {
       final notifier = _ref.read(vibeLibraryNotifierProvider.notifier);
       await notifier.initialize();

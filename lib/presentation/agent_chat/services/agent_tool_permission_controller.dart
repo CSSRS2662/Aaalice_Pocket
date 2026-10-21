@@ -7,6 +7,7 @@ import '../../../core/agent/audit/audit_event.dart';
 import '../../../core/agent/audit/audit_sink.dart';
 import '../../../core/agent/permissions/permissions.dart';
 import '../../../core/utils/app_logger.dart';
+import '../models/agent_approval_change.dart';
 import '../providers/agent_chat_state.dart';
 import 'agent_tool_registry_builder.dart';
 
@@ -35,11 +36,29 @@ class AgentToolPermissionController {
 
   AgentToolPermissionCatalog? _catalog;
   AgentPermissionPolicy? _policy;
+  Map<String, AgentApprovalChangePreview> _changePreviews = const {};
   Completer<bool>? _approvalCompleter;
 
   void configure(AgentToolRegistry registry) {
     _catalog = registry.catalog;
     _policy = registry.policy;
+    _changePreviews = registry.changePreviews;
+  }
+
+  /// What the call would rewrite; the card still opens when reading the
+  /// current values fails.
+  Future<List<AgentApprovalChange>> _previewChanges(
+    String toolName,
+    Map<String, dynamic> args,
+  ) async {
+    final preview = _changePreviews[toolName];
+    if (preview == null) return const [];
+    try {
+      return await preview(args);
+    } catch (error) {
+      AppLogger.w('Approval preview failed for $toolName: $error', 'Agent');
+      return const [];
+    }
   }
 
   Future<BeforeToolCallResult?> beforeToolCall(
@@ -92,6 +111,7 @@ class AgentToolPermissionController {
       catalog: catalog,
       policy: permissionPolicy,
       toolName: context.toolCall.name,
+      args: args,
       estimatedAnlas: estimatedAnlas,
       isNonBillingPreparation: isNonBillingPreparation,
       fileTargets: fileTargets,
@@ -122,6 +142,7 @@ class AgentToolPermissionController {
     _approvalCompleter = completer;
     _activeApprovalToolCallId = context.toolCall.id;
     estimatedAnlas ??= await _estimateAnlas(context.toolCall.name, args);
+    final changes = await _previewChanges(context.toolCall.name, args);
     _onApprovalChanged(
       AgentToolApprovalRequest(
         toolCallId: context.toolCall.id,
@@ -129,6 +150,7 @@ class AgentToolPermissionController {
         args: args,
         estimatedAnlas: estimatedAnlas,
         fileTargets: fileTargets,
+        changes: changes,
       ),
     );
 
@@ -169,6 +191,7 @@ class AgentToolPermissionController {
     required AgentToolPermissionCatalog catalog,
     required AgentPermissionPolicy policy,
     required String toolName,
+    required Map<String, dynamic> args,
     required int? estimatedAnlas,
     required bool isNonBillingPreparation,
     required List<String> fileTargets,
@@ -179,6 +202,7 @@ class AgentToolPermissionController {
             toolName: toolName,
             policy: policy,
             estimatedAnlas: estimatedAnlas,
+            args: args,
           );
     if (fileTargets.isEmpty || toolName == 'save_generated_image') {
       return decision;

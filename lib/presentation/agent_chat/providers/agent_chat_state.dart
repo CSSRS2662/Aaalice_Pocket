@@ -5,6 +5,7 @@ import '../../../core/agent/harness/harness_messages.dart';
 import '../../../core/agent/harness/session/session_types.dart'
     as session_types;
 import '../../../core/agent/resources/agent_chat_resource_reference.dart';
+import '../models/agent_approval_change.dart';
 import '../models/agent_chat_turn_timeline.dart';
 import 'agent_chat_session_view.dart';
 import '../models/agent_user_question_request.dart';
@@ -300,6 +301,7 @@ class AgentToolApprovalRequest {
     required this.args,
     this.estimatedAnlas,
     this.fileTargets = const [],
+    this.changes = const [],
     this.turnId,
     this.itemId,
   });
@@ -309,6 +311,9 @@ class AgentToolApprovalRequest {
   final Map<String, dynamic> args;
   final int? estimatedAnlas;
   final List<String> fileTargets;
+
+  /// What the call would rewrite in saved data, shown as a diff.
+  final List<AgentApprovalChange> changes;
   final String? turnId;
   final String? itemId;
 
@@ -319,6 +324,7 @@ class AgentToolApprovalRequest {
         args: args,
         estimatedAnlas: estimatedAnlas,
         fileTargets: fileTargets,
+        changes: changes,
         turnId: turnId ?? this.turnId,
         itemId: itemId ?? this.itemId,
       );

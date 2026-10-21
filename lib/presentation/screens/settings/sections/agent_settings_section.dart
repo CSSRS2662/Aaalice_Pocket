@@ -110,7 +110,6 @@ class _AgentSettingsSectionState extends ConsumerState<AgentSettingsSection> {
         ),
         _ReadingPreferencesCard(settings: state.settings),
         const AgentChatPlacementCard(),
-        _PermissionCard(settings: state.settings),
         _WebAccessCard(settings: state.settings),
         if (_selectedPanel == 0)
           AgentSystemPromptEditor(panelSelector: panelSelector)
@@ -361,74 +360,6 @@ class _ReadingPreferencesCard extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _PermissionCard extends ConsumerWidget {
-  const _PermissionCard({required this.settings});
-
-  final AgentSettings settings;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return SettingsCard(
-      title: context.l10n.agentSettings_toolPermission,
-      icon: Icons.admin_panel_settings_outlined,
-      child: RadioGroup<AgentPermissionMode>(
-        groupValue: settings.chat.permissionMode,
-        onChanged: (value) {
-          if (value != null) {
-            _reportAgentSettingFailure(
-              context,
-              ref.read(agentSettingsProvider.notifier).setPermissionMode(value),
-            );
-          }
-        },
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final cards = [
-              (
-                AgentPermissionMode.safe,
-                context.l10n.agentSettings_permissionSafe,
-                context.l10n.agentSettings_permissionSafeDescription,
-              ),
-              (
-                AgentPermissionMode.askBeforeSensitiveActions,
-                context.l10n.agentSettings_permissionAsk,
-                context.l10n.agentSettings_permissionAskDescription,
-              ),
-              (
-                AgentPermissionMode.fullAccess,
-                context.l10n.agentSettings_permissionFull,
-                context.l10n.agentSettings_permissionFullDescription,
-              ),
-            ];
-            if (constraints.maxWidth < 680) {
-              return Column(
-                children: [for (final card in cards) _permissionTile(card)],
-              );
-            }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (var index = 0; index < cards.length; index++) ...[
-                  if (index > 0) const SizedBox(width: 8),
-                  Expanded(child: _permissionTile(cards[index])),
-                ],
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _permissionTile((AgentPermissionMode, String, String) card) =>
-      RadioListTile<AgentPermissionMode>(
-        value: card.$1,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        title: Text(card.$2),
-        subtitle: Text(card.$3),
-      );
 }
 
 class _WebAccessCard extends ConsumerWidget {

@@ -1111,6 +1111,62 @@ class AppLocalizationsJa extends AppLocalizations {
   String get agentChat_stop => '停止';
 
   @override
+  String get agentChat_steer => '現在の作業をガイド';
+
+  @override
+  String get agentChat_steerTag => 'ガイド';
+
+  @override
+  String get agentChat_sendAfterRun => '完了後に送信';
+
+  @override
+  String get agentChat_inputHintRunning => '入力して次の作業をガイド…';
+
+  @override
+  String get agentChat_steerNote => 'あなたの補足';
+
+  @override
+  String get agentChat_workStopped => '停止しました';
+
+  @override
+  String get agentChat_workFailed => 'エラーが発生しました';
+
+  @override
+  String agentChat_doingTool(String tool) {
+    return '$tool中…';
+  }
+
+  @override
+  String get agentChat_changeEmpty => '（空）';
+
+  @override
+  String get agentChat_changeParent => '親カテゴリ';
+
+  @override
+  String get agentChat_changeSource => '連携する辞書項目';
+
+  @override
+  String get agentChat_changeType => '参照タイプ';
+
+  @override
+  String get agentChat_changeYes => 'はい';
+
+  @override
+  String get agentChat_changeNo => 'いいえ';
+
+  @override
+  String get agentChat_approvalCost => '予想消費';
+
+  @override
+  String get agentChat_approvalRewriteDescription =>
+      '保存済みの内容を書き換えます。下の変更を確認してください。';
+
+  @override
+  String agentChat_workActions(int count) {
+    return '$count 件の操作';
+  }
+
+  @override
   String get agentChat_queued => '待機中';
 
   @override
@@ -1170,35 +1226,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get agentChat_working => '作業中';
-
-  @override
-  String agentChat_workingFor(String duration) {
-    return '$duration 作業中';
-  }
-
-  @override
   String get agentChat_worked => '作業完了';
-
-  @override
-  String agentChat_workedFor(String duration) {
-    return '作業時間 $duration';
-  }
-
-  @override
-  String agentChat_workItemCount(int count) {
-    return '$count 件';
-  }
-
-  @override
-  String agentChat_ranCommands(int count) {
-    return '$count 件のコマンドを実行';
-  }
-
-  @override
-  String agentChat_exploredItems(int count) {
-    return '$count 件のソースを調査';
-  }
 
   @override
   String agentChat_earlierMessages(int count) {
@@ -1401,11 +1429,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String agentChat_approvalEstimatedAnlas(int cost) {
-    return '推定コスト：$cost Anlas';
-  }
-
-  @override
   String agentChat_approvalFileTarget(String path) {
     return 'ファイルを書き込みます：$path';
   }
@@ -1525,7 +1548,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get agentChat_permissionFullDescription =>
-      '保存データの削除と Anlas 消費時のみ確認、ワークスペース外も許可';
+      '直接実行。Anlas の消費、画像の削除、ライブラリ項目の削除・書き換えのときだけ確認';
 
   @override
   String agentChat_approvalTitle(Object toolName) {

@@ -11,6 +11,7 @@ import '../../../data/models/tag_library/tag_library_category.dart';
 import '../../../data/models/tag_library/tag_library_entry.dart';
 import '../../../data/services/tag_library_portable_thumbnail_store.dart';
 import '../../providers/tag_library_page_provider.dart';
+import '../models/agent_approval_change.dart';
 import 'agent_resource_resolver.dart';
 import 'defined_agent_tool.dart';
 import 'generation_image_resource.dart';
@@ -336,6 +337,37 @@ class TagLibraryToolbox {
       },
       required: const ['entry_id'],
     ),
+    previewChanges: (params) async {
+      final state = _ref.read(tagLibraryPageNotifierProvider);
+      final entry = _ref
+          .read(tagLibraryPageNotifierProvider.notifier)
+          .getEntry(params['entry_id'] as String);
+      if (entry == null) return const [];
+      String category(String? id) =>
+          tagLibraryCategoryName(state.categories, id);
+      return AgentApprovalChange.between({
+        'name': (entry.name, params['name'] as String?),
+        'content': (entry.content, params['content'] as String?),
+        'tags': (
+          entry.tags.join(', '),
+          params.containsKey('tags')
+              ? toolboxStrings(params['tags']).join(', ')
+              : null,
+        ),
+        'category': (
+          category(entry.categoryId),
+          params['clear_category'] == true
+              ? ''
+              : params.containsKey('category_id')
+              ? category(params['category_id'] as String?)
+              : null,
+        ),
+        'favorite': (
+          '${entry.isFavorite}',
+          (params['favorite'] as bool?)?.toString(),
+        ),
+      });
+    },
     executeFn: (_, params) async {
       final notifier = _ref.read(tagLibraryPageNotifierProvider.notifier);
       final entry = notifier.getEntry(params['entry_id'] as String);
@@ -453,6 +485,27 @@ class TagLibraryToolbox {
       },
       required: const ['category_id'],
     ),
+    previewChanges: (params) async {
+      final categories = _ref.read(tagLibraryPageNotifierProvider).categories;
+      final category = categories
+          .where((item) => item.id == params['category_id'])
+          .firstOrNull;
+      if (category == null) return const [];
+      return AgentApprovalChange.between({
+        'name': (category.name, params['name'] as String?),
+        'parent': (
+          tagLibraryCategoryName(categories, category.parentId),
+          params['move_to_root'] == true
+              ? ''
+              : params.containsKey('parent_id')
+              ? tagLibraryCategoryName(
+                  categories,
+                  params['parent_id'] as String?,
+                )
+              : null,
+        ),
+      });
+    },
     executeFn: (_, params) async {
       final notifier = _ref.read(tagLibraryPageNotifierProvider.notifier);
       final state = _ref.read(tagLibraryPageNotifierProvider);
@@ -591,3 +644,16 @@ Map<String, dynamic> _categoryJson(
       .where((entry) => entry.categoryId == category.id)
       .length,
 };
+
+/// The name of tag-library category [id] for an approval diff; empty for
+/// none, the id itself when it is unknown.
+String tagLibraryCategoryName(
+  Iterable<TagLibraryCategory> categories,
+  String? id,
+) {
+  if (id == null) return '';
+  for (final category in categories) {
+    if (category.id == id) return category.name;
+  }
+  return id;
+}

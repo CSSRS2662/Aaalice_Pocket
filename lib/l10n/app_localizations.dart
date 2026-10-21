@@ -2159,6 +2159,108 @@ abstract class AppLocalizations {
   /// **'Stop'**
   String get agentChat_stop;
 
+  /// No description provided for @agentChat_steer.
+  ///
+  /// In en, this message translates to:
+  /// **'Guide the current work'**
+  String get agentChat_steer;
+
+  /// No description provided for @agentChat_steerTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Guide'**
+  String get agentChat_steerTag;
+
+  /// No description provided for @agentChat_sendAfterRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Send when done'**
+  String get agentChat_sendAfterRun;
+
+  /// No description provided for @agentChat_inputHintRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Type to guide what happens next…'**
+  String get agentChat_inputHintRunning;
+
+  /// No description provided for @agentChat_steerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You added'**
+  String get agentChat_steerNote;
+
+  /// No description provided for @agentChat_workStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get agentChat_workStopped;
+
+  /// No description provided for @agentChat_workFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get agentChat_workFailed;
+
+  /// No description provided for @agentChat_doingTool.
+  ///
+  /// In en, this message translates to:
+  /// **'{tool}…'**
+  String agentChat_doingTool(String tool);
+
+  /// No description provided for @agentChat_changeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'(empty)'**
+  String get agentChat_changeEmpty;
+
+  /// No description provided for @agentChat_changeParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent category'**
+  String get agentChat_changeParent;
+
+  /// No description provided for @agentChat_changeSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked library entry'**
+  String get agentChat_changeSource;
+
+  /// No description provided for @agentChat_changeType.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference type'**
+  String get agentChat_changeType;
+
+  /// No description provided for @agentChat_changeYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get agentChat_changeYes;
+
+  /// No description provided for @agentChat_changeNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get agentChat_changeNo;
+
+  /// No description provided for @agentChat_approvalCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated cost'**
+  String get agentChat_approvalCost;
+
+  /// No description provided for @agentChat_approvalRewriteDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This rewrites saved content. Check the changes below.'**
+  String get agentChat_approvalRewriteDescription;
+
+  /// No description provided for @agentChat_workActions.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 action} other{{count} actions}}'**
+  String agentChat_workActions(int count);
+
   /// No description provided for @agentChat_queued.
   ///
   /// In en, this message translates to:
@@ -2273,47 +2375,11 @@ abstract class AppLocalizations {
   /// **'Ran {count} actions'**
   String agentChat_toolGroupCount(int count);
 
-  /// No description provided for @agentChat_working.
-  ///
-  /// In en, this message translates to:
-  /// **'Working'**
-  String get agentChat_working;
-
-  /// No description provided for @agentChat_workingFor.
-  ///
-  /// In en, this message translates to:
-  /// **'Working for {duration}'**
-  String agentChat_workingFor(String duration);
-
   /// No description provided for @agentChat_worked.
   ///
   /// In en, this message translates to:
   /// **'Worked'**
   String get agentChat_worked;
-
-  /// No description provided for @agentChat_workedFor.
-  ///
-  /// In en, this message translates to:
-  /// **'Worked for {duration}'**
-  String agentChat_workedFor(String duration);
-
-  /// No description provided for @agentChat_workItemCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} items'**
-  String agentChat_workItemCount(int count);
-
-  /// No description provided for @agentChat_ranCommands.
-  ///
-  /// In en, this message translates to:
-  /// **'Ran {count} commands'**
-  String agentChat_ranCommands(int count);
-
-  /// No description provided for @agentChat_exploredItems.
-  ///
-  /// In en, this message translates to:
-  /// **'Explored {count} sources'**
-  String agentChat_exploredItems(int count);
 
   /// No description provided for @agentChat_earlierMessages.
   ///
@@ -2699,12 +2765,6 @@ abstract class AppLocalizations {
   /// **'Failed to add reference: {error}'**
   String agentChat_addResourceFailed(String error);
 
-  /// No description provided for @agentChat_approvalEstimatedAnlas.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated cost: {cost} Anlas'**
-  String agentChat_approvalEstimatedAnlas(int cost);
-
   /// No description provided for @agentChat_approvalFileTarget.
   ///
   /// In en, this message translates to:
@@ -2924,7 +2984,7 @@ abstract class AppLocalizations {
   /// No description provided for @agentChat_permissionFullDescription.
   ///
   /// In en, this message translates to:
-  /// **'Ask only to delete saved data or spend Anlas; allow outside files'**
+  /// **'Runs directly; asks only to spend Anlas, delete images, or delete or rewrite library entries'**
   String get agentChat_permissionFullDescription;
 
   /// No description provided for @agentChat_approvalTitle.

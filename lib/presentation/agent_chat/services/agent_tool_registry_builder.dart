@@ -9,6 +9,8 @@ import '../../../core/platform/platform_capabilities.dart';
 import '../../agent_settings/providers/agent_settings_provider.dart';
 import '../../../data/models/prompt_assistant/prompt_assistant_models.dart';
 import '../../prompt_assistant/providers/web_access_provider.dart';
+import '../models/agent_approval_change.dart';
+import 'defined_agent_tool.dart';
 import '../../providers/generation/image_workflow_controller.dart';
 import '../../providers/krita/krita_bridge_notifier.dart';
 import '../../router/app_router_config.dart';
@@ -52,11 +54,15 @@ class AgentToolRegistry {
     required this.tools,
     required this.catalog,
     required this.policy,
+    this.changePreviews = const {},
   });
 
   final List<AgentTool> tools;
   final AgentToolPermissionCatalog catalog;
   final AgentPermissionPolicy policy;
+
+  /// What each previewable tool would change, by tool name.
+  final Map<String, AgentApprovalChangePreview> changePreviews;
 }
 
 /// Builds the single tool registry used by the active chat runtime.
@@ -285,6 +291,11 @@ class AgentToolRegistryBuilder {
       ],
       catalog: catalog,
       policy: policy,
+      changePreviews: {
+        for (final tool in tools)
+          if (tool case DefinedAgentTool(:final previewChanges?))
+            tool.name: previewChanges,
+      },
     );
   }
 

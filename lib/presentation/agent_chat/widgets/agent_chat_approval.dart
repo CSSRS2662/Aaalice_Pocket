@@ -8,6 +8,8 @@ import '../../../core/utils/localization_extension.dart';
 import 'agent_chat_shared_widgets.dart';
 import '../../adaptive/interaction_policy.dart';
 import '../../themes/theme_extension.dart';
+import '../models/agent_approval_change.dart';
+import 'agent_chat_change_diff.dart';
 import 'agent_chat_tool_widgets.dart';
 
 /// Adapts an authoritative approval request to the approval surface shared by
@@ -20,12 +22,16 @@ class AgentChatApprovalCard extends StatefulWidget {
     required this.estimatedAnlas,
     required this.fileTargets,
     required this.onResolve,
+    this.changes = const [],
   });
 
   final String toolName;
   final Map<String, dynamic> args;
   final int? estimatedAnlas;
   final List<String> fileTargets;
+
+  /// What the call would rewrite in saved data, shown as a diff.
+  final List<AgentApprovalChange> changes;
   final void Function(bool approved) onResolve;
 
   @override
@@ -57,7 +63,7 @@ class _AgentChatApprovalCardState extends State<AgentChatApprovalCard> {
     } on JsonUnsupportedObjectError {
       encoded = sanitized.toString();
     }
-    return '${context.l10n.generation_params}\n$encoded';
+    return encoded;
   }
 
   void _resolve(bool approved) {
@@ -73,14 +79,19 @@ class _AgentChatApprovalCardState extends State<AgentChatApprovalCard> {
     final toolLabel = agentToolLabel(context, widget.toolName);
     final description = widget.toolName.toLowerCase().contains('delete')
         ? l10n.common_deleteItemConfirm(toolLabel)
+        : widget.changes.isNotEmpty
+        ? l10n.agentChat_approvalRewriteDescription
         : l10n.agentChat_approvalDescription;
     final surface = AgentChatApprovalSurface(
       title: l10n.agentChat_approvalTitle(toolLabel),
       description: description,
       details: _details,
-      costLabel: widget.estimatedAnlas == null
+      detailsLabel: l10n.generation_params,
+      costLabel: l10n.agentChat_approvalCost,
+      costAmount: widget.estimatedAnlas,
+      changes: widget.changes.isEmpty
           ? null
-          : l10n.agentChat_approvalEstimatedAnlas(widget.estimatedAnlas!),
+          : AgentChatChangeDiff(changes: widget.changes),
       fileTargetLabel: widget.fileTargets.isEmpty
           ? null
           : l10n.agentChat_approvalFileTarget(widget.fileTargets.join('\n')),

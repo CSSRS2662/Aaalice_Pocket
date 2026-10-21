@@ -1090,6 +1090,61 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentChat_stop => '停止';
 
   @override
+  String get agentChat_steer => '引导当前工作';
+
+  @override
+  String get agentChat_steerTag => '引导';
+
+  @override
+  String get agentChat_sendAfterRun => '完成后再发送';
+
+  @override
+  String get agentChat_inputHintRunning => '输入文字，引导接下来的工作…';
+
+  @override
+  String get agentChat_steerNote => '你补充';
+
+  @override
+  String get agentChat_workStopped => '已停止';
+
+  @override
+  String get agentChat_workFailed => '出错了';
+
+  @override
+  String agentChat_doingTool(String tool) {
+    return '正在$tool…';
+  }
+
+  @override
+  String get agentChat_changeEmpty => '（空）';
+
+  @override
+  String get agentChat_changeParent => '上级分类';
+
+  @override
+  String get agentChat_changeSource => '关联词库条目';
+
+  @override
+  String get agentChat_changeType => '参考类型';
+
+  @override
+  String get agentChat_changeYes => '是';
+
+  @override
+  String get agentChat_changeNo => '否';
+
+  @override
+  String get agentChat_approvalCost => '预计消耗';
+
+  @override
+  String get agentChat_approvalRewriteDescription => '会改写已保存的内容，请核对下面的改动。';
+
+  @override
+  String agentChat_workActions(int count) {
+    return '$count 次操作';
+  }
+
+  @override
   String get agentChat_queued => '已排队';
 
   @override
@@ -1149,35 +1204,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get agentChat_working => '正在工作';
-
-  @override
-  String agentChat_workingFor(String duration) {
-    return '已工作 $duration';
-  }
-
-  @override
   String get agentChat_worked => '工作完成';
-
-  @override
-  String agentChat_workedFor(String duration) {
-    return '工作耗时 $duration';
-  }
-
-  @override
-  String agentChat_workItemCount(int count) {
-    return '$count 项';
-  }
-
-  @override
-  String agentChat_ranCommands(int count) {
-    return '执行了 $count 条命令';
-  }
-
-  @override
-  String agentChat_exploredItems(int count) {
-    return '探索了 $count 项资源';
-  }
 
   @override
   String agentChat_earlierMessages(int count) {
@@ -1380,11 +1407,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String agentChat_approvalEstimatedAnlas(int cost) {
-    return '预计消耗：$cost Anlas';
-  }
-
-  @override
   String agentChat_approvalFileTarget(String path) {
     return '将写入文件：$path';
   }
@@ -1503,7 +1525,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get agentChat_permissionFullDescription =>
-      '仅删除已存数据或消耗 Anlas 时询问，可访问工作区外文件';
+      '直接执行；只在消耗 Anlas、删除图片、删除或改写库条目时询问';
 
   @override
   String agentChat_approvalTitle(Object toolName) {
@@ -16867,6 +16889,61 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentChat_stop => '停止';
 
   @override
+  String get agentChat_steer => '引導目前工作';
+
+  @override
+  String get agentChat_steerTag => '引導';
+
+  @override
+  String get agentChat_sendAfterRun => '完成後再傳送';
+
+  @override
+  String get agentChat_inputHintRunning => '輸入文字，引導接下來的工作…';
+
+  @override
+  String get agentChat_steerNote => '你補充';
+
+  @override
+  String get agentChat_workStopped => '已停止';
+
+  @override
+  String get agentChat_workFailed => '出錯了';
+
+  @override
+  String agentChat_doingTool(String tool) {
+    return '正在$tool…';
+  }
+
+  @override
+  String get agentChat_changeEmpty => '（空）';
+
+  @override
+  String get agentChat_changeParent => '上級分類';
+
+  @override
+  String get agentChat_changeSource => '關聯詞庫條目';
+
+  @override
+  String get agentChat_changeType => '參考類型';
+
+  @override
+  String get agentChat_changeYes => '是';
+
+  @override
+  String get agentChat_changeNo => '否';
+
+  @override
+  String get agentChat_approvalCost => '預計消耗';
+
+  @override
+  String get agentChat_approvalRewriteDescription => '會改寫已儲存的內容，請核對下面的變更。';
+
+  @override
+  String agentChat_workActions(int count) {
+    return '$count 次操作';
+  }
+
+  @override
   String get agentChat_queued => '已排隊';
 
   @override
@@ -16926,35 +17003,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get agentChat_working => '正在工作';
-
-  @override
-  String agentChat_workingFor(String duration) {
-    return '已工作 $duration';
-  }
-
-  @override
   String get agentChat_worked => '工作完成';
-
-  @override
-  String agentChat_workedFor(String duration) {
-    return '工作耗時 $duration';
-  }
-
-  @override
-  String agentChat_workItemCount(int count) {
-    return '$count 項';
-  }
-
-  @override
-  String agentChat_ranCommands(int count) {
-    return '執行了 $count 條命令';
-  }
-
-  @override
-  String agentChat_exploredItems(int count) {
-    return '探索了 $count 項資源';
-  }
 
   @override
   String agentChat_earlierMessages(int count) {
@@ -17157,11 +17206,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String agentChat_approvalEstimatedAnlas(int cost) {
-    return '預計消耗：$cost Anlas';
-  }
-
-  @override
   String agentChat_approvalFileTarget(String path) {
     return '將寫入檔案：$path';
   }
@@ -17280,7 +17324,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get agentChat_permissionFullDescription =>
-      '僅刪除已存資料或消耗 Anlas 時詢問，可存取工作區外檔案';
+      '直接執行；只在消耗 Anlas、刪除圖片、刪除或改寫庫條目時詢問';
 
   @override
   String agentChat_approvalTitle(Object toolName) {

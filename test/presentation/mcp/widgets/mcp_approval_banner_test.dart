@@ -92,7 +92,7 @@ void main() {
     expect(find.byKey(const ValueKey('mcp-approval-banner')), findsOneWidget);
     expect(find.text(l10n.mcpApproval_title('codex 1.0.0')), findsOneWidget);
     expect(
-      find.text(l10n.agentChat_approvalEstimatedAnlas(24)),
+      find.text('${l10n.agentChat_approvalCost} 24 Anlas'),
       findsOneWidget,
     );
     expect(find.text(l10n.agentChat_approvalAllow), findsOneWidget);

@@ -1133,6 +1133,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentChat_stop => 'Stop';
 
   @override
+  String get agentChat_steer => 'Guide the current work';
+
+  @override
+  String get agentChat_steerTag => 'Guide';
+
+  @override
+  String get agentChat_sendAfterRun => 'Send when done';
+
+  @override
+  String get agentChat_inputHintRunning => 'Type to guide what happens next…';
+
+  @override
+  String get agentChat_steerNote => 'You added';
+
+  @override
+  String get agentChat_workStopped => 'Stopped';
+
+  @override
+  String get agentChat_workFailed => 'Something went wrong';
+
+  @override
+  String agentChat_doingTool(String tool) {
+    return '$tool…';
+  }
+
+  @override
+  String get agentChat_changeEmpty => '(empty)';
+
+  @override
+  String get agentChat_changeParent => 'Parent category';
+
+  @override
+  String get agentChat_changeSource => 'Linked library entry';
+
+  @override
+  String get agentChat_changeType => 'Reference type';
+
+  @override
+  String get agentChat_changeYes => 'Yes';
+
+  @override
+  String get agentChat_changeNo => 'No';
+
+  @override
+  String get agentChat_approvalCost => 'Estimated cost';
+
+  @override
+  String get agentChat_approvalRewriteDescription =>
+      'This rewrites saved content. Check the changes below.';
+
+  @override
+  String agentChat_workActions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count actions',
+      one: '1 action',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get agentChat_queued => 'Queued';
 
   @override
@@ -1193,35 +1255,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get agentChat_working => 'Working';
-
-  @override
-  String agentChat_workingFor(String duration) {
-    return 'Working for $duration';
-  }
-
-  @override
   String get agentChat_worked => 'Worked';
-
-  @override
-  String agentChat_workedFor(String duration) {
-    return 'Worked for $duration';
-  }
-
-  @override
-  String agentChat_workItemCount(int count) {
-    return '$count items';
-  }
-
-  @override
-  String agentChat_ranCommands(int count) {
-    return 'Ran $count commands';
-  }
-
-  @override
-  String agentChat_exploredItems(int count) {
-    return 'Explored $count sources';
-  }
 
   @override
   String agentChat_earlierMessages(int count) {
@@ -1430,11 +1464,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String agentChat_approvalEstimatedAnlas(int cost) {
-    return 'Estimated cost: $cost Anlas';
-  }
-
-  @override
   String agentChat_approvalFileTarget(String path) {
     return 'Will write file: $path';
   }
@@ -1561,7 +1590,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentChat_permissionFullDescription =>
-      'Ask only to delete saved data or spend Anlas; allow outside files';
+      'Runs directly; asks only to spend Anlas, delete images, or delete or rewrite library entries';
 
   @override
   String agentChat_approvalTitle(Object toolName) {

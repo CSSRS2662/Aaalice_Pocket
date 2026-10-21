@@ -9,7 +9,9 @@ import '../../../data/services/prompt_group/character_section_store.dart';
 import '../../providers/character_prompt_provider.dart';
 import '../../providers/fixed_tags_provider.dart';
 import '../../providers/tag_library_page_provider.dart';
+import '../models/agent_approval_change.dart';
 import 'defined_agent_tool.dart';
+import 'tag_library_toolbox.dart' show tagLibraryCategoryName;
 import 'toolbox_json.dart';
 
 /// Tools for ordered positive and negative fixed prompt fragments.
@@ -179,6 +181,62 @@ class FixedTagsToolbox {
       },
       required: const ['entry_id'],
     ),
+    previewChanges: (params) async {
+      final current = _find(params['entry_id'] as String);
+      if (current == null) return const [];
+      final library = _ref.read(tagLibraryPageNotifierProvider);
+      String source(String? id) => id == null
+          ? ''
+          : library.entries
+                    .where((entry) => entry.id == id)
+                    .firstOrNull
+                    ?.name ??
+                id;
+      String category(String? id) =>
+          tagLibraryCategoryName(library.categories, id);
+      return AgentApprovalChange.between({
+        'name': (current.name, params['name'] as String?),
+        'content': (current.content, params['content'] as String?),
+        'weight': (
+          AgentApprovalChange.number(current.weight),
+          params['weight'] is num
+              ? AgentApprovalChange.number(params['weight'] as num)
+              : null,
+        ),
+        'position': (
+          current.position.name,
+          params.containsKey('position')
+              ? _position(params['position'] as String?).name
+              : null,
+        ),
+        'enabled': (
+          '${current.enabled}',
+          (params['enabled'] as bool?)?.toString(),
+        ),
+        'prompt_type': (
+          current.promptType.name,
+          params.containsKey('prompt_type')
+              ? _promptType(params['prompt_type'] as String?).name
+              : null,
+        ),
+        'source': (
+          source(current.sourceEntryId),
+          params['clear_source'] == true
+              ? ''
+              : params.containsKey('source_entry_id')
+              ? source(params['source_entry_id'] as String?)
+              : null,
+        ),
+        'category': (
+          category(current.categoryId),
+          params['clear_category'] == true
+              ? ''
+              : params.containsKey('category_id')
+              ? category(params['category_id'] as String?)
+              : null,
+        ),
+      });
+    },
     executeFn: (_, params) async {
       final current = _find(params['entry_id'] as String);
       if (current == null) {

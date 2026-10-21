@@ -65,7 +65,9 @@ void main() {
               title: 'Generate image',
               description: 'This action changes data.',
               details: '{"prompt":"a long prompt"}',
-              costLabel: 'Estimated cost: 3 Anlas',
+              detailsLabel: 'Parameters',
+              costLabel: 'Estimated cost',
+              costAmount: 3,
               denyLabel: 'Deny',
               allowLabel: 'Allow once',
               touchOptimized: true,
@@ -78,7 +80,7 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
-    final deny = find.widgetWithText(OutlinedButton, 'Deny');
+    final deny = find.widgetWithText(FilledButton, 'Deny');
     final allow = find.widgetWithText(FilledButton, 'Allow once');
     expect(tester.getSize(deny).height, greaterThanOrEqualTo(48));
     expect(tester.getSize(allow).height, greaterThanOrEqualTo(48));

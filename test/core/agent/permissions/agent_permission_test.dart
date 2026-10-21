@@ -83,63 +83,76 @@ void main() {
     }
   });
 
-  group('stored-data deletions', () {
-    const storedDataDeletions = [
+  group('full-access confirmations', () {
+    // Library data deleted for good or rewritten, and images deleted.
+    const confirmed = [
       'delete_fixed_tag',
       'delete_tag_library_entry',
       'delete_tag_library_category',
       'delete_precise_reference_entry',
       'delete_vibe_library_entry',
-      'delete_generation_queue_task',
-      'clear_failed_generation_queue_tasks',
+      'update_fixed_tag',
+      'update_tag_library_entry',
+      'update_tag_library_category',
+      'update_vibe_library_entry',
+      'update_precise_reference_entry',
+      'toggle_local_gallery_favorite',
     ];
-    const pageStateRemovals = [
+    // Page state, prompts and queue work run directly.
+    const direct = [
       'remove_character',
       'clear_characters',
+      'remove_prompt_section',
+      'set_positive_prompt',
+      'edit_prompt_sections',
       'remove_active_vibe',
       'remove_active_precise_reference',
       'clear_generation_source_image',
       'cancel_generation_preparation',
       'cancel_manual_inpaint_draft',
+      'delete_generation_queue_task',
+      'clear_failed_generation_queue_tasks',
       'clear_completed_generation_queue_tasks',
+      'save_generated_image',
+      'create_tag_library_entry',
+      'toggle_fixed_tag_enabled',
     ];
 
-    test('are told apart from page-state removals', () {
-      for (final name in storedDataDeletions) {
-        final descriptor = describeAgentToolPermission(name);
-        expect(descriptor.deletesStoredData, isTrue, reason: name);
+    test('mark only library deletes, rewrites and image deletes', () {
+      for (final name in confirmed) {
         expect(
-          descriptor.operation,
-          AgentPermissionOperation.delete,
+          describeAgentToolPermission(name).confirmsInFullAccess(const {}),
+          isTrue,
           reason: name,
         );
       }
-      for (final name in pageStateRemovals) {
-        final descriptor = describeAgentToolPermission(name);
-        expect(descriptor.deletesStoredData, isFalse, reason: name);
+      for (final name in direct) {
         expect(
-          descriptor.operation,
-          AgentPermissionOperation.delete,
+          describeAgentToolPermission(name).confirmsInFullAccess(const {}),
+          isFalse,
           reason: name,
         );
       }
       expect(
-        describeAgentToolPermission('delete_vibe_library_folder'),
-        isA<AgentToolPermissionDescriptor>().having(
-          (value) => value.deletesStoredData,
-          'deletesStoredData',
-          isTrue,
-        ),
+        describeAgentToolPermission(
+          'delete_vibe_library_folder',
+        ).fullAccessConfirmation,
+        FullAccessConfirmation.always,
         reason: 'new delete_ tools must default to confirmation',
       );
+      final favorite = describeAgentToolPermission(
+        'set_generated_image_favorite',
+      );
+      expect(favorite.confirmsInFullAccess(const {'favorite': true}), isFalse);
       expect(
-        describeAgentToolPermission('update_fixed_tag').deletesStoredData,
-        isFalse,
+        favorite.confirmsInFullAccess(const {'favorite': false}),
+        isTrue,
+        reason: '取消收藏会从图库删除图片',
       );
     });
 
-    test('still ask in full access while page-state removals run', () {
-      const toolNames = [...storedDataDeletions, ...pageStateRemovals];
+    test('still ask in full access while the rest runs', () {
+      const toolNames = [...confirmed, ...direct];
       final catalog = AgentToolPermissionCatalog(
         toolNames: toolNames,
         descriptors: [
@@ -156,12 +169,17 @@ void main() {
           for (final domain in AgentPermissionDomain.values) domain: mode,
         });
         for (final name in toolNames) {
+          final read =
+              describeAgentToolPermission(name).operation ==
+              AgentPermissionOperation.read;
           final expected = switch (mode) {
-            AgentAccessMode.readOnly ||
-            AgentAccessMode.blocked => AgentPermissionDecision.block,
+            AgentAccessMode.readOnly || AgentAccessMode.blocked =>
+              read
+                  ? AgentPermissionDecision.allow
+                  : AgentPermissionDecision.block,
             AgentAccessMode.askBeforeWrite => AgentPermissionDecision.ask,
             AgentAccessMode.allowWrite =>
-              storedDataDeletions.contains(name)
+              confirmed.contains(name)
                   ? AgentPermissionDecision.ask
                   : AgentPermissionDecision.allow,
           };
@@ -208,7 +226,11 @@ void main() {
       };
       for (final name in toolNames) {
         expect(
-          catalog.decide(toolName: name, policy: policy),
+          catalog.decide(
+            toolName: name,
+            policy: policy,
+            args: const {'favorite': true},
+          ),
           expected,
           reason: '$mode/$name',
         );

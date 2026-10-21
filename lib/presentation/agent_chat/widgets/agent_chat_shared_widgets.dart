@@ -357,20 +357,32 @@ class AgentChatApprovalSurface extends StatelessWidget {
     required this.title,
     required this.description,
     required this.details,
+    required this.detailsLabel,
     required this.denyLabel,
     required this.allowLabel,
     required this.onDeny,
     required this.onAllow,
     this.costLabel,
+    this.costAmount,
     this.fileTargetLabel,
+    this.changes,
     this.touchOptimized = false,
   });
 
   final String title;
   final String description;
   final String details;
+
+  /// Names the folded arguments, such as 参数.
+  final String detailsLabel;
+
+  /// Introduces [costAmount], such as 预计消耗.
   final String? costLabel;
+  final int? costAmount;
   final String? fileTargetLabel;
+
+  /// What the call would rewrite, shown open above the arguments.
+  final Widget? changes;
   final String denyLabel;
   final String allowLabel;
   final VoidCallback onDeny;
@@ -382,6 +394,7 @@ class AgentChatApprovalSurface extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final foreground = scheme.onSurface;
+    final buttonHeight = touchOptimized ? 48.0 : 38.0;
     return Container(
       key: const ValueKey('agent-chat-approval-surface'),
       margin: EdgeInsets.fromLTRB(
@@ -390,10 +403,11 @@ class AgentChatApprovalSurface extends StatelessWidget {
         touchOptimized ? 12 : 10,
         5,
       ),
-      padding: EdgeInsets.all(touchOptimized ? 14 : 12),
+      padding: EdgeInsets.fromLTRB(14, touchOptimized ? 14 : 12, 14, 12),
       decoration: BoxDecoration(
         color: overlaySurfaceColor(scheme),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,117 +415,140 @@ class AgentChatApprovalSurface extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: controlSurfaceColor(scheme),
-                  shape: BoxShape.circle,
-                ),
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
                 child: Icon(
-                  Icons.gpp_maybe_outlined,
+                  Icons.verified_user_outlined,
                   size: 19,
                   color: scheme.primary,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: foreground,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                    if (costLabel case final label?) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        label,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: foreground,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                    if (fileTargetLabel case final label?) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        label,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: foreground,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ],
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: foreground,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
-          if (details.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Material(
-              color: Colors.transparent,
-              child: Theme(
-                data: theme.copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  key: const ValueKey('agent-chat-approval-details'),
-                  minTileHeight: touchOptimized ? 44 : 34,
-                  tilePadding: EdgeInsets.zero,
-                  childrenPadding: EdgeInsets.zero,
-                  title: Text(
-                    details.split('\n').first,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      fontFamily: 'monospace',
+          Padding(
+            padding: const EdgeInsets.only(left: 27, top: 3),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                if (costAmount case final amount?) ...[
+                  const SizedBox(height: 6),
+                  Text.rich(
+                    key: const ValueKey('agent-chat-approval-cost'),
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${costLabel ?? ''} ',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '$amount',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: foreground,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' Anlas',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  children: [
-                    AgentToolDetailSurface(
-                      text: details,
-                      maxHeight: touchOptimized ? 132 : 104,
-                      margin: EdgeInsets.zero,
+                ],
+                if (fileTargetLabel case final label?) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    label,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (changes case final view?) ...[const SizedBox(height: 10), view],
+          if (details.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 19),
+              child: Material(
+                color: Colors.transparent,
+                child: Theme(
+                  data: theme.copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    key: const ValueKey('agent-chat-approval-details'),
+                    minTileHeight: touchOptimized ? 44 : 34,
+                    tilePadding: const EdgeInsets.only(left: 8),
+                    childrenPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: Text(
+                      detailsLabel,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    children: [
+                      AgentToolDetailSurface(
+                        text: details,
+                        maxHeight: touchOptimized ? 132 : 104,
+                        margin: EdgeInsets.zero,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-          const SizedBox(height: 10),
+            )
+          else
+            const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: FilledButton(
+                  key: const ValueKey('agent-chat-approval-deny'),
                   onPressed: onDeny,
-                  style: OutlinedButton.styleFrom(
+                  style: FilledButton.styleFrom(
                     backgroundColor: controlSurfaceColor(scheme),
                     foregroundColor: foreground,
-                    side: BorderSide.none,
-                    minimumSize: Size.fromHeight(touchOptimized ? 48 : 38),
+                    minimumSize: Size.fromHeight(buttonHeight),
+                    shape: const StadiumBorder(),
                   ),
                   child: Text(denyLabel),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
                 child: FilledButton(
+                  key: const ValueKey('agent-chat-approval-allow'),
                   onPressed: onAllow,
                   style: FilledButton.styleFrom(
                     backgroundColor: scheme.primary,
                     foregroundColor: scheme.onPrimary,
-                    minimumSize: Size.fromHeight(touchOptimized ? 48 : 38),
+                    minimumSize: Size.fromHeight(buttonHeight),
+                    shape: const StadiumBorder(),
+                    textStyle: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   child: Text(allowLabel),
                 ),

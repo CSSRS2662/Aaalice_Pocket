@@ -457,6 +457,37 @@
   "agentChat_sendEmptyHint": "メッセージを入力するか画像を追加してください",
   "agentChat_sendUnavailableHint": "AI アシスタントはまだ送信できません",
   "agentChat_stop": "停止",
+  "agentChat_steer": "現在の作業をガイド",
+  "agentChat_steerTag": "ガイド",
+  "agentChat_sendAfterRun": "完了後に送信",
+  "agentChat_inputHintRunning": "入力して次の作業をガイド…",
+  "agentChat_steerNote": "あなたの補足",
+  "agentChat_workStopped": "停止しました",
+  "agentChat_workFailed": "エラーが発生しました",
+  "agentChat_doingTool": "{tool}中…",
+  "@agentChat_doingTool": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "agentChat_changeEmpty": "（空）",
+  "agentChat_changeParent": "親カテゴリ",
+  "agentChat_changeSource": "連携する辞書項目",
+  "agentChat_changeType": "参照タイプ",
+  "agentChat_changeYes": "はい",
+  "agentChat_changeNo": "いいえ",
+  "agentChat_approvalCost": "予想消費",
+  "agentChat_approvalRewriteDescription": "保存済みの内容を書き換えます。下の変更を確認してください。",
+  "agentChat_workActions": "{count} 件の操作",
+  "@agentChat_workActions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "agentChat_queued": "待機中",
   "agentChat_queueSteering": "現在の作業に割り込む",
   "agentChat_queueFollowUp": "現在のタスク後に続ける",
@@ -477,18 +508,7 @@
   "agentChat_jumpToLatest": "最新へ移動",
   "agentChat_toolGroupCount": "{count} 件の操作を実行",
   "@agentChat_toolGroupCount": {"placeholders": {"count": {"type": "int"}}},
-  "agentChat_working": "作業中",
-  "agentChat_workingFor": "{duration} 作業中",
-  "@agentChat_workingFor": {"placeholders": {"duration": {"type": "String"}}},
   "agentChat_worked": "作業完了",
-  "agentChat_workedFor": "作業時間 {duration}",
-  "@agentChat_workedFor": {"placeholders": {"duration": {"type": "String"}}},
-  "agentChat_workItemCount": "{count} 件",
-  "@agentChat_workItemCount": {"placeholders": {"count": {"type": "int"}}},
-  "agentChat_ranCommands": "{count} 件のコマンドを実行",
-  "@agentChat_ranCommands": {"placeholders": {"count": {"type": "int"}}},
-  "agentChat_exploredItems": "{count} 件のソースを調査",
-  "@agentChat_exploredItems": {"placeholders": {"count": {"type": "int"}}},
   "agentChat_earlierMessages": "以前のメッセージ {count} 件",
   "@agentChat_earlierMessages": {"placeholders": {"count": {"type": "int"}}},
   "agentChat_loadEarlierMessages": "以前のメッセージ",
@@ -563,8 +583,6 @@
   "agentChat_resourceAdded": "Agent の入力欄に追加しました",
   "agentChat_addResourceFailed": "参照の追加に失敗しました：{error}",
   "@agentChat_addResourceFailed": {"placeholders":{"error":{"type":"String"}}},
-  "agentChat_approvalEstimatedAnlas": "推定コスト：{cost} Anlas",
-  "@agentChat_approvalEstimatedAnlas": {"placeholders": {"cost": {"type": "int"}}},
   "agentChat_approvalFileTarget": "ファイルを書き込みます：{path}",
   "@agentChat_approvalFileTarget": {"placeholders": {"path": {"type": "String"}}},
   "agentChat_needSetup": "チャットモデルが未設定です。先に設定でツール呼び出しに対応したプロバイダーを追加してください。",
@@ -611,7 +629,7 @@
   "agentChat_permissionAsk": "確認",
   "agentChat_permissionAskDescription": "機密性の高い操作の前に確認",
   "agentChat_permissionFull": "フルアクセス",
-  "agentChat_permissionFullDescription": "保存データの削除と Anlas 消費時のみ確認、ワークスペース外も許可",
+  "agentChat_permissionFullDescription": "直接実行。Anlas の消費、画像の削除、ライブラリ項目の削除・書き換えのときだけ確認",
   "agentChat_approvalTitle": "{toolName} の実行を許可しますか？",
   "@agentChat_approvalTitle": {
     "placeholders": {

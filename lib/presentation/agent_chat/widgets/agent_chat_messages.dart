@@ -10,6 +10,7 @@ import '../../../core/utils/localization_extension.dart';
 import '../../../core/windowing/agent_chat_layout_contract.dart';
 import 'agent_chat_shared_widgets.dart';
 import '../../adaptive/interaction_policy.dart';
+import '../../themes/core/layered_surface_style.dart';
 import '../../widgets/common/draggable_memory_image.dart';
 import '../models/agent_chat_prompt_envelope.dart';
 import '../providers/agent_chat_notifier.dart';
@@ -19,6 +20,7 @@ import 'agent_chat_history.dart';
 import 'agent_chat_resource_widgets.dart';
 import 'agent_chat_tool_widgets.dart';
 import 'agent_chat_turn.dart';
+import 'agent_chat_work_process.dart';
 
 class AgentChatMessages extends StatelessWidget {
   const AgentChatMessages({
@@ -83,16 +85,14 @@ class AgentChatMessages extends StatelessWidget {
         streaming != null &&
         (streaming.toolCalls.isNotEmpty ||
             streaming.stopReason == StopReason.toolUse);
-    final streamingReasoning = streaming == null
+    final liveThinking = streaming == null
         ? ''
-        : [
-            streaming.content
-                .whereType<AssistantThinkingContent>()
-                .map((content) => content.thinking.trim())
-                .where((text) => text.isNotEmpty)
-                .join('\n\n'),
-            if (streamingUsesTools) streaming.text.trim(),
-          ].where((text) => text.isNotEmpty).join('\n\n');
+        : streaming.content
+              .whereType<AssistantThinkingContent>()
+              .map((content) => content.thinking.trim())
+              .where((text) => text.isNotEmpty)
+              .join('\n\n');
+    final liveNarration = streamingUsesTools ? streaming.text.trim() : '';
     if (thread.turns.isEmpty &&
         (state.streamingMessage != null ||
             state.status == AgentChatRunStatus.running ||
@@ -136,11 +136,13 @@ class AgentChatMessages extends StatelessWidget {
                       canEditLastUserMessage &&
                       turn.userMessageIndex == lastUserMessageIndex,
                 ),
-              AgentChatWorkTrail(
+              AgentChatWorkProcess(
                 turn: turn,
                 running: current && state.status == AgentChatRunStatus.running,
                 activities: current ? state.activities : const [],
-                streamingReasoning: current ? streamingReasoning : '',
+                liveNarration: current ? liveNarration : '',
+                liveThinking: current ? liveThinking : '',
+                awaitingApproval: current && state.approvalRequest != null,
               ),
               for (final result in turn.mediaResults)
                 AgentChatToolResultMedia(result: result),
@@ -183,124 +185,102 @@ class AgentChatMessages extends StatelessWidget {
 
   Widget _hero(BuildContext context, ThemeData theme) {
     final l10n = context.l10n;
-    final muted = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.78);
+    final colors = theme.colorScheme;
     final suggestions = [
-      l10n.agentChat_suggestion1,
-      l10n.agentChat_suggestion2,
-      l10n.agentChat_suggestion3,
+      (Icons.tune_rounded, l10n.agentChat_suggestion1),
+      (Icons.image_search_outlined, l10n.agentChat_suggestion2),
+      (Icons.sell_outlined, l10n.agentChat_suggestion3),
     ];
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: Image.asset(
-                  'assets/icons/Icon.png',
-                  width: 64,
-                  height: 64,
-                  filterQuality: FilterQuality.medium,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 30,
-                      color: theme.colorScheme.primary,
-                    ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: colors.primaryContainer,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 26,
+                    color: colors.onPrimaryContainer,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              l10n.agentChat_heroTitle,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
+              const SizedBox(height: 16),
+              Text(
+                l10n.agentChat_heroTitle,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurface,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.agentChat_heroSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: muted,
-                height: 1.45,
+              const SizedBox(height: 6),
+              Text(
+                l10n.agentChat_heroSubtitle,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  height: 1.45,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 28),
-            Align(
-              alignment: Alignment.center,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 360),
-                child: Column(
-                  children: [
-                    for (var index = 0; index < suggestions.length; index++)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Material(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                          child: InkWell(
-                            key: ValueKey('agent-chat-suggestion-$index'),
-                            onTap: () =>
-                                commands.useSuggestion(suggestions[index]),
-                            borderRadius: BorderRadius.circular(10),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
+              const SizedBox(height: 22),
+              for (final (index, (icon, text)) in suggestions.indexed)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Material(
+                    color: sectionSurfaceColor(colors),
+                    borderRadius: BorderRadius.circular(12),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      key: ValueKey('agent-chat-suggestion-$index'),
+                      onTap: () => commands.useSuggestion(text),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 52),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                icon,
+                                size: 19,
+                                color: colors.onSurfaceVariant,
                               ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    switch (index) {
-                                      0 => Icons.tune_rounded,
-                                      1 => Icons.image_search_outlined,
-                                      _ => Icons.sell_outlined,
-                                    },
-                                    size: 17,
-                                    color: theme.colorScheme.onSurfaceVariant,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  text,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    height: 1.35,
                                   ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      suggestions[index],
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: theme.colorScheme.onSurface
-                                                .withValues(alpha: 0.86),
-                                            height: 1.35,
-                                          ),
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.chevron_right_rounded,
-                                    size: 17,
-                                    color: theme.colorScheme.onSurfaceVariant
-                                        .withValues(alpha: 0.52),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.north_east_rounded,
+                                size: 16,
+                                color: colors.outline,
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                  ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -400,29 +380,16 @@ class AgentChatMessages extends StatelessWidget {
       final hasText = message.text.trim().isNotEmpty;
       final hovered = controller.hoveredUserMessageIndex == messageIndex;
       final actionsFocused = controller.focusedUserMessageIndex == messageIndex;
-      final sentAt = MaterialLocalizations.of(context).formatTimeOfDay(
-        TimeOfDay.fromDateTime(
-          DateTime.fromMillisecondsSinceEpoch(message.timestamp),
-        ),
-        alwaysUse24HourFormat: true,
-      );
       final hasBubbleContent = hasText || message.images.isNotEmpty;
-      Widget deliveryStatus(Color color) => Row(
-        key: ValueKey('agent-user-message-delivery-$messageIndex'),
-        mainAxisAlignment: MainAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            sentAt,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: color,
-              fontSize: 9,
-              height: 1,
-            ),
-          ),
-          const SizedBox(width: 3),
-          Icon(Icons.done_all_rounded, size: 11, color: color),
-        ],
+      // Touch opens the actions from a long press instead of a row under
+      // every message.
+      final touchMenu = context.interactionPolicy.usesTouchActionMenu;
+      void showActions() => _showUserMessageActions(
+        context,
+        message: message,
+        editSource: editSourceMessage ?? message,
+        messageIndex: messageIndex,
+        canEdit: canEditUserMessage && !controller.isEditingUserMessage,
       );
       return MouseRegion(
         key: ValueKey('agent-user-message-$messageIndex'),
@@ -434,192 +401,167 @@ class AgentChatMessages extends StatelessWidget {
         },
         child: Align(
           alignment: Alignment.centerRight,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 6, left: 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (resourceReferences.isNotEmpty)
-                  ConstrainedBox(
-                    key: ValueKey('agent-user-message-resources-$messageIndex'),
-                    constraints: BoxConstraints(
-                      maxWidth: viewData.userBubbleMaxWidth,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Wrap(
-                        spacing: 5,
-                        runSpacing: 4,
-                        alignment: WrapAlignment.end,
-                        children: [
-                          for (
-                            var index = 0;
-                            index < resourceReferences.length;
-                            index++
-                          )
-                            AgentChatSentResourceCard(
-                              key: ValueKey(
-                                'agent-user-message-resource-'
-                                '$messageIndex-$index',
-                              ),
-                              reference: resourceReferences[index],
-                              loadPreview: () =>
-                                  commands.resolveResourcePreview(
-                                    resourceReferences[index],
-                                  ),
-                            ),
-                        ],
+          child: GestureDetector(
+            key: ValueKey('agent-user-message-press-$messageIndex'),
+            onLongPress: touchMenu ? showActions : null,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 6, left: 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (resourceReferences.isNotEmpty)
+                    ConstrainedBox(
+                      key: ValueKey(
+                        'agent-user-message-resources-$messageIndex',
                       ),
-                    ),
-                  ),
-                if (hasBubbleContent)
-                  Container(
-                    key: ValueKey('agent-user-message-bubble-$messageIndex'),
-                    constraints: BoxConstraints(
-                      minWidth: hasText ? 44 : 0,
-                      maxWidth: viewData.userBubbleMaxWidth,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withValues(
-                        alpha: 0.55,
+                      constraints: BoxConstraints(
+                        maxWidth: viewData.userBubbleMaxWidth,
                       ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(12),
-                        bottomLeft: Radius.circular(12),
-                        bottomRight: Radius.circular(4),
-                      ),
-                    ),
-                    child: IntrinsicWidth(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (message.images.isNotEmpty)
-                            Padding(
-                              padding: EdgeInsets.only(bottom: hasText ? 6 : 0),
-                              child: Wrap(
-                                spacing: 6,
-                                runSpacing: 6,
-                                alignment: WrapAlignment.end,
-                                children: [
-                                  for (final image in message.images)
-                                    _userImage(
-                                      theme,
-                                      image,
-                                      maxWidth:
-                                          viewData.userBubbleMaxWidth - 24,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          if (hasText)
-                            Text(
-                              message.text,
-                              key: ValueKey(
-                                'agent-user-message-text-$messageIndex',
-                              ),
-                              textAlign: TextAlign.left,
-                              style:
-                                  (viewData.compactWidth
-                                          ? theme.textTheme.bodyMedium
-                                          : theme.textTheme.bodySmall)
-                                      ?.copyWith(
-                                        color: theme
-                                            .colorScheme
-                                            .onPrimaryContainer,
-                                        height: 1.45,
-                                      ),
-                            ),
-                          const SizedBox(height: 4),
-                          deliveryStatus(
-                            theme.colorScheme.onPrimaryContainer.withValues(
-                              alpha: 0.58,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  Padding(
-                    padding: const EdgeInsets.only(right: 4),
-                    child: deliveryStatus(
-                      theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                    ),
-                  ),
-                const SizedBox(height: 2),
-                Focus(
-                  onFocusChange: (focused) =>
-                      controller.setFocusedUserMessageIndex(
-                        focused ? messageIndex : null,
-                      ),
-                  child: SizedBox(
-                    height: context.interactionPolicy.minimumControlExtent,
-                    child: AnimatedOpacity(
-                      key: ValueKey('agent-user-message-actions-$messageIndex'),
-                      opacity:
-                          context
-                                  .interactionPolicy
-                                  .shouldExposeTouchAlternatives ||
-                              hovered ||
-                              actionsFocused
-                          ? 1
-                          : 0,
-                      duration: MediaQuery.disableAnimationsOf(context)
-                          ? Duration.zero
-                          : const Duration(milliseconds: 120),
-                      child: IgnorePointer(
-                        ignoring:
-                            !context
-                                .interactionPolicy
-                                .shouldExposeTouchAlternatives &&
-                            !hovered &&
-                            !actionsFocused,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Wrap(
+                          spacing: 5,
+                          runSpacing: 4,
+                          alignment: WrapAlignment.end,
                           children: [
-                            if (canEditUserMessage)
-                              _MessageActionButton(
+                            for (
+                              var index = 0;
+                              index < resourceReferences.length;
+                              index++
+                            )
+                              AgentChatSentResourceCard(
                                 key: ValueKey(
-                                  'agent-user-message-edit-$messageIndex',
+                                  'agent-user-message-resource-'
+                                  '$messageIndex-$index',
                                 ),
-                                tooltip: context.l10n.common_edit,
-                                icon: Icons.edit_outlined,
-                                largeHitArea: context
-                                    .interactionPolicy
-                                    .shouldExposeTouchAlternatives,
-                                onPressed: controller.isEditingUserMessage
-                                    ? null
-                                    : () => commands.editUserMessage(
-                                        editSourceMessage ?? message,
-                                        messageIndex,
-                                      ),
+                                reference: resourceReferences[index],
+                                loadPreview: () =>
+                                    commands.resolveResourcePreview(
+                                      resourceReferences[index],
+                                    ),
                               ),
-                            _MessageActionButton(
-                              key: ValueKey(
-                                'agent-user-message-copy-$messageIndex',
-                              ),
-                              tooltip: context.l10n.common_copy,
-                              icon: Icons.copy_all_outlined,
-                              largeHitArea: context
-                                  .interactionPolicy
-                                  .shouldExposeTouchAlternatives,
-                              onPressed: () =>
-                                  commands.copyUserMessage(message),
-                            ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ],
+                  if (hasBubbleContent)
+                    Container(
+                      key: ValueKey('agent-user-message-bubble-$messageIndex'),
+                      constraints: BoxConstraints(
+                        minWidth: hasText ? 44 : 0,
+                        maxWidth: viewData.userBubbleMaxWidth,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: controlSurfaceColor(theme.colorScheme),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(18),
+                          topRight: Radius.circular(18),
+                          bottomLeft: Radius.circular(18),
+                          bottomRight: Radius.circular(6),
+                        ),
+                      ),
+                      child: IntrinsicWidth(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (message.images.isNotEmpty)
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: hasText ? 6 : 0,
+                                ),
+                                child: Wrap(
+                                  spacing: 6,
+                                  runSpacing: 6,
+                                  alignment: WrapAlignment.end,
+                                  children: [
+                                    for (final image in message.images)
+                                      _userImage(
+                                        theme,
+                                        image,
+                                        maxWidth:
+                                            viewData.userBubbleMaxWidth - 24,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            if (hasText)
+                              Text(
+                                message.text,
+                                key: ValueKey(
+                                  'agent-user-message-text-$messageIndex',
+                                ),
+                                textAlign: TextAlign.left,
+                                style:
+                                    (viewData.compactWidth
+                                            ? theme.textTheme.bodyMedium
+                                            : theme.textTheme.bodySmall)
+                                        ?.copyWith(
+                                          color: theme.colorScheme.onSurface,
+                                          height: 1.5,
+                                        ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (!touchMenu)
+                    Focus(
+                      onFocusChange: (focused) =>
+                          controller.setFocusedUserMessageIndex(
+                            focused ? messageIndex : null,
+                          ),
+                      child: SizedBox(
+                        height: context.interactionPolicy.minimumControlExtent,
+                        child: AnimatedOpacity(
+                          key: ValueKey(
+                            'agent-user-message-actions-$messageIndex',
+                          ),
+                          opacity: hovered || actionsFocused ? 1 : 0,
+                          duration: MediaQuery.disableAnimationsOf(context)
+                              ? Duration.zero
+                              : const Duration(milliseconds: 120),
+                          child: IgnorePointer(
+                            ignoring: !hovered && !actionsFocused,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (canEditUserMessage)
+                                  _MessageActionButton(
+                                    key: ValueKey(
+                                      'agent-user-message-edit-$messageIndex',
+                                    ),
+                                    tooltip: context.l10n.common_edit,
+                                    icon: Icons.edit_outlined,
+                                    onPressed: controller.isEditingUserMessage
+                                        ? null
+                                        : () => commands.editUserMessage(
+                                            editSourceMessage ?? message,
+                                            messageIndex,
+                                          ),
+                                  ),
+                                _MessageActionButton(
+                                  key: ValueKey(
+                                    'agent-user-message-copy-$messageIndex',
+                                  ),
+                                  tooltip: context.l10n.common_copy,
+                                  icon: Icons.copy_all_outlined,
+                                  onPressed: () =>
+                                      commands.copyUserMessage(message),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -657,18 +599,6 @@ class AgentChatMessages extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        _formatMessageTime(context, message.timestamp),
-                        key: ValueKey(
-                          'agent-assistant-message-time-$messageIndex',
-                        ),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.7,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
                       _AssistantActionBar(
                         messageIndex: messageIndex,
                         onCopy: () => commands.copyAssistantMessage(message),
@@ -689,6 +619,49 @@ class AgentChatMessages extends StatelessWidget {
       return AgentChatToolResultTile(result: message);
     }
     return const SizedBox.shrink();
+  }
+
+  /// The actions of a user message on touch, opened by a long press.
+  Future<void> _showUserMessageActions(
+    BuildContext context, {
+    required UserMessage message,
+    required Message editSource,
+    required int messageIndex,
+    required bool canEdit,
+  }) async {
+    final l10n = context.l10n;
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              key: ValueKey('agent-user-message-copy-$messageIndex'),
+              leading: const Icon(Icons.copy_all_outlined),
+              title: Text(l10n.common_copy),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                commands.copyUserMessage(message);
+              },
+            ),
+            if (canEdit)
+              ListTile(
+                key: ValueKey('agent-user-message-edit-$messageIndex'),
+                leading: const Icon(Icons.edit_outlined),
+                title: Text(l10n.common_edit),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  commands.editUserMessage(editSource, messageIndex);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<AgentChatResourceReference> _decodeResourceReferences(Object? details) {
@@ -823,12 +796,6 @@ class AgentChatMessages extends StatelessWidget {
     );
   }
 }
-
-String _formatMessageTime(BuildContext context, int timestamp) =>
-    MaterialLocalizations.of(context).formatTimeOfDay(
-      TimeOfDay.fromDateTime(DateTime.fromMillisecondsSinceEpoch(timestamp)),
-      alwaysUse24HourFormat: true,
-    );
 
 class _StreamingStatus extends StatelessWidget {
   const _StreamingStatus({required this.theme});

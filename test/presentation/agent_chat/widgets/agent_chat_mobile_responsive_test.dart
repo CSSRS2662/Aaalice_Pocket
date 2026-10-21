@@ -139,8 +139,7 @@ void main() {
     _expectCoreRegionsVisible(tester, 800);
     expect(tester.takeException(), isNull);
     for (final key in [
-      'agent-chat-permission-mode',
-      'agent-chat-web-access-toggle',
+      'agent-chat-access-control',
       'agent-chat-context-target',
     ]) {
       final control = find.byKey(ValueKey(key));

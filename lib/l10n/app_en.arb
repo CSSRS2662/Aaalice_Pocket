@@ -465,6 +465,37 @@
   "agentChat_sendEmptyHint": "Enter a message or add an image to send",
   "agentChat_sendUnavailableHint": "The AI assistant is not ready to send yet",
   "agentChat_stop": "Stop",
+  "agentChat_steer": "Guide the current work",
+  "agentChat_steerTag": "Guide",
+  "agentChat_sendAfterRun": "Send when done",
+  "agentChat_inputHintRunning": "Type to guide what happens next…",
+  "agentChat_steerNote": "You added",
+  "agentChat_workStopped": "Stopped",
+  "agentChat_workFailed": "Something went wrong",
+  "agentChat_doingTool": "{tool}…",
+  "@agentChat_doingTool": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "agentChat_changeEmpty": "(empty)",
+  "agentChat_changeParent": "Parent category",
+  "agentChat_changeSource": "Linked library entry",
+  "agentChat_changeType": "Reference type",
+  "agentChat_changeYes": "Yes",
+  "agentChat_changeNo": "No",
+  "agentChat_approvalCost": "Estimated cost",
+  "agentChat_approvalRewriteDescription": "This rewrites saved content. Check the changes below.",
+  "agentChat_workActions": "{count, plural, =1{1 action} other{{count} actions}}",
+  "@agentChat_workActions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "agentChat_queued": "Queued",
   "agentChat_queueSteering": "Steer current work",
   "agentChat_queueFollowUp": "Continue after current task",
@@ -485,18 +516,7 @@
   "agentChat_jumpToLatest": "Jump to latest",
   "agentChat_toolGroupCount": "Ran {count} actions",
   "@agentChat_toolGroupCount": {"placeholders": {"count": {"type": "int"}}},
-  "agentChat_working": "Working",
-  "agentChat_workingFor": "Working for {duration}",
-  "@agentChat_workingFor": {"placeholders": {"duration": {"type": "String"}}},
   "agentChat_worked": "Worked",
-  "agentChat_workedFor": "Worked for {duration}",
-  "@agentChat_workedFor": {"placeholders": {"duration": {"type": "String"}}},
-  "agentChat_workItemCount": "{count} items",
-  "@agentChat_workItemCount": {"placeholders": {"count": {"type": "int"}}},
-  "agentChat_ranCommands": "Ran {count} commands",
-  "@agentChat_ranCommands": {"placeholders": {"count": {"type": "int"}}},
-  "agentChat_exploredItems": "Explored {count} sources",
-  "@agentChat_exploredItems": {"placeholders": {"count": {"type": "int"}}},
   "agentChat_earlierMessages": "{count} earlier messages",
   "@agentChat_earlierMessages": {"placeholders": {"count": {"type": "int"}}},
   "agentChat_loadEarlierMessages": "Earlier messages",
@@ -571,8 +591,6 @@
   "agentChat_resourceAdded": "Added to the Agent composer",
   "agentChat_addResourceFailed": "Failed to add reference: {error}",
   "@agentChat_addResourceFailed": {"placeholders":{"error":{"type":"String"}}},
-  "agentChat_approvalEstimatedAnlas": "Estimated cost: {cost} Anlas",
-  "@agentChat_approvalEstimatedAnlas": {"placeholders": {"cost": {"type": "int"}}},
   "agentChat_approvalFileTarget": "Will write file: {path}",
   "@agentChat_approvalFileTarget": {"placeholders": {"path": {"type": "String"}}},
   "agentChat_needSetup": "No chat model configured. Add a provider with tool-calling support in Settings first.",
@@ -619,7 +637,7 @@
   "agentChat_permissionAsk": "Ask",
   "agentChat_permissionAskDescription": "Ask before sensitive actions",
   "agentChat_permissionFull": "Full access",
-  "agentChat_permissionFullDescription": "Ask only to delete saved data or spend Anlas; allow outside files",
+  "agentChat_permissionFullDescription": "Runs directly; asks only to spend Anlas, delete images, or delete or rewrite library entries",
   "agentChat_approvalTitle": "Allow {toolName}?",
   "@agentChat_approvalTitle": {
     "placeholders": {

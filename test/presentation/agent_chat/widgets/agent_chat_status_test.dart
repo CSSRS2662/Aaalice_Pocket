@@ -98,7 +98,7 @@ void main() {
     );
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.byType(FilledButton));
+    await tester.tap(find.byKey(const ValueKey('agent-chat-approval-allow')));
     expect(decisions, [isTrue]);
   });
 }

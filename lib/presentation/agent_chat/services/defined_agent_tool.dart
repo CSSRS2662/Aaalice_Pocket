@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../../core/agent/agent_types.dart';
+import '../models/agent_approval_change.dart';
 
 /// Small adapter used by product Toolboxes to declare a schema and executor.
 class DefinedAgentTool extends AgentTool {
@@ -10,6 +11,7 @@ class DefinedAgentTool extends AgentTool {
     required Map<String, dynamic> parameters,
     required super.label,
     this.executionModeOverride,
+    this.previewChanges,
     Future<AgentToolResult> Function(
       String toolCallId,
       Map<String, dynamic> params,
@@ -37,6 +39,9 @@ class DefinedAgentTool extends AgentTool {
        super(parameters: _strictToolParameters(parameters));
 
   final ToolExecutionMode? executionModeOverride;
+
+  /// The fields a call would change, shown in its approval card as a diff.
+  final AgentApprovalChangePreview? previewChanges;
   final Future<AgentToolResult> Function(
     String toolCallId,
     Map<String, dynamic> params,

@@ -312,15 +312,18 @@ void main() {
       ),
     );
 
-    const key = ValueKey('agent-chat-web-access-toggle');
-    IconButton toggle() => tester.widget(find.byKey(key));
+    // Web access shows on the composer's access chip, read from the shared
+    // agent configuration.
     expect(container.read(agentSettingsProvider).error, isEmpty);
-    expect(toggle().onPressed, isNotNull);
-    expect(toggle().isSelected, isTrue);
-    expect(toggle().iconSize, 18);
+    final chip = find.byKey(const ValueKey('agent-chat-access-control'));
+    expect(chip, findsOneWidget);
+    expect(tester.widget<InkWell>(chip).onTap, isNotNull);
     expect(
-      toggle().style?.overlayColor?.resolve({WidgetState.hovered}),
-      Colors.transparent,
+      find.descendant(
+        of: chip,
+        matching: find.byKey(const ValueKey('agent-chat-access-web-on')),
+      ),
+      findsOneWidget,
     );
     expect(
       find.byKey(const ValueKey('agent-chat-session-controls')),
@@ -331,10 +334,13 @@ void main() {
       findsOneWidget,
     );
     expect(
-      tester.getCenter(find.byKey(key)).dy,
-      tester
-          .getCenter(find.byKey(const ValueKey('agent-chat-permission-mode')))
-          .dy,
+      tester.getCenter(chip).dy,
+      closeTo(
+        tester
+            .getCenter(find.byKey(const ValueKey('agent-chat-model-selector')))
+            .dy,
+        0.5,
+      ),
     );
     expect(container.read(webAccessConfigProvider).config.enabled, isTrue);
     expect(tester.takeException(), isNull);
@@ -463,14 +469,14 @@ void main() {
 
       expect(find.byType(md.MarkdownBody), findsNothing);
       expect(find.byType(CustomScrollView), findsOneWidget);
-      expect(find.text('Worked'), findsOneWidget);
+      expect(find.text('Worked · 3 actions'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('agent-tool-result-icon-read-image')),
         findsNothing,
-        reason: 'a completed Turn starts collapsed',
+        reason: 'a completed Turn keeps its tools folded',
       );
 
-      await tester.tap(find.byKey(const ValueKey('agent-turn-work-header-0')));
+      await tester.tap(find.byKey(const ValueKey('agent-work-summary-0-0')));
       await tester.pump();
 
       expect(find.text('Parameters'), findsNothing);
@@ -757,7 +763,7 @@ void main() {
     await mouse.moveTo(tester.getCenter(latestMessage));
     await tester.pump(const Duration(milliseconds: 150));
     expect(tester.widget<AnimatedOpacity>(actions).opacity, 1);
-    expect(find.text('14:24'), findsOneWidget);
+    expect(find.text('14:24'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('agent-user-message-copy-2')));
     await tester.pump();
@@ -968,8 +974,7 @@ void main() {
     expect(tester.getSize(attachmentButton), const Size.square(48));
     for (final key in [
       'agent-chat-input',
-      'agent-chat-permission-mode',
-      'agent-chat-web-access-toggle',
+      'agent-chat-access-control',
       'agent-chat-send',
     ]) {
       final target = find.byKey(ValueKey(key));
@@ -1019,8 +1024,7 @@ void main() {
           );
         } else {
           for (final key in [
-            'agent-chat-permission-mode',
-            'agent-chat-web-access-toggle',
+            'agent-chat-access-control',
             'agent-chat-context-target',
           ]) {
             final size = tester.getSize(find.byKey(ValueKey(key)));
@@ -1121,28 +1125,20 @@ void main() {
     await tester.pump();
     expect(find.byKey(const ValueKey('agent-chat-send')), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('agent-chat-follow-up')),
-      findsNothing,
-      reason: 'queued actions stay inside the collapsed queue disclosure',
-    );
-    expect(
       tester
           .getSize(find.byKey(const ValueKey('agent-chat-send')))
           .shortestSide,
       greaterThanOrEqualTo(44),
       reason: 'agent-chat-send running target',
     );
-    expect(find.bySemanticsLabel('Stop'), findsWidgets);
-    await tester.tap(find.byKey(const ValueKey('agent-chat-queue')));
-    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.bySemanticsLabel('Guide the current work'), findsWidgets);
+    expect(find.byKey(const ValueKey('agent-chat-queue')), findsOneWidget);
     expect(
       tester
-          .getSize(find.byKey(const ValueKey('agent-chat-follow-up')))
+          .getSize(find.byKey(const ValueKey('agent-chat-queue-remove-0')))
           .shortestSide,
       greaterThanOrEqualTo(44),
     );
-    expect(find.byTooltip('Steer current work'), findsWidgets);
-    expect(find.bySemanticsLabel('Continue after current task'), findsWidgets);
     final layoutError = tester.takeException();
     expect(
       layoutError,

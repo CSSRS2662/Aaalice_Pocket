@@ -62,6 +62,7 @@ class AgentChatStatus extends StatelessWidget {
             args: request.args,
             estimatedAnlas: request.estimatedAnlas,
             fileTargets: request.fileTargets,
+            changes: request.changes,
             onResolve: (approved) =>
                 commands.resolveApproval(request.toolCallId, approved),
           ),
