@@ -728,18 +728,30 @@ void main() {
     );
     await tester.enterText(_sheetEditor(), ', school_uniform');
     await tester.pump();
+
+    // The editor's + key adds the next one in place, without a second sheet.
+    final title = find.byKey(const ValueKey('prompt_group_edit_title'));
+    await tester.tap(find.byKey(const ValueKey('prompt_group_edit_add')));
+    await tester.pumpAndSettle();
+    expect(title, findsOneWidget);
+    expect(
+      tester.widget<Text>(title).textSpan!.toPlainText(),
+      endsWith('3 / 3'),
+    );
+    await tester.enterText(_sheetEditor(), 'smile');
+    await tester.pump();
     await _closeSheet(tester);
 
     expect(
       container.read(generationParamsNotifierProvider).prompt,
-      '1girl, blue eyes, school_uniform',
+      '1girl, blue eyes, school_uniform, smile',
     );
 
     await tester.tap(_keyPrefix('prompt_group_enabled_').first);
     await tester.pump();
     expect(
       container.read(generationParamsNotifierProvider).prompt,
-      'school_uniform',
+      'school_uniform, smile',
     );
     expect(tester.takeException(), isNull);
   });

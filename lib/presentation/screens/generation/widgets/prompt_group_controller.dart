@@ -179,11 +179,13 @@ class PromptGroupCollection extends ChangeNotifier {
     return '${DateTime.now().microsecondsSinceEpoch}_$_nextId';
   }
 
-  /// Adds an empty section and asks the editor UI to open it.
-  PromptGroupSection add() {
+  /// Adds an empty section at the end and asks the editor UI to open it;
+  /// an editor that is already open and moves to it itself passes
+  /// [requestEdit] false.
+  PromptGroupSection add({bool requestEdit = true}) {
     final section = PromptGroupSection(id: _newId(), text: '');
     _insert(section);
-    _editRequest = section.id;
+    if (requestEdit) _editRequest = section.id;
     notifyListeners();
     return section;
   }

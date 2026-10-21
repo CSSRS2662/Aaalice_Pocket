@@ -21,6 +21,7 @@ Future<(PromptGroupCollection, _Calls)> _openSheet(
   double textScale = 1,
   String sectionId = 's1',
   bool autocomplete = true,
+  bool canAdd = true,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -73,6 +74,9 @@ Future<(PromptGroupCollection, _Calls)> _openSheet(
                     onMoveToFront: (_) {},
                     onDelete: calls.deleted.add,
                     onOpenAssistantSettings: () {},
+                    onAdd: canAdd
+                        ? () => groups.add(requestEdit: false).id
+                        : null,
                   ),
                 ),
                 child: const Text('open'),
@@ -162,7 +166,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(titleText(), '分区 2 / 3');
 
-    await tester.tap(find.byKey(const ValueKey('prompt_group_edit_enabled')));
+    // The wide test font fills the bottom row, which then scrolls.
+    final include = find.byKey(const ValueKey('prompt_group_edit_enabled'));
+    await tester.ensureVisible(include);
+    await tester.pumpAndSettle();
+    await tester.tap(include);
     await tester.pump();
     expect(calls.toggled, ['s1']);
 
@@ -170,6 +178,63 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('prompt_group_edit_title')), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the + key adds a section at the end and moves to it', (
+    tester,
+  ) async {
+    final (groups, _) = await _openSheet(tester, size: const Size(412, 800));
+    final title = find.byKey(const ValueKey('prompt_group_edit_title'));
+    final add = find.byKey(const ValueKey('prompt_group_edit_add'));
+    String titleText() => tester.widget<Text>(title).textSpan!.toPlainText();
+
+    // Right after the next arrow, as a full-size touch target.
+    final next = tester.getRect(
+      find.byKey(const ValueKey('prompt_group_edit_next')),
+    );
+    expect(tester.getRect(add).left, closeTo(next.right, 0.5));
+    expect(tester.getSize(add).height, greaterThanOrEqualTo(44));
+    expect(_clipped(tester, title), isFalse);
+
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+    expect(titleText(), '分区 4 / 4');
+    expect(groups.sections.length, 4);
+    final added = groups.sections.last;
+    expect(added.controller.text, isEmpty);
+    expect(added.focusNode.hasFocus, isTrue, reason: '新分区直接进入输入');
+    // The open editor moved to it; nothing asks the grid to open another.
+    expect(groups.takeEditRequest(), isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a header too tight for the title moves the + key below', (
+    tester,
+  ) async {
+    // The square test font makes the title as wide as large text would.
+    final (groups, _) = await _openSheet(tester);
+    final title = find.byKey(const ValueKey('prompt_group_edit_title'));
+    final add = find.byKey(const ValueKey('prompt_group_edit_add'));
+    expect(_clipped(tester, title), isFalse);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('prompt_group_edit_toolbar')),
+        matching: add,
+      ),
+      findsOne,
+    );
+
+    await tester.ensureVisible(add);
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+    expect(groups.sections.length, 4);
+    expect(groups.sections.last.focusNode.hasFocus, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a prompt edited as one section has no + key', (tester) async {
+    await _openSheet(tester, canAdd: false);
+    expect(find.byKey(const ValueKey('prompt_group_edit_add')), findsNothing);
   });
 
   testWidgets('deleting from the menu closes first, then deletes', (

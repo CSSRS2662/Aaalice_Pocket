@@ -31,10 +31,16 @@ class PromptGroupEditCallbacks {
     required this.onDelete,
     required this.onOpenAssistantSettings,
     this.onComfyuiImport,
+    this.onAdd,
   });
 
   /// Section text or order changed; the host recombines the prompt.
   final VoidCallback onChanged;
+
+  /// Adds an empty section and returns its id; the editor then moves to it.
+  /// The + key next to the title shows when given (not for a prompt edited
+  /// as a single section).
+  final String Function()? onAdd;
   final ValueChanged<String> onToggleEnabled;
   final ValueChanged<String> onDuplicate;
   final ValueChanged<String> onMoveToFront;
@@ -174,6 +180,15 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
     if (typing) _focusAtEndAfterBuild();
   }
 
+  /// Adds a section at the end and moves to it, ready for typing.
+  void _add() {
+    final id = widget.callbacks.onAdd?.call();
+    if (id == null || widget.groups.sectionById(id) == null) return;
+    _direction = 1;
+    widget.current.value = id;
+    _focusAtEndAfterBuild();
+  }
+
   void _close() => Navigator.of(context).maybePop();
 
   void _closeOnce() {
@@ -199,13 +214,15 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
         final total = widget.groups.sections.length;
         return LayoutBuilder(
           builder: (context, constraints) {
-            // The mode toggle and menu go next to the title as far as the
-            // row has room, leaving the bottom row to typing tools.
+            // The + key, the mode toggle and the menu go next to the title as
+            // far as the row has room, leaving the bottom row to typing tools.
+            final canAdd = widget.callbacks.onAdd != null;
             final onTop = _EditorHeader.toolsThatFit(
               context,
               maxWidth: constraints.maxWidth,
               index: index,
               total: total,
+              withAdd: canAdd,
             );
             final toggle = PromptTagModeToggle(sessionId: _modeSessionId);
             final menu = _buildMenu(context, section);
@@ -215,12 +232,9 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
                   index: index,
                   total: total,
                   onStep: _step,
+                  onAdd: canAdd && onTop.add ? _add : null,
                   onDone: _close,
-                  tools: switch (onTop) {
-                    _HeaderTools.toggleAndMenu => [toggle, menu],
-                    _HeaderTools.menu => [menu],
-                    _HeaderTools.none => const [],
-                  },
+                  tools: [if (onTop.toggle) toggle, if (onTop.menu) menu],
                 ),
                 Expanded(
                   child: Padding(
@@ -240,11 +254,11 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
                   child: _buildToolbar(
                     context,
                     section,
-                    tools: switch (onTop) {
-                      _HeaderTools.toggleAndMenu => const [],
-                      _HeaderTools.menu => [toggle],
-                      _HeaderTools.none => [toggle, menu],
-                    },
+                    tools: [
+                      if (canAdd && !onTop.add) _AddKey(onPressed: _add),
+                      if (!onTop.toggle) toggle,
+                      if (!onTop.menu) menu,
+                    ],
                   ),
                 ),
               ],
@@ -504,17 +518,20 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
   }
 }
 
-/// Which of the text/tag toggle and the menu the header holds.
-enum _HeaderTools { toggleAndMenu, menu, none }
+/// Which of the + key, the text/tag toggle and the menu the header holds;
+/// the others go to the bottom row.
+typedef _HeaderTools = ({bool add, bool menu, bool toggle});
 
 /// Section position with neighbours: arrows around a swipeable title with
-/// page dots, then [tools] and Done on the right.
+/// page dots and the + key that adds a section, then [tools] and Done on
+/// the right.
 class _EditorHeader extends StatelessWidget {
   const _EditorHeader({
     required this.index,
     required this.total,
     required this.onStep,
     required this.onDone,
+    this.onAdd,
     this.tools = const [],
   });
 
@@ -537,18 +554,21 @@ class _EditorHeader extends StatelessWidget {
   final int total;
   final ValueChanged<int> onStep;
   final VoidCallback onDone;
+  final VoidCallback? onAdd;
   final List<Widget> tools;
 
   static TextStyle? _titleStyle(ThemeData theme) =>
       theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700);
 
   /// Which tools share one [maxWidth] row with the title and Done without
-  /// cutting the title short (large text, narrow windows).
+  /// cutting the title short (large text, narrow windows): the + key stays
+  /// longest, then the menu, then the text/tag toggle.
   static _HeaderTools toolsThatFit(
     BuildContext context, {
     required double maxWidth,
     required int index,
     required int total,
+    required bool withAdd,
   }) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
@@ -573,12 +593,13 @@ class _EditorHeader extends StatelessWidget {
       widthOf(l10n.common_done, theme.textTheme.labelLarge) +
           _donePadding.horizontal,
     );
-    final base = _padding.horizontal + 2 * _arrowExtent + title + 8 + done;
-    if (base + _toggleWidth + 4 + _menuWidth + 8 <= maxWidth) {
-      return _HeaderTools.toggleAndMenu;
-    }
-    if (base + _menuWidth + 8 <= maxWidth) return _HeaderTools.menu;
-    return _HeaderTools.none;
+    var used = _padding.horizontal + 2 * _arrowExtent + title + 8 + done;
+    // A little slack, so rounding never cuts the title.
+    final add = withAdd && used + _arrowExtent + 4 <= maxWidth;
+    if (add) used += _arrowExtent;
+    final menu = used + _menuWidth + 8 <= maxWidth;
+    final toggle = used + _toggleWidth + 4 + _menuWidth + 8 <= maxWidth;
+    return (add: add, menu: menu, toggle: toggle);
   }
 
   @override
@@ -642,6 +663,7 @@ class _EditorHeader extends StatelessWidget {
                   onPressed: index < total - 1 ? () => onStep(1) : null,
                   icon: const Icon(Icons.chevron_right_rounded),
                 ),
+                if (onAdd case final add?) _AddKey(onPressed: add),
               ],
             ),
           ),
@@ -668,6 +690,22 @@ class _EditorHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Adds a section at the end and moves to it: next to the title, or in the
+/// bottom row when the title needs the room.
+class _AddKey extends StatelessWidget {
+  const _AddKey({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    key: const ValueKey('prompt_group_edit_add'),
+    tooltip: context.l10n.prompt_addGroup,
+    onPressed: onPressed,
+    icon: const Icon(Icons.add_rounded),
+  );
 }
 
 class _PageDots extends StatelessWidget {

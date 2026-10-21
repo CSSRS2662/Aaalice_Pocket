@@ -362,8 +362,17 @@ class _PromptGroupBoardState extends ConsumerState<PromptGroupBoard> {
         },
         onOpenAssistantSettings: widget.onOpenAssistantSettings,
         onComfyuiImport: widget.onComfyuiImport,
+        onAdd: () => _addFromEditor(groups, negative),
       ),
     );
+  }
+
+  /// The editor's + key: a new section at the end, which the open editor
+  /// moves to itself rather than the grid opening a second one.
+  String _addFromEditor(PromptGroupCollection groups, bool negative) {
+    final section = groups.add(requestEdit: false);
+    widget.onCommit(negative);
+    return section.id;
   }
 
   /// Opens the library's entry form with the section's prompt; the title,
