@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/core/constants/app_version.dart';
@@ -8,6 +9,7 @@ import 'package:nai_launcher/core/services/data_migration_service.dart';
 import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/presentation/providers/startup_initialization_provider.dart';
 import 'package:nai_launcher/presentation/screens/splash/app_bootstrap.dart';
+import 'package:nai_launcher/presentation/screens/splash/splash_intro_animation.dart';
 import 'package:nai_launcher/presentation/screens/splash/splash_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -91,6 +93,23 @@ void main() {
     expect(calls.where((call) => call == 'migration'), hasLength(1));
     expect(calls.where((call) => call == 'database'), hasLength(1));
     expect(calls.where((call) => call == 'criticalServices'), hasLength(1));
+  });
+
+  testWidgets('进入动画播完前不切换到主应用', (tester) async {
+    await tester.pumpWidget(
+      _buildApp(tasks: _successfulTasks(), waitForSplashIntro: true),
+    );
+    await _pumpAsync(tester);
+
+    expect(find.byType(SplashScreen), findsOneWidget);
+    expect(find.byKey(const ValueKey('main_app')), findsNothing);
+
+    // The intro asset never loads here, so the safety timeout settles it.
+    await tester.pump(SplashIntroAnimation.settleTimeout);
+    await _pumpAsync(tester);
+
+    expect(find.byKey(const ValueKey('main_app')), findsOneWidget);
+    expect(_splashOverlayOpacity(tester), 0);
   });
 
   testWidgets('数据库失败保留 Splash，点击重试后才进入主应用', (tester) async {
@@ -214,22 +233,33 @@ Widget _buildApp({
   required StartupInitializationTasks tasks,
   VoidCallback? onWarmupComplete,
   WidgetBuilder? mainAppBuilder,
+  bool waitForSplashIntro = false,
 }) {
   return ProviderScope(
     overrides: [
       localStorageServiceProvider.overrideWith((ref) => _MemoryStorage()),
       startupInitializationTasksProvider.overrideWithValue(tasks),
     ],
-    child: AppBootstrap(
-      onWarmupComplete: onWarmupComplete,
-      mainAppBuilder:
-          mainAppBuilder ??
-          (_) => const Directionality(
-            textDirection: TextDirection.ltr,
-            child: SizedBox(key: ValueKey('main_app')),
-          ),
+    child: DefaultAssetBundle(
+      bundle: _PendingAssetBundle(),
+      child: AppBootstrap(
+        onWarmupComplete: onWarmupComplete,
+        waitForSplashIntro: waitForSplashIntro,
+        mainAppBuilder:
+            mainAppBuilder ??
+            (_) => const Directionality(
+              textDirection: TextDirection.ltr,
+              child: SizedBox(key: ValueKey('main_app')),
+            ),
+      ),
     ),
   );
+}
+
+/// Keeps the intro asset loading so tests never touch the image decoder.
+class _PendingAssetBundle extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) => Completer<ByteData>().future;
 }
 
 class _LifecycleProbe extends StatefulWidget {

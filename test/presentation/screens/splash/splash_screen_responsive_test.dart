@@ -1,11 +1,13 @@
+import 'dart:async';
+
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nai_launcher/core/constants/app_version.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/providers/warmup_provider.dart';
+import 'package:nai_launcher/presentation/screens/splash/splash_intro_animation.dart';
 import 'package:nai_launcher/presentation/screens/splash/splash_screen.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../helpers/flutter_error_collector.dart';
 
@@ -14,119 +16,200 @@ class _IdleWarmupNotifier extends WarmupNotifier {
   WarmupState build() => WarmupState.initial();
 }
 
-void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+class _FailedWarmupNotifier extends WarmupNotifier {
+  @override
+  WarmupState build() =>
+      WarmupState.initial().copyWith(error: 'database failed');
+}
 
-  setUpAll(() async {
-    PackageInfo.setMockInitialValues(
-      appName: 'Aaalice Pocket',
-      packageName: 'nai_launcher',
-      version: '1.0.0',
-      buildNumber: '1',
-      buildSignature: '',
+/// Keeps the intro asset loading so tests never touch the image decoder.
+class _PendingAssetBundle extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) => Completer<ByteData>().future;
+}
+
+const _safePadding = EdgeInsets.only(top: 24, bottom: 16);
+
+Widget _splashApp({
+  required WarmupNotifier Function() notifier,
+  double textScale = 1,
+  EdgeInsets padding = _safePadding,
+  double keyboardInset = 0,
+}) {
+  return ProviderScope(
+    overrides: [warmupNotifierProvider.overrideWith(notifier)],
+    child: DefaultAssetBundle(
+      bundle: _PendingAssetBundle(),
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+            padding: padding,
+            viewPadding: padding,
+            viewInsets: EdgeInsets.only(bottom: keyboardInset),
+          ),
+          child: child!,
+        ),
+        home: const SplashScreen(),
+      ),
+    ),
+  );
+}
+
+Future<void> _setSize(WidgetTester tester, Size size) async {
+  await tester.binding.setSurfaceSize(size);
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+}
+
+void main() {
+  testWidgets('Splash shows only the intro and a spinner while loading', (
+    tester,
+  ) async {
+    await _setSize(tester, const Size(412, 915));
+    await tester.pumpWidget(_splashApp(notifier: _IdleWarmupNotifier.new));
+    await tester.pump();
+
+    expect(find.byType(SplashIntroAnimation), findsOneWidget);
+    expect(find.byKey(const ValueKey('splash-spinner')), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(find.byType(Text), findsNothing);
+    expect(
+      tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
+      SplashScreen.backgroundColor,
     );
-    await AppVersion.initialize();
+  });
+
+  testWidgets('Intro artwork sits where the system splash draws the icon', (
+    tester,
+  ) async {
+    const size = Size(412, 915);
+    await _setSize(tester, size);
+    await tester.pumpWidget(
+      _splashApp(
+        notifier: _IdleWarmupNotifier.new,
+        padding: const EdgeInsets.only(top: 32, bottom: 24),
+      ),
+    );
+    await tester.pump();
+
+    final rect = tester.getRect(find.byKey(const ValueKey('splash-intro')));
+    final scale = rect.width / SplashIntroAnimation.frameSize.width;
+    final art = rect.topLeft + SplashIntroAnimation.artCenter * scale;
+    expect(scale, closeTo(SplashIntroAnimation.systemSplashScale, 1e-9));
+    expect(art.dx, closeTo(size.width / 2, 0.01));
+    expect(art.dy, closeTo(size.height / 2, 0.01));
   });
 
   testWidgets(
-    'Splash keeps critical content reachable at 320 width with 3x text, IME, and SafeArea',
+    'Splash keeps the spinner reachable at 320 width with 3x text, IME, and SafeArea',
     (tester) async {
       final flutterErrors = FlutterErrorCollector.install(tester);
       addTearDown(flutterErrors.restoreAndAssertNoErrors);
       const size = Size(320, 760);
-      const safePadding = EdgeInsets.only(top: 24, bottom: 16);
       const keyboardInset = 300.0;
-      await tester.binding.setSurfaceSize(size);
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await _setSize(tester, size);
 
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            warmupNotifierProvider.overrideWith(_IdleWarmupNotifier.new),
-          ],
-          child: MaterialApp(
-            locale: const Locale('zh'),
-            supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                disableAnimations: true,
-                textScaler: const TextScaler.linear(3),
-                padding: safePadding,
-                viewPadding: safePadding,
-                viewInsets: const EdgeInsets.only(bottom: keyboardInset),
-              ),
-              child: child!,
-            ),
-            home: const SplashScreen(),
-          ),
+        _splashApp(
+          notifier: _IdleWarmupNotifier.new,
+          textScale: 3,
+          keyboardInset: keyboardInset,
         ),
       );
       await tester.pump();
-
       flutterErrors.expectNoErrors(reason: 'initial splash layout');
-      final scrollView = find.byKey(const ValueKey('splash_scroll_view'));
-      final scrollable = tester.state<ScrollableState>(
-        find.descendant(of: scrollView, matching: find.byType(Scrollable)),
-      );
-      expect(scrollable.position.maxScrollExtent, greaterThan(0));
 
       final usableRect = Rect.fromLTRB(
         0,
-        safePadding.top,
+        _safePadding.top,
         size.width,
         size.height - keyboardInset,
       );
-      expect(find.byKey(const ValueKey('splash-brand-art')), findsOneWidget);
-      expect(find.text('NAI Launcher'), findsNothing);
-      for (final content in [find.text('Aaalice Pocket'), find.text('0%')]) {
-        await tester.ensureVisible(content);
-        await tester.pump();
-        expect(
-          tester.getRect(content).intersect(usableRect).height,
-          greaterThan(0),
-          reason: '$content should be reachable above the IME',
-        );
-        flutterErrors.expectNoErrors(
-          reason: '$content should remain reachable above the IME',
-        );
-      }
+      final spinner = find.byKey(const ValueKey('splash-spinner'));
+      await tester.ensureVisible(spinner);
+      await tester.pump();
+      expect(usableRect.contains(tester.getRect(spinner).center), isTrue);
+      expect(
+        tester.getRect(find.byKey(const ValueKey('splash-intro'))).width,
+        greaterThan(0),
+      );
     },
   );
 
-  testWidgets('Splash plays the pixel artist intro once and settles', (
+  testWidgets('Startup errors keep the message and retry reachable', (
     tester,
   ) async {
+    final flutterErrors = FlutterErrorCollector.install(tester);
+    addTearDown(flutterErrors.restoreAndAssertNoErrors);
+    const size = Size(320, 760);
+    const keyboardInset = 300.0;
+    await _setSize(tester, size);
+
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          warmupNotifierProvider.overrideWith(_IdleWarmupNotifier.new),
-        ],
-        child: const MaterialApp(
-          locale: Locale('zh'),
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: SplashScreen(),
-        ),
+      _splashApp(
+        notifier: _FailedWarmupNotifier.new,
+        textScale: 3,
+        keyboardInset: keyboardInset,
       ),
     );
+    await tester.pump();
+    flutterErrors.expectNoErrors(reason: 'error splash layout');
 
-    final artFade = find.byKey(const ValueKey('splash-brand-art-transition'));
-    expect(artFade, findsOneWidget);
-    expect(tester.widget<FadeTransition>(artFade).opacity.value, 0);
+    expect(find.byKey(const ValueKey('splash-spinner')), findsNothing);
+    final usableRect = Rect.fromLTRB(
+      0,
+      _safePadding.top,
+      size.width,
+      size.height - keyboardInset,
+    );
+    for (final target in [
+      find.byIcon(Icons.error_outline),
+      find.byKey(const ValueKey('warmup_retry')),
+    ]) {
+      await tester.ensureVisible(target);
+      await tester.pump();
+      expect(
+        tester.getRect(target).intersect(usableRect).height,
+        greaterThan(0),
+        reason: '$target should be reachable above the IME',
+      );
+    }
+  });
 
-    await tester.pump(const Duration(milliseconds: 200));
-    final enteringOpacity = tester
-        .widget<FadeTransition>(artFade)
-        .opacity
-        .value;
-    expect(enteringOpacity, greaterThan(0));
-    expect(enteringOpacity, lessThan(1));
+  testWidgets('Splash fits common widths and a short landscape screen', (
+    tester,
+  ) async {
+    final flutterErrors = FlutterErrorCollector.install(tester);
+    addTearDown(flutterErrors.restoreAndAssertNoErrors);
 
-    await tester.pump(const Duration(milliseconds: 900));
-    expect(tester.widget<FadeTransition>(artFade).opacity.value, 1);
+    for (final size in const [
+      Size(320, 640),
+      Size(600, 960),
+      Size(840, 700),
+      Size(1180, 820),
+      Size(1600, 1000),
+      Size(740, 360),
+    ]) {
+      await _setSize(tester, size);
+      await tester.pumpWidget(_splashApp(notifier: _IdleWarmupNotifier.new));
+      await tester.pump();
+      flutterErrors.expectNoErrors(reason: 'splash at $size');
 
-    await tester.pump(const Duration(seconds: 2));
-    expect(tester.widget<FadeTransition>(artFade).opacity.value, 1);
+      final screen = Offset.zero & size;
+      final spinner = tester.getRect(
+        find.byKey(const ValueKey('splash-spinner')),
+      );
+      final intro = tester.getRect(find.byKey(const ValueKey('splash-intro')));
+      expect(screen.contains(spinner.bottomRight), isTrue, reason: '$size');
+      expect(
+        intro.top,
+        greaterThanOrEqualTo(_safePadding.top),
+        reason: '$size',
+      );
+      expect(intro.bottom, lessThanOrEqualTo(spinner.top), reason: '$size');
+    }
   });
 }

@@ -22,7 +22,7 @@
 
 | 领域 | 本分支做法 | 合并时的规则 |
 | --- | --- | --- |
-| 包名与品牌 | `com.cssrs2662.aaalicepocket`，名称、图标、启动页为 Aaalice Pocket | 保留本分支；MethodChannel 名称与上游保持一致，开发与验收脚本使用新包名 |
+| 包名与品牌 | `com.cssrs2662.aaalicepocket`，名称、图标、启动页为 Aaalice Pocket；图标是口袋里的猫耳像素少女（自适应图标前景 + 奶油色底 `#FFF9ED` + 主题图标），启动页只播放一次进入动画（`SplashIntroAnimation` 播放 `assets/splash/pocket_intro.gif`，加载更久时停在最后一帧）并只显示转圈，`AppBootstrap` 等动画播完再进入主界面；原生启动窗口、图标底色与 Flutter 启动页同色 | 保留本分支；MethodChannel 名称与上游保持一致，开发与验收脚本使用新包名；上游修改 `splash_screen.dart`、`app_bootstrap.dart` 或安卓启动主题时保留本分支启动页、`_splashKey` 与动画等待，不恢复进度条和任务文字 |
 | 应用内更新 | 整套移除（检查、下载、安装、弹窗、横幅） | 上游对更新模块的修改一律丢弃；上游新测试中对更新 provider 的 override 一并删除 |
 | 社区入口 | 导航与“更多”面板不显示 GitHub/Discord | `CommunityLinks` 常量保留，上游其他代码仍在引用 |
 | 网络 | 共享连接工厂；Android 不使用应用级代理，交给系统/VPN | 保留工厂；上游的请求形态（浏览器请求头、JS 兼容 JSON）叠加在工厂创建的 Dio 上 |

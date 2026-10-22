@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="launch_background_color">#17101F</color>
-    <color name="ic_launcher_background">#17132F</color>
+    <!-- Same cream as the intro animation, so launch, icon and splash match. -->
+    <color name="launch_background_color">#FFF9ED</color>
+    <color name="ic_launcher_background">#FFF9ED</color>
 </resources>

@@ -17,11 +17,20 @@ import 'splash_screen.dart';
 /// 应用启动引导器
 /// 管理预加载流程和页面切换
 class AppBootstrap extends ConsumerStatefulWidget {
-  const AppBootstrap({super.key, this.mainAppBuilder, this.onWarmupComplete});
+  const AppBootstrap({
+    super.key,
+    this.mainAppBuilder,
+    this.onWarmupComplete,
+    this.waitForSplashIntro = true,
+  });
 
   @visibleForTesting
   final WidgetBuilder? mainAppBuilder;
   final VoidCallback? onWarmupComplete;
+
+  /// Keep the splash until its intro animation has played once.
+  @visibleForTesting
+  final bool waitForSplashIntro;
 
   @override
   ConsumerState<AppBootstrap> createState() => _AppBootstrapState();
@@ -33,7 +42,12 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> {
   bool _hasCheckedFirstLaunch = false;
   bool _mainAppMountScheduled = false;
   bool _warmupCompletionNotified = false;
+  bool _introSettled = false;
   Widget? _mountedMainApp;
+
+  // Keeps the splash state (and the intro's current frame) when the splash
+  // moves under the main app.
+  final GlobalKey _splashKey = GlobalKey(debugLabel: 'splash');
 
   @override
   void reassemble() {
@@ -92,25 +106,44 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> {
     });
   }
 
+  void _handleIntroSettled() {
+    if (_introSettled || !mounted) return;
+    setState(() {
+      _introSettled = true;
+    });
+  }
+
   Widget _buildSplash() {
     final locale = ref.watch(localeNotifierProvider);
-    return MaterialApp(
-      title: 'Aaalice Pocket',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(),
-      locale: locale,
-      supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      builder: (context, child) => DesktopWindowFrame(child: child!),
-      home: const SplashScreen(key: ValueKey('splash')),
+    return KeyedSubtree(
+      key: _splashKey,
+      child: MaterialApp(
+        title: 'Aaalice Pocket',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: SplashScreen.accentColor,
+          ),
+          scaffoldBackgroundColor: SplashScreen.backgroundColor,
+        ),
+        locale: locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => DesktopWindowFrame(child: child!),
+        home: SplashScreen(
+          key: const ValueKey('splash'),
+          onIntroSettled: _handleIntroSettled,
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final warmupState = ref.watch(warmupNotifierProvider);
+    final introDone = _introSettled || !widget.waitForSplashIntro;
 
-    if (warmupState.isComplete && !_showMainApp) {
+    if (warmupState.isComplete && introDone && !_showMainApp) {
       _scheduleMainAppMount();
     }
 
