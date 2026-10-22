@@ -106,55 +106,79 @@ class AgentChatConfigurationControl extends StatelessWidget {
                 padding: EdgeInsets.symmetric(
                   horizontal: showModelName ? 11 : 6,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ModelFamilyIcon(
-                      modelId:
-                          current?.model.name ??
-                          agentSettings.settings.chat.modelReference.model,
-                      displayName: modelName,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
-                    if (showModelName) ...[
-                      Flexible(
-                        child: Text(
-                          modelName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+                // The reasoning level always shows in full; the model name
+                // takes only the room left after it and hides when too
+                // little is left.
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final nameStyle = theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    );
+                    final thinkingStyle = theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    );
+                    final painter = TextPainter(
+                      text: TextSpan(text: thinkingName, style: thinkingStyle),
+                      textDirection: Directionality.of(context),
+                      textScaler: MediaQuery.textScalerOf(context),
+                      maxLines: 1,
+                    )..layout();
+                    final thinkingWidth = painter.width;
+                    painter.dispose();
+                    // Icon, its gap, the bolt and the chevron.
+                    final fixed = 16 + 6 + (fastActive ? 18 : 0) + 2 + 17.0;
+                    final nameRoom =
+                        constraints.maxWidth - fixed - thinkingWidth - 4;
+                    final showName = showModelName && nameRoom >= 36;
+                    final thinking = Text(
+                      thinkingName,
+                      key: const ValueKey('agent-chat-thinking-selector'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: thinkingStyle,
+                    );
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ModelFamilyIcon(
+                          modelId:
+                              current?.model.name ??
+                              agentSettings.settings.chat.modelReference.model,
+                          displayName: modelName,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        if (showName) ...[
+                          Flexible(
+                            child: Text(
+                              modelName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: nameStyle,
+                            ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                    ],
-                    Flexible(
-                      child: Text(
-                        thinkingName,
-                        key: const ValueKey('agent-chat-thinking-selector'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    if (fastActive) ...[
-                      const SizedBox(width: 2),
-                      Icon(
-                        Icons.bolt_rounded,
-                        key: const ValueKey('agent-chat-fast-mode-indicator'),
-                        size: 16,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ],
-                    const SizedBox(width: 2),
-                    const Icon(Icons.expand_more_rounded, size: 17),
-                  ],
+                          const SizedBox(width: 4),
+                          thinking,
+                        ] else
+                          Flexible(child: thinking),
+                        if (fastActive) ...[
+                          const SizedBox(width: 2),
+                          Icon(
+                            Icons.bolt_rounded,
+                            key: const ValueKey(
+                              'agent-chat-fast-mode-indicator',
+                            ),
+                            size: 16,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ],
+                        const SizedBox(width: 2),
+                        const Icon(Icons.expand_more_rounded, size: 17),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
