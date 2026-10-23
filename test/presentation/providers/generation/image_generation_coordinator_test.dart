@@ -428,16 +428,15 @@ void main() {
       );
       final handle = coordinator.start(command);
 
-      final completed = (await coordinator.execute(command, handle).toList())
-          .whereType<GenerationRequestCompleted>()
-          .single;
+      final events = await coordinator.execute(command, handle).toList();
+      final completed = events.whereType<GenerationRequestCompleted>().single;
 
+      expect(
+        events.whereType<GenerationRetrying>().map((event) => event.attempt),
+        [1, 2, 3],
+      );
       expect(fallbackCalls, 4);
-      expect(delays, const [
-        Duration(seconds: 1),
-        Duration(seconds: 2),
-        Duration(seconds: 4),
-      ]);
+      expect(delays, isEmpty, reason: 'failed requests retry at once');
       expect(completed.images.single, Uint8List.fromList([4]));
       expect(completed.vibeEncodings, {2: 'fallback-vibe'});
       verify(
@@ -452,7 +451,7 @@ void main() {
   );
 
   test(
-    'streaming-not-allowed fallback retries 429 with the same budget',
+    'streaming-not-allowed fallback waits out 429 without using retries',
     () async {
       final apiService = _MockNAIImageGenerationApiService();
       final delays = <Duration>[];
@@ -514,10 +513,11 @@ void main() {
       expect(events.last, isA<GenerationCompleted>());
       expect(fallbackCalls, 4);
       expect(delays, const [
-        Duration(seconds: 1),
-        Duration(seconds: 2),
-        Duration(seconds: 4),
+        Duration(seconds: 3),
+        Duration(seconds: 3),
+        Duration(seconds: 3),
       ]);
+      expect(events.whereType<GenerationRetrying>(), isEmpty);
       verify(
         () => apiService.generateImageStream(
           any(),
@@ -529,10 +529,10 @@ void main() {
     },
   );
 
-  test('cancel during fallback retry delay prevents another request', () async {
+  test('cancel after a failed attempt prevents another request', () async {
     final apiService = _MockNAIImageGenerationApiService();
-    final delayStarted = Completer<void>();
-    final blockedDelay = Completer<void>();
+    late ImageGenerationCoordinator coordinator;
+    late GenerationRunHandle handle;
     when(
       () => apiService.generateImageStream(
         any(),
@@ -551,16 +551,13 @@ void main() {
         minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
         focusedSelectionRect: any(named: 'focusedSelectionRect'),
       ),
-    ).thenThrow(StateError('temporary fallback failure'));
+    ).thenAnswer((_) async {
+      coordinator.cancel(handle);
+      throw StateError('temporary fallback failure');
+    });
     when(() => apiService.cancelGeneration(any())).thenReturn(null);
 
-    final coordinator = ImageGenerationCoordinator(
-      apiService: apiService,
-      delay: (_) {
-        delayStarted.complete();
-        return blockedDelay.future;
-      },
-    );
+    coordinator = ImageGenerationCoordinator(apiService: apiService);
     final command = GenerationCommand(
       runId: 1,
       params: const ImageParams(prompt: 'test'),
@@ -570,14 +567,15 @@ void main() {
       materializeRandomSeed: false,
       cancellableFallback: false,
     );
-    final handle = coordinator.start(command);
-    final events = coordinator.execute(command, handle).toList();
+    handle = coordinator.start(command);
 
-    await delayStarted.future;
-    coordinator.cancel(handle);
+    final events = await coordinator
+        .execute(command, handle)
+        .toList()
+        .timeout(const Duration(seconds: 1));
 
-    final completedEvents = await events.timeout(const Duration(seconds: 1));
-    expect(completedEvents.last, isA<GenerationCancelled>());
+    expect(events.last, isA<GenerationCancelled>());
+    expect(events.whereType<GenerationRetrying>(), isEmpty);
     verify(
       () => apiService.generateImage(
         any(),
@@ -587,16 +585,6 @@ void main() {
         focusedSelectionRect: any(named: 'focusedSelectionRect'),
       ),
     ).called(1);
-    verify(
-      () => apiService.generateImageStream(
-        any(),
-        focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
-        minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
-        focusedSelectionRect: any(named: 'focusedSelectionRect'),
-      ),
-    ).called(1);
-    expect(blockedDelay.isCompleted, isFalse);
-    blockedDelay.complete();
   });
 
   test('exhausted fallback retries fail without returning to stream', () async {
@@ -645,7 +633,11 @@ void main() {
       (events.last as GenerationFailed).error.toString(),
       contains('persistent fallback failure'),
     );
-    expect(delays, ImageGenerationCoordinator.defaultRetryDelays);
+    expect(delays, isEmpty);
+    expect(
+      events.whereType<GenerationRetrying>().map((event) => event.attempt),
+      [1, 2, 3, 4, 5],
+    );
     verify(
       () => apiService.generateImage(
         any(),
@@ -948,7 +940,18 @@ void main() {
         contains('down'),
       );
       expect(streamCalls, 6);
-      expect(delays, ImageGenerationCoordinator.defaultRetryDelays);
+      expect(delays, isEmpty, reason: 'failed requests retry at once');
+      final retries = events.whereType<GenerationRetrying>().toList();
+      expect(retries.map((event) => event.attempt), [1, 2, 3, 4, 5]);
+      for (final retry in retries) {
+        expect(retry.maxRetries, ImageGenerationCoordinator.defaultMaxRetries);
+        expect(retry.startImage, 1);
+        expect(retry.requestSize, 1);
+        expect(retry.totalImages, 1);
+        expect(retry.error.toString(), contains('down'));
+      }
+      // Every retry is announced before the request that follows it.
+      expect(events.indexOf(retries.last), lessThan(events.length - 2));
     });
 
     test('a later attempt that succeeds completes the image', () async {
@@ -965,7 +968,46 @@ void main() {
         same(image),
       );
       expect(streamCalls, 3);
-      expect(delays, const [Duration(seconds: 1), Duration(seconds: 2)]);
+      expect(delays, isEmpty);
+      expect(
+        events.whereType<GenerationRetrying>().map((event) => event.attempt),
+        [1, 2],
+      );
+    });
+
+    test('stream and non-stream attempts share the five retries', () async {
+      streamReplies = (call) => [
+        ImageStreamChunk.error(
+          call < 3 ? 'API_ERROR_500|down' : 'Streaming is not allowed',
+        ),
+      ];
+      when(
+        () => apiService.generateImage(
+          any(),
+          onProgress: any(named: 'onProgress'),
+          focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+          minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+          focusedSelectionRect: any(named: 'focusedSelectionRect'),
+        ),
+      ).thenThrow(StateError('fallback down'));
+
+      final events = await generateOne();
+
+      expect(events.last, isA<GenerationFailed>());
+      expect(
+        events.whereType<GenerationRetrying>().map((event) => event.attempt),
+        [1, 2, 3, 4, 5],
+      );
+      expect(streamCalls, 3);
+      verify(
+        () => apiService.generateImage(
+          any(),
+          onProgress: any(named: 'onProgress'),
+          focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+          minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+          focusedSelectionRect: any(named: 'focusedSelectionRect'),
+        ),
+      ).called(4);
     });
 
     test('errors that would fail again are not retried', () async {
@@ -983,6 +1025,7 @@ void main() {
         expect(events.last, isA<GenerationFailed>(), reason: error);
         expect(streamCalls, 1, reason: error);
         expect(delays, isEmpty, reason: error);
+        expect(events.whereType<GenerationRetrying>(), isEmpty, reason: error);
       }
     });
 
@@ -1035,11 +1078,11 @@ void main() {
 
       expect(events.last, isA<GenerationCompleted>());
       expect(streamCalls, 8);
-      expect(delays, [
-        const Duration(seconds: 3),
-        const Duration(seconds: 3),
-        ...ImageGenerationCoordinator.defaultRetryDelays,
-      ]);
+      expect(delays, const [Duration(seconds: 3), Duration(seconds: 3)]);
+      expect(
+        events.whereType<GenerationRetrying>().map((event) => event.attempt),
+        [1, 2, 3, 4, 5],
+      );
     });
 
     test('empty inpaint masks fail without fallback retries', () async {

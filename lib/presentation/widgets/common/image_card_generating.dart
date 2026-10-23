@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/utils/localization_extension.dart';
 import '../../themes/theme_extension.dart';
 import 'image_card_controller.dart';
 import 'image_card_models.dart';
@@ -75,9 +76,12 @@ class ImageCardGenerating extends StatelessWidget {
           else
             Positioned(
               left: 8,
+              right: 8,
               bottom: 8,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   SizedBox(
                     width: 20,
@@ -96,18 +100,40 @@ class ImageCardGenerating extends StatelessWidget {
                       color: _streamProgressForeground,
                     ),
                   ),
-                  const SizedBox(width: 8),
                   Text(
                     '${data.currentImage ?? 0}/${data.totalImages ?? 0}',
                     key: const ValueKey('stream-generation-progress-count'),
                     style: _progressStyle(),
                   ),
-                  const SizedBox(width: 8),
                   if (progress > 0)
                     Text(
                       '${(progress * 100).toInt()}%',
                       key: const ValueKey('stream-generation-progress-percent'),
                       style: _progressStyle(),
+                    ),
+                  if (data.retryAttempt > 0)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.refresh_rounded,
+                          size: 14,
+                          color: _streamProgressForeground,
+                          shadows: [
+                            Shadow(color: Colors.black87, blurRadius: 4),
+                          ],
+                        ),
+                        const SizedBox(width: 2),
+                        Flexible(
+                          child: Text(
+                            _retryLabel(context),
+                            key: const ValueKey('generation-retry-label'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: _progressStyle(),
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -124,8 +150,25 @@ class ImageCardGenerating extends StatelessWidget {
 
   Widget _loading(BuildContext context, ThemeData theme) {
     final progress = data.progress ?? 0;
+    // Small grid cards shrink the whole block instead of overflowing.
+    return Center(
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: _loadingContent(context, theme, progress),
+        ),
+      ),
+    );
+  }
+
+  Widget _loadingContent(
+    BuildContext context,
+    ThemeData theme,
+    double progress,
+  ) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
           width: 52,
@@ -200,9 +243,34 @@ class ImageCardGenerating extends StatelessWidget {
             ),
           ],
         ),
+        if (data.retryAttempt > 0) ...[
+          const SizedBox(height: 12),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.refresh_rounded,
+                size: 16,
+                color: theme.colorScheme.error,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                _retryLabel(context),
+                key: const ValueKey('generation-retry-label'),
+                maxLines: 1,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
+
+  String _retryLabel(BuildContext context) =>
+      context.l10n.generation_retryProgress(data.retryAttempt, data.maxRetries);
 
   TextStyle _progressStyle() => const TextStyle(
     color: _streamProgressForeground,

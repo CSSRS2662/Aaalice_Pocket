@@ -78,6 +78,8 @@ class SelectableImageCard extends ConsumerStatefulWidget {
     this.postprocessPhase,
     this.currentImage,
     this.totalImages,
+    this.retryAttempt = 0,
+    this.maxRetries = 0,
     this.streamPreview,
     this.focusedPreviewPlacement,
     this.imageWidth,
@@ -141,6 +143,10 @@ class SelectableImageCard extends ConsumerStatefulWidget {
   final ImagePostprocessPhase? postprocessPhase;
   final int? currentImage;
   final int? totalImages;
+
+  /// Which retry of a failed request is generating this card (0 = none).
+  final int retryAttempt;
+  final int maxRetries;
   final Uint8List? streamPreview;
   final FocusedStreamPreviewPlacement? focusedPreviewPlacement;
   final int? imageWidth;
@@ -174,6 +180,8 @@ class _SelectableImageCardState extends ConsumerState<SelectableImageCard>
     postprocessPhase: widget.postprocessPhase,
     currentImage: widget.currentImage,
     totalImages: widget.totalImages,
+    retryAttempt: widget.retryAttempt,
+    maxRetries: widget.maxRetries,
     streamPreview: widget.streamPreview,
     focusedPreviewPlacement: widget.focusedPreviewPlacement,
     imageWidth: widget.imageWidth,

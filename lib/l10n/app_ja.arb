@@ -7331,6 +7331,29 @@
       "percent": {}
     }
   },
+  "generation_retryProgress": "再試行 {attempt}/{max}",
+  "@generation_retryProgress": {
+    "description": "Shown on the generating card while a failed request is retried",
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "mobileWorkbench_cancelRetry": "キャンセル · 再試行 {attempt}/{max}",
+  "@mobileWorkbench_cancelRetry": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "stamina_title": "V5 スタミナ",
   "stamina_subtitle": "時間とともに回復する Opus の利用上限",
   "stamina_barSemantics": "V5 スタミナ {percent}、タップで詳細",

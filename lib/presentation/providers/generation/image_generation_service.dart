@@ -48,7 +48,7 @@ typedef GenerationStepProgressCallback =
 class ImageGenerationService {
   ImageGenerationService({
     required NAIImageGenerationApiService apiService,
-    List<Duration> retryDelays = ImageGenerationCoordinator.defaultRetryDelays,
+    int maxRetries = ImageGenerationCoordinator.defaultMaxRetries,
     Future<void> Function(Duration) delay = Future<void>.delayed,
     this.streamPreviewEnabled = true,
     ImagePostprocessor? postprocess,
@@ -56,7 +56,7 @@ class ImageGenerationService {
   }) : _apiService = apiService,
        _coordinator = ImageGenerationCoordinator(
          apiService: apiService,
-         retryDelays: retryDelays,
+         maxRetries: maxRetries,
          delay: delay,
          postprocess: postprocess,
          onPostprocessError: onPostprocessError,
@@ -216,6 +216,7 @@ class ImageGenerationService {
             cancelled = true;
           case GenerationStarted() ||
               GenerationRequestSkipped() ||
+              GenerationRetrying() ||
               GenerationCompleted():
             break;
         }

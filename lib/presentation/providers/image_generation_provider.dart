@@ -592,6 +592,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
           batchHeight: params.height,
           completionPreviews: const {},
           clearStreamPreview: true,
+          retryAttempt: 0,
         );
       case GenerationRequestStarted(
         :final params,
@@ -614,11 +615,42 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
               ),
           ],
           clearStreamPreview: true,
+          retryAttempt: 0,
         );
       case GenerationImageStarted(:final imageNumber, :final totalImages):
         state = state.copyWith(
           currentImage: imageNumber,
           progress: (imageNumber - 1) / totalImages,
+          retryAttempt: 0,
+        );
+      case GenerationRetrying(
+        :final startImage,
+        :final requestSize,
+        :final totalImages,
+        :final attempt,
+        :final maxRetries,
+      ):
+        // The retry starts over, so the failed attempt's preview goes away.
+        var slots = state.streamPreviewSlots;
+        for (var i = 0; i < requestSize; i++) {
+          slots = _replacePreviewSlot(
+            slots,
+            StreamPreviewSlot(
+              imageNumber: startImage + i,
+              totalImages: totalImages,
+              progress: 0,
+              retryAttempt: attempt,
+              maxRetries: maxRetries,
+            ),
+          );
+        }
+        state = state.copyWith(
+          currentImage: startImage,
+          progress: (startImage - 1) / totalImages,
+          streamPreviewSlots: slots,
+          clearStreamPreview: true,
+          retryAttempt: attempt,
+          maxRetries: maxRetries,
         );
       case GenerationPreviewReceived(
         :final params,
@@ -635,12 +667,17 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
           params,
           focusedPreviewPlacement,
         );
+        final retried = state.streamPreviewSlots
+            .where((slot) => slot.imageNumber == imageNumber)
+            .firstOrNull;
         final slot = StreamPreviewSlot(
           imageNumber: imageNumber,
           totalImages: totalImages,
           progress: progress,
           previewBytes: bytes,
           focusedPreviewPlacement: focusedPreviewPlacement,
+          retryAttempt: retried?.retryAttempt ?? 0,
+          maxRetries: retried?.maxRetries ?? 0,
         );
         state = state.copyWith(
           currentImage: imageNumber,
@@ -723,6 +760,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
             history: history,
           ),
           clearStreamPreview: true,
+          retryAttempt: 0,
         );
         for (var i = 0; i < max(images.length, params.nSamples); i++) {
           _streamPreviews.release(event.runId, startImage + i);
@@ -735,7 +773,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         for (var i = 0; i < requestSize; i++) {
           _streamPreviews.release(event.runId, startImage + i);
         }
-        state = state.copyWith(clearStreamPreview: true);
+        state = state.copyWith(clearStreamPreview: true, retryAttempt: 0);
       case GenerationRequestFailed(:final error, :final isTerminal):
         _appendFailedSnapshots(event.runId);
         if (isTerminal) {
@@ -747,7 +785,10 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
             currentImage: 0,
             totalImages: 0,
             clearStreamPreview: true,
+            retryAttempt: 0,
           );
+        } else {
+          state = state.copyWith(retryAttempt: 0);
         }
       case GenerationCompleted(:final params):
         final images = List<GeneratedImage>.from(state.currentImages);
@@ -762,6 +803,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
           currentImage: 0,
           totalImages: 0,
           clearStreamPreview: true,
+          retryAttempt: 0,
         );
         if (images.isNotEmpty) {
           final settings = ref.read(imageSaveSettingsNotifierProvider);
@@ -782,6 +824,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
           currentImage: 0,
           totalImages: 0,
           clearStreamPreview: true,
+          retryAttempt: 0,
         );
       case GenerationFailed(:final error):
         _appendFailedSnapshots(event.runId);
@@ -794,6 +837,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
           currentImage: 0,
           totalImages: 0,
           clearStreamPreview: true,
+          retryAttempt: 0,
         );
     }
   }

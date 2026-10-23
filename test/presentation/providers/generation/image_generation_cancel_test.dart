@@ -21,6 +21,7 @@ import 'package:nai_launcher/data/models/image/image_stream_chunk.dart';
 import 'package:nai_launcher/data/models/user/user_subscription.dart';
 import 'package:nai_launcher/data/services/auth_provider.dart';
 import 'package:nai_launcher/presentation/providers/character_prompt_provider.dart';
+import 'package:nai_launcher/presentation/providers/generation/image_generation_selectors.dart';
 import 'package:nai_launcher/presentation/providers/image_generation_provider.dart';
 import 'package:nai_launcher/presentation/providers/image_save_settings_provider.dart';
 import 'package:nai_launcher/presentation/providers/notification_settings_provider.dart';
@@ -1404,6 +1405,93 @@ void main() {
     expect(state.status, GenerationStatus.completed);
     expect(state.currentImages, hasLength(1));
     expect(state.currentImages.single.bytes, orderedEquals(freshImage));
+  });
+
+  group('failed requests retry at once', () {
+    late MockNAIImageGenerationApiService mockApiService;
+    late int streamCall;
+    late List<ImageStreamChunk> Function(int call) replies;
+
+    setUp(() {
+      mockApiService = MockNAIImageGenerationApiService();
+      streamCall = 0;
+      when(
+        () => mockApiService.generateImageStream(
+          any(),
+          focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+          minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+          focusedSelectionRect: any(named: 'focusedSelectionRect'),
+        ),
+      ).thenAnswer((_) => Stream.fromIterable(replies(++streamCall)));
+      when(() => mockApiService.cancelGeneration(any())).thenReturn(null);
+    });
+
+    Future<(ProviderContainer, List<ImageGenerationState>)> run() async {
+      final container = _createAuthenticatedContainer(
+        overrides: [
+          naiImageGenerationApiServiceProvider.overrideWithValue(
+            mockApiService,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container
+          .read(notificationSettingsNotifierProvider.notifier)
+          .setSoundEnabled(false);
+      final seen = <ImageGenerationState>[];
+      container.listen(
+        imageGenerationNotifierProvider,
+        (_, next) => seen.add(next),
+      );
+      final notifier = container.read(imageGenerationNotifierProvider.notifier);
+      final params = container
+          .read(generationParamsNotifierProvider)
+          .copyWith(prompt: '1girl', nSamples: 1);
+      await notifier.generate(params);
+      return (container, seen);
+    }
+
+    test('the generating card shows each retry until one succeeds', () async {
+      final image = _validImageBytes(width: 512, height: 768);
+      replies = (call) => call < 3
+          ? [ImageStreamChunk.error('API_ERROR_500|server down')]
+          : [ImageStreamChunk.complete(image)];
+
+      final (container, seen) = await run();
+
+      final retrying = seen.where((state) => state.retryAttempt > 0).toList();
+      expect(retrying.map((state) => state.retryAttempt).toSet(), {1, 2});
+      for (final state in retrying) {
+        expect(state.maxRetries, 5);
+        expect(selectGenerationRetry(state), isNotNull);
+        expect(
+          state.streamPreviewSlots.single.retryAttempt,
+          state.retryAttempt,
+        );
+        expect(state.streamPreviewSlots.single.previewBytes, isNull);
+      }
+      final finalState = container.read(imageGenerationNotifierProvider);
+      expect(streamCall, 3);
+      expect(finalState.status, GenerationStatus.completed);
+      expect(finalState.retryAttempt, 0);
+      expect(selectGenerationRetry(finalState), isNull);
+    });
+
+    test('five failed retries end in an error', () async {
+      replies = (_) => [ImageStreamChunk.error('API_ERROR_500|server down')];
+
+      final (container, seen) = await run();
+
+      expect(streamCall, 6);
+      expect(
+        seen.map((state) => state.retryAttempt).where((n) => n > 0).toSet(),
+        {1, 2, 3, 4, 5},
+      );
+      final finalState = container.read(imageGenerationNotifierProvider);
+      expect(finalState.status, GenerationStatus.error);
+      expect(finalState.errorMessage, contains('server down'));
+      expect(finalState.retryAttempt, 0);
+    });
   });
 
   test('cancel during 429 wait must stop retrying', () async {

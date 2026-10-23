@@ -55,6 +55,75 @@ void main() {
     }
     await tester.binding.setSurfaceSize(null);
   });
+
+  testWidgets('生成按钮在重试时显示重试次数', (tester) async {
+    Widget button(ImageGenerationState state) => ProviderScope(
+      key: UniqueKey(),
+      overrides: [
+        imageGenerationNotifierProvider.overrideWith(
+          () => _StateImageGenerationNotifier(state),
+        ),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.getTheme(Brightness.light),
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 240,
+              child: MobileGenerateActionButton(
+                isGenerating: true,
+                showCancel: true,
+                isPreparing: false,
+                cooldownRemainingSeconds: 0,
+                showCost: true,
+                requiresLogin: false,
+                onGenerate: () {},
+                onCancel: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      button(
+        const ImageGenerationState(
+          status: GenerationStatus.generating,
+          progress: 0.4,
+          retryAttempt: 3,
+          maxRetries: 5,
+        ),
+      ),
+    );
+    expect(find.text('取消 · 重试 3/5'), findsOneWidget);
+
+    await tester.pumpWidget(
+      button(
+        const ImageGenerationState(
+          status: GenerationStatus.generating,
+          progress: 0.4,
+        ),
+      ),
+    );
+    expect(find.text('取消 · 40%'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('generation-mobile-retry-label')),
+      findsNothing,
+    );
+  });
+}
+
+class _StateImageGenerationNotifier extends ImageGenerationNotifier {
+  _StateImageGenerationNotifier(this.initial);
+
+  final ImageGenerationState initial;
+
+  @override
+  ImageGenerationState build() => initial;
 }
 
 Widget _subject({

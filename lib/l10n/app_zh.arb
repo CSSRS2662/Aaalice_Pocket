@@ -7375,6 +7375,29 @@
       "percent": {}
     }
   },
+  "generation_retryProgress": "重试 {attempt}/{max}",
+  "@generation_retryProgress": {
+    "description": "Shown on the generating card while a failed request is retried",
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "mobileWorkbench_cancelRetry": "取消 · 重试 {attempt}/{max}",
+  "@mobileWorkbench_cancelRetry": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "stamina_title": "V5 体力",
   "stamina_subtitle": "Opus 使用上限，随时间自动回充",
   "stamina_barSemantics": "V5 体力 {percent}，点按查看详情",

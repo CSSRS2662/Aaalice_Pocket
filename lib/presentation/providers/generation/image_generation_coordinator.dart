@@ -17,7 +17,7 @@ import 'generation_error_classifier.dart';
 class ImageGenerationCoordinator {
   ImageGenerationCoordinator({
     required NAIImageGenerationApiService apiService,
-    List<Duration> retryDelays = defaultRetryDelays,
+    this.maxRetries = defaultMaxRetries,
     this.concurrencyRetryInterval = const Duration(seconds: 3),
     this.concurrencyRetryBudget = const Duration(seconds: 90),
     Future<void> Function(Duration) delay = Future<void>.delayed,
@@ -25,25 +25,20 @@ class ImageGenerationCoordinator {
     this.postprocess,
     this.onPostprocessError,
   }) : _apiService = apiService,
-       _retryDelays = retryDelays,
        _delay = delay,
        _random = random ?? Random();
 
   static const int randomSeedExclusiveUpperBound = 4294967295;
 
-  /// A failed request is retried five times, waiting twice as long before
-  /// each retry. Errors that would fail again are not retried, and 429
-  /// concurrency waits on the stream endpoint do not count.
-  static const List<Duration> defaultRetryDelays = [
-    Duration(seconds: 1),
-    Duration(seconds: 2),
-    Duration(seconds: 4),
-    Duration(seconds: 8),
-    Duration(seconds: 16),
-  ];
+  /// A failed request is sent again at once, at most five times per request
+  /// (stream and non-stream attempts share the count). Errors that would fail
+  /// again are reported right away, and 429 concurrency waits do not count.
+  static const int defaultMaxRetries = 5;
 
   final NAIImageGenerationApiService _apiService;
-  final List<Duration> _retryDelays;
+  final int maxRetries;
+
+  /// Used only for the 429 concurrency waits.
   final Future<void> Function(Duration) _delay;
   final Duration concurrencyRetryInterval;
   final Duration concurrencyRetryBudget;
@@ -368,13 +363,13 @@ class ImageGenerationCoordinator {
     final startWithFallback = nonStreamOnly || !command.streamPreviewEnabled;
     var mode = startWithFallback ? _RequestMode.fallback : _RequestMode.stream;
     var persistFallbackMode = startWithFallback;
-    var failures = 0;
+    var retries = 0;
 
     while (true) {
       if (_aborted(handle) || _skipCurrentRequest) return;
       try {
         if (mode == _RequestMode.fallback) {
-          final result = await _runFallbackWithRetry(command, handle, params);
+          final result = await _runFallback(command, handle, params);
           if (_aborted(handle) || _skipCurrentRequest) return;
           yield _RequestSignal.result(
             result,
@@ -449,8 +444,7 @@ class ImageGenerationCoordinator {
         // A server-side "Cancelled" result is a generation error. Only the
         // local run token maps cancellation to GenerationCancelled.
         if (_isRemoteCancelled(error) ||
-            isDeterministicGenerationError(error) ||
-            mode == _RequestMode.fallback) {
+            isDeterministicGenerationError(error)) {
           rethrow;
         }
         if (_isConcurrencyLimited(error)) {
@@ -461,21 +455,28 @@ class ImageGenerationCoordinator {
           }
           rethrow;
         }
-        if (isStreamingGenerationUnsupportedError(error)) {
+        if (mode == _RequestMode.stream &&
+            isStreamingGenerationUnsupportedError(error)) {
           mode = _RequestMode.fallback;
           persistFallbackMode = true;
           continue;
         }
-        if (!isRetryableGenerationError(error) ||
-            failures >= _retryDelays.length) {
+        if (!isRetryableGenerationError(error) || retries >= maxRetries) {
           rethrow;
         }
-        final wait = _retryDelays[failures++];
-        AppLogger.w(
-          '生成失败，${wait.inMilliseconds}ms 后重试 '
-          '($failures/${_retryDelays.length}): $error',
+        retries++;
+        AppLogger.w('生成失败，立即重试 ($retries/$maxRetries): $error');
+        yield _RequestSignal.event(
+          GenerationRetrying(
+            runId: command.runId,
+            startImage: startImage,
+            requestSize: params.nSamples,
+            totalImages: command.totalImages,
+            attempt: retries,
+            maxRetries: maxRetries,
+            error: error,
+          ),
         );
-        if (!await _waitForRetry(handle, wait)) return;
       }
     }
   }
@@ -489,38 +490,6 @@ class ImageGenerationCoordinator {
       handle.cancellation.whenCancelled,
     ]);
     return !_aborted(handle) && !_skipCurrentRequest;
-  }
-
-  Future<_RequestResult> _runFallbackWithRetry(
-    GenerationCommand command,
-    GenerationRunHandle handle,
-    ImageParams params,
-  ) async {
-    for (var attempt = 0; ; attempt++) {
-      if (_aborted(handle) || _skipCurrentRequest) {
-        return const _RequestResult();
-      }
-      try {
-        return await _runFallback(command, handle, params);
-      } catch (error) {
-        if (_aborted(handle) || _skipCurrentRequest) {
-          return const _RequestResult();
-        }
-        if (_isRemoteCancelled(error) ||
-            !isRetryableGenerationError(error) ||
-            isDeterministicGenerationError(error) ||
-            attempt >= _retryDelays.length) {
-          rethrow;
-        }
-        AppLogger.w(
-          '非流式生成失败，${_retryDelays[attempt].inMilliseconds}ms 后重试 '
-          '(${attempt + 1}/${_retryDelays.length}): $error',
-        );
-        if (!await _waitForRetry(handle, _retryDelays[attempt])) {
-          return const _RequestResult();
-        }
-      }
-    }
   }
 
   Future<_RequestResult> _runFallback(

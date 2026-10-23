@@ -166,6 +166,77 @@ void main() {
     expect(percent.style?.shadows, isNotEmpty);
   });
 
+  testWidgets('generating cards show the retry count', (tester) async {
+    final preview = Uint8List.fromList(
+      img.encodePng(img.Image(width: 32, height: 32)),
+    );
+    Widget card({Uint8List? streamPreview, double size = 160}) {
+      return ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: Scaffold(
+            body: Center(
+              child: SizedBox.square(
+                dimension: size,
+                child: SelectableImageCard(
+                  isGenerating: true,
+                  progress: 0,
+                  currentImage: 1,
+                  totalImages: 4,
+                  retryAttempt: 2,
+                  maxRetries: 5,
+                  streamPreview: streamPreview,
+                  imageWidth: 32,
+                  imageHeight: 32,
+                  enableSelection: false,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    for (final (streamPreview, size) in [
+      (null, 160.0),
+      (null, 72.0),
+      (preview, 160.0),
+      (preview, 72.0),
+    ]) {
+      await tester.pumpWidget(card(streamPreview: streamPreview, size: size));
+      await tester.pump();
+
+      final label = find.byKey(const ValueKey('generation-retry-label'));
+      expect(label, findsOneWidget, reason: 'preview $streamPreview, $size');
+      expect(tester.widget<Text>(label).data, '重试 2/5');
+      expect(tester.takeException(), isNull, reason: 'size $size');
+    }
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: SizedBox.square(
+              dimension: 160,
+              child: SelectableImageCard(
+                isGenerating: true,
+                progress: 0.3,
+                currentImage: 1,
+                totalImages: 1,
+                imageWidth: 32,
+                imageHeight: 32,
+                enableSelection: false,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.byKey(const ValueKey('generation-retry-label')), findsNothing);
+  });
+
   testWidgets('completed image cards use the shared hover scale', (
     tester,
   ) async {

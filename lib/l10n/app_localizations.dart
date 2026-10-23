@@ -27655,6 +27655,18 @@ abstract class AppLocalizations {
   /// **'Cancel · {percent}%'**
   String mobileWorkbench_cancelProgress(Object percent);
 
+  /// Shown on the generating card while a failed request is retried
+  ///
+  /// In en, this message translates to:
+  /// **'Retry {attempt}/{max}'**
+  String generation_retryProgress(int attempt, int max);
+
+  /// No description provided for @mobileWorkbench_cancelRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel · retry {attempt}/{max}'**
+  String mobileWorkbench_cancelRetry(int attempt, int max);
+
   /// No description provided for @stamina_title.
   ///
   /// In en, this message translates to:

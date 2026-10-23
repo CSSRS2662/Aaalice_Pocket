@@ -320,6 +320,17 @@ class _CancelLabel extends ConsumerWidget {
                 100)
             .clamp(0, 100)
             .round();
+    final retry = ref.watch(
+      imageGenerationNotifierProvider.select(selectGenerationRetry),
+    );
+    final label = preparing
+        ? context.l10n.common_cancel
+        : retry != null
+        ? context.l10n.mobileWorkbench_cancelRetry(
+            retry.attempt,
+            retry.maxRetries,
+          )
+        : context.l10n.mobileWorkbench_cancelProgress(percent);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -333,9 +344,10 @@ class _CancelLabel extends ConsumerWidget {
         const SizedBox(width: 8),
         Flexible(
           child: Text(
-            preparing
-                ? context.l10n.common_cancel
-                : context.l10n.mobileWorkbench_cancelProgress(percent),
+            label,
+            key: retry != null && !preparing
+                ? const ValueKey('generation-mobile-retry-label')
+                : null,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(color: color),

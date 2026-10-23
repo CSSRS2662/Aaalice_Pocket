@@ -7306,6 +7306,29 @@
       "percent": {}
     }
   },
+  "generation_retryProgress": "Retry {attempt}/{max}",
+  "@generation_retryProgress": {
+    "description": "Shown on the generating card while a failed request is retried",
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "mobileWorkbench_cancelRetry": "Cancel · retry {attempt}/{max}",
+  "@mobileWorkbench_cancelRetry": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "stamina_title": "V5 stamina",
   "stamina_subtitle": "Opus usage limit that recharges over time",
   "stamina_barSemantics": "V5 stamina {percent}, tap for details",

@@ -213,6 +213,28 @@ class GenerationRequestSkipped extends GenerationEvent {
   final int requestSize;
 }
 
+/// A request failed and is being sent again right away.
+class GenerationRetrying extends GenerationEvent {
+  const GenerationRetrying({
+    required super.runId,
+    required this.startImage,
+    required this.requestSize,
+    required this.totalImages,
+    required this.attempt,
+    required this.maxRetries,
+    required this.error,
+  });
+
+  final int startImage;
+  final int requestSize;
+  final int totalImages;
+
+  /// 1-based number of this retry.
+  final int attempt;
+  final int maxRetries;
+  final Object error;
+}
+
 class GenerationRequestFailed extends GenerationEvent {
   const GenerationRequestFailed({
     required super.runId,

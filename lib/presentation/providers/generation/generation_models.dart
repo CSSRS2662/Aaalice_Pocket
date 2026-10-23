@@ -268,6 +268,8 @@ class StreamPreviewSlot {
     this.previewBytes,
     this.focusedPreviewPlacement,
     this.postprocessPhase,
+    this.retryAttempt = 0,
+    this.maxRetries = 0,
   });
 
   final int imageNumber;
@@ -277,6 +279,10 @@ class StreamPreviewSlot {
   final FocusedStreamPreviewPlacement? focusedPreviewPlacement;
   final ImagePostprocessPhase? postprocessPhase;
 
+  /// Which retry is producing this image (0 for the first attempt).
+  final int retryAttempt;
+  final int maxRetries;
+
   StreamPreviewSlot copyWith({
     int? imageNumber,
     int? totalImages,
@@ -285,6 +291,8 @@ class StreamPreviewSlot {
     FocusedStreamPreviewPlacement? focusedPreviewPlacement,
     bool clearFocusedPreviewPlacement = false,
     ImagePostprocessPhase? postprocessPhase,
+    int? retryAttempt,
+    int? maxRetries,
   }) {
     return StreamPreviewSlot(
       imageNumber: imageNumber ?? this.imageNumber,
@@ -295,6 +303,8 @@ class StreamPreviewSlot {
       focusedPreviewPlacement: clearFocusedPreviewPlacement
           ? null
           : (focusedPreviewPlacement ?? this.focusedPreviewPlacement),
+      retryAttempt: retryAttempt ?? this.retryAttempt,
+      maxRetries: maxRetries ?? this.maxRetries,
     );
   }
 }
@@ -335,6 +345,12 @@ class ImageGenerationState {
   /// 一次生成调用是否仍在进行：从点击到整条调用结算（含读盘、编码、跑批与收尾）。
   final bool isSubmitting;
 
+  /// 当前请求失败后的第几次重试（0 表示没有在重试）。
+  final int retryAttempt;
+
+  /// 每个请求最多重试几次，与 [retryAttempt] 一起显示。
+  final int maxRetries;
+
   const ImageGenerationState({
     this.status = GenerationStatus.idle,
     this.currentImages = const [],
@@ -353,6 +369,8 @@ class ImageGenerationState {
     this.displayWidth,
     this.displayHeight,
     this.isSubmitting = false,
+    this.retryAttempt = 0,
+    this.maxRetries = 0,
   });
 
   ImageGenerationState copyWith({
@@ -375,6 +393,8 @@ class ImageGenerationState {
     int? displayWidth,
     int? displayHeight,
     bool? isSubmitting,
+    int? retryAttempt,
+    int? maxRetries,
   }) {
     return ImageGenerationState(
       status: status ?? this.status,
@@ -401,6 +421,8 @@ class ImageGenerationState {
       displayWidth: displayWidth ?? this.displayWidth,
       displayHeight: displayHeight ?? this.displayHeight,
       isSubmitting: isSubmitting ?? this.isSubmitting,
+      retryAttempt: retryAttempt ?? this.retryAttempt,
+      maxRetries: maxRetries ?? this.maxRetries,
     );
   }
 

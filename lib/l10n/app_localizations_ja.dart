@@ -15477,6 +15477,16 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String generation_retryProgress(int attempt, int max) {
+    return '再試行 $attempt/$max';
+  }
+
+  @override
+  String mobileWorkbench_cancelRetry(int attempt, int max) {
+    return 'キャンセル · 再試行 $attempt/$max';
+  }
+
+  @override
   String get stamina_title => 'V5 スタミナ';
 
   @override

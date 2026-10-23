@@ -31,6 +31,8 @@ class ImageCardViewData {
     required this.imageHeight,
     required this.sourceFilePath,
     this.postprocessPhase,
+    this.retryAttempt = 0,
+    this.maxRetries = 0,
   });
 
   final Uint8List? imageBytes;
@@ -51,6 +53,10 @@ class ImageCardViewData {
   final ImagePostprocessPhase? postprocessPhase;
   final int? currentImage;
   final int? totalImages;
+
+  /// Which retry of a failed request is generating this card (0 = none).
+  final int retryAttempt;
+  final int maxRetries;
   final Uint8List? streamPreview;
   final FocusedStreamPreviewPlacement? focusedPreviewPlacement;
   final int? imageWidth;
