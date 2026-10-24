@@ -5,172 +5,164 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/data/models/tag_library/tag_library_entry.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/screens/tag_library_page/widgets/entry_card.dart';
-import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
-import 'package:nai_launcher/presentation/screens/tag_library_page/widgets/entry_avatar.dart';
 import 'package:nai_launcher/presentation/widgets/common/thumbnail_display.dart';
+import 'package:nai_launcher/presentation/widgets/tag_library/library_group_style.dart';
+
+TagLibraryEntry _entry({
+  String id = 'entry',
+  bool favorite = false,
+  String? thumbnail,
+}) => TagLibraryEntry(
+  id: id,
+  name: '测试词条',
+  content: '1girl,\n solo, smile',
+  isFavorite: favorite,
+  thumbnail: thumbnail,
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+);
+
+Future<void> _pump(
+  WidgetTester tester,
+  EntryCard card, {
+  Size size = const Size(200, 64),
+}) => tester.pumpWidget(
+  MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(
+      body: Center(
+        child: SizedBox(width: size.width, height: size.height, child: card),
+      ),
+    ),
+  ),
+);
 
 void main() {
-  testWidgets('收藏状态显示在头像上且保留更多菜单', (tester) async {
-    final entry = TagLibraryEntry(
-      id: 'favorite-entry',
-      name: '收藏词条',
-      content: '1girl, solo',
-      isFavorite: true,
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: SizedBox(
-            width: 240,
-            height: 80,
-            child: EntryCard(
-              entry: entry,
-              onTap: () {},
-              onDelete: () {},
-              onToggleFavorite: () {},
-            ),
-          ),
-        ),
+  testWidgets('shows the name, a one-line snippet, heart and pin', (
+    tester,
+  ) async {
+    final entry = _entry(favorite: true);
+    await _pump(
+      tester,
+      EntryCard(
+        entry: entry,
+        groupStyle: LibraryGroupStyle.generic,
+        isFixedTag: true,
+        onTap: () {},
       ),
     );
 
-    final avatarRect = tester.getRect(find.byType(EntryAvatar));
-    final badgeRect = tester.getRect(find.byIcon(Icons.favorite_rounded));
-    expect(avatarRect.contains(badgeRect.center), isTrue);
-    expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
+    expect(find.text('测试词条'), findsOneWidget);
+    expect(find.text('1girl, solo, smile'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('tag-library-entry-favorite-entry')),
+      findsOne,
+    );
+    expect(
+      find.byKey(const ValueKey('tag-library-entry-fixed-entry')),
+      findsOne,
+    );
+    expect(find.byType(LibraryGroupIcon), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('词库卡片在多选模式下仍显示名称', (tester) async {
-    final entry = TagLibraryEntry(
-      id: 'entry-1',
-      name: '测试词条名称',
-      content: '1girl, solo',
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
+  testWidgets('tap opens, long-press starts selecting', (tester) async {
+    final calls = <String>[];
+    await _pump(
+      tester,
+      EntryCard(
+        entry: _entry(),
+        groupStyle: LibraryGroupStyle.generic,
+        onTap: () => calls.add('open'),
+        onToggleSelection: () => calls.add('select'),
+      ),
     );
 
-    Future<void> pumpCard({required bool isSelected}) {
-      return tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: SizedBox(
-              width: 240,
-              height: 80,
-              child: EntryCard(
-                entry: entry,
-                isSelectionMode: true,
-                isSelected: isSelected,
-                onToggleSelection: () {},
-                onTap: () {},
-                onDelete: () {},
-                onToggleFavorite: () {},
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    await pumpCard(isSelected: false);
-    expect(find.text(entry.displayName), findsOneWidget);
-
-    await pumpCard(isSelected: true);
-    expect(find.text(entry.displayName), findsOneWidget);
-    expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isTrue);
-  });
-
-  testWidgets('切换多选模式时保留缩略图状态并禁用拖拽', (tester) async {
-    final entry = TagLibraryEntry(
-      id: 'entry-with-thumbnail',
-      name: '带缩略图的词条',
-      content: '1girl, solo',
-      thumbnail: 'missing-thumbnail.png',
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
-    );
-
-    Future<void> pumpCard({required bool isSelectionMode}) {
-      return tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: SizedBox(
-              width: 240,
-              height: 80,
-              child: EntryCard(
-                entry: entry,
-                isSelectionMode: isSelectionMode,
-                onToggleSelection: () {},
-                onTap: () {},
-                onDelete: () {},
-                onToggleFavorite: () {},
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    await pumpCard(isSelectionMode: false);
+    await tester.tap(find.byType(EntryCard));
+    await tester.longPress(find.byType(EntryCard));
     await tester.pump();
-    final thumbnailFinder = find.byType(ThumbnailDisplay);
-    final thumbnailState = tester.state(thumbnailFinder);
-    final thumbnail = tester.widget<ThumbnailDisplay>(thumbnailFinder);
 
-    expect(thumbnail.width, 44);
-    expect(thumbnail.height, 44);
-
-    await pumpCard(isSelectionMode: true);
-
-    expect(tester.state(find.byType(ThumbnailDisplay)), same(thumbnailState));
-    expect(find.byType(Draggable<TagLibraryEntry>), findsNothing);
+    expect(calls, ['open', 'select']);
   });
 
-  testWidgets('词库卡片复用共享预览并在进入多选模式时清理', (tester) async {
-    final entry = TagLibraryEntry(
-      id: 'hover-entry',
-      name: '悬浮词条',
-      content: '1girl, solo',
-      thumbnail: 'missing-thumbnail.png',
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
+  testWidgets('in selection mode a tap toggles and the card is outlined', (
+    tester,
+  ) async {
+    final calls = <String>[];
+    await _pump(
+      tester,
+      EntryCard(
+        entry: _entry(),
+        groupStyle: LibraryGroupStyle.generic,
+        isSelectionMode: true,
+        isSelected: true,
+        onTap: () => calls.add('open'),
+        onToggleSelection: () => calls.add('toggle'),
+      ),
     );
 
-    Future<void> pumpCard({required bool isSelectionMode}) {
-      return tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: Center(
-              child: SizedBox(
-                width: 240,
-                height: 80,
-                child: EntryCard(
-                  entry: entry,
-                  isSelectionMode: isSelectionMode,
-                  onToggleSelection: () {},
-                  onTap: () {},
-                  onDelete: () {},
-                  onToggleFavorite: () {},
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    await tester.tap(find.byType(EntryCard));
+    expect(calls, ['toggle']);
+    final decoration =
+        tester
+                .widget<Ink>(
+                  find.descendant(
+                    of: find.byType(EntryCard),
+                    matching: find.byType(Ink),
+                  ),
+                )
+                .decoration!
+            as BoxDecoration;
+    final scheme = Theme.of(tester.element(find.byType(EntryCard))).colorScheme;
+    expect(decoration.color, scheme.primaryContainer);
+    expect((decoration.border! as Border).top.color, scheme.primary);
+  });
 
-    await pumpCard(isSelectionMode: false);
+  testWidgets('keeps the thumbnail when selection mode changes', (
+    tester,
+  ) async {
+    final entry = _entry(thumbnail: 'missing-thumbnail.png');
+    Future<void> pump({required bool selecting}) => _pump(
+      tester,
+      EntryCard(
+        entry: entry,
+        groupStyle: LibraryGroupStyle.generic,
+        isSelectionMode: selecting,
+        onTap: () {},
+        onToggleSelection: () {},
+      ),
+    );
+
+    await pump(selecting: false);
+    await tester.pump();
+    final state = tester.state(find.byType(ThumbnailDisplay));
+    expect(
+      tester.widget<ThumbnailDisplay>(find.byType(ThumbnailDisplay)).width,
+      40,
+    );
+
+    await pump(selecting: true);
+    expect(tester.state(find.byType(ThumbnailDisplay)), same(state));
+  });
+
+  testWidgets('shared hover preview closes when selecting starts', (
+    tester,
+  ) async {
+    final entry = _entry(thumbnail: 'missing-thumbnail.png');
+    Future<void> pump({required bool selecting}) => _pump(
+      tester,
+      EntryCard(
+        entry: entry,
+        groupStyle: LibraryGroupStyle.generic,
+        isSelectionMode: selecting,
+        onTap: () {},
+        onToggleSelection: () {},
+      ),
+      size: const Size(240, 64),
+    );
+
+    await pump(selecting: false);
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     addTearDown(mouse.removePointer);
     await mouse.addPointer();
@@ -180,89 +172,50 @@ void main() {
     const previewKey = ValueKey('tag-library-entry-preview-overlay');
     expect(find.byKey(previewKey), findsOneWidget);
 
-    await pumpCard(isSelectionMode: true);
+    await pump(selecting: true);
     await tester.pump();
     expect(find.byKey(previewKey), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('窄格子改为头像在上、名称居中的竖向卡片并保留更多菜单', (tester) async {
-    final entry = TagLibraryEntry(
-      id: 'narrow-entry',
-      name: '三列时的词条名称',
-      content: '1girl',
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
-    );
+  testWidgets('3x text fits the card height it asks for', (tester) async {
+    late double extent;
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(3)),
+          child: child!,
+        ),
         home: Scaffold(
-          body: Center(
-            child: SizedBox(
-              width: entryCardVerticalBreakpoint - 55,
-              height: 124,
-              child: EntryCard(
-                entry: entry,
-                onTap: () {},
-                onDelete: () {},
-                onToggleFavorite: () {},
-              ),
-            ),
+          body: Builder(
+            builder: (context) {
+              extent = EntryCard.extentFor(
+                context,
+                textScaler: MediaQuery.textScalerOf(context),
+              );
+              return Center(
+                child: SizedBox(
+                  width: 300,
+                  height: extent,
+                  child: EntryCard(
+                    entry: _entry(favorite: true),
+                    groupStyle: LibraryGroupStyle.generic,
+                    isFixedTag: true,
+                    onTap: () {},
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
 
-    final avatar = tester.getRect(find.byType(EntryAvatar));
-    final name = tester.getRect(find.text(entry.displayName));
-    expect(avatar.width, 52);
-    expect(avatar.bottom, lessThanOrEqualTo(name.top));
-    expect(
-      tester.widget<Text>(find.text(entry.displayName)).textAlign,
-      TextAlign.center,
-    );
-    expect(find.byIcon(Icons.more_vert_rounded).hitTestable(), findsOne);
+    expect(extent, greaterThan(100));
     expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('触屏更多菜单可以点击移动到分类', (tester) async {
-    var classifyCount = 0;
-    final entry = TagLibraryEntry(
-      id: 'touch-entry',
-      name: '触屏词条',
-      content: '1girl',
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
-    );
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('zh'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: InteractionPolicyScope(
-          initialPolicy: const InteractionPolicy(
-            modality: InteractionModality.touch,
-            touchAvailable: true,
-            precisePointerAvailable: false,
-          ),
-          child: Scaffold(
-            body: EntryCard(
-              entry: entry,
-              onTap: () {},
-              onDelete: () {},
-              onToggleFavorite: () {},
-              onClassify: () => classifyCount++,
-            ),
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.byIcon(Icons.more_vert_rounded));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('移动到分类'));
-    expect(classifyCount, 1);
   });
 }

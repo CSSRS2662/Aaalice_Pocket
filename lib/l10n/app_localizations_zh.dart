@@ -243,12 +243,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_filter => '筛选';
 
   @override
-  String get common_grid => '网格';
-
-  @override
-  String get common_grouped => '分组';
-
-  @override
   String get common_date => '日期';
 
   @override
@@ -1055,12 +1049,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get agentChat_enableWebAccess => '开启联网';
-
-  @override
-  String get agentChat_disableWebAccess => '关闭联网';
-
-  @override
   String get agentChat_webAccessLabel => '联网';
 
   @override
@@ -1840,14 +1828,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String prompt_importedCharacters(int count) {
     return '已导入 $count 个角色';
-  }
-
-  @override
-  String get prompt_characterPromptReplaced => '已替换角色提示词';
-
-  @override
-  String prompt_characterPromptAppended(Object count) {
-    return '已追加角色提示词 ($count 个角色)';
   }
 
   @override
@@ -6643,10 +6623,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fixedTags_addedToSidebar => '已添加到固定词侧栏';
 
   @override
-  String get fixedTags_unknownCategory => '未知分类';
+  String get fixedTags_unknownCategory => '未知分组';
 
   @override
-  String get fixedTags_uncategorized => '未分类';
+  String get fixedTags_uncategorized => '未分组';
 
   @override
   String get fixedTags_clickManageLongPressSidebar => '点击管理，长按打开侧栏';
@@ -6715,11 +6695,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fixedTags_disableAll => '全关';
-
-  @override
-  String fixedTags_searchTarget(Object target) {
-    return '搜索 $target...';
-  }
 
   @override
   String get fixedTags_noMatching => '无匹配固定词';
@@ -7295,10 +7270,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_create => '创建';
 
   @override
-  String get tagLibrary_categories => '分类';
+  String get tagLibrary_categories => '分组';
 
   @override
-  String get tagLibrary_newCategory => '新建分类';
+  String get tagLibrary_newCategory => '新建分组';
 
   @override
   String get tagLibrary_addEntry => '添加条目';
@@ -7316,28 +7291,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tagLibrary_export => '导出';
 
   @override
-  String get tagLibrary_sortCustom => '自定义排序';
+  String get tagLibrary_sortCustom => '自定义';
 
   @override
   String get tagLibrary_sortName => '名称';
 
   @override
-  String get tagLibrary_sortUseCount => '使用频率';
-
-  @override
-  String get tagLibrary_sortUpdatedAt => '更新时间';
-
-  @override
-  String get tagLibrary_transferCategory => '转移分类';
+  String get tagLibrary_transferCategory => '移动分组';
 
   @override
   String get tagLibrary_copyContent => '复制内容';
 
   @override
-  String get tagLibrary_moveToCategoryTitle => '移动到分类';
+  String get tagLibrary_moveToCategoryTitle => '移动到分组';
 
   @override
-  String get tagLibrary_selectTargetCategory => '选择目标分类：';
+  String get tagLibrary_selectTargetCategory => '选择目标分组：';
 
   @override
   String get tagLibrary_includeThumbnails => '包含预览图';
@@ -7359,7 +7328,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tagLibrary_entriesLabel => '条目';
 
   @override
-  String get tagLibrary_categoriesLabel => '分类';
+  String get tagLibrary_categoriesLabel => '分组';
 
   @override
   String get tagLibrary_selectExportContent => '选择要导出的内容';
@@ -7397,7 +7366,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tagLibrary_entryCountLabel => '条目数';
 
   @override
-  String get tagLibrary_categoryCountLabel => '分类数';
+  String get tagLibrary_categoryCountLabel => '分组数';
 
   @override
   String get tagLibrary_exportDateLabel => '导出时间';
@@ -7409,7 +7378,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String tagLibrary_categoriesSection(Object count) {
-    return '分类 ($count)';
+    return '分组 ($count)';
   }
 
   @override
@@ -7457,7 +7426,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String tagLibrary_importedCategoriesCount(Object count) {
-    return '$count 分类';
+    return '$count 个分组';
   }
 
   @override
@@ -7481,7 +7450,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get tagLibrary_unknownCategory => '未知分类';
+  String get tagLibrary_unknownCategory => '未知分组';
 
   @override
   String get tagLibrary_selectEntryToUpdate => '选择要更新的词条';
@@ -7491,11 +7460,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tagLibrary_replaceThumbnailHint => '将替换现有预览图';
-
-  @override
-  String tagLibrary_sentEntriesToMainPrompt(Object count) {
-    return '已发送 $count 个词条到主提示词';
-  }
 
   @override
   String tagLibrary_confirmDeleteSelectedEntries(Object count) {
@@ -7554,20 +7518,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tagLibrary_favorites => '收藏';
 
   @override
-  String get tagLibrary_addSubCategory => '添加子分类';
+  String get tagLibrary_addSubCategory => '添加子分组';
 
   @override
   String get tagLibrary_moveToRoot => '移动到根目录';
 
   @override
-  String get tagLibrary_categoryNameHint => '输入分类名称';
+  String get tagLibrary_categoryNameHint => '输入分组名称';
 
   @override
-  String get tagLibrary_deleteCategoryTitle => '删除分类';
+  String get tagLibrary_deleteCategoryTitle => '删除分组';
 
   @override
   String tagLibrary_deleteCategoryConfirm(Object name, Object count) {
-    return '确定要删除分类 \"$name\" 吗？该分类下的 $count 个条目将移至根目录。';
+    return '确定要删除分组“$name”吗？其中的 $count 个词条会移到未分组。';
   }
 
   @override
@@ -7585,7 +7549,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tagLibrary_tryDifferentSearch => '尝试使用其他关键词搜索';
 
   @override
-  String get tagLibrary_categoryEmpty => '该分类暂无条目';
+  String get tagLibrary_categoryEmpty => '这个分组还没有词条';
 
   @override
   String get tagLibrary_empty => '词库为空';
@@ -7603,10 +7567,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tagLibraryPicker_allCategories => '全部分类';
 
   @override
-  String get tagLibrary_addedToFixed => '已添加到固定词';
-
-  @override
-  String get tagLibrary_entryMoved => '条目已移动到目标分类';
+  String get tagLibrary_entryMoved => '词条已移到目标分组';
 
   @override
   String get tagLibrary_thumbnail => '预览图';
@@ -7624,10 +7585,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tagLibrary_nameHint => '输入条目名称';
 
   @override
-  String get tagLibrary_category => '分类';
+  String get tagLibrary_category => '分组';
 
   @override
-  String get tagLibrary_rootCategory => '根目录';
+  String get tagLibrary_rootCategory => '未分组';
 
   @override
   String get tagLibrary_tags => '标签';
@@ -7708,7 +7669,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_proxyRestartHint => '代理设置已更改，建议重启应用';
 
   @override
-  String get tagLibrary_categoryNameExists => '该分类名称已存在';
+  String get tagLibrary_categoryNameExists => '已有同名分组';
 
   @override
   String get tagLibrary_addToLibrary => '收藏到词库';
@@ -7723,7 +7684,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tagLibrary_entryUpdated => '条目已更新';
 
   @override
-  String get tagLibrary_uncategorized => '未分类';
+  String get tagLibrary_uncategorized => '未分组';
 
   @override
   String get tagLibrary_contentPreview => '内容预览';
@@ -8033,19 +7994,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get statistics_heatmapNoActivity => '无活动';
 
   @override
-  String get sendToHome_dialogTitle => '发送到主页';
-
-  @override
   String get sendToHome_send => '发送';
 
   @override
-  String get sendToHome_mainPrompt => '发送到主提示词';
+  String get sendToHome_mainPrompt => '追加到正面提示词';
 
   @override
-  String get sendToHome_mainPromptSubtitle => '填充到主页的正向提示词输入框';
+  String get sendToHome_mainPromptSubtitle => '加在当前提示词末尾';
 
   @override
-  String get sendToHome_mainPromptPipeSubtitle => '发送完整内容到主提示词（包含竖线）';
+  String get sendToHome_mainPromptPipeSubtitle => '整段加在当前提示词末尾（含竖线）';
 
   @override
   String get sendToHome_smartDecompose => '智能分解';
@@ -8068,21 +8026,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendToHome_appendCharacterSubtitle => '保留现有角色，追加新角色';
 
   @override
-  String get sendToHome_fixedTags => '发送到固定词';
+  String get sendToHome_fixedTags => '添加为固定词';
 
   @override
-  String get sendToHome_fixedTagsSubtitle => '追加到固定词列表';
+  String get sendToHome_fixedTagsSubtitle => '以后每次生成自动加入';
 
   @override
-  String get sendToHome_sendAsAlias => '作为别名发送';
+  String get sendToHome_sendAsAlias => '以引用发送';
 
   @override
   String sendToHome_sendAsAliasSubtitle(Object name) {
-    return '发送到主页时包装为 <$name>';
+    return '写成 <$name>，词条修改后自动跟着变';
   }
 
   @override
-  String get sendToHome_preview => '发送预览';
+  String get sendToHome_preview => '将写入';
 
   @override
   String get sendToHome_characterPrompt => '角色提示词';
@@ -8099,9 +8057,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sendToHome_recommended => '推荐';
-
-  @override
-  String get sendToHome_successMainPrompt => '已发送到主提示词';
 
   @override
   String get sendToHome_successReplaceCharacter => '已替换角色提示词';
@@ -10956,9 +10911,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String toast_extractPromptFailed(Object error) {
     return '提取提示词失败: $error';
   }
-
-  @override
-  String get toast_smartDecomposeSent => '已智能分解并发送';
 
   @override
   String get toast_addedToFixedTags => '已添加到固定词';
@@ -15811,6 +15763,260 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get characterLibrary_unsaved => '有改动未存入角色库';
+
+  @override
+  String get libraryGroup_character => '人物';
+
+  @override
+  String get libraryGroup_hair => '发型';
+
+  @override
+  String get libraryGroup_eyes => '眼睛';
+
+  @override
+  String get libraryGroup_expression => '表情';
+
+  @override
+  String get libraryGroup_outfit => '服装';
+
+  @override
+  String get libraryGroup_accessory => '饰品';
+
+  @override
+  String get libraryGroup_pose => '动作';
+
+  @override
+  String get libraryGroup_composition => '构图';
+
+  @override
+  String get libraryGroup_scene => '场景';
+
+  @override
+  String get libraryGroup_background => '背景';
+
+  @override
+  String get libraryGroup_lighting => '光影';
+
+  @override
+  String get libraryGroup_weather => '天气';
+
+  @override
+  String get libraryGroup_style => '风格';
+
+  @override
+  String get libraryGroup_artist => '画师';
+
+  @override
+  String get libraryGroup_color => '色彩';
+
+  @override
+  String get libraryGroup_quality => '质量';
+
+  @override
+  String get libraryGroup_prop => '道具';
+
+  @override
+  String get libraryGroup_animal => '动物';
+
+  @override
+  String get libraryGroup_effect => '特效';
+
+  @override
+  String get libraryGroup_negative => '负面';
+
+  @override
+  String get fixedTags_subtitle => '启用的词在发送时自动加入';
+
+  @override
+  String get fixedTags_positiveTab => '正面';
+
+  @override
+  String get fixedTags_negativeTab => '负面';
+
+  @override
+  String get fixedTags_searchHint => '搜索固定词';
+
+  @override
+  String get fixedTags_sortTitle => '排序';
+
+  @override
+  String get fixedTags_sortFrequent => '常用';
+
+  @override
+  String get fixedTags_sortFrequentHint => '最近两周用得越多越靠前，越久没用分量越轻';
+
+  @override
+  String get fixedTags_sortRecent => '最近使用';
+
+  @override
+  String get fixedTags_sortRecentHint => '按上次随生成发送的时间';
+
+  @override
+  String get fixedTags_sortCustom => '自定义';
+
+  @override
+  String get fixedTags_sortCustomHint => '按分组排列，顺序可以手动调整';
+
+  @override
+  String get fixedTags_sortName => '名称';
+
+  @override
+  String get fixedTags_sortNameHint => '按名称排列，中文按拼音';
+
+  @override
+  String get fixedTags_enabledFirst => '已启用的排在前面';
+
+  @override
+  String get fixedTags_enabledFirstHint => '一眼看到正在用的词';
+
+  @override
+  String get fixedTags_group => '分组';
+
+  @override
+  String get fixedTags_groupFollowsLibrary => '跟随词库';
+
+  @override
+  String get fixedTags_weightDecrease => '降低权重';
+
+  @override
+  String get fixedTags_weightIncrease => '提高权重';
+
+  @override
+  String fixedTags_usageSummary(int count, String when) {
+    return '共随 $count 张图发送 · 上次$when';
+  }
+
+  @override
+  String get fixedTags_usageNever => '还没随生成发送过';
+
+  @override
+  String fixedTags_fromLibraryNote(String name) {
+    return '来自词库“$name”，内容和分组与词条保持同步';
+  }
+
+  @override
+  String tagLibrary_searchCount(int count) {
+    return '搜索 $count 条词条';
+  }
+
+  @override
+  String get tagLibrary_manageGroups => '管理分组';
+
+  @override
+  String get tagLibrary_manageGroupsHint => '拖动调整顺序；预设分组自带图标，自定义分组用通用图标';
+
+  @override
+  String get tagLibrary_noGroups => '还没有分组';
+
+  @override
+  String get tagLibrary_newGroupHint => '点选预设分组，或在下面起一个自己的名字';
+
+  @override
+  String get tagLibrary_presetGroups => '预设分组';
+
+  @override
+  String get tagLibrary_customGroup => '自定义分组';
+
+  @override
+  String get tagLibrary_customGroupHint => '分组名称，例如：我的 OC';
+
+  @override
+  String tagLibrary_groupCreated(String name) {
+    return '已新建分组“$name”';
+  }
+
+  @override
+  String get tagLibrary_sendToPrompt => '发送到提示词';
+
+  @override
+  String get tagLibrary_moreTargets => '其他发送方式';
+
+  @override
+  String tagLibrary_sendSelected(int count) {
+    return '发送 $count 条到提示词';
+  }
+
+  @override
+  String tagLibrary_selectedCount(int count) {
+    return '已选 $count 条';
+  }
+
+  @override
+  String get tagLibrary_addedToPrompt => '已加入正面提示词';
+
+  @override
+  String tagLibrary_addedEntriesToPrompt(int count) {
+    return '已将 $count 条加入正面提示词';
+  }
+
+  @override
+  String get tagLibrary_goGenerate => '去生成';
+
+  @override
+  String tagLibrary_usedTimes(int count) {
+    return '用过 $count 次';
+  }
+
+  @override
+  String get tagLibrary_neverUsed => '还没用过';
+
+  @override
+  String get tagLibrary_isFixedTag => '已是固定词';
+
+  @override
+  String get tagLibrary_addAsFixed => '添加为固定词';
+
+  @override
+  String tagLibrary_addedAsFixed(int count) {
+    return '已添加 $count 个固定词';
+  }
+
+  @override
+  String get tagLibrary_alreadyFixed => '这些词条已经是固定词';
+
+  @override
+  String get tagLibrary_setPreview => '设置预览图';
+
+  @override
+  String get tagLibrary_replacePreview => '更换预览图';
+
+  @override
+  String get tagLibrary_removePreview => '移除预览图';
+
+  @override
+  String get tagLibrary_sortTitle => '排序';
+
+  @override
+  String get tagLibrary_sortFrequent => '常用';
+
+  @override
+  String get tagLibrary_sortFrequentHint => '最近用得越多越靠前，越久没用分量越轻';
+
+  @override
+  String get tagLibrary_sortRecent => '最近使用';
+
+  @override
+  String get tagLibrary_sortRecentHint => '按上次发送的时间';
+
+  @override
+  String get tagLibrary_sortCustomHint => '按分组排列，保持你排好的顺序';
+
+  @override
+  String get tagLibrary_sortNameHint => '按名称排列，中文按拼音';
+
+  @override
+  String get tagLibrary_favoritesFirst => '收藏置顶';
+
+  @override
+  String get tagLibrary_favoritesFirstHint => '“全部”里把收藏单独排在最上面';
+
+  @override
+  String sendToHome_titleFor(String name) {
+    return '发送“$name”';
+  }
+
+  @override
+  String get sendToHome_chooseTarget => '选择加入的位置';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -16050,12 +16256,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get common_filter => '篩選';
-
-  @override
-  String get common_grid => '網格';
-
-  @override
-  String get common_grouped => '分組';
 
   @override
   String get common_date => '日期';
@@ -16864,12 +17064,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get agentChat_enableWebAccess => '開啟聯網';
-
-  @override
-  String get agentChat_disableWebAccess => '關閉聯網';
-
-  @override
   String get agentChat_webAccessLabel => '聯網';
 
   @override
@@ -17649,14 +17843,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String prompt_importedCharacters(int count) {
     return '已匯入 $count 個角色';
-  }
-
-  @override
-  String get prompt_characterPromptReplaced => '已替換角色提示詞';
-
-  @override
-  String prompt_characterPromptAppended(Object count) {
-    return '已追加角色提示詞 ($count 個角色)';
   }
 
   @override
@@ -22452,10 +22638,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get fixedTags_addedToSidebar => '已新增到固定詞側欄';
 
   @override
-  String get fixedTags_unknownCategory => '未知分類';
+  String get fixedTags_unknownCategory => '未知分組';
 
   @override
-  String get fixedTags_uncategorized => '未分類';
+  String get fixedTags_uncategorized => '未分組';
 
   @override
   String get fixedTags_clickManageLongPressSidebar => '點選管理，長按開啟側欄';
@@ -22524,11 +22710,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get fixedTags_disableAll => '全關';
-
-  @override
-  String fixedTags_searchTarget(Object target) {
-    return '搜尋 $target...';
-  }
 
   @override
   String get fixedTags_noMatching => '無匹配固定詞';
@@ -23104,10 +23285,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get common_create => '建立';
 
   @override
-  String get tagLibrary_categories => '分類';
+  String get tagLibrary_categories => '分組';
 
   @override
-  String get tagLibrary_newCategory => '新建分類';
+  String get tagLibrary_newCategory => '新建分組';
 
   @override
   String get tagLibrary_addEntry => '新增條目';
@@ -23125,28 +23306,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tagLibrary_export => '匯出';
 
   @override
-  String get tagLibrary_sortCustom => '自定義排序';
+  String get tagLibrary_sortCustom => '自訂';
 
   @override
   String get tagLibrary_sortName => '名稱';
 
   @override
-  String get tagLibrary_sortUseCount => '使用頻率';
-
-  @override
-  String get tagLibrary_sortUpdatedAt => '更新時間';
-
-  @override
-  String get tagLibrary_transferCategory => '轉移分類';
+  String get tagLibrary_transferCategory => '移動分組';
 
   @override
   String get tagLibrary_copyContent => '複製內容';
 
   @override
-  String get tagLibrary_moveToCategoryTitle => '移動到分類';
+  String get tagLibrary_moveToCategoryTitle => '移動到分組';
 
   @override
-  String get tagLibrary_selectTargetCategory => '選擇目標分類：';
+  String get tagLibrary_selectTargetCategory => '選擇目標分組：';
 
   @override
   String get tagLibrary_includeThumbnails => '包含預覽圖';
@@ -23168,7 +23343,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tagLibrary_entriesLabel => '條目';
 
   @override
-  String get tagLibrary_categoriesLabel => '分類';
+  String get tagLibrary_categoriesLabel => '分組';
 
   @override
   String get tagLibrary_selectExportContent => '選擇要匯出的內容';
@@ -23206,7 +23381,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tagLibrary_entryCountLabel => '條目數';
 
   @override
-  String get tagLibrary_categoryCountLabel => '分類數';
+  String get tagLibrary_categoryCountLabel => '分組數';
 
   @override
   String get tagLibrary_exportDateLabel => '匯出時間';
@@ -23218,7 +23393,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String tagLibrary_categoriesSection(Object count) {
-    return '分類 ($count)';
+    return '分組 ($count)';
   }
 
   @override
@@ -23266,7 +23441,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String tagLibrary_importedCategoriesCount(Object count) {
-    return '$count 分類';
+    return '$count 個分組';
   }
 
   @override
@@ -23290,7 +23465,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get tagLibrary_unknownCategory => '未知分類';
+  String get tagLibrary_unknownCategory => '未知分組';
 
   @override
   String get tagLibrary_selectEntryToUpdate => '選擇要更新的詞條';
@@ -23300,11 +23475,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get tagLibrary_replaceThumbnailHint => '將替換現有預覽圖';
-
-  @override
-  String tagLibrary_sentEntriesToMainPrompt(Object count) {
-    return '已傳送 $count 個詞條到主提示詞';
-  }
 
   @override
   String tagLibrary_confirmDeleteSelectedEntries(Object count) {
@@ -23363,20 +23533,20 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tagLibrary_favorites => '收藏';
 
   @override
-  String get tagLibrary_addSubCategory => '新增子分類';
+  String get tagLibrary_addSubCategory => '新增子分組';
 
   @override
   String get tagLibrary_moveToRoot => '移動到根目錄';
 
   @override
-  String get tagLibrary_categoryNameHint => '輸入分類名稱';
+  String get tagLibrary_categoryNameHint => '輸入分組名稱';
 
   @override
-  String get tagLibrary_deleteCategoryTitle => '刪除分類';
+  String get tagLibrary_deleteCategoryTitle => '刪除分組';
 
   @override
   String tagLibrary_deleteCategoryConfirm(Object name, Object count) {
-    return '確定要刪除分類 \"$name\" 嗎？該分類下的 $count 個條目將移至根目錄。';
+    return '確定要刪除分組「$name」嗎？其中的 $count 個詞條會移到未分組。';
   }
 
   @override
@@ -23394,7 +23564,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tagLibrary_tryDifferentSearch => '嘗試使用其他關鍵詞搜尋';
 
   @override
-  String get tagLibrary_categoryEmpty => '該分類暫無條目';
+  String get tagLibrary_categoryEmpty => '這個分組還沒有詞條';
 
   @override
   String get tagLibrary_empty => '詞庫為空';
@@ -23412,10 +23582,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tagLibraryPicker_allCategories => '全部分類';
 
   @override
-  String get tagLibrary_addedToFixed => '已新增到固定詞';
-
-  @override
-  String get tagLibrary_entryMoved => '條目已移動到目標分類';
+  String get tagLibrary_entryMoved => '詞條已移到目標分組';
 
   @override
   String get tagLibrary_thumbnail => '預覽圖';
@@ -23433,10 +23600,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tagLibrary_nameHint => '輸入條目名稱';
 
   @override
-  String get tagLibrary_category => '分類';
+  String get tagLibrary_category => '分組';
 
   @override
-  String get tagLibrary_rootCategory => '根目錄';
+  String get tagLibrary_rootCategory => '未分組';
 
   @override
   String get tagLibrary_tags => '標籤';
@@ -23517,7 +23684,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_proxyRestartHint => '代理設定已更改，建議重啟應用';
 
   @override
-  String get tagLibrary_categoryNameExists => '該分類名稱已存在';
+  String get tagLibrary_categoryNameExists => '已有同名分組';
 
   @override
   String get tagLibrary_addToLibrary => '收藏到詞庫';
@@ -23532,7 +23699,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tagLibrary_entryUpdated => '條目已更新';
 
   @override
-  String get tagLibrary_uncategorized => '未分類';
+  String get tagLibrary_uncategorized => '未分組';
 
   @override
   String get tagLibrary_contentPreview => '內容預覽';
@@ -23842,19 +24009,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get statistics_heatmapNoActivity => '無活動';
 
   @override
-  String get sendToHome_dialogTitle => '傳送到主頁';
-
-  @override
   String get sendToHome_send => '傳送';
 
   @override
-  String get sendToHome_mainPrompt => '傳送到主提示詞';
+  String get sendToHome_mainPrompt => '追加到正面提示詞';
 
   @override
-  String get sendToHome_mainPromptSubtitle => '填充到主頁的正向提示詞輸入框';
+  String get sendToHome_mainPromptSubtitle => '加在目前提示詞末尾';
 
   @override
-  String get sendToHome_mainPromptPipeSubtitle => '傳送完整內容到主提示詞（包含豎線）';
+  String get sendToHome_mainPromptPipeSubtitle => '整段加在目前提示詞末尾（含豎線）';
 
   @override
   String get sendToHome_smartDecompose => '智慧分解';
@@ -23877,21 +24041,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get sendToHome_appendCharacterSubtitle => '保留現有角色，追加新角色';
 
   @override
-  String get sendToHome_fixedTags => '傳送到固定詞';
+  String get sendToHome_fixedTags => '新增為固定詞';
 
   @override
-  String get sendToHome_fixedTagsSubtitle => '追加到固定詞列表';
+  String get sendToHome_fixedTagsSubtitle => '之後每次生成自動加入';
 
   @override
-  String get sendToHome_sendAsAlias => '作為別名傳送';
+  String get sendToHome_sendAsAlias => '以引用發送';
 
   @override
   String sendToHome_sendAsAliasSubtitle(Object name) {
-    return '傳送到主頁時包裝為 <$name>';
+    return '寫成 <$name>，詞條修改後自動跟著變';
   }
 
   @override
-  String get sendToHome_preview => '傳送預覽';
+  String get sendToHome_preview => '將寫入';
 
   @override
   String get sendToHome_characterPrompt => '角色提示詞';
@@ -23908,9 +24072,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get sendToHome_recommended => '推薦';
-
-  @override
-  String get sendToHome_successMainPrompt => '已傳送到主提示詞';
 
   @override
   String get sendToHome_successReplaceCharacter => '已替換角色提示詞';
@@ -26765,9 +26926,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String toast_extractPromptFailed(Object error) {
     return '提取提示詞失敗: $error';
   }
-
-  @override
-  String get toast_smartDecomposeSent => '已智慧分解併傳送';
 
   @override
   String get toast_addedToFixedTags => '已新增到固定詞';
@@ -31623,4 +31781,258 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get characterLibrary_unsaved => '有改動未存入角色庫';
+
+  @override
+  String get libraryGroup_character => '人物';
+
+  @override
+  String get libraryGroup_hair => '髮型';
+
+  @override
+  String get libraryGroup_eyes => '眼睛';
+
+  @override
+  String get libraryGroup_expression => '表情';
+
+  @override
+  String get libraryGroup_outfit => '服裝';
+
+  @override
+  String get libraryGroup_accessory => '飾品';
+
+  @override
+  String get libraryGroup_pose => '動作';
+
+  @override
+  String get libraryGroup_composition => '構圖';
+
+  @override
+  String get libraryGroup_scene => '場景';
+
+  @override
+  String get libraryGroup_background => '背景';
+
+  @override
+  String get libraryGroup_lighting => '光影';
+
+  @override
+  String get libraryGroup_weather => '天氣';
+
+  @override
+  String get libraryGroup_style => '風格';
+
+  @override
+  String get libraryGroup_artist => '畫師';
+
+  @override
+  String get libraryGroup_color => '色彩';
+
+  @override
+  String get libraryGroup_quality => '質量';
+
+  @override
+  String get libraryGroup_prop => '道具';
+
+  @override
+  String get libraryGroup_animal => '動物';
+
+  @override
+  String get libraryGroup_effect => '特效';
+
+  @override
+  String get libraryGroup_negative => '負面';
+
+  @override
+  String get fixedTags_subtitle => '啟用的詞在發送時自動加入';
+
+  @override
+  String get fixedTags_positiveTab => '正面';
+
+  @override
+  String get fixedTags_negativeTab => '負面';
+
+  @override
+  String get fixedTags_searchHint => '搜尋固定詞';
+
+  @override
+  String get fixedTags_sortTitle => '排序';
+
+  @override
+  String get fixedTags_sortFrequent => '常用';
+
+  @override
+  String get fixedTags_sortFrequentHint => '最近兩週用得越多越靠前，越久沒用分量越輕';
+
+  @override
+  String get fixedTags_sortRecent => '最近使用';
+
+  @override
+  String get fixedTags_sortRecentHint => '按上次隨生成發送的時間';
+
+  @override
+  String get fixedTags_sortCustom => '自訂';
+
+  @override
+  String get fixedTags_sortCustomHint => '按分組排列，順序可以手動調整';
+
+  @override
+  String get fixedTags_sortName => '名稱';
+
+  @override
+  String get fixedTags_sortNameHint => '按名稱排列，中文按拼音';
+
+  @override
+  String get fixedTags_enabledFirst => '已啟用的排在前面';
+
+  @override
+  String get fixedTags_enabledFirstHint => '一眼看到正在用的詞';
+
+  @override
+  String get fixedTags_group => '分組';
+
+  @override
+  String get fixedTags_groupFollowsLibrary => '跟隨詞庫';
+
+  @override
+  String get fixedTags_weightDecrease => '降低權重';
+
+  @override
+  String get fixedTags_weightIncrease => '提高權重';
+
+  @override
+  String fixedTags_usageSummary(int count, String when) {
+    return '共隨 $count 張圖發送 · 上次$when';
+  }
+
+  @override
+  String get fixedTags_usageNever => '還沒隨生成發送過';
+
+  @override
+  String fixedTags_fromLibraryNote(String name) {
+    return '來自詞庫「$name」，內容和分組與詞條保持同步';
+  }
+
+  @override
+  String tagLibrary_searchCount(int count) {
+    return '搜尋 $count 條詞條';
+  }
+
+  @override
+  String get tagLibrary_manageGroups => '管理分組';
+
+  @override
+  String get tagLibrary_manageGroupsHint => '拖動調整順序；預設分組自帶圖示，自訂分組用通用圖示';
+
+  @override
+  String get tagLibrary_noGroups => '還沒有分組';
+
+  @override
+  String get tagLibrary_newGroupHint => '點選預設分組，或在下面取一個自己的名字';
+
+  @override
+  String get tagLibrary_presetGroups => '預設分組';
+
+  @override
+  String get tagLibrary_customGroup => '自訂分組';
+
+  @override
+  String get tagLibrary_customGroupHint => '分組名稱，例如：我的 OC';
+
+  @override
+  String tagLibrary_groupCreated(String name) {
+    return '已新建分組「$name」';
+  }
+
+  @override
+  String get tagLibrary_sendToPrompt => '發送到提示詞';
+
+  @override
+  String get tagLibrary_moreTargets => '其他發送方式';
+
+  @override
+  String tagLibrary_sendSelected(int count) {
+    return '發送 $count 條到提示詞';
+  }
+
+  @override
+  String tagLibrary_selectedCount(int count) {
+    return '已選 $count 條';
+  }
+
+  @override
+  String get tagLibrary_addedToPrompt => '已加入正面提示詞';
+
+  @override
+  String tagLibrary_addedEntriesToPrompt(int count) {
+    return '已將 $count 條加入正面提示詞';
+  }
+
+  @override
+  String get tagLibrary_goGenerate => '去生成';
+
+  @override
+  String tagLibrary_usedTimes(int count) {
+    return '用過 $count 次';
+  }
+
+  @override
+  String get tagLibrary_neverUsed => '還沒用過';
+
+  @override
+  String get tagLibrary_isFixedTag => '已是固定詞';
+
+  @override
+  String get tagLibrary_addAsFixed => '新增為固定詞';
+
+  @override
+  String tagLibrary_addedAsFixed(int count) {
+    return '已新增 $count 個固定詞';
+  }
+
+  @override
+  String get tagLibrary_alreadyFixed => '這些詞條已經是固定詞';
+
+  @override
+  String get tagLibrary_setPreview => '設定預覽圖';
+
+  @override
+  String get tagLibrary_replacePreview => '更換預覽圖';
+
+  @override
+  String get tagLibrary_removePreview => '移除預覽圖';
+
+  @override
+  String get tagLibrary_sortTitle => '排序';
+
+  @override
+  String get tagLibrary_sortFrequent => '常用';
+
+  @override
+  String get tagLibrary_sortFrequentHint => '最近用得越多越靠前，越久沒用分量越輕';
+
+  @override
+  String get tagLibrary_sortRecent => '最近使用';
+
+  @override
+  String get tagLibrary_sortRecentHint => '按上次發送的時間';
+
+  @override
+  String get tagLibrary_sortCustomHint => '按分組排列，保持你排好的順序';
+
+  @override
+  String get tagLibrary_sortNameHint => '按名稱排列，中文按拼音';
+
+  @override
+  String get tagLibrary_favoritesFirst => '收藏置頂';
+
+  @override
+  String get tagLibrary_favoritesFirstHint => '「全部」裡把收藏單獨排在最上面';
+
+  @override
+  String sendToHome_titleFor(String name) {
+    return '發送「$name」';
+  }
+
+  @override
+  String get sendToHome_chooseTarget => '選擇加入的位置';
 }

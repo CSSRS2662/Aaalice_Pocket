@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,10 +28,8 @@ import '../../../widgets/prompt/nai_syntax_controller.dart';
 import '../../../widgets/prompt/prompt_formatter_wrapper.dart';
 import '../../../widgets/prompt/tag_mode_prompt_field.dart';
 import 'thumbnail_crop_dialog.dart';
-import 'thumbnail_gallery_picker_dialog.dart';
+import 'tag_library_thumbnail_store.dart';
 import 'thumbnail_selection_preview.dart';
-
-enum _ThumbnailSource { device, appGallery }
 
 /// 添加/编辑词库条目对话框
 class EntryAddDialog extends ConsumerStatefulWidget {
@@ -700,87 +697,11 @@ class _EntryAddDialogState extends ConsumerState<EntryAddDialog> {
   }
 
   Future<void> _selectThumbnail() async {
-    final source = await showModalBottomSheet<_ThumbnailSource>(
-      context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(sheetContext.l10n.tagLibrary_selectFromDevice),
-              onTap: () => Navigator.pop(sheetContext, _ThumbnailSource.device),
-            ),
-            ListTile(
-              leading: const Icon(Icons.collections_outlined),
-              title: Text(sheetContext.l10n.tagLibrary_selectFromAppGallery),
-              subtitle: Text(sheetContext.l10n.tagLibrary_appGallerySourceHint),
-              onTap: () =>
-                  Navigator.pop(sheetContext, _ThumbnailSource.appGallery),
-            ),
-          ],
-        ),
-      ),
-    );
+    final source = await TagLibraryThumbnailStore.pickSource(context);
     if (!mounted || source == null) return;
-
-    switch (source) {
-      case _ThumbnailSource.device:
-        await _selectThumbnailFromDevice();
-        break;
-      case _ThumbnailSource.appGallery:
-        await _selectThumbnailFromAppGallery();
-        break;
-    }
-  }
-
-  Future<void> _selectThumbnailFromDevice() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: supportedThumbnailImageExtensions,
-        allowMultiple: false,
-      );
-      if (result == null) return;
-
-      final selectedFile = result.files.single;
-      final bytes =
-          selectedFile.bytes ??
-          (selectedFile.path == null
-              ? null
-              : await File(selectedFile.path!).readAsBytes());
-      if (bytes == null) {
-        throw const FileSystemException('无法读取所选图像');
-      }
-
-      await _importThumbnailAndOpenCrop(bytes);
-    } catch (e) {
-      if (mounted) {
-        AppToast.error(
-          context,
-          context.l10n.imagePicker_fileSelectionFailed(e.toString()),
-        );
-      }
-    }
-  }
-
-  Future<void> _selectThumbnailFromAppGallery() async {
-    final selectedPath = await ThumbnailGalleryPickerDialog.show(context);
-    if (!mounted || selectedPath == null) return;
-    try {
-      final file = File(selectedPath);
-      if (!await file.exists()) {
-        throw const FileSystemException('所选图库图片不存在');
-      }
-      await _importThumbnailAndOpenCrop(await file.readAsBytes());
-    } catch (e) {
-      if (mounted) {
-        AppToast.error(
-          context,
-          context.l10n.imagePicker_fileSelectionFailed(e.toString()),
-        );
-      }
-    }
+    final bytes = await TagLibraryThumbnailStore.readImage(context, source);
+    if (!mounted || bytes == null) return;
+    await _importThumbnailAndOpenCrop(bytes);
   }
 
   Future<void> _importThumbnailAndOpenCrop(Uint8List bytes) async {
@@ -791,67 +712,6 @@ class _EntryAddDialogState extends ConsumerState<EntryAddDialog> {
 
   bool _canSave() {
     return _contentController.text.trim().isNotEmpty;
-  }
-
-  /// 确保缩略图存储在应用目录内
-  /// 如果缩略图在外部路径，则复制到应用目录并返回新路径
-  Future<String?> _ensureThumbnailInAppDir(String? thumbnailPath) async {
-    if (thumbnailPath == null || thumbnailPath.isEmpty) {
-      return null;
-    }
-
-    // 检查文件是否已存在于应用目录内
-    final appDir = await getApplicationDocumentsDirectory();
-    final thumbnailsDir = Directory(
-      path.join(appDir.path, 'tag_library_thumbnails'),
-    );
-
-    // 如果路径已经在应用目录内，直接返回
-    if (thumbnailPath.startsWith(thumbnailsDir.path)) {
-      return thumbnailPath;
-    }
-
-    // 确保缩略图目录存在
-    if (!await thumbnailsDir.exists()) {
-      await thumbnailsDir.create(recursive: true);
-    }
-
-    // 复制文件到应用目录
-    final sourceFile = File(thumbnailPath);
-    if (!await sourceFile.exists()) {
-      // 原文件不存在，返回 null（图片可能被删除了）
-      return null;
-    }
-
-    final ext = path.extension(thumbnailPath);
-    final newFileName = '${const Uuid().v4()}$ext';
-    final newPath = path.join(thumbnailsDir.path, newFileName);
-
-    await sourceFile.copy(newPath);
-    return newPath;
-  }
-
-  /// 删除应用目录内的旧缩略图文件
-  Future<void> _deleteOldThumbnail(String? oldThumbnailPath) async {
-    if (oldThumbnailPath == null || oldThumbnailPath.isEmpty) {
-      return;
-    }
-
-    try {
-      final appDir = await getApplicationDocumentsDirectory();
-      final thumbnailsDir = path.join(appDir.path, 'tag_library_thumbnails');
-
-      // 只删除应用目录内的文件，避免误删外部文件
-      if (oldThumbnailPath.startsWith(thumbnailsDir)) {
-        final file = File(oldThumbnailPath);
-        if (await file.exists()) {
-          await file.delete();
-        }
-      }
-    } catch (e) {
-      // 忽略删除失败，不影响保存流程
-      debugPrint('删除旧缩略图失败: $e');
-    }
   }
 
   Future<void> _save() async {
@@ -874,15 +734,14 @@ class _EntryAddDialogState extends ConsumerState<EntryAddDialog> {
         : null;
 
     // 处理缩略图：确保存储在应用目录内
-    final String? savedThumbnailPath = await _ensureThumbnailInAppDir(
-      _thumbnailPath,
-    );
+    final String? savedThumbnailPath =
+        await TagLibraryThumbnailStore.ensureOwned(_thumbnailPath);
 
     // 如果缩略图发生了变化，删除旧的
     if (oldThumbnailPath != null &&
         oldThumbnailPath != savedThumbnailPath &&
         oldThumbnailPath != _thumbnailPath) {
-      await _deleteOldThumbnail(oldThumbnailPath);
+      await TagLibraryThumbnailStore.deleteOwned(oldThumbnailPath);
     }
 
     final notifier = ref.read(tagLibraryPageNotifierProvider.notifier);

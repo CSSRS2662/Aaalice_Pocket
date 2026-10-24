@@ -7,6 +7,7 @@ import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/nai_prompt_parser.dart';
 import '../../../../data/models/gallery/prompt_group_snapshot.dart';
+import '../../../../data/services/prompt_group/character_section_store.dart';
 import '../../../widgets/prompt/nai_syntax_controller.dart';
 import 'prompt_group_controller.dart';
 
@@ -133,6 +134,19 @@ class PromptInputController extends ChangeNotifier {
 
   void clearPrompt({required bool negative}) =>
       replacePrompt('', negative: negative);
+
+  /// Adds [text] after the current prompt and returns the result. In grouped
+  /// mode it becomes a section of its own.
+  String appendPrompt(String text, {required bool negative}) {
+    if (isGroupedMode) {
+      groupsFor(negative).addText(text);
+      return commitGroupedPrompt(negative: negative);
+    }
+    final current = (negative ? negativeController : promptController).text;
+    final next = CharacterSectionStore.join([current, text]);
+    replacePrompt(next, negative: negative);
+    return next;
+  }
 
   void configureHighlighting({
     required bool enabled,

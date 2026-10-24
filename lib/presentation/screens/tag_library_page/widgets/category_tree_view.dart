@@ -11,6 +11,7 @@ import '../../../widgets/common/library_classification_drag.dart';
 import '../../../widgets/gallery/gallery_album_tree_view.dart';
 import '../../../widgets/gallery/gallery_sidebar.dart';
 import '../../../widgets/gallery/library_sidebar_drag_item.dart';
+import '../../../widgets/tag_library/library_group_style.dart';
 import '../../../../data/models/gallery/gallery_tree_drop_slot.dart';
 import '../../../utils/library_sidebar_sort.dart';
 import '../../../utils/library_category_counts.dart';
@@ -183,12 +184,11 @@ class _CategoryTreeViewState extends State<CategoryTreeView> {
     final hasChildren = children.isNotEmpty;
     final isExpanded = widget.expandedCategoryIds.contains(category.id);
     final entryCount = _counts[category.id] ?? 0;
+    final style = LibraryGroupStyle.of(category.id, widget.categories);
 
     // 构建分类项内容
     Widget categoryItem = _CategoryItem(
-      icon: hasChildren
-          ? (isExpanded ? Icons.folder_open : Icons.folder)
-          : Icons.folder_outlined,
+      groupStyle: style,
       label: category.displayName,
       count: entryCount,
       isSelected: widget.selectedCategoryId == category.id,
@@ -216,7 +216,7 @@ class _CategoryTreeViewState extends State<CategoryTreeView> {
         key: ValueKey(('tag-category-drag', category.id)),
         item: category,
         label: category.displayName,
-        icon: Icons.folder_outlined,
+        icon: style.icon,
         canDrop: (source, slot) =>
             source.id != category.id &&
             !widget.categories.wouldCreateCycle(
@@ -312,7 +312,7 @@ class _CategoryTreeViewState extends State<CategoryTreeView> {
 
 /// 分类项
 class _CategoryItem extends StatefulWidget {
-  final IconData icon;
+  final LibraryGroupStyle groupStyle;
   final String label;
   final int count;
   final bool isSelected;
@@ -328,7 +328,7 @@ class _CategoryItem extends StatefulWidget {
   final VoidCallback? onMoveToRoot;
 
   const _CategoryItem({
-    required this.icon,
+    required this.groupStyle,
     required this.label,
     required this.count,
     required this.isSelected,
@@ -433,15 +433,13 @@ class _CategoryItemState extends State<_CategoryItem> {
                     else
                       const SizedBox(width: 48, height: 48),
 
-                    // 图标
-                    Icon(
-                      widget.icon,
-                      size: 18,
-                      color: widget.isSelected
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
+                    LibraryGroupIcon(
+                      style: widget.groupStyle,
+                      size: 26,
+                      iconSize: 16,
+                      radius: 8,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
 
                     // 名称
                     Expanded(

@@ -190,6 +190,28 @@ class PromptGroupCollection extends ChangeNotifier {
     return section;
   }
 
+  /// Adds [text] as a new section at the end, or fills the only section when
+  /// it is still empty, without opening an editor.
+  PromptGroupSection addText(String text) {
+    final blank =
+        _sections.length == 1 &&
+            !_sections.single.isFixedTag &&
+            _sections.single.controller.text.trim().isEmpty
+        ? _sections.single
+        : null;
+    if (blank != null) {
+      blank
+        ..controller.text = text
+        ..enabled = true;
+      notifyListeners();
+      return blank;
+    }
+    final section = PromptGroupSection(id: _newId(), text: text);
+    _insert(section);
+    notifyListeners();
+    return section;
+  }
+
   /// Returns and clears the section the editor UI should open, if any.
   String? takeEditRequest() {
     final id = _editRequest;

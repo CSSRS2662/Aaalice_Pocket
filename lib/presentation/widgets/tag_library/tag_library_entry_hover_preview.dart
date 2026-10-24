@@ -2,11 +2,10 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
-import '../../../core/utils/localization_extension.dart';
 import '../../../data/models/tag_library/tag_library_entry.dart';
 import '../../themes/core/layered_surface_style.dart';
+import '../../utils/last_used_label.dart';
 import '../common/image_hover_preview_controller.dart';
 import '../common/thumbnail_display.dart';
 import '../common/translated_tag_text.dart';
@@ -277,10 +276,7 @@ class _TagLibraryEntryPreviewOverlayState
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      _formatLastUsed(
-                                        context,
-                                        entry.lastUsedAt!,
-                                      ),
+                                      lastUsedLabel(context, entry.lastUsedAt!),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: theme.colorScheme.outline,
@@ -302,18 +298,5 @@ class _TagLibraryEntryPreviewOverlayState
         );
       },
     );
-  }
-
-  String _formatLastUsed(BuildContext context, DateTime date) {
-    final diff = DateTime.now().difference(date);
-
-    if (diff.inDays == 0) {
-      return context.l10n.common_today;
-    } else if (diff.inDays == 1) {
-      return context.l10n.common_yesterday;
-    } else if (diff.inDays < 7) {
-      return context.l10n.common_daysAgo(diff.inDays);
-    }
-    return DateFormat.MMMd().format(date);
   }
 }

@@ -245,12 +245,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get common_filter => 'フィルター';
 
   @override
-  String get common_grid => 'グリッド';
-
-  @override
-  String get common_grouped => 'グループ';
-
-  @override
   String get common_date => '日付';
 
   @override
@@ -1076,12 +1070,6 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get agentChat_enableWebAccess => 'ウェブアクセスを有効にする';
-
-  @override
-  String get agentChat_disableWebAccess => 'ウェブアクセスを無効にする';
-
-  @override
   String get agentChat_webAccessLabel => 'ウェブ';
 
   @override
@@ -1866,14 +1854,6 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String prompt_importedCharacters(int count) {
     return '$count キャラクターをインポートしました';
-  }
-
-  @override
-  String get prompt_characterPromptReplaced => 'キャラクタープロンプトを置き換えました';
-
-  @override
-  String prompt_characterPromptAppended(Object count) {
-    return 'キャラクタープロンプトを追加しました ($count キャラクター)';
   }
 
   @override
@@ -6757,10 +6737,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get fixedTags_addedToSidebar => '固定タグのサイドバーに追加されました';
 
   @override
-  String get fixedTags_unknownCategory => '不明なカテゴリ';
+  String get fixedTags_unknownCategory => '不明なグループ';
 
   @override
-  String get fixedTags_uncategorized => '未分類';
+  String get fixedTags_uncategorized => 'グループなし';
 
   @override
   String get fixedTags_clickManageLongPressSidebar =>
@@ -6830,11 +6810,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get fixedTags_disableAll => 'すべて無効にする';
-
-  @override
-  String fixedTags_searchTarget(Object target) {
-    return '$target を検索...';
-  }
 
   @override
   String get fixedTags_noMatching => '一致する固定タグがありません';
@@ -7424,10 +7399,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get common_create => '作成';
 
   @override
-  String get tagLibrary_categories => 'カテゴリ';
+  String get tagLibrary_categories => 'グループ';
 
   @override
-  String get tagLibrary_newCategory => '新しいカテゴリ';
+  String get tagLibrary_newCategory => '新しいグループ';
 
   @override
   String get tagLibrary_addEntry => 'エントリの追加';
@@ -7445,28 +7420,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tagLibrary_export => 'エクスポート';
 
   @override
-  String get tagLibrary_sortCustom => 'カスタム並べ替え';
+  String get tagLibrary_sortCustom => 'カスタム';
 
   @override
   String get tagLibrary_sortName => '名前';
 
   @override
-  String get tagLibrary_sortUseCount => '使用回数';
-
-  @override
-  String get tagLibrary_sortUpdatedAt => '更新日時';
-
-  @override
-  String get tagLibrary_transferCategory => 'カテゴリを移動';
+  String get tagLibrary_transferCategory => 'グループを移動';
 
   @override
   String get tagLibrary_copyContent => 'コンテンツをコピー';
 
   @override
-  String get tagLibrary_moveToCategoryTitle => 'カテゴリに移動';
+  String get tagLibrary_moveToCategoryTitle => 'グループに移動';
 
   @override
-  String get tagLibrary_selectTargetCategory => 'ターゲット カテゴリを選択してください:';
+  String get tagLibrary_selectTargetCategory => '移動先のグループを選択してください：';
 
   @override
   String get tagLibrary_includeThumbnails => 'サムネイルを含める';
@@ -7488,7 +7457,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tagLibrary_entriesLabel => 'エントリ';
 
   @override
-  String get tagLibrary_categoriesLabel => 'カテゴリ';
+  String get tagLibrary_categoriesLabel => 'グループ';
 
   @override
   String get tagLibrary_selectExportContent => 'エクスポートするコンテンツを選択してください';
@@ -7526,7 +7495,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tagLibrary_entryCountLabel => 'エントリ';
 
   @override
-  String get tagLibrary_categoryCountLabel => 'カテゴリ';
+  String get tagLibrary_categoryCountLabel => 'グループ数';
 
   @override
   String get tagLibrary_exportDateLabel => 'エクスポート日';
@@ -7538,7 +7507,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String tagLibrary_categoriesSection(Object count) {
-    return 'カテゴリ ($count)';
+    return 'グループ ($count)';
   }
 
   @override
@@ -7586,7 +7555,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String tagLibrary_importedCategoriesCount(Object count) {
-    return '$count カテゴリ';
+    return '$count グループ';
   }
 
   @override
@@ -7610,7 +7579,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get tagLibrary_unknownCategory => '不明なカテゴリ';
+  String get tagLibrary_unknownCategory => '不明なグループ';
 
   @override
   String get tagLibrary_selectEntryToUpdate => '更新するエントリを選択してください';
@@ -7620,11 +7589,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get tagLibrary_replaceThumbnailHint => '既存のサムネイルを置き換えます';
-
-  @override
-  String tagLibrary_sentEntriesToMainPrompt(Object count) {
-    return '$count エントリをメイン プロンプトに送信しました';
-  }
 
   @override
   String tagLibrary_confirmDeleteSelectedEntries(Object count) {
@@ -7684,20 +7648,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tagLibrary_favorites => 'お気に入り';
 
   @override
-  String get tagLibrary_addSubCategory => 'サブカテゴリを追加';
+  String get tagLibrary_addSubCategory => 'サブグループを追加';
 
   @override
   String get tagLibrary_moveToRoot => 'ルートに移動';
 
   @override
-  String get tagLibrary_categoryNameHint => 'カテゴリ名を入力してください';
+  String get tagLibrary_categoryNameHint => 'グループ名を入力してください';
 
   @override
-  String get tagLibrary_deleteCategoryTitle => 'カテゴリを削除';
+  String get tagLibrary_deleteCategoryTitle => 'グループを削除';
 
   @override
   String tagLibrary_deleteCategoryConfirm(Object name, Object count) {
-    return 'カテゴリ「$name」を削除してもよろしいですか? $count エントリはルートに移動されます。';
+    return 'グループ「$name」を削除しますか？中の $count 件のエントリはグループなしになります。';
   }
 
   @override
@@ -7715,7 +7679,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tagLibrary_tryDifferentSearch => '別のキーワードを試してください';
 
   @override
-  String get tagLibrary_categoryEmpty => 'このカテゴリは空です';
+  String get tagLibrary_categoryEmpty => 'このグループにはまだエントリがありません';
 
   @override
   String get tagLibrary_empty => 'ライブラリが空です';
@@ -7733,10 +7697,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tagLibraryPicker_allCategories => 'すべてのカテゴリ';
 
   @override
-  String get tagLibrary_addedToFixed => '固定タグに追加';
-
-  @override
-  String get tagLibrary_entryMoved => 'エントリがターゲット カテゴリに移動されました';
+  String get tagLibrary_entryMoved => 'エントリをグループに移動しました';
 
   @override
   String get tagLibrary_thumbnail => 'サムネイル';
@@ -7754,10 +7715,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tagLibrary_nameHint => 'エントリ名を入力してください';
 
   @override
-  String get tagLibrary_category => 'カテゴリ';
+  String get tagLibrary_category => 'グループ';
 
   @override
-  String get tagLibrary_rootCategory => 'ルート';
+  String get tagLibrary_rootCategory => 'グループなし';
 
   @override
   String get tagLibrary_tags => 'タグ';
@@ -7838,7 +7799,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_proxyRestartHint => 'プロキシ設定が変更されました。再起動をお勧めします';
 
   @override
-  String get tagLibrary_categoryNameExists => 'カテゴリ名はすでに存在します';
+  String get tagLibrary_categoryNameExists => '同じ名前のグループがすでにあります';
 
   @override
   String get tagLibrary_addToLibrary => 'ライブラリに追加';
@@ -7853,7 +7814,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tagLibrary_entryUpdated => 'エントリが更新されました';
 
   @override
-  String get tagLibrary_uncategorized => '未分類';
+  String get tagLibrary_uncategorized => 'グループなし';
 
   @override
   String get tagLibrary_contentPreview => 'コンテンツのプレビュー';
@@ -8165,20 +8126,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get statistics_heatmapNoActivity => 'アクティビティはありません';
 
   @override
-  String get sendToHome_dialogTitle => 'ホームに送信';
-
-  @override
   String get sendToHome_send => '送信';
 
   @override
-  String get sendToHome_mainPrompt => 'メイン プロンプトに送信';
+  String get sendToHome_mainPrompt => 'ポジティブプロンプトに追加';
 
   @override
-  String get sendToHome_mainPromptSubtitle => 'メイン プロンプト入力フィールドに入力します';
+  String get sendToHome_mainPromptSubtitle => '今のプロンプトの末尾に追加します';
 
   @override
-  String get sendToHome_mainPromptPipeSubtitle =>
-      '完全なコンテンツをメイン プロンプトに送信します (パイプを含む)';
+  String get sendToHome_mainPromptPipeSubtitle => '縦線を含めて全体を末尾に追加します';
 
   @override
   String get sendToHome_smartDecompose => 'スマート分解';
@@ -8202,21 +8159,21 @@ class AppLocalizationsJa extends AppLocalizations {
       '既存のキャラクターを保持し、新しいキャラクターを追加します';
 
   @override
-  String get sendToHome_fixedTags => '固定タグに送信';
+  String get sendToHome_fixedTags => '固定タグに追加';
 
   @override
-  String get sendToHome_fixedTagsSubtitle => '固定タグリストに追加';
+  String get sendToHome_fixedTagsSubtitle => '以後の生成に毎回追加されます';
 
   @override
-  String get sendToHome_sendAsAlias => 'エイリアスとして送信';
+  String get sendToHome_sendAsAlias => '参照として送る';
 
   @override
   String sendToHome_sendAsAliasSubtitle(Object name) {
-    return '自宅に送信する場合は <$name> としてラップします';
+    return '<$name> と書き、エントリの変更に追従します';
   }
 
   @override
-  String get sendToHome_preview => 'プレビューを送信';
+  String get sendToHome_preview => '追加される内容';
 
   @override
   String get sendToHome_characterPrompt => 'キャラクタープロンプト';
@@ -8233,9 +8190,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sendToHome_recommended => '推奨';
-
-  @override
-  String get sendToHome_successMainPrompt => 'メイン プロンプトに送信されます';
 
   @override
   String get sendToHome_successReplaceCharacter => 'キャラクタープロンプトを置換しました';
@@ -11150,9 +11104,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String toast_extractPromptFailed(Object error) {
     return 'プロンプトを抽出できませんでした: $error';
   }
-
-  @override
-  String get toast_smartDecomposeSent => 'スマートに分解して送信';
 
   @override
   String get toast_addedToFixedTags => '固定タグに追加しました';
@@ -16092,4 +16043,259 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get characterLibrary_unsaved => 'キャラクターに未保存の変更あり';
+
+  @override
+  String get libraryGroup_character => 'キャラクター';
+
+  @override
+  String get libraryGroup_hair => '髪型';
+
+  @override
+  String get libraryGroup_eyes => '目';
+
+  @override
+  String get libraryGroup_expression => '表情';
+
+  @override
+  String get libraryGroup_outfit => '衣装';
+
+  @override
+  String get libraryGroup_accessory => 'アクセサリー';
+
+  @override
+  String get libraryGroup_pose => 'ポーズ';
+
+  @override
+  String get libraryGroup_composition => '構図';
+
+  @override
+  String get libraryGroup_scene => 'シーン';
+
+  @override
+  String get libraryGroup_background => '背景';
+
+  @override
+  String get libraryGroup_lighting => 'ライティング';
+
+  @override
+  String get libraryGroup_weather => '天気';
+
+  @override
+  String get libraryGroup_style => 'スタイル';
+
+  @override
+  String get libraryGroup_artist => '絵師';
+
+  @override
+  String get libraryGroup_color => 'カラー';
+
+  @override
+  String get libraryGroup_quality => '品質';
+
+  @override
+  String get libraryGroup_prop => '小物';
+
+  @override
+  String get libraryGroup_animal => '動物';
+
+  @override
+  String get libraryGroup_effect => 'エフェクト';
+
+  @override
+  String get libraryGroup_negative => 'ネガティブ';
+
+  @override
+  String get fixedTags_subtitle => '有効なタグは生成時に自動で追加されます';
+
+  @override
+  String get fixedTags_positiveTab => 'ポジティブ';
+
+  @override
+  String get fixedTags_negativeTab => 'ネガティブ';
+
+  @override
+  String get fixedTags_searchHint => '固定タグを検索';
+
+  @override
+  String get fixedTags_sortTitle => '並べ替え';
+
+  @override
+  String get fixedTags_sortFrequent => 'よく使う';
+
+  @override
+  String get fixedTags_sortFrequentHint => '最近2週間によく使ったものほど前へ。古い使用ほど軽く数えます';
+
+  @override
+  String get fixedTags_sortRecent => '最近使った順';
+
+  @override
+  String get fixedTags_sortRecentHint => '最後に生成と一緒に送った時刻の順';
+
+  @override
+  String get fixedTags_sortCustom => 'カスタム';
+
+  @override
+  String get fixedTags_sortCustomHint => 'グループ別、手動で並べた順';
+
+  @override
+  String get fixedTags_sortName => '名前';
+
+  @override
+  String get fixedTags_sortNameHint => '名前順（中国語はピンイン順）';
+
+  @override
+  String get fixedTags_enabledFirst => '有効なものを先に';
+
+  @override
+  String get fixedTags_enabledFirstHint => '使用中のタグがひと目で分かります';
+
+  @override
+  String get fixedTags_group => 'グループ';
+
+  @override
+  String get fixedTags_groupFollowsLibrary => 'ライブラリに連動';
+
+  @override
+  String get fixedTags_weightDecrease => '重みを下げる';
+
+  @override
+  String get fixedTags_weightIncrease => '重みを上げる';
+
+  @override
+  String fixedTags_usageSummary(int count, String when) {
+    return '$count 枚の画像と送信 · 最後は$when';
+  }
+
+  @override
+  String get fixedTags_usageNever => 'まだ生成で使っていません';
+
+  @override
+  String fixedTags_fromLibraryNote(String name) {
+    return 'ライブラリの「$name」から。内容とグループは同期されます';
+  }
+
+  @override
+  String tagLibrary_searchCount(int count) {
+    return '$count 件のエントリを検索';
+  }
+
+  @override
+  String get tagLibrary_manageGroups => 'グループを管理';
+
+  @override
+  String get tagLibrary_manageGroupsHint =>
+      'ドラッグで並べ替え。プリセットのグループには専用アイコン、カスタムには共通アイコンが付きます';
+
+  @override
+  String get tagLibrary_noGroups => 'グループはまだありません';
+
+  @override
+  String get tagLibrary_newGroupHint => 'プリセットを選ぶか、下で名前を付けてください';
+
+  @override
+  String get tagLibrary_presetGroups => 'プリセット';
+
+  @override
+  String get tagLibrary_customGroup => 'カスタムグループ';
+
+  @override
+  String get tagLibrary_customGroupHint => 'グループ名（例：自作キャラ）';
+
+  @override
+  String tagLibrary_groupCreated(String name) {
+    return 'グループ「$name」を作成しました';
+  }
+
+  @override
+  String get tagLibrary_sendToPrompt => 'プロンプトに送る';
+
+  @override
+  String get tagLibrary_moreTargets => 'ほかの送り先';
+
+  @override
+  String tagLibrary_sendSelected(int count) {
+    return '$count 件をプロンプトに送る';
+  }
+
+  @override
+  String tagLibrary_selectedCount(int count) {
+    return '$count 件選択中';
+  }
+
+  @override
+  String get tagLibrary_addedToPrompt => 'ポジティブプロンプトに追加しました';
+
+  @override
+  String tagLibrary_addedEntriesToPrompt(int count) {
+    return '$count 件をポジティブプロンプトに追加しました';
+  }
+
+  @override
+  String get tagLibrary_goGenerate => '生成へ';
+
+  @override
+  String tagLibrary_usedTimes(int count) {
+    return '$count 回使用';
+  }
+
+  @override
+  String get tagLibrary_neverUsed => '未使用';
+
+  @override
+  String get tagLibrary_isFixedTag => '固定タグに登録済み';
+
+  @override
+  String get tagLibrary_addAsFixed => '固定タグに追加';
+
+  @override
+  String tagLibrary_addedAsFixed(int count) {
+    return '$count 件を固定タグに追加しました';
+  }
+
+  @override
+  String get tagLibrary_alreadyFixed => 'これらはすでに固定タグです';
+
+  @override
+  String get tagLibrary_setPreview => 'プレビュー画像を設定';
+
+  @override
+  String get tagLibrary_replacePreview => 'プレビュー画像を変更';
+
+  @override
+  String get tagLibrary_removePreview => 'プレビュー画像を外す';
+
+  @override
+  String get tagLibrary_sortTitle => '並べ替え';
+
+  @override
+  String get tagLibrary_sortFrequent => 'よく使う';
+
+  @override
+  String get tagLibrary_sortFrequentHint => '最近よく使ったものほど前へ。古い使用ほど軽く数えます';
+
+  @override
+  String get tagLibrary_sortRecent => '最近使った順';
+
+  @override
+  String get tagLibrary_sortRecentHint => '最後に送った時刻の順';
+
+  @override
+  String get tagLibrary_sortCustomHint => 'グループ別、並べた順のまま';
+
+  @override
+  String get tagLibrary_sortNameHint => '名前順（中国語はピンイン順）';
+
+  @override
+  String get tagLibrary_favoritesFirst => 'お気に入りを先頭に';
+
+  @override
+  String get tagLibrary_favoritesFirstHint => '「すべて」でお気に入りを先頭の別枠に表示します';
+
+  @override
+  String sendToHome_titleFor(String name) {
+    return '「$name」を送る';
+  }
+
+  @override
+  String get sendToHome_chooseTarget => '追加する場所を選んでください';
 }

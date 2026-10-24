@@ -5,14 +5,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../../data/models/fixed_tag/fixed_tag_entry.dart';
 import '../../../data/models/fixed_tag/fixed_tag_prompt_type.dart';
+import '../../../data/models/tag_library/tag_library_category.dart';
 import '../../adaptive/adaptive_presenter.dart';
 import '../../adaptive/content_sized_adaptive_form.dart';
+import '../../adaptive/interaction_policy.dart';
+import '../../providers/fixed_tag_usage_provider.dart';
 import '../../providers/fixed_tags_provider.dart';
+import '../../providers/tag_library_page_provider.dart';
 import '../../themes/core/layered_surface_style.dart';
+import '../../utils/last_used_label.dart';
 import '../common/app_toast.dart';
 import '../common/horizontal_segmented_control.dart';
 import '../common/translated_tag_text.dart';
+import '../tag_library/library_group_style.dart';
 import 'fixed_tags_dialog_models.dart';
+
+/// Weight limits and step, matching the edit dialog's slider.
+const _minWeight = 0.5;
+const _maxWeight = 2.0;
+const _weightStep = 0.05;
 
 /// Shows everything about one fixed tag except the on/off state, which the
 /// grid toggles directly.
@@ -23,8 +34,7 @@ Future<void> showFixedTagDetails({
 }) {
   return AdaptivePresenter.showForm<void>(
     context: context,
-    titleBuilder: (context) =>
-        Text(entry.displayName, style: Theme.of(context).textTheme.titleLarge),
+    titleBuilder: (context) => _DetailsTitle(entry: entry),
     dialogWidth: 440,
     builder: (_, scrollController) => FixedTagDetailsBody(
       entryId: entry.id,
@@ -32,6 +42,39 @@ Future<void> showFixedTagDetails({
       scrollController: scrollController,
     ),
   );
+}
+
+class _DetailsTitle extends StatelessWidget {
+  const _DetailsTitle({required this.entry});
+
+  final FixedTagEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          entry.displayName,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Text(
+          entry.promptType == FixedTagPromptType.positive
+              ? context.l10n.fixedTags_positiveTitle
+              : context.l10n.fixedTags_negativeTitle,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class FixedTagDetailsBody extends ConsumerWidget {
@@ -51,6 +94,15 @@ class FixedTagDetailsBody extends ConsumerWidget {
     final state = ref.watch(fixedTagsNotifierProvider);
     final entry = state.entries.where((item) => item.id == entryId).firstOrNull;
     if (entry == null) return const SizedBox.shrink();
+    final library = ref.watch(tagLibraryPageNotifierProvider);
+    final libraryEntry = entry.sourceEntryId == null
+        ? null
+        : library.entries
+              .where((item) => item.id == entry.sourceEntryId)
+              .firstOrNull;
+    final usage = ref.watch(
+      fixedTagUsageProvider.select((scores) => scores[entry.id]),
+    );
     final linked = entry.promptType == FixedTagPromptType.positive
         ? state.linkedNegativesOf(entry.id)
         : state.linkedPositivesOf(entry.id);
@@ -65,21 +117,50 @@ class FixedTagDetailsBody extends ConsumerWidget {
     return ContentSizedAdaptiveForm(
       key: const ValueKey('fixed-tag-details'),
       scrollController: scrollController,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       content: [
-        _DetailsMeta(entry: entry),
-        const SizedBox(height: 12),
         _ContentPreview(entry: entry),
-        const SizedBox(height: 16),
-        _PositionSelector(
+        const SizedBox(height: 12),
+        _GroupRow(
+          categoryId: libraryEntry?.categoryId ?? entry.categoryId,
+          categories: library.categories,
+          followsLibrary: libraryEntry != null,
+          onPressed: () => closeThen(() => commands.moveToCategory(entry)),
+        ),
+        _WeightRow(
+          weight: entry.weight,
+          onChanged: (weight) => commands.setWeight(entry, weight),
+        ),
+        _PositionRow(
           entry: entry,
           onChanged: () => commands.togglePosition(entry),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         _LinksRow(
           linked: linked,
           onPressed: () => closeThen(() => commands.showLinkManager(entry)),
         ),
+        const SizedBox(height: 14),
+        _NoteLine(
+          key: const ValueKey('fixed-tag-details-usage'),
+          icon: Icons.bar_chart_rounded,
+          text: usage == null || usage.lastUsedAt == null
+              ? context.l10n.fixedTags_usageNever
+              : context.l10n.fixedTags_usageSummary(
+                  usage.count,
+                  lastUsedLabel(context, usage.lastUsedAt!),
+                ),
+        ),
+        if (libraryEntry != null) ...[
+          const SizedBox(height: 6),
+          _NoteLine(
+            key: const ValueKey('fixed-tag-details-library'),
+            icon: Icons.sync_rounded,
+            text: context.l10n.fixedTags_fromLibraryNote(
+              libraryEntry.displayName,
+            ),
+          ),
+        ],
       ],
       footer: SafeArea(
         top: false,
@@ -135,52 +216,6 @@ class FixedTagDetailsBody extends ConsumerWidget {
   }
 }
 
-class _DetailsMeta extends StatelessWidget {
-  const _DetailsMeta({required this.entry});
-
-  final FixedTagEntry entry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.labelLarge?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-    final scope = entry.promptType == FixedTagPromptType.positive
-        ? context.l10n.fixedTags_positiveTitle
-        : context.l10n.fixedTags_negativeTitle;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '$scope · ${context.l10n.fixedTags_weight} '
-          '${entry.weight.toStringAsFixed(2)}',
-          style: style,
-        ),
-        if (entry.sourceEntryId != null) ...[
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Icon(
-                Icons.sync_rounded,
-                size: 14,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  context.l10n.fixedTags_linkedFromLibrary,
-                  style: style,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-}
-
 class _ContentPreview extends StatelessWidget {
   const _ContentPreview({required this.entry});
 
@@ -219,48 +254,222 @@ class _ContentPreview extends StatelessWidget {
   }
 }
 
-class _PositionSelector extends StatelessWidget {
-  const _PositionSelector({required this.entry, required this.onChanged});
+/// A labeled row: the label on the start side, the control on the end side,
+/// stacked when large text leaves no room for both.
+class _SettingRow extends StatelessWidget {
+  const _SettingRow({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final labelText = Text(
+      label,
+      style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+    );
+    final stacked = MediaQuery.textScalerOf(context).scale(1) >= 2;
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: context.interactionPolicy.minimumControlExtent + 8,
+      ),
+      child: stacked
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [labelText, const SizedBox(height: 6), child],
+              ),
+            )
+          : Row(
+              children: [
+                labelText,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: child,
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class _GroupRow extends StatelessWidget {
+  const _GroupRow({
+    required this.categoryId,
+    required this.categories,
+    required this.followsLibrary,
+    required this.onPressed,
+  });
+
+  final String? categoryId;
+  final List<TagLibraryCategory> categories;
+  final bool followsLibrary;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final category = categories
+        .where((item) => item.id == categoryId)
+        .firstOrNull;
+    final name = category?.displayName ?? context.l10n.fixedTags_uncategorized;
+    return _SettingRow(
+      label: context.l10n.fixedTags_group,
+      child: InkWell(
+        key: const ValueKey('fixed-tag-details-group'),
+        borderRadius: BorderRadius.circular(10),
+        onTap: onPressed,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: context.interactionPolicy.minimumControlExtent,
+          ),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(start: 8, end: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LibraryGroupIcon(
+                  style: category == null
+                      ? LibraryGroupStyle.generic
+                      : LibraryGroupStyle.of(category.id, categories),
+                  size: 24,
+                  iconSize: 15,
+                  radius: 7,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text.rich(
+                    TextSpan(
+                      text: name,
+                      children: [
+                        if (followsLibrary)
+                          TextSpan(
+                            text:
+                                ' · ${context.l10n.fixedTags_groupFollowsLibrary}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WeightRow extends StatelessWidget {
+  const _WeightRow({required this.weight, required this.onChanged});
+
+  final double weight;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    void step(int direction) {
+      final next =
+          ((weight + direction * _weightStep) / _weightStep).round() *
+          _weightStep;
+      onChanged(next.clamp(_minWeight, _maxWeight).toDouble());
+    }
+
+    return _SettingRow(
+      label: context.l10n.fixedTags_weight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: controlSurfaceColor(theme.colorScheme),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              key: const ValueKey('fixed-tag-details-weight-down'),
+              tooltip: context.l10n.fixedTags_weightDecrease,
+              onPressed: weight <= _minWeight + 0.001 ? null : () => step(-1),
+              icon: const Icon(Icons.remove_rounded),
+            ),
+            // Very large text shrinks the number rather than the buttons.
+            Flexible(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 44),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    weight.toStringAsFixed(2),
+                    key: const ValueKey('fixed-tag-details-weight'),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              key: const ValueKey('fixed-tag-details-weight-up'),
+              tooltip: context.l10n.fixedTags_weightIncrease,
+              onPressed: weight >= _maxWeight - 0.001 ? null : () => step(1),
+              icon: const Icon(Icons.add_rounded),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PositionRow extends StatelessWidget {
+  const _PositionRow({required this.entry, required this.onChanged});
 
   final FixedTagEntry entry;
   final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.l10n.fixedTags_position,
-          style: theme.textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+    return _SettingRow(
+      label: context.l10n.fixedTags_position,
+      child: HorizontalSegmentedControl(
+        child: SegmentedButton<FixedTagPosition>(
+          key: const ValueKey('fixed-tag-details-position'),
+          showSelectedIcon: false,
+          segments: [
+            ButtonSegment(
+              value: FixedTagPosition.prefix,
+              label: Text(context.l10n.fixedTags_prefix),
+            ),
+            ButtonSegment(
+              value: FixedTagPosition.suffix,
+              label: Text(context.l10n.fixedTags_suffix),
+            ),
+          ],
+          selected: {entry.position},
+          onSelectionChanged: (selection) {
+            if (selection.first != entry.position) onChanged();
+          },
         ),
-        const SizedBox(height: 6),
-        HorizontalSegmentedControl(
-          child: SegmentedButton<FixedTagPosition>(
-            key: const ValueKey('fixed-tag-details-position'),
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(
-                value: FixedTagPosition.prefix,
-                icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-                label: Text(context.l10n.fixedTags_prefix),
-              ),
-              ButtonSegment(
-                value: FixedTagPosition.suffix,
-                icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                label: Text(context.l10n.fixedTags_suffix),
-              ),
-            ],
-            selected: {entry.position},
-            onSelectionChanged: (selection) {
-              if (selection.first != entry.position) onChanged();
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -332,6 +541,35 @@ class _LinksRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _NoteLine extends StatelessWidget {
+  const _NoteLine({super.key, required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.onSurfaceVariant;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 1),
+          child: Icon(icon, size: 15, color: color),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodySmall?.copyWith(color: color),
+          ),
+        ),
+      ],
     );
   }
 }

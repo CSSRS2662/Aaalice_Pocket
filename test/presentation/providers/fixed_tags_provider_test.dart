@@ -5,6 +5,7 @@ import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/data/models/fixed_tag/fixed_tag_entry.dart';
 import 'package:nai_launcher/data/models/fixed_tag/fixed_tag_link.dart';
 import 'package:nai_launcher/data/models/fixed_tag/fixed_tag_prompt_type.dart';
+import 'package:nai_launcher/data/models/tag_library/tag_library_category.dart';
 import 'package:nai_launcher/data/models/tag_library/tag_library_entry.dart';
 import 'package:nai_launcher/presentation/providers/fixed_tags_provider.dart';
 import 'package:nai_launcher/presentation/providers/tag_library_page_provider.dart';
@@ -376,46 +377,136 @@ void main() {
       expect(grouped.containsKey('neg-cat'), isFalse);
     });
 
-    test(
-      'inferFixedTagCategories copies categoryId from linked library entries',
-      () {
-        final fixed = FixedTagEntry.create(
-          name: 'linked',
+    TagLibraryEntry libraryEntry(String id, String? categoryId) =>
+        TagLibraryEntry(
+          id: id,
+          name: id,
           content: 'tag',
-          sourceEntryId: 'lib-1',
+          categoryId: categoryId,
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
         );
-        final untouched = FixedTagEntry.create(
-          name: 'already',
-          content: 'tag',
-          sourceEntryId: 'lib-2',
-          categoryId: 'existing',
-        );
-        final inferred = inferFixedTagCategories(
-          [fixed, untouched],
-          [
-            TagLibraryEntry(
-              id: 'lib-1',
-              name: 'linked',
-              content: 'tag',
-              categoryId: 'from-lib',
-              createdAt: DateTime(2026),
-              updatedAt: DateTime(2026),
-            ),
-            TagLibraryEntry(
-              id: 'lib-2',
-              name: 'already',
-              content: 'tag',
-              categoryId: 'should-not-overwrite',
-              createdAt: DateTime(2026),
-              updatedAt: DateTime(2026),
-            ),
-          ],
-        );
+    TagLibraryCategory category(String id) =>
+        TagLibraryCategory(id: id, name: id, createdAt: DateTime(2026));
 
-        expect(inferred[0].categoryId, 'from-lib');
-        expect(inferred[1].categoryId, 'existing');
-      },
-    );
+    test('reconcile makes linked tags follow their library entry', () {
+      final linked = FixedTagEntry.create(
+        name: 'linked',
+        content: 'tag',
+        sourceEntryId: 'lib-1',
+        categoryId: 'old',
+      );
+      final reconciled = reconcileFixedTagCategories(
+        [linked],
+        [libraryEntry('lib-1', 'scene')],
+        [category('old'), category('scene')],
+      );
+
+      expect(reconciled.single.categoryId, 'scene');
+    });
+
+    test('reconcile ungroups tags whose group is gone', () {
+      final manual = FixedTagEntry.create(
+        name: 'manual',
+        content: 'tag',
+        categoryId: 'deleted',
+      );
+      final orphanLink = FixedTagEntry.create(
+        name: 'orphan',
+        content: 'tag',
+        sourceEntryId: 'missing-entry',
+        categoryId: 'kept',
+      );
+      final reconciled = reconcileFixedTagCategories(
+        [manual, orphanLink],
+        const [],
+        [category('kept')],
+      );
+
+      expect(reconciled[0].categoryId, isNull);
+      // A tag whose library entry was deleted keeps its own group.
+      expect(reconciled[1].categoryId, 'kept');
+    });
+
+    test('effective group prefers the linked entry', () {
+      final linked = FixedTagEntry.create(
+        name: 'linked',
+        content: 'tag',
+        sourceEntryId: 'lib-1',
+        categoryId: 'stale',
+      );
+      expect(
+        effectiveFixedTagCategoryId(linked, {
+          'lib-1': libraryEntry('lib-1', 'fresh'),
+        }),
+        'fresh',
+      );
+      expect(effectiveFixedTagCategoryId(linked, const {}), 'stale');
+    });
+  });
+
+  group('词库移动与删除分组时固定词跟随', () {
+    Future<({ProviderContainer container, String entryId, String tagId})>
+    linkedEntry() async {
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(MemoryLocalStorage()),
+        ],
+      );
+      addTearDown(container.dispose);
+      final library = container.read(tagLibraryPageNotifierProvider.notifier);
+      final scene = await library.addCategory(name: '场景');
+      final style = await library.addCategory(name: '风格');
+      final entry = await library.addEntry(
+        name: '夜景',
+        content: 'night',
+        categoryId: scene!.id,
+      );
+      final tag = await container
+          .read(fixedTagsNotifierProvider.notifier)
+          .addEntry(
+            name: '夜景',
+            content: 'night',
+            sourceEntryId: entry.id,
+            categoryId: scene.id,
+          );
+      expect(style, isNotNull);
+      return (container: container, entryId: entry.id, tagId: tag.id);
+    }
+
+    String? tagCategory(ProviderContainer container, String id) => container
+        .read(fixedTagsNotifierProvider)
+        .entries
+        .singleWhere((e) => e.id == id)
+        .categoryId;
+
+    test('移动词条到另一分组时关联的固定词一起移动', () async {
+      final (:container, :entryId, :tagId) = await linkedEntry();
+      final style = container
+          .read(tagLibraryPageNotifierProvider)
+          .categories
+          .singleWhere((c) => c.name == '风格');
+
+      await container
+          .read(tagLibraryPageNotifierProvider.notifier)
+          .moveEntryToCategory(entryId, style.id);
+
+      expect(tagCategory(container, tagId), style.id);
+    });
+
+    test('删除分组后固定词回到未分组', () async {
+      final (:container, :entryId, :tagId) = await linkedEntry();
+      final scene = container
+          .read(tagLibraryPageNotifierProvider)
+          .categories
+          .singleWhere((c) => c.name == '场景');
+
+      await container
+          .read(tagLibraryPageNotifierProvider.notifier)
+          .deleteCategory(scene.id);
+
+      expect(tagCategory(container, tagId), isNull);
+    });
   });
 
   group('library preview resolution', () {

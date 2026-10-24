@@ -7,9 +7,12 @@ import '../../../data/models/fixed_tag/fixed_tag_entry.dart';
 import '../../../data/models/fixed_tag/fixed_tag_prompt_type.dart';
 import '../../../data/models/tag_library/tag_library_entry.dart';
 import '../../providers/fixed_tags_provider.dart';
+import '../../providers/fixed_tags_sort_provider.dart';
 import '../../providers/tag_library_page_provider.dart';
 import '../../router/app_routes.dart';
+import '../../screens/tag_library_page/widgets/bulk_move_category_dialog.dart';
 import '../common/app_toast.dart';
+import '../common/sort_options_sheet.dart';
 import '../common/themed_confirm_dialog.dart';
 import 'fixed_tag_details_sheet.dart';
 import 'fixed_tag_edit_dialog.dart';
@@ -56,6 +59,9 @@ class FixedTagsDialogCoordinator {
         commands: commands,
       ),
       togglePosition: (entry) => notifier.togglePosition(entry.id),
+      setWeight: (entry, weight) =>
+          notifier.updateEntry(entry.copyWith(weight: weight)),
+      moveToCategory: (entry) => _moveToCategory(context, entry),
       reorder: notifier.reorderWithinPromptType,
       editEntry: (entry, initialPromptType) =>
           _editEntry(context, entry, initialPromptType),
@@ -69,6 +75,81 @@ class FixedTagsDialogCoordinator {
         entry: entry,
         showAllCandidates: true,
       ),
+      showSortOptions: () => _showSortOptions(context),
+    );
+  }
+
+  /// A tag from the library lives in its entry's group, so moving it moves
+  /// the entry and the tag follows; other tags just change their own group.
+  Future<void> _moveToCategory(
+    BuildContext context,
+    FixedTagEntry entry,
+  ) async {
+    final library = ref.read(tagLibraryPageNotifierProvider);
+    final linked = library.entries
+        .where((item) => item.id == entry.sourceEntryId)
+        .firstOrNull;
+    final target = await BulkMoveCategoryDialog.show(
+      context,
+      categories: library.categories,
+      currentCategoryId: linked?.categoryId ?? entry.categoryId,
+    );
+    if (target == null) return;
+    final categoryId = target.isEmpty ? null : target;
+    if (linked != null) {
+      await ref
+          .read(tagLibraryPageNotifierProvider.notifier)
+          .moveEntryToCategory(linked.id, categoryId);
+    } else {
+      await ref
+          .read(fixedTagsNotifierProvider.notifier)
+          .updateEntry(entry.copyWith(categoryId: categoryId));
+    }
+  }
+
+  void _showSortOptions(BuildContext context) {
+    final l10n = context.l10n;
+    showSortOptionsSheet<FixedTagsSort>(
+      context: context,
+      title: l10n.fixedTags_sortTitle,
+      specOf: (ref) {
+        final prefs = ref.watch(fixedTagsSortProvider);
+        final notifier = ref.read(fixedTagsSortProvider.notifier);
+        return SortOptionsSpec(
+          options: [
+            SortOption(
+              value: FixedTagsSort.frequent,
+              title: l10n.fixedTags_sortFrequent,
+              subtitle: l10n.fixedTags_sortFrequentHint,
+            ),
+            SortOption(
+              value: FixedTagsSort.recent,
+              title: l10n.fixedTags_sortRecent,
+              subtitle: l10n.fixedTags_sortRecentHint,
+            ),
+            SortOption(
+              value: FixedTagsSort.custom,
+              title: l10n.fixedTags_sortCustom,
+              subtitle: l10n.fixedTags_sortCustomHint,
+            ),
+            SortOption(
+              value: FixedTagsSort.name,
+              title: l10n.fixedTags_sortName,
+              subtitle: l10n.fixedTags_sortNameHint,
+            ),
+          ],
+          selected: prefs.sort,
+          onSelected: notifier.setSort,
+          toggle: SortToggle(
+            key: const ValueKey('fixed-tags-enabled-first'),
+            title: l10n.fixedTags_enabledFirst,
+            subtitle: l10n.fixedTags_enabledFirstHint,
+            value: prefs.enabledFirst,
+            enabled: !prefs.groupsByCategory,
+            onChanged: notifier.setEnabledFirst,
+          ),
+        );
+      },
     );
   }
 

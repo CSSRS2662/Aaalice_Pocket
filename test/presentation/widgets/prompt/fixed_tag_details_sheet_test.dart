@@ -81,7 +81,8 @@ void main() {
 
     expect(find.byKey(const ValueKey('adaptive-bottom-sheet')), findsOne);
     expect(find.text('无袖水手服'), findsOne);
-    expect(find.textContaining('正向固定词 · 权重 1.20'), findsOne);
+    expect(find.text('正向固定词'), findsOne);
+    expect(find.text('1.20'), findsOne);
     expect(find.textContaining('serafuku'), findsWidgets);
     expect(find.text('已联动：低画质'), findsOne);
 
@@ -97,10 +98,23 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('权重加减按 0.05 调整并停在上下限', (tester) async {
+    final calls = await openDetails(tester, size: const Size(390, 800));
+
+    await tester.tap(find.byKey(const ValueKey('fixed-tag-details-weight-up')));
+    await tester.tap(
+      find.byKey(const ValueKey('fixed-tag-details-weight-down')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(calls, ['weight:positive:1.25', 'weight:positive:1.15']);
+  });
+
   for (final (key, call) in [
     ('fixed-tag-details-edit', 'edit'),
     ('fixed-tag-details-delete', 'delete'),
     ('fixed-tag-details-links', 'links'),
+    ('fixed-tag-details-group', 'group'),
   ]) {
     testWidgets('$call 先关闭详情再打开对应流程', (tester) async {
       final calls = await openDetails(tester, size: const Size(390, 800));
@@ -119,6 +133,8 @@ void main() {
     // Lazily built rows need the vertical scroll; ensureVisible then also
     // scrolls the horizontal segment strip at 3x.
     for (final target in [
+      find.byKey(const ValueKey('fixed-tag-details-group')),
+      find.byKey(const ValueKey('fixed-tag-details-weight-up')),
       find.text('后缀'),
       find.byKey(const ValueKey('fixed-tag-details-links')),
       find.byKey(const ValueKey('fixed-tag-details-copy')),
@@ -165,12 +181,16 @@ FixedTagsDialogCommands _commands(
     toggleEntry: unused,
     showDetails: unused,
     togglePosition: (entry) => notifier.togglePosition(entry.id),
+    setWeight: (entry, weight) =>
+        calls.add('weight:${entry.id}:${weight.toStringAsFixed(2)}'),
+    moveToCategory: (entry) => calls.add('group:${entry.id}'),
     reorder: (_, _, _) {},
     editEntry: (entry, _) => calls.add('edit:${entry?.id}'),
     deleteEntry: (entry) => calls.add('delete:${entry.id}'),
     clearAll: unused,
     pickFromLibrary: unused,
     showLinkManager: (entry) => calls.add('links:${entry.id}'),
+    showSortOptions: unused,
   );
 }
 

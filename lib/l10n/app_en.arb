@@ -113,8 +113,6 @@
   "common_exit": "Exit",
   "common_folder": "Folder",
   "common_filter": "Filter",
-  "common_grid": "Grid",
-  "common_grouped": "Grouped",
   "common_date": "Date",
   "common_pack": "Pack",
   "common_multiSelect": "Multi-select",
@@ -449,8 +447,6 @@
   "agentChat_noResources": "No resources are available here yet.",
   "agentChat_imageTooLarge": "{fileName} is larger than {maxSizeMB} MB.",
   "@agentChat_imageTooLarge": {"placeholders":{"fileName":{"type":"String"},"maxSizeMB":{"type":"int"}}},
-  "agentChat_enableWebAccess": "Enable web access",
-  "agentChat_disableWebAccess": "Disable web access",
   "agentChat_webAccessLabel": "Web access",
   "agentChat_contextUsageLabel": "Context",
   "agentChat_unsupportedImageFormat": "Unsupported image format: {fileName}",
@@ -808,13 +804,6 @@
       "count": {
         "type": "int"
       }
-    }
-  },
-  "prompt_characterPromptReplaced": "Replaced character prompts",
-  "prompt_characterPromptAppended": "Appended character prompts ({count} character(s))",
-  "@prompt_characterPromptAppended": {
-    "placeholders": {
-      "count": {}
     }
   },
   "prompt_smartDecomposedWithCharacters": "Decomposed into main prompt + {count} character(s)",
@@ -3191,8 +3180,8 @@
   "fixedTags_emptyNegative": "No Undesired Content fixed tags",
   "fixedTags_noMatchingNegative": "No matching Undesired Content fixed tags",
   "fixedTags_addedToSidebar": "Added to fixed tags sidebar",
-  "fixedTags_unknownCategory": "Unknown Category",
-  "fixedTags_uncategorized": "Uncategorized",
+  "fixedTags_unknownCategory": "Unknown group",
+  "fixedTags_uncategorized": "Ungrouped",
   "fixedTags_clickManageLongPressSidebar": "Click to manage, long-press to open sidebar",
   "fixedTags_clickManageLongPressCompact": "Click to manage, long-press sidebar",
   "fixedTags_linkCount": "{count} linked",
@@ -3239,12 +3228,6 @@
   },
   "fixedTags_enableAll": "Enable All",
   "fixedTags_disableAll": "Disable All",
-  "fixedTags_searchTarget": "Search {target}...",
-  "@fixedTags_searchTarget": {
-    "placeholders": {
-      "target": {}
-    }
-  },
   "fixedTags_noMatching": "No matching fixed tags",
   "fixedTags_emptyTarget": "No {target}",
   "@fixedTags_emptyTarget": {
@@ -3506,21 +3489,19 @@
   "common_rename": "Rename",
   "common_create": "Create",
 
-  "tagLibrary_categories": "Categories",
-  "tagLibrary_newCategory": "New Category",
+  "tagLibrary_categories": "Groups",
+  "tagLibrary_newCategory": "New group",
   "tagLibrary_addEntry": "Add Entry",
   "tagLibrary_editEntry": "Edit Entry",
   "tagLibrary_searchHint": "Search entries...",
   "tagLibrary_import": "Import",
   "tagLibrary_export": "Export",
-  "tagLibrary_sortCustom": "Custom Sort",
+  "tagLibrary_sortCustom": "Custom",
   "tagLibrary_sortName": "Name",
-  "tagLibrary_sortUseCount": "Usage",
-  "tagLibrary_sortUpdatedAt": "Updated",
-  "tagLibrary_transferCategory": "Move Category",
+  "tagLibrary_transferCategory": "Move to group",
   "tagLibrary_copyContent": "Copy Content",
-  "tagLibrary_moveToCategoryTitle": "Move to Category",
-  "tagLibrary_selectTargetCategory": "Select target category:",
+  "tagLibrary_moveToCategoryTitle": "Move to group",
+  "tagLibrary_selectTargetCategory": "Choose a group:",
   "tagLibrary_includeThumbnails": "Include thumbnails",
   "tagLibrary_includeThumbnailsSubtitle": "Increases file size",
   "tagLibrary_selectedExportCount": "Export ({count} items)",
@@ -3536,7 +3517,7 @@
     }
   },
   "tagLibrary_entriesLabel": "Entries",
-  "tagLibrary_categoriesLabel": "Categories",
+  "tagLibrary_categoriesLabel": "Groups",
   "tagLibrary_selectExportContent": "Select content to export",
   "tagLibrary_selectImportContent": "Select content to import",
   "tagLibrary_selectSaveLocation": "Select save location",
@@ -3553,7 +3534,7 @@
   "tagLibrary_reselect": "Select Again",
   "tagLibrary_fileInfo": "File Info",
   "tagLibrary_entryCountLabel": "Entries",
-  "tagLibrary_categoryCountLabel": "Categories",
+  "tagLibrary_categoryCountLabel": "Groups",
   "tagLibrary_exportDateLabel": "Export Date",
   "tagLibrary_importConflictsHint": "{count} conflicts found. Click a conflicted item below to choose how to handle it.",
   "@tagLibrary_importConflictsHint": {
@@ -3561,7 +3542,7 @@
       "count": {}
     }
   },
-  "tagLibrary_categoriesSection": "Categories ({count})",
+  "tagLibrary_categoriesSection": "Groups ({count})",
   "@tagLibrary_categoriesSection": {
     "placeholders": {
       "count": {}
@@ -3603,7 +3584,7 @@
       "count": {}
     }
   },
-  "tagLibrary_importedCategoriesCount": "{count} categories",
+  "tagLibrary_importedCategoriesCount": "{count} groups",
   "@tagLibrary_importedCategoriesCount": {
     "placeholders": {
       "count": {}
@@ -3633,16 +3614,10 @@
       "count": {}
     }
   },
-  "tagLibrary_unknownCategory": "Unknown Category",
+  "tagLibrary_unknownCategory": "Unknown group",
   "tagLibrary_selectEntryToUpdate": "Select Entry to Update",
   "tagLibrary_updatePreview": "Update Preview",
   "tagLibrary_replaceThumbnailHint": "Will replace existing thumbnail",
-  "tagLibrary_sentEntriesToMainPrompt": "Sent {count} entries to main prompt",
-  "@tagLibrary_sentEntriesToMainPrompt": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "tagLibrary_confirmDeleteSelectedEntries": "Delete {count} selected entries? This action cannot be undone.",
   "@tagLibrary_confirmDeleteSelectedEntries": {
     "placeholders": {
@@ -3692,11 +3667,11 @@
   "tagLibrary_updateExistingThumbnailSubtitle": "Select an entry and replace its thumbnail",
   "tagLibrary_allEntries": "All",
   "tagLibrary_favorites": "Favorites",
-  "tagLibrary_addSubCategory": "Add Subcategory",
+  "tagLibrary_addSubCategory": "Add subgroup",
   "tagLibrary_moveToRoot": "Move to Root",
-  "tagLibrary_categoryNameHint": "Enter category name",
-  "tagLibrary_deleteCategoryTitle": "Delete Category",
-  "tagLibrary_deleteCategoryConfirm": "Are you sure you want to delete category \"{name}\"? {count} entries will be moved to root.",
+  "tagLibrary_categoryNameHint": "Group name",
+  "tagLibrary_deleteCategoryTitle": "Delete group",
+  "tagLibrary_deleteCategoryConfirm": "Delete the group “{name}”? Its {count} entries will become ungrouped.",
   "@tagLibrary_deleteCategoryConfirm": {
     "placeholders": {
       "name": {},
@@ -3712,7 +3687,7 @@
   },
   "tagLibrary_noSearchResults": "No matching entries found",
   "tagLibrary_tryDifferentSearch": "Try different keywords",
-  "tagLibrary_categoryEmpty": "This category is empty",
+  "tagLibrary_categoryEmpty": "This group has no entries yet",
   "tagLibrary_empty": "Library is empty",
   "tagLibrary_addFirstEntry": "Click the button above to add your first entry",
 
@@ -3720,15 +3695,14 @@
   "tagLibraryPicker_searchHint": "Search entries...",
   "tagLibraryPicker_allCategories": "All Categories",
 
-  "tagLibrary_addedToFixed": "Added to Fixed Tags",
-  "tagLibrary_entryMoved": "Entry moved to target category",
+  "tagLibrary_entryMoved": "Entry moved to the group",
   "tagLibrary_thumbnail": "Thumbnail",
   "tagLibrary_selectImage": "Select Image",
   "tagLibrary_thumbnailHint": "Supports PNG, JPG, WEBP, GIF, BMP, TIFF, and more",
   "tagLibrary_name": "Name",
   "tagLibrary_nameHint": "Enter entry name",
-  "tagLibrary_category": "Category",
-  "tagLibrary_rootCategory": "Root",
+  "tagLibrary_category": "Group",
+  "tagLibrary_rootCategory": "Ungrouped",
   "tagLibrary_tags": "Tags",
   "tagLibrary_tagsHint": "Enter tags, separated by commas",
   "tagLibrary_tagsHelper": "Tags are used for filtering and searching",
@@ -3765,12 +3739,12 @@
   },
   "settings_proxyRestartHint": "Proxy settings changed, restart recommended",
 
-  "tagLibrary_categoryNameExists": "Category name already exists",
+  "tagLibrary_categoryNameExists": "A group with this name already exists",
   "tagLibrary_addToLibrary": "Add to Library",
   "tagLibrary_saveToLibrary": "Save to Library",
   "tagLibrary_entrySaved": "Saved to library",
   "tagLibrary_entryUpdated": "Entry updated",
-  "tagLibrary_uncategorized": "Uncategorized",
+  "tagLibrary_uncategorized": "Ungrouped",
   "tagLibrary_contentPreview": "Content Preview",
   "tagLibrary_confirmAdd": "Confirm",
   "tagLibrary_entryName": "Name",
@@ -3929,11 +3903,10 @@
   },
   "statistics_heatmapNoActivity": "No activity",
 
-  "sendToHome_dialogTitle": "Send to Home",
   "sendToHome_send": "Send",
-  "sendToHome_mainPrompt": "Send to Main Prompt",
-  "sendToHome_mainPromptSubtitle": "Fill into the main prompt input field",
-  "sendToHome_mainPromptPipeSubtitle": "Send the full content to the main prompt (including pipes)",
+  "sendToHome_mainPrompt": "Add to the positive prompt",
+  "sendToHome_mainPromptSubtitle": "Goes after what is already there",
+  "sendToHome_mainPromptPipeSubtitle": "Adds everything, pipes included, after the current prompt",
   "sendToHome_smartDecompose": "Smart Decompose",
   "sendToHome_smartDecomposeSubtitle": "Main prompt + {count} characters",
   "@sendToHome_smartDecomposeSubtitle": {
@@ -3945,16 +3918,16 @@
   "sendToHome_replaceCharacterSubtitle": "Clear existing characters and add as new",
   "sendToHome_appendCharacter": "Append Character Prompt",
   "sendToHome_appendCharacterSubtitle": "Keep existing characters and append new",
-  "sendToHome_fixedTags": "Send to Fixed Tags",
-  "sendToHome_fixedTagsSubtitle": "Append to the fixed tag list",
-  "sendToHome_sendAsAlias": "Send as Alias",
-  "sendToHome_sendAsAliasSubtitle": "Wrap as <{name}> when sending to home",
+  "sendToHome_fixedTags": "Add as fixed tag",
+  "sendToHome_fixedTagsSubtitle": "Added to every generation from now on",
+  "sendToHome_sendAsAlias": "Send as a reference",
+  "sendToHome_sendAsAliasSubtitle": "Writes <{name}>, which follows later edits to the entry",
   "@sendToHome_sendAsAliasSubtitle": {
     "placeholders": {
       "name": {}
     }
   },
-  "sendToHome_preview": "Send Preview",
+  "sendToHome_preview": "Will add",
   "sendToHome_characterPrompt": "Character Prompt",
   "sendToHome_characterPromptCount": "Character Prompt ({count})",
   "@sendToHome_characterPromptCount": {
@@ -3969,7 +3942,6 @@
     }
   },
   "sendToHome_recommended": "Recommended",
-  "sendToHome_successMainPrompt": "Sent to main prompt",
   "sendToHome_successReplaceCharacter": "Character prompt replaced",
   "sendToHome_successAppendCharacter": "Character prompt appended",
 
@@ -5508,7 +5480,6 @@
       "error": {}
     }
   },
-  "toast_smartDecomposeSent": "Smart decomposed and sent",
   "toast_addedToFixedTags": "Added to fixed tags",
   "toast_renameNameRequired": "Name is required",
   "toast_renameNameConflict": "Name already exists. Use another name.",
@@ -7834,5 +7805,93 @@
     }
   },
   "characterLibrary_fromLibrary": "From characters",
-  "characterLibrary_unsaved": "Changed since saved to characters"
+  "characterLibrary_unsaved": "Changed since saved to characters",
+  "libraryGroup_character": "Character",
+  "libraryGroup_hair": "Hair",
+  "libraryGroup_eyes": "Eyes",
+  "libraryGroup_expression": "Expression",
+  "libraryGroup_outfit": "Outfit",
+  "libraryGroup_accessory": "Accessories",
+  "libraryGroup_pose": "Pose",
+  "libraryGroup_composition": "Composition",
+  "libraryGroup_scene": "Scene",
+  "libraryGroup_background": "Background",
+  "libraryGroup_lighting": "Lighting",
+  "libraryGroup_weather": "Weather",
+  "libraryGroup_style": "Style",
+  "libraryGroup_artist": "Artist",
+  "libraryGroup_color": "Color",
+  "libraryGroup_quality": "Quality",
+  "libraryGroup_prop": "Props",
+  "libraryGroup_animal": "Animals",
+  "libraryGroup_effect": "Effects",
+  "libraryGroup_negative": "Negative",
+  "fixedTags_subtitle": "Enabled tags are added when you generate",
+  "fixedTags_positiveTab": "Positive",
+  "fixedTags_negativeTab": "Negative",
+  "fixedTags_searchHint": "Search fixed tags",
+  "fixedTags_sortTitle": "Sort",
+  "fixedTags_sortFrequent": "Frequent",
+  "fixedTags_sortFrequentHint": "Tags used more in the last two weeks come first; older uses count less",
+  "fixedTags_sortRecent": "Recently used",
+  "fixedTags_sortRecentHint": "By when a tag was last sent with a generation",
+  "fixedTags_sortCustom": "Custom",
+  "fixedTags_sortCustomHint": "By group, in the order you set",
+  "fixedTags_sortName": "Name",
+  "fixedTags_sortNameHint": "Alphabetical; Chinese names by pinyin",
+  "fixedTags_enabledFirst": "Enabled first",
+  "fixedTags_enabledFirstHint": "See the tags in use at a glance",
+  "fixedTags_group": "Group",
+  "fixedTags_groupFollowsLibrary": "follows library",
+  "fixedTags_weightDecrease": "Lower weight",
+  "fixedTags_weightIncrease": "Raise weight",
+  "fixedTags_usageSummary": "Sent with {count} images · last {when}",
+  "@fixedTags_usageSummary": {"placeholders": {"count": {"type": "int"}, "when": {"type": "String"}}},
+  "fixedTags_usageNever": "Not sent with a generation yet",
+  "fixedTags_fromLibraryNote": "From library entry “{name}”; content and group stay in sync",
+  "@fixedTags_fromLibraryNote": {"placeholders": {"name": {"type": "String"}}},
+  "tagLibrary_searchCount": "Search {count} entries",
+  "@tagLibrary_searchCount": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_manageGroups": "Manage groups",
+  "tagLibrary_manageGroupsHint": "Drag to reorder. Preset groups have their own icons; custom groups use a general one",
+  "tagLibrary_noGroups": "No groups yet",
+  "tagLibrary_newGroupHint": "Pick a preset, or name your own below",
+  "tagLibrary_presetGroups": "Presets",
+  "tagLibrary_customGroup": "Custom group",
+  "tagLibrary_customGroupHint": "Group name, e.g. My OCs",
+  "tagLibrary_groupCreated": "Created group “{name}”",
+  "@tagLibrary_groupCreated": {"placeholders": {"name": {"type": "String"}}},
+  "tagLibrary_sendToPrompt": "Send to prompt",
+  "tagLibrary_moreTargets": "More ways to send",
+  "tagLibrary_sendSelected": "Send {count} to prompt",
+  "@tagLibrary_sendSelected": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_selectedCount": "{count} selected",
+  "@tagLibrary_selectedCount": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_addedToPrompt": "Added to the positive prompt",
+  "tagLibrary_addedEntriesToPrompt": "Added {count} entries to the positive prompt",
+  "@tagLibrary_addedEntriesToPrompt": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_goGenerate": "Generate",
+  "tagLibrary_usedTimes": "Used {count} times",
+  "@tagLibrary_usedTimes": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_neverUsed": "Not used yet",
+  "tagLibrary_isFixedTag": "Fixed tag",
+  "tagLibrary_addAsFixed": "Add as fixed tags",
+  "tagLibrary_addedAsFixed": "Added {count} fixed tags",
+  "@tagLibrary_addedAsFixed": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_alreadyFixed": "These entries are already fixed tags",
+  "tagLibrary_setPreview": "Set preview image",
+  "tagLibrary_replacePreview": "Replace preview image",
+  "tagLibrary_removePreview": "Remove preview image",
+  "tagLibrary_sortTitle": "Sort",
+  "tagLibrary_sortFrequent": "Frequent",
+  "tagLibrary_sortFrequentHint": "Entries used more lately come first; older uses count less",
+  "tagLibrary_sortRecent": "Recently used",
+  "tagLibrary_sortRecentHint": "By when an entry was last sent",
+  "tagLibrary_sortCustomHint": "By group, in the order you set",
+  "tagLibrary_sortNameHint": "Alphabetical; Chinese names by pinyin",
+  "tagLibrary_favoritesFirst": "Favorites first",
+  "tagLibrary_favoritesFirstHint": "In All, favorites get their own section at the top",
+  "sendToHome_titleFor": "Send “{name}”",
+  "@sendToHome_titleFor": {"placeholders": {"name": {"type": "String"}}},
+  "sendToHome_chooseTarget": "Choose where it goes"
 }

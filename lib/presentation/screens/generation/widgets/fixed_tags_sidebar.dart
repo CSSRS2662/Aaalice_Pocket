@@ -117,7 +117,9 @@ class _FixedTagsSidebarState extends ConsumerState<FixedTagsSidebar> {
     _negativeScrollController.addListener(_scheduleLinkRepaint);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(fixedTagsNotifierProvider.notifier).inferCategoriesFromLibrary();
+      ref
+          .read(fixedTagsNotifierProvider.notifier)
+          .reconcileCategoriesWithLibrary();
       _scheduleLinkRepaint();
     });
   }

@@ -9,6 +9,7 @@ import '../../data/models/fixed_tag/fixed_tag_entry.dart';
 import '../../data/models/fixed_tag/fixed_tag_usage_snapshot.dart';
 import '../../data/models/fixed_tag/fixed_tag_link.dart';
 import '../../data/models/fixed_tag/fixed_tag_prompt_type.dart';
+import '../../data/models/tag_library/tag_library_category.dart';
 import '../../data/models/tag_library/tag_library_entry.dart';
 import 'tag_library_page_provider.dart';
 
@@ -302,25 +303,46 @@ TagLibraryEntry? resolveFixedTagLibraryEntry(
   return null;
 }
 
-/// 从词库条目推断固定词分类。
-List<FixedTagEntry> inferFixedTagCategories(
+/// 让固定词的分组与词库一致：关联了词库条目的固定词始终跟随该条目的分组，
+/// 指向词库已没有的分组的固定词回到未分组。
+List<FixedTagEntry> reconcileFixedTagCategories(
   List<FixedTagEntry> fixedEntries,
   List<TagLibraryEntry> libraryEntries,
+  List<TagLibraryCategory> categories,
 ) {
-  if (libraryEntries.isEmpty) return fixedEntries;
   final entryById = {for (final entry in libraryEntries) entry.id: entry};
-
+  final knownCategories = {for (final category in categories) category.id};
   return [
     for (final entry in fixedEntries)
-      if (entry.categoryId != null || entry.sourceEntryId == null)
-        entry
-      else
-        entryById[entry.sourceEntryId]?.categoryId == null
-            ? entry
-            : entry.copyWith(
-                categoryId: entryById[entry.sourceEntryId]!.categoryId,
-              ),
+      _withCategory(
+        entry,
+        effectiveFixedTagCategoryId(entry, entryById),
+        knownCategories,
+      ),
   ];
+}
+
+FixedTagEntry _withCategory(
+  FixedTagEntry entry,
+  String? categoryId,
+  Set<String> knownCategories,
+) {
+  final target = categoryId != null && knownCategories.contains(categoryId)
+      ? categoryId
+      : null;
+  return target == entry.categoryId
+      ? entry
+      : entry.copyWith(categoryId: target);
+}
+
+/// 固定词当前所在的分组：关联条目的分组优先，否则是固定词自己的分组。
+String? effectiveFixedTagCategoryId(
+  FixedTagEntry entry,
+  Map<String, TagLibraryEntry> libraryEntriesById,
+) {
+  final sourceId = entry.sourceEntryId;
+  final linked = sourceId == null ? null : libraryEntriesById[sourceId];
+  return linked == null ? entry.categoryId : linked.categoryId;
 }
 
 /// 排除已经从词库添加到固定词列表的条目。
@@ -557,6 +579,8 @@ class FixedTagsNotifier extends _$FixedTagsNotifier {
     _redoStack.add(_historySnapshot(state));
     state = _withHistoryCounts(_undoStack.removeLast());
     await _saveAllState();
+    // 分组以词库为准，撤销不会把条目挪回去。
+    await reconcileCategoriesWithLibrary();
   }
 
   Future<void> redo() async {
@@ -564,6 +588,7 @@ class FixedTagsNotifier extends _$FixedTagsNotifier {
     _undoStack.add(_historySnapshot(state));
     state = _withHistoryCounts(_redoStack.removeLast());
     await _saveAllState();
+    await reconcileCategoriesWithLibrary();
   }
 
   /// 添加固定词
@@ -809,16 +834,20 @@ class FixedTagsNotifier extends _$FixedTagsNotifier {
     );
   }
 
-  /// 从词库条目补齐已关联固定词缺失的分类。
-  Future<void> inferCategoriesFromLibrary() async {
-    final tagLibraryState = ref.read(tagLibraryPageNotifierProvider);
-    final inferred = inferFixedTagCategories(
+  /// 按词库刷新固定词分组，见 [reconcileFixedTagCategories]。词库移动条目、
+  /// 删除分组后调用；分组只是跟随词库，不进撤销历史。
+  Future<void> reconcileCategoriesWithLibrary() async {
+    final library = ref.read(tagLibraryPageNotifierProvider);
+    // 词库读取失败时分组列表为空，不能据此清空所有固定词的分组。
+    if (library.error != null) return;
+    final reconciled = reconcileFixedTagCategories(
       state.entries,
-      tagLibraryState.entries,
+      library.entries,
+      library.categories,
     );
-    if (_sameCategoryAssignments(state.entries, inferred)) return;
+    if (_sameCategoryAssignments(state.entries, reconciled)) return;
 
-    state = state.copyWith(entries: inferred);
+    state = state.copyWith(entries: reconciled);
     await _saveEntries();
   }
 

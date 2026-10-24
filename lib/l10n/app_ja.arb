@@ -109,8 +109,6 @@
   "common_exit": "終了",
   "common_folder": "フォルダー",
   "common_filter": "フィルター",
-  "common_grid": "グリッド",
-  "common_grouped": "グループ",
   "common_date": "日付",
   "common_pack": "パック",
   "common_multiSelect": "複数選択",
@@ -441,8 +439,6 @@
   "agentChat_noResources": "利用できるリソースはまだありません。",
   "agentChat_imageTooLarge": "{fileName} は {maxSizeMB} MB を超えています。",
   "@agentChat_imageTooLarge": {"placeholders":{"fileName":{"type":"String"},"maxSizeMB":{"type":"int"}}},
-  "agentChat_enableWebAccess": "ウェブアクセスを有効にする",
-  "agentChat_disableWebAccess": "ウェブアクセスを無効にする",
   "agentChat_webAccessLabel": "ウェブ",
   "agentChat_contextUsageLabel": "コンテキスト",
   "agentChat_unsupportedImageFormat": "サポートされていない画像形式です: {fileName}",
@@ -800,13 +796,6 @@
       "count": {
         "type": "int"
       }
-    }
-  },
-  "prompt_characterPromptReplaced": "キャラクタープロンプトを置き換えました",
-  "prompt_characterPromptAppended": "キャラクタープロンプトを追加しました ({count} キャラクター)",
-  "@prompt_characterPromptAppended": {
-    "placeholders": {
-      "count": {}
     }
   },
   "prompt_smartDecomposedWithCharacters": "メインプロンプト + {count} キャラクターに分解",
@@ -3145,8 +3134,8 @@
   "fixedTags_emptyNegative": "除外したい要素固定タグはありません",
   "fixedTags_noMatchingNegative": "一致する除外したい要素固定タグがありません",
   "fixedTags_addedToSidebar": "固定タグのサイドバーに追加されました",
-  "fixedTags_unknownCategory": "不明なカテゴリ",
-  "fixedTags_uncategorized": "未分類",
+  "fixedTags_unknownCategory": "不明なグループ",
+  "fixedTags_uncategorized": "グループなし",
   "fixedTags_clickManageLongPressSidebar": "クリックして管理し、長押ししてサイドバーを開きます",
   "fixedTags_clickManageLongPressCompact": "クリックしてサイドバーを長押しして管理します",
   "fixedTags_linkCount": "{count} リンクされました",
@@ -3193,12 +3182,6 @@
   },
   "fixedTags_enableAll": "すべて有効にする",
   "fixedTags_disableAll": "すべて無効にする",
-  "fixedTags_searchTarget": "{target} を検索...",
-  "@fixedTags_searchTarget": {
-    "placeholders": {
-      "target": {}
-    }
-  },
   "fixedTags_noMatching": "一致する固定タグがありません",
   "fixedTags_emptyTarget": "{target} はありません",
   "@fixedTags_emptyTarget": {
@@ -3455,21 +3438,19 @@
   "promptToken_characterNegative": "キャラクター除外要素",
   "common_rename": "名前の変更",
   "common_create": "作成",
-  "tagLibrary_categories": "カテゴリ",
-  "tagLibrary_newCategory": "新しいカテゴリ",
+  "tagLibrary_categories": "グループ",
+  "tagLibrary_newCategory": "新しいグループ",
   "tagLibrary_addEntry": "エントリの追加",
   "tagLibrary_editEntry": "エントリーの編集",
   "tagLibrary_searchHint": "エントリを検索...",
   "tagLibrary_import": "インポート",
   "tagLibrary_export": "エクスポート",
-  "tagLibrary_sortCustom": "カスタム並べ替え",
+  "tagLibrary_sortCustom": "カスタム",
   "tagLibrary_sortName": "名前",
-  "tagLibrary_sortUseCount": "使用回数",
-  "tagLibrary_sortUpdatedAt": "更新日時",
-  "tagLibrary_transferCategory": "カテゴリを移動",
+  "tagLibrary_transferCategory": "グループを移動",
   "tagLibrary_copyContent": "コンテンツをコピー",
-  "tagLibrary_moveToCategoryTitle": "カテゴリに移動",
-  "tagLibrary_selectTargetCategory": "ターゲット カテゴリを選択してください:",
+  "tagLibrary_moveToCategoryTitle": "グループに移動",
+  "tagLibrary_selectTargetCategory": "移動先のグループを選択してください：",
   "tagLibrary_includeThumbnails": "サムネイルを含める",
   "tagLibrary_includeThumbnailsSubtitle": "ファイルサイズが増加します",
   "tagLibrary_selectedExportCount": "エクスポート ({count} アイテム)",
@@ -3485,7 +3466,7 @@
     }
   },
   "tagLibrary_entriesLabel": "エントリ",
-  "tagLibrary_categoriesLabel": "カテゴリ",
+  "tagLibrary_categoriesLabel": "グループ",
   "tagLibrary_selectExportContent": "エクスポートするコンテンツを選択してください",
   "tagLibrary_selectImportContent": "インポートするコンテンツを選択してください",
   "tagLibrary_selectSaveLocation": "保存場所を選択してください",
@@ -3502,7 +3483,7 @@
   "tagLibrary_reselect": "もう一度選択してください",
   "tagLibrary_fileInfo": "ファイル情報",
   "tagLibrary_entryCountLabel": "エントリ",
-  "tagLibrary_categoryCountLabel": "カテゴリ",
+  "tagLibrary_categoryCountLabel": "グループ数",
   "tagLibrary_exportDateLabel": "エクスポート日",
   "tagLibrary_importConflictsHint": "{count} の競合が見つかりました。以下の競合する項目をクリックして、その処理方法を選択します。",
   "@tagLibrary_importConflictsHint": {
@@ -3510,7 +3491,7 @@
       "count": {}
     }
   },
-  "tagLibrary_categoriesSection": "カテゴリ ({count})",
+  "tagLibrary_categoriesSection": "グループ ({count})",
   "@tagLibrary_categoriesSection": {
     "placeholders": {
       "count": {}
@@ -3552,7 +3533,7 @@
       "count": {}
     }
   },
-  "tagLibrary_importedCategoriesCount": "{count} カテゴリ",
+  "tagLibrary_importedCategoriesCount": "{count} グループ",
   "@tagLibrary_importedCategoriesCount": {
     "placeholders": {
       "count": {}
@@ -3582,16 +3563,10 @@
       "count": {}
     }
   },
-  "tagLibrary_unknownCategory": "不明なカテゴリ",
+  "tagLibrary_unknownCategory": "不明なグループ",
   "tagLibrary_selectEntryToUpdate": "更新するエントリを選択してください",
   "tagLibrary_updatePreview": "プレビューを更新",
   "tagLibrary_replaceThumbnailHint": "既存のサムネイルを置き換えます",
-  "tagLibrary_sentEntriesToMainPrompt": "{count} エントリをメイン プロンプトに送信しました",
-  "@tagLibrary_sentEntriesToMainPrompt": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "tagLibrary_confirmDeleteSelectedEntries": "{count} 選択したエントリを削除しますか?この操作は元に戻すことができません。",
   "@tagLibrary_confirmDeleteSelectedEntries": {
     "placeholders": {
@@ -3641,11 +3616,11 @@
   "tagLibrary_updateExistingThumbnailSubtitle": "エントリを選択し、そのサムネイルを置き換えます",
   "tagLibrary_allEntries": "すべて",
   "tagLibrary_favorites": "お気に入り",
-  "tagLibrary_addSubCategory": "サブカテゴリを追加",
+  "tagLibrary_addSubCategory": "サブグループを追加",
   "tagLibrary_moveToRoot": "ルートに移動",
-  "tagLibrary_categoryNameHint": "カテゴリ名を入力してください",
-  "tagLibrary_deleteCategoryTitle": "カテゴリを削除",
-  "tagLibrary_deleteCategoryConfirm": "カテゴリ「{name}」を削除してもよろしいですか? {count} エントリはルートに移動されます。",
+  "tagLibrary_categoryNameHint": "グループ名を入力してください",
+  "tagLibrary_deleteCategoryTitle": "グループを削除",
+  "tagLibrary_deleteCategoryConfirm": "グループ「{name}」を削除しますか？中の {count} 件のエントリはグループなしになります。",
   "@tagLibrary_deleteCategoryConfirm": {
     "placeholders": {
       "name": {},
@@ -3661,21 +3636,20 @@
   },
   "tagLibrary_noSearchResults": "一致するエントリが見つかりませんでした",
   "tagLibrary_tryDifferentSearch": "別のキーワードを試してください",
-  "tagLibrary_categoryEmpty": "このカテゴリは空です",
+  "tagLibrary_categoryEmpty": "このグループにはまだエントリがありません",
   "tagLibrary_empty": "ライブラリが空です",
   "tagLibrary_addFirstEntry": "上のボタンをクリックして最初のエントリを追加してください",
   "tagLibraryPicker_title": "エントリの選択",
   "tagLibraryPicker_searchHint": "エントリを検索...",
   "tagLibraryPicker_allCategories": "すべてのカテゴリ",
-  "tagLibrary_addedToFixed": "固定タグに追加",
-  "tagLibrary_entryMoved": "エントリがターゲット カテゴリに移動されました",
+  "tagLibrary_entryMoved": "エントリをグループに移動しました",
   "tagLibrary_thumbnail": "サムネイル",
   "tagLibrary_selectImage": "画像を選択してください",
   "tagLibrary_thumbnailHint": "PNG、JPG、WEBP、GIF、BMP、TIFF などをサポート",
   "tagLibrary_name": "名前",
   "tagLibrary_nameHint": "エントリ名を入力してください",
-  "tagLibrary_category": "カテゴリ",
-  "tagLibrary_rootCategory": "ルート",
+  "tagLibrary_category": "グループ",
+  "tagLibrary_rootCategory": "グループなし",
   "tagLibrary_tags": "タグ",
   "tagLibrary_tagsHint": "タグをカンマで区切って入力します",
   "tagLibrary_tagsHelper": "タグはフィルタリングと検索に使用されます",
@@ -3710,12 +3684,12 @@
     }
   },
   "settings_proxyRestartHint": "プロキシ設定が変更されました。再起動をお勧めします",
-  "tagLibrary_categoryNameExists": "カテゴリ名はすでに存在します",
+  "tagLibrary_categoryNameExists": "同じ名前のグループがすでにあります",
   "tagLibrary_addToLibrary": "ライブラリに追加",
   "tagLibrary_saveToLibrary": "ライブラリに保存",
   "tagLibrary_entrySaved": "ライブラリに保存されました",
   "tagLibrary_entryUpdated": "エントリが更新されました",
-  "tagLibrary_uncategorized": "未分類",
+  "tagLibrary_uncategorized": "グループなし",
   "tagLibrary_contentPreview": "コンテンツのプレビュー",
   "tagLibrary_confirmAdd": "確認",
   "tagLibrary_entryName": "名前",
@@ -3859,11 +3833,10 @@
     }
   },
   "statistics_heatmapNoActivity": "アクティビティはありません",
-  "sendToHome_dialogTitle": "ホームに送信",
   "sendToHome_send": "送信",
-  "sendToHome_mainPrompt": "メイン プロンプトに送信",
-  "sendToHome_mainPromptSubtitle": "メイン プロンプト入力フィールドに入力します",
-  "sendToHome_mainPromptPipeSubtitle": "完全なコンテンツをメイン プロンプトに送信します (パイプを含む)",
+  "sendToHome_mainPrompt": "ポジティブプロンプトに追加",
+  "sendToHome_mainPromptSubtitle": "今のプロンプトの末尾に追加します",
+  "sendToHome_mainPromptPipeSubtitle": "縦線を含めて全体を末尾に追加します",
   "sendToHome_smartDecompose": "スマート分解",
   "sendToHome_smartDecomposeSubtitle": "メインプロンプト + {count} キャラクター",
   "@sendToHome_smartDecomposeSubtitle": {
@@ -3875,16 +3848,16 @@
   "sendToHome_replaceCharacterSubtitle": "既存のキャラクターをクリアして新規として追加",
   "sendToHome_appendCharacter": "キャラクタープロンプトを追加",
   "sendToHome_appendCharacterSubtitle": "既存のキャラクターを保持し、新しいキャラクターを追加します",
-  "sendToHome_fixedTags": "固定タグに送信",
-  "sendToHome_fixedTagsSubtitle": "固定タグリストに追加",
-  "sendToHome_sendAsAlias": "エイリアスとして送信",
-  "sendToHome_sendAsAliasSubtitle": "自宅に送信する場合は <{name}> としてラップします",
+  "sendToHome_fixedTags": "固定タグに追加",
+  "sendToHome_fixedTagsSubtitle": "以後の生成に毎回追加されます",
+  "sendToHome_sendAsAlias": "参照として送る",
+  "sendToHome_sendAsAliasSubtitle": "<{name}> と書き、エントリの変更に追従します",
   "@sendToHome_sendAsAliasSubtitle": {
     "placeholders": {
       "name": {}
     }
   },
-  "sendToHome_preview": "プレビューを送信",
+  "sendToHome_preview": "追加される内容",
   "sendToHome_characterPrompt": "キャラクタープロンプト",
   "sendToHome_characterPromptCount": "キャラクタープロンプト ({count})",
   "@sendToHome_characterPromptCount": {
@@ -3899,7 +3872,6 @@
     }
   },
   "sendToHome_recommended": "推奨",
-  "sendToHome_successMainPrompt": "メイン プロンプトに送信されます",
   "sendToHome_successReplaceCharacter": "キャラクタープロンプトを置換しました",
   "sendToHome_successAppendCharacter": "キャラクタープロンプトを追加しました",
   "metadataImport_title": "インポートするパラメータを選択してください",
@@ -5526,7 +5498,6 @@
       "error": {}
     }
   },
-  "toast_smartDecomposeSent": "スマートに分解して送信",
   "toast_addedToFixedTags": "固定タグに追加しました",
   "toast_renameNameRequired": "名前は必須です",
   "toast_renameNameConflict": "名前はすでに存在します。別の名前を使用してください。",
@@ -7859,5 +7830,93 @@
     }
   },
   "characterLibrary_fromLibrary": "キャラクターから追加",
-  "characterLibrary_unsaved": "キャラクターに未保存の変更あり"
+  "characterLibrary_unsaved": "キャラクターに未保存の変更あり",
+  "libraryGroup_character": "キャラクター",
+  "libraryGroup_hair": "髪型",
+  "libraryGroup_eyes": "目",
+  "libraryGroup_expression": "表情",
+  "libraryGroup_outfit": "衣装",
+  "libraryGroup_accessory": "アクセサリー",
+  "libraryGroup_pose": "ポーズ",
+  "libraryGroup_composition": "構図",
+  "libraryGroup_scene": "シーン",
+  "libraryGroup_background": "背景",
+  "libraryGroup_lighting": "ライティング",
+  "libraryGroup_weather": "天気",
+  "libraryGroup_style": "スタイル",
+  "libraryGroup_artist": "絵師",
+  "libraryGroup_color": "カラー",
+  "libraryGroup_quality": "品質",
+  "libraryGroup_prop": "小物",
+  "libraryGroup_animal": "動物",
+  "libraryGroup_effect": "エフェクト",
+  "libraryGroup_negative": "ネガティブ",
+  "fixedTags_subtitle": "有効なタグは生成時に自動で追加されます",
+  "fixedTags_positiveTab": "ポジティブ",
+  "fixedTags_negativeTab": "ネガティブ",
+  "fixedTags_searchHint": "固定タグを検索",
+  "fixedTags_sortTitle": "並べ替え",
+  "fixedTags_sortFrequent": "よく使う",
+  "fixedTags_sortFrequentHint": "最近2週間によく使ったものほど前へ。古い使用ほど軽く数えます",
+  "fixedTags_sortRecent": "最近使った順",
+  "fixedTags_sortRecentHint": "最後に生成と一緒に送った時刻の順",
+  "fixedTags_sortCustom": "カスタム",
+  "fixedTags_sortCustomHint": "グループ別、手動で並べた順",
+  "fixedTags_sortName": "名前",
+  "fixedTags_sortNameHint": "名前順（中国語はピンイン順）",
+  "fixedTags_enabledFirst": "有効なものを先に",
+  "fixedTags_enabledFirstHint": "使用中のタグがひと目で分かります",
+  "fixedTags_group": "グループ",
+  "fixedTags_groupFollowsLibrary": "ライブラリに連動",
+  "fixedTags_weightDecrease": "重みを下げる",
+  "fixedTags_weightIncrease": "重みを上げる",
+  "fixedTags_usageSummary": "{count} 枚の画像と送信 · 最後は{when}",
+  "@fixedTags_usageSummary": {"placeholders": {"count": {"type": "int"}, "when": {"type": "String"}}},
+  "fixedTags_usageNever": "まだ生成で使っていません",
+  "fixedTags_fromLibraryNote": "ライブラリの「{name}」から。内容とグループは同期されます",
+  "@fixedTags_fromLibraryNote": {"placeholders": {"name": {"type": "String"}}},
+  "tagLibrary_searchCount": "{count} 件のエントリを検索",
+  "@tagLibrary_searchCount": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_manageGroups": "グループを管理",
+  "tagLibrary_manageGroupsHint": "ドラッグで並べ替え。プリセットのグループには専用アイコン、カスタムには共通アイコンが付きます",
+  "tagLibrary_noGroups": "グループはまだありません",
+  "tagLibrary_newGroupHint": "プリセットを選ぶか、下で名前を付けてください",
+  "tagLibrary_presetGroups": "プリセット",
+  "tagLibrary_customGroup": "カスタムグループ",
+  "tagLibrary_customGroupHint": "グループ名（例：自作キャラ）",
+  "tagLibrary_groupCreated": "グループ「{name}」を作成しました",
+  "@tagLibrary_groupCreated": {"placeholders": {"name": {"type": "String"}}},
+  "tagLibrary_sendToPrompt": "プロンプトに送る",
+  "tagLibrary_moreTargets": "ほかの送り先",
+  "tagLibrary_sendSelected": "{count} 件をプロンプトに送る",
+  "@tagLibrary_sendSelected": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_selectedCount": "{count} 件選択中",
+  "@tagLibrary_selectedCount": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_addedToPrompt": "ポジティブプロンプトに追加しました",
+  "tagLibrary_addedEntriesToPrompt": "{count} 件をポジティブプロンプトに追加しました",
+  "@tagLibrary_addedEntriesToPrompt": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_goGenerate": "生成へ",
+  "tagLibrary_usedTimes": "{count} 回使用",
+  "@tagLibrary_usedTimes": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_neverUsed": "未使用",
+  "tagLibrary_isFixedTag": "固定タグに登録済み",
+  "tagLibrary_addAsFixed": "固定タグに追加",
+  "tagLibrary_addedAsFixed": "{count} 件を固定タグに追加しました",
+  "@tagLibrary_addedAsFixed": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_alreadyFixed": "これらはすでに固定タグです",
+  "tagLibrary_setPreview": "プレビュー画像を設定",
+  "tagLibrary_replacePreview": "プレビュー画像を変更",
+  "tagLibrary_removePreview": "プレビュー画像を外す",
+  "tagLibrary_sortTitle": "並べ替え",
+  "tagLibrary_sortFrequent": "よく使う",
+  "tagLibrary_sortFrequentHint": "最近よく使ったものほど前へ。古い使用ほど軽く数えます",
+  "tagLibrary_sortRecent": "最近使った順",
+  "tagLibrary_sortRecentHint": "最後に送った時刻の順",
+  "tagLibrary_sortCustomHint": "グループ別、並べた順のまま",
+  "tagLibrary_sortNameHint": "名前順（中国語はピンイン順）",
+  "tagLibrary_favoritesFirst": "お気に入りを先頭に",
+  "tagLibrary_favoritesFirstHint": "「すべて」でお気に入りを先頭の別枠に表示します",
+  "sendToHome_titleFor": "「{name}」を送る",
+  "@sendToHome_titleFor": {"placeholders": {"name": {"type": "String"}}},
+  "sendToHome_chooseTarget": "追加する場所を選んでください"
 }

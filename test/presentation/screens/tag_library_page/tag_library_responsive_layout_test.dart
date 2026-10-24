@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/core/platform/platform_capabilities.dart';
 import 'package:nai_launcher/core/shortcuts/shortcut_config.dart';
 import 'package:nai_launcher/core/storage/local_storage_service.dart';
+import 'package:nai_launcher/data/models/tag_library/tag_library_category.dart';
 import 'package:nai_launcher/data/models/tag_library/tag_library_entry.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
@@ -26,43 +27,33 @@ void main() {
   });
   tearDown(() => PlatformCapabilities.debugOverride = null);
 
-  test('tag library cards widen and grow for compact 3x text layouts', () {
-    final compact = computeTagLibraryGridLayout(320, 3);
-    final medium = computeTagLibraryGridLayout(600, 1);
-    final expanded = computeTagLibraryGridLayout(1180, 1);
+  test('phones get two columns, wide panes more, 3x text one', () {
+    final phone = computeTagLibraryGridLayout(411, 1, cardExtent: 62);
+    final large = computeTagLibraryGridLayout(320, 3, cardExtent: 120);
+    final wide = computeTagLibraryGridLayout(1180, 1, cardExtent: 62);
 
-    expect(compact.columns, 1);
-    expect(expanded.columns, greaterThan(compact.columns));
-    expect(compact.mainAxisExtent, greaterThan(expanded.mainAxisExtent));
-    expect(compact.padding, 12);
-    expect(medium.padding, 16);
-  });
-
-  test('phones keep the chosen column count and switch to tiles at 3', () {
-    final layouts = [
-      for (final columns in [1, 2, 3])
-        computeTagLibraryGridLayout(411, 1, preferredColumns: columns),
-    ];
-    expect(layouts.map((layout) => layout.columns), [1, 2, 3]);
-    expect(layouts[0].mainAxisExtent, 68);
-    expect(layouts[1].mainAxisExtent, 68);
-    expect(layouts[2].mainAxisExtent, greaterThan(100));
+    expect(phone.columns, 2);
+    expect(large.columns, 1);
+    expect(wide.columns, greaterThan(2));
+    expect(large.mainAxisExtent, 120);
+    expect(phone.padding, 12);
+    expect(wide.padding, 16);
   });
 
   for (final width in [320.0, 600.0, 840.0, 1180.0, 1600.0]) {
     testWidgets(
-      'non-empty tag library keeps search, toolbar and selection reachable at ${width.toInt()}px',
+      'library keeps search, groups and selection reachable at ${width.toInt()}px',
       (tester) async {
         await _setViewport(tester, Size(width, 800));
         await _pumpLibrary(tester);
 
-        expect(find.byType(GridView), findsOneWidget);
-        expect(
-          find.byKey(const Key('tag-library-create-card')),
-          findsOneWidget,
-        );
+        expect(find.byKey(const ValueKey('tag-library-sections')), findsOne);
         expect(find.text('目标条目'), findsOneWidget);
         expect(find.byType(TextField), findsOneWidget);
+        expect(
+          find.byKey(const Key('tag-library-add-entry-button')),
+          findsOneWidget,
+        );
         if (width < 840) {
           final searchRect = tester.getRect(find.byType(TextField));
           final addRect = tester.getRect(
@@ -70,9 +61,12 @@ void main() {
           );
           expect(addRect.left, greaterThan(searchRect.left));
           expect(addRect.center.dy, closeTo(searchRect.center.dy, 1));
-        }
-
-        if (width >= 840) {
+          expect(find.byKey(const ValueKey('tag-library-chip-all')), findsOne);
+          expect(
+            find.byKey(const ValueKey('tag-library-chip-scene')),
+            findsOne,
+          );
+        } else {
           expect(
             find.descendant(
               of: find.byKey(const Key('tag-library-toolbar')),
@@ -80,19 +74,15 @@ void main() {
             ),
             findsOneWidget,
           );
+          expect(
+            find.byKey(const Key('tag-library-category-sidebar')),
+            findsOne,
+          );
         }
         if (width == 1600) {
           expect(
             tester.getSize(find.byKey(const Key('tag-library-toolbar'))).height,
             GalleryCollectionChrome.toolbarHeight,
-          );
-          expect(
-            tester.getTopLeft(find.byKey(const Key('tag-library-toolbar'))).dx,
-            0,
-          );
-          expect(
-            tester.getSize(find.byKey(const Key('tag-library-toolbar'))).width,
-            1600,
           );
           final addRect = tester.getRect(
             find.byKey(const Key('tag-library-add-entry-button')),
@@ -107,10 +97,13 @@ void main() {
         await tester.pump();
         expect(find.text('目标条目'), findsOneWidget);
         expect(find.text('其他条目'), findsNothing);
+        await tester.enterText(find.byType(TextField), '');
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         await tester.pump();
 
-        await tester.longPress(find.byKey(const ValueKey('target-entry')));
+        await tester.longPress(
+          find.byKey(const ValueKey('tag-library-entry-target-entry')),
+        );
         await tester.pump();
         final container = ProviderScope.containerOf(
           tester.element(find.byType(TagLibraryPageScreen)),
@@ -119,13 +112,38 @@ void main() {
           container.read(tagLibrarySelectionNotifierProvider).selectedIds,
           contains('target-entry'),
         );
+        if (width < 840) {
+          expect(
+            find.byKey(const ValueKey('tag-library-selection-bar')),
+            findsOne,
+          );
+          expect(
+            find.byKey(const ValueKey('tag-library-selection-header')),
+            findsOne,
+          );
+        }
         expect(tester.takeException(), isNull);
       },
     );
   }
 
+  testWidgets('choosing a group chip shows its sections only', (tester) async {
+    await _setViewport(tester, const Size(390, 800));
+    await _pumpLibrary(tester);
+
+    final chip = find.byKey(const ValueKey('tag-library-chip-scene'));
+    await tester.ensureVisible(chip);
+    await tester.pump();
+    await tester.tap(chip);
+    await tester.pump();
+
+    expect(find.text('其他条目'), findsOneWidget);
+    expect(find.text('目标条目'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
-    'mixed touch and precise-pointer policy keeps touch controls on desktop',
+    'mixed touch and precise-pointer policy keeps touch-sized search',
     (tester) async {
       PlatformCapabilities.debugOverride = PlatformCapabilities.forPlatform(
         TargetPlatform.windows,
@@ -144,13 +162,12 @@ void main() {
         tester.getSize(find.byType(InputSurfaceContainer).first).height,
         48,
       );
-      expect(find.byIcon(Icons.more_vert_rounded), findsWidgets);
       expect(tester.takeException(), isNull);
     },
   );
 
   testWidgets(
-    '320px 3x text with SafeArea and IME preserves search input and actions',
+    '320px 3x text with SafeArea and IME preserves search input and groups',
     (tester) async {
       await _setViewport(
         tester,
@@ -166,10 +183,8 @@ void main() {
       await tester.enterText(search, '目标');
       await tester.pump();
 
-      expect(
-        find.byKey(const Key('tag-library-categories-button')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('tag-library-chip-all')), findsOne);
+      expect(find.byKey(const ValueKey('tag-library-sort-button')), findsOne);
       expect(find.text('目标条目'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
@@ -241,13 +256,21 @@ Future<void> _pumpLibrary(
 class _PopulatedTagLibraryNotifier extends TagLibraryPageNotifier {
   @override
   TagLibraryPageState build() => TagLibraryPageState(
-    viewMode: TagLibraryViewMode.card,
+    categories: [
+      TagLibraryCategory(id: 'person', name: '人物', createdAt: DateTime(2026)),
+      TagLibraryCategory(
+        id: 'scene',
+        name: '场景',
+        sortOrder: 1,
+        createdAt: DateTime(2026),
+      ),
+    ],
     entries: [
       TagLibraryEntry(
         id: 'target-entry',
         name: '目标条目',
         content: 'target tag, detailed prompt',
-        tags: const ['人物'],
+        categoryId: 'person',
         isFavorite: true,
         createdAt: DateTime(2026),
         updatedAt: DateTime(2026),
@@ -256,7 +279,7 @@ class _PopulatedTagLibraryNotifier extends TagLibraryPageNotifier {
         id: 'other-entry',
         name: '其他条目',
         content: 'landscape, sunset',
-        tags: const ['场景'],
+        categoryId: 'scene',
         createdAt: DateTime(2026),
         updatedAt: DateTime(2026),
       ),

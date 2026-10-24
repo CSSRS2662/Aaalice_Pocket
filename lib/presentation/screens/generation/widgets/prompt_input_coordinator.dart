@@ -59,19 +59,21 @@ class PromptInputCoordinator {
             clearExisting: false,
           );
         case SendTargetType.mainPrompt:
+          updatePrompt(_controller.appendPrompt(prompt, negative: false));
         case SendTargetType.fixedTag:
         case null:
           applyToMainPrompt(prompt);
       }
     }
 
-    if (target == null || target == SendTargetType.mainPrompt) {
-      final sourceNegative = consumed.negativePrompt;
-      if (sourceNegative != null && sourceNegative.isNotEmpty) {
-        final negative = _normalize(sourceNegative);
-        _controller.replacePrompt(negative, negative: true);
-        updateNegativePrompt(negative);
-      }
+    final sourceNegative = consumed.negativePrompt;
+    if (sourceNegative == null || sourceNegative.isEmpty) return;
+    final negative = _normalize(sourceNegative);
+    if (target == SendTargetType.mainPrompt) {
+      updateNegativePrompt(_controller.appendPrompt(negative, negative: true));
+    } else if (target == null) {
+      _controller.replacePrompt(negative, negative: true);
+      updateNegativePrompt(negative);
     }
   }
 
@@ -119,16 +121,7 @@ class PromptInputCoordinator {
         negativePrompt: normalizedNegative,
       );
     }
-
-    if (_mounted()) {
-      final context = _context();
-      final message = clearExisting
-          ? context.l10n.prompt_characterPromptReplaced
-          : context.l10n.prompt_characterPromptAppended(
-              _ref.read(characterPromptNotifierProvider).characters.length,
-            );
-      AppToast.success(context, message);
-    }
+    // The sender (the library) reports the result where the user is.
   }
 
   CharacterGender _inferGender(String prompt) {
@@ -163,17 +156,6 @@ class PromptInputCoordinator {
           negativePrompt: normalizedNegative,
         );
       }
-    }
-
-    if (_mounted()) {
-      final context = _context();
-      final count = result.characters.length;
-      AppToast.success(
-        context,
-        count > 0
-            ? context.l10n.prompt_smartDecomposedWithCharacters(count)
-            : context.l10n.prompt_appliedToMainPrompt,
-      );
     }
   }
 

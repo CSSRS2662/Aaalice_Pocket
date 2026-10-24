@@ -108,6 +108,50 @@ void main() {
     expect(controller.negativeGroups.sections, hasLength(2));
   });
 
+  group('appending from the library', () {
+    test('single mode joins after the current prompt', () {
+      final controller = PromptInputController(
+        prompt: '1girl, ',
+        negativePrompt: '',
+      );
+      addTearDown(controller.dispose);
+
+      final text = controller.appendPrompt('night, city', negative: false);
+
+      expect(text, '1girl, night, city');
+      expect(controller.promptController.text, '1girl, night, city');
+    });
+
+    test('grouped mode adds a section of its own without an edit request', () {
+      final controller = PromptInputController(
+        prompt: '1girl',
+        negativePrompt: '',
+      );
+      addTearDown(controller.dispose);
+      controller.setEditorMode(PromptEditorMode.grouped);
+
+      final text = controller.appendPrompt('rooftop', negative: false);
+
+      expect(text, '1girl, rooftop');
+      expect(controller.positiveGroups.sections, hasLength(2));
+      expect(
+        controller.positiveGroups.sections.last.controller.text,
+        'rooftop',
+      );
+      expect(controller.positiveGroups.takeEditRequest(), isNull);
+    });
+
+    test('an empty only section is filled instead of adding one', () {
+      final groups = PromptGroupCollection.single('');
+      addTearDown(groups.dispose);
+
+      groups.addText('solo');
+
+      expect(groups.sections, hasLength(1));
+      expect(groups.effectiveText, 'solo');
+    });
+  });
+
   test('restores imported partitions without flattening their state', () {
     final controller = PromptInputController(
       prompt: 'old positive',

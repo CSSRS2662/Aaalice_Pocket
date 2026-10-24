@@ -9,7 +9,7 @@ part 'pending_prompt_provider.g.dart';
 ///
 /// 用于指定词库条目发送到主页的目标位置
 enum SendTargetType {
-  /// 发送到主提示词
+  /// 追加到主提示词（分组模式下成为新的一段），不覆盖已有内容
   mainPrompt,
 
   /// 替换角色提示词（清空后添加）
@@ -76,6 +76,20 @@ class PendingPromptNotifier extends _$PendingPromptNotifier {
       negativePrompt: negativePrompt,
       clearOnConsume: clearOnConsume,
       targetType: targetType,
+    );
+  }
+
+  /// 追加到主提示词。生成页尚未取走的上一次追加会与这次合并，连续发送不会
+  /// 互相覆盖。
+  void appendToMainPrompt(String prompt) {
+    final pending = state;
+    final merges =
+        pending.targetType == SendTargetType.mainPrompt &&
+        pending.prompt != null;
+    state = PendingPromptState(
+      prompt: merges ? '${pending.prompt}, $prompt' : prompt,
+      negativePrompt: merges ? pending.negativePrompt : null,
+      targetType: SendTargetType.mainPrompt,
     );
   }
 

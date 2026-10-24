@@ -7,35 +7,26 @@ import '../../core/storage/local_storage_service.dart';
 import '../../core/utils/app_logger.dart';
 import '../widgets/common/grid_column_count.dart';
 
-/// Screens whose grids remember their own column count: title grids pick
-/// 1–3 columns, image waterfalls 2–4.
+/// Screens whose image waterfalls remember their own column count, 2–4.
 ///
 /// Column density depends on the device's screen, so the values stay local and
 /// are not registered with cloud sync.
 enum GridColumnsSurface {
-  fixedTags(StorageKeys.fixedTagsGridColumns),
-  tagLibrary(StorageKeys.tagLibraryGridColumns),
-  localGallery(StorageKeys.localGalleryMasonryColumns, masonry: true),
-  generationHistory(StorageKeys.historyMasonryColumns, masonry: true),
-  onlineGallery(StorageKeys.onlineGalleryMasonryColumns, masonry: true),
-  vibeLibrary(StorageKeys.vibeLibraryMasonryColumns, masonry: true),
-  preciseRefLibrary(StorageKeys.preciseRefLibraryMasonryColumns, masonry: true);
+  localGallery(StorageKeys.localGalleryMasonryColumns),
+  generationHistory(StorageKeys.historyMasonryColumns),
+  onlineGallery(StorageKeys.onlineGalleryMasonryColumns),
+  vibeLibrary(StorageKeys.vibeLibraryMasonryColumns),
+  preciseRefLibrary(StorageKeys.preciseRefLibraryMasonryColumns);
 
-  const GridColumnsSurface(this.storageKey, {this.masonry = false});
+  const GridColumnsSurface(this.storageKey);
 
   final String storageKey;
-  final bool masonry;
 
-  int get fallback =>
-      masonry ? MasonryColumnCount.fallback : GridColumnCount.fallback;
+  int get fallback => MasonryColumnCount.fallback;
 
-  int clamp(int columns) => masonry
-      ? MasonryColumnCount.clamp(columns)
-      : GridColumnCount.clamp(columns);
+  int clamp(int columns) => MasonryColumnCount.clamp(columns);
 
-  int next(int columns) => masonry
-      ? MasonryColumnCount.next(columns)
-      : GridColumnCount.next(columns);
+  int next(int columns) => MasonryColumnCount.next(columns);
 }
 
 final gridColumnsProvider =

@@ -110,8 +110,6 @@
   "common_exit": "退出",
   "common_folder": "資料夾",
   "common_filter": "篩選",
-  "common_grid": "網格",
-  "common_grouped": "分組",
   "common_date": "日期",
   "common_pack": "打包",
   "common_multiSelect": "多選",
@@ -434,8 +432,6 @@
   "agentChat_noResources": "這裡暫時沒有可用資源。",
   "agentChat_imageTooLarge": "{fileName} 超過 {maxSizeMB} MB。",
   "@agentChat_imageTooLarge": {"placeholders":{"fileName":{"type":"String"},"maxSizeMB":{"type":"int"}}},
-  "agentChat_enableWebAccess": "開啟聯網",
-  "agentChat_disableWebAccess": "關閉聯網",
   "agentChat_webAccessLabel": "聯網",
   "agentChat_contextUsageLabel": "上下文",
   "agentChat_unsupportedImageFormat": "不支援的圖片格式：{fileName}",
@@ -758,13 +754,6 @@
       "count": {
         "type": "int"
       }
-    }
-  },
-  "prompt_characterPromptReplaced": "已替換角色提示詞",
-  "prompt_characterPromptAppended": "已追加角色提示詞 ({count} 個角色)",
-  "@prompt_characterPromptAppended": {
-    "placeholders": {
-      "count": {}
     }
   },
   "prompt_smartDecomposedWithCharacters": "已分解：主提示詞 + {count} 個角色",
@@ -3248,8 +3237,8 @@
   "fixedTags_emptyNegative": "暫無負向固定詞",
   "fixedTags_noMatchingNegative": "沒有匹配的負向固定詞",
   "fixedTags_addedToSidebar": "已新增到固定詞側欄",
-  "fixedTags_unknownCategory": "未知分類",
-  "fixedTags_uncategorized": "未分類",
+  "fixedTags_unknownCategory": "未知分組",
+  "fixedTags_uncategorized": "未分組",
   "fixedTags_clickManageLongPressSidebar": "點選管理，長按開啟側欄",
   "fixedTags_clickManageLongPressCompact": "點選管理，長按側欄",
   "fixedTags_linkCount": "{count} 個聯動",
@@ -3296,12 +3285,6 @@
   },
   "fixedTags_enableAll": "全開",
   "fixedTags_disableAll": "全關",
-  "fixedTags_searchTarget": "搜尋 {target}...",
-  "@fixedTags_searchTarget": {
-    "placeholders": {
-      "target": {}
-    }
-  },
   "fixedTags_noMatching": "無匹配固定詞",
   "fixedTags_emptyTarget": "暫無{target}",
   "@fixedTags_emptyTarget": {
@@ -3558,21 +3541,19 @@
   "promptToken_characterNegative": "角色負面",
   "common_rename": "重新命名",
   "common_create": "建立",
-  "tagLibrary_categories": "分類",
-  "tagLibrary_newCategory": "新建分類",
+  "tagLibrary_categories": "分組",
+  "tagLibrary_newCategory": "新建分組",
   "tagLibrary_addEntry": "新增條目",
   "tagLibrary_editEntry": "編輯條目",
   "tagLibrary_searchHint": "搜尋條目...",
   "tagLibrary_import": "匯入",
   "tagLibrary_export": "匯出",
-  "tagLibrary_sortCustom": "自定義排序",
+  "tagLibrary_sortCustom": "自訂",
   "tagLibrary_sortName": "名稱",
-  "tagLibrary_sortUseCount": "使用頻率",
-  "tagLibrary_sortUpdatedAt": "更新時間",
-  "tagLibrary_transferCategory": "轉移分類",
+  "tagLibrary_transferCategory": "移動分組",
   "tagLibrary_copyContent": "複製內容",
-  "tagLibrary_moveToCategoryTitle": "移動到分類",
-  "tagLibrary_selectTargetCategory": "選擇目標分類：",
+  "tagLibrary_moveToCategoryTitle": "移動到分組",
+  "tagLibrary_selectTargetCategory": "選擇目標分組：",
   "tagLibrary_includeThumbnails": "包含預覽圖",
   "tagLibrary_includeThumbnailsSubtitle": "將增加檔案大小",
   "tagLibrary_selectedExportCount": "匯出 ({count} 項)",
@@ -3588,7 +3569,7 @@
     }
   },
   "tagLibrary_entriesLabel": "條目",
-  "tagLibrary_categoriesLabel": "分類",
+  "tagLibrary_categoriesLabel": "分組",
   "tagLibrary_selectExportContent": "選擇要匯出的內容",
   "tagLibrary_selectImportContent": "選擇要匯入的內容",
   "tagLibrary_selectSaveLocation": "選擇儲存位置",
@@ -3605,7 +3586,7 @@
   "tagLibrary_reselect": "重新選擇",
   "tagLibrary_fileInfo": "檔案資訊",
   "tagLibrary_entryCountLabel": "條目數",
-  "tagLibrary_categoryCountLabel": "分類數",
+  "tagLibrary_categoryCountLabel": "分組數",
   "tagLibrary_exportDateLabel": "匯出時間",
   "tagLibrary_importConflictsHint": "發現 {count} 個衝突項，請點選下方衝突項選擇處理方式",
   "@tagLibrary_importConflictsHint": {
@@ -3613,7 +3594,7 @@
       "count": {}
     }
   },
-  "tagLibrary_categoriesSection": "分類 ({count})",
+  "tagLibrary_categoriesSection": "分組 ({count})",
   "@tagLibrary_categoriesSection": {
     "placeholders": {
       "count": {}
@@ -3655,7 +3636,7 @@
       "count": {}
     }
   },
-  "tagLibrary_importedCategoriesCount": "{count} 分類",
+  "tagLibrary_importedCategoriesCount": "{count} 個分組",
   "@tagLibrary_importedCategoriesCount": {
     "placeholders": {
       "count": {}
@@ -3685,16 +3666,10 @@
       "count": {}
     }
   },
-  "tagLibrary_unknownCategory": "未知分類",
+  "tagLibrary_unknownCategory": "未知分組",
   "tagLibrary_selectEntryToUpdate": "選擇要更新的詞條",
   "tagLibrary_updatePreview": "更新預覽圖",
   "tagLibrary_replaceThumbnailHint": "將替換現有預覽圖",
-  "tagLibrary_sentEntriesToMainPrompt": "已傳送 {count} 個詞條到主提示詞",
-  "@tagLibrary_sentEntriesToMainPrompt": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "tagLibrary_confirmDeleteSelectedEntries": "確定要刪除選中的 {count} 個詞條嗎？此操作不可撤銷。",
   "@tagLibrary_confirmDeleteSelectedEntries": {
     "placeholders": {
@@ -3744,11 +3719,11 @@
   "tagLibrary_updateExistingThumbnailSubtitle": "選擇詞條並替換其預覽圖",
   "tagLibrary_allEntries": "全部",
   "tagLibrary_favorites": "收藏",
-  "tagLibrary_addSubCategory": "新增子分類",
+  "tagLibrary_addSubCategory": "新增子分組",
   "tagLibrary_moveToRoot": "移動到根目錄",
-  "tagLibrary_categoryNameHint": "輸入分類名稱",
-  "tagLibrary_deleteCategoryTitle": "刪除分類",
-  "tagLibrary_deleteCategoryConfirm": "確定要刪除分類 \"{name}\" 嗎？該分類下的 {count} 個條目將移至根目錄。",
+  "tagLibrary_categoryNameHint": "輸入分組名稱",
+  "tagLibrary_deleteCategoryTitle": "刪除分組",
+  "tagLibrary_deleteCategoryConfirm": "確定要刪除分組「{name}」嗎？其中的 {count} 個詞條會移到未分組。",
   "@tagLibrary_deleteCategoryConfirm": {
     "placeholders": {
       "name": {},
@@ -3764,21 +3739,20 @@
   },
   "tagLibrary_noSearchResults": "沒有找到匹配的條目",
   "tagLibrary_tryDifferentSearch": "嘗試使用其他關鍵詞搜尋",
-  "tagLibrary_categoryEmpty": "該分類暫無條目",
+  "tagLibrary_categoryEmpty": "這個分組還沒有詞條",
   "tagLibrary_empty": "詞庫為空",
   "tagLibrary_addFirstEntry": "點選上方按鈕新增第一個條目",
   "tagLibraryPicker_title": "選擇詞條",
   "tagLibraryPicker_searchHint": "搜尋詞條...",
   "tagLibraryPicker_allCategories": "全部分類",
-  "tagLibrary_addedToFixed": "已新增到固定詞",
-  "tagLibrary_entryMoved": "條目已移動到目標分類",
+  "tagLibrary_entryMoved": "詞條已移到目標分組",
   "tagLibrary_thumbnail": "預覽圖",
   "tagLibrary_selectImage": "選擇圖片",
   "tagLibrary_thumbnailHint": "支援 PNG、JPG、WEBP、GIF、BMP、TIFF 等格式",
   "tagLibrary_name": "名稱",
   "tagLibrary_nameHint": "輸入條目名稱",
-  "tagLibrary_category": "分類",
-  "tagLibrary_rootCategory": "根目錄",
+  "tagLibrary_category": "分組",
+  "tagLibrary_rootCategory": "未分組",
   "tagLibrary_tags": "標籤",
   "tagLibrary_tagsHint": "輸入標籤，用逗號分隔",
   "tagLibrary_tagsHelper": "標籤用於篩選和搜尋",
@@ -3813,12 +3787,12 @@
     }
   },
   "settings_proxyRestartHint": "代理設定已更改，建議重啟應用",
-  "tagLibrary_categoryNameExists": "該分類名稱已存在",
+  "tagLibrary_categoryNameExists": "已有同名分組",
   "tagLibrary_addToLibrary": "收藏到詞庫",
   "tagLibrary_saveToLibrary": "儲存到詞庫",
   "tagLibrary_entrySaved": "收藏成功",
   "tagLibrary_entryUpdated": "條目已更新",
-  "tagLibrary_uncategorized": "未分類",
+  "tagLibrary_uncategorized": "未分組",
   "tagLibrary_contentPreview": "內容預覽",
   "tagLibrary_confirmAdd": "確認收藏",
   "tagLibrary_entryName": "名稱",
@@ -3966,11 +3940,10 @@
     }
   },
   "statistics_heatmapNoActivity": "無活動",
-  "sendToHome_dialogTitle": "傳送到主頁",
   "sendToHome_send": "傳送",
-  "sendToHome_mainPrompt": "傳送到主提示詞",
-  "sendToHome_mainPromptSubtitle": "填充到主頁的正向提示詞輸入框",
-  "sendToHome_mainPromptPipeSubtitle": "傳送完整內容到主提示詞（包含豎線）",
+  "sendToHome_mainPrompt": "追加到正面提示詞",
+  "sendToHome_mainPromptSubtitle": "加在目前提示詞末尾",
+  "sendToHome_mainPromptPipeSubtitle": "整段加在目前提示詞末尾（含豎線）",
   "sendToHome_smartDecompose": "智慧分解",
   "sendToHome_smartDecomposeSubtitle": "主提示詞 + {count}個角色",
   "@sendToHome_smartDecomposeSubtitle": {
@@ -3982,16 +3955,16 @@
   "sendToHome_replaceCharacterSubtitle": "清空現有角色，新增為新角色",
   "sendToHome_appendCharacter": "追加角色提示詞",
   "sendToHome_appendCharacterSubtitle": "保留現有角色，追加新角色",
-  "sendToHome_fixedTags": "傳送到固定詞",
-  "sendToHome_fixedTagsSubtitle": "追加到固定詞列表",
-  "sendToHome_sendAsAlias": "作為別名傳送",
-  "sendToHome_sendAsAliasSubtitle": "傳送到主頁時包裝為 <{name}>",
+  "sendToHome_fixedTags": "新增為固定詞",
+  "sendToHome_fixedTagsSubtitle": "之後每次生成自動加入",
+  "sendToHome_sendAsAlias": "以引用發送",
+  "sendToHome_sendAsAliasSubtitle": "寫成 <{name}>，詞條修改後自動跟著變",
   "@sendToHome_sendAsAliasSubtitle": {
     "placeholders": {
       "name": {}
     }
   },
-  "sendToHome_preview": "傳送預覽",
+  "sendToHome_preview": "將寫入",
   "sendToHome_characterPrompt": "角色提示詞",
   "sendToHome_characterPromptCount": "角色提示詞 ({count}個)",
   "@sendToHome_characterPromptCount": {
@@ -4006,7 +3979,6 @@
     }
   },
   "sendToHome_recommended": "推薦",
-  "sendToHome_successMainPrompt": "已傳送到主提示詞",
   "sendToHome_successReplaceCharacter": "已替換角色提示詞",
   "sendToHome_successAppendCharacter": "已追加角色提示詞",
   "metadataImport_title": "選擇要套用的引數",
@@ -5356,7 +5328,6 @@
       "error": {}
     }
   },
-  "toast_smartDecomposeSent": "已智慧分解併傳送",
   "toast_addedToFixedTags": "已新增到固定詞",
   "toast_renameNameRequired": "名稱不能為空",
   "toast_renameNameConflict": "名稱已存在，請使用其他名稱",
@@ -8144,5 +8115,93 @@
     }
   },
   "characterLibrary_fromLibrary": "來自角色庫",
-  "characterLibrary_unsaved": "有改動未存入角色庫"
+  "characterLibrary_unsaved": "有改動未存入角色庫",
+  "libraryGroup_character": "人物",
+  "libraryGroup_hair": "髮型",
+  "libraryGroup_eyes": "眼睛",
+  "libraryGroup_expression": "表情",
+  "libraryGroup_outfit": "服裝",
+  "libraryGroup_accessory": "飾品",
+  "libraryGroup_pose": "動作",
+  "libraryGroup_composition": "構圖",
+  "libraryGroup_scene": "場景",
+  "libraryGroup_background": "背景",
+  "libraryGroup_lighting": "光影",
+  "libraryGroup_weather": "天氣",
+  "libraryGroup_style": "風格",
+  "libraryGroup_artist": "畫師",
+  "libraryGroup_color": "色彩",
+  "libraryGroup_quality": "質量",
+  "libraryGroup_prop": "道具",
+  "libraryGroup_animal": "動物",
+  "libraryGroup_effect": "特效",
+  "libraryGroup_negative": "負面",
+  "fixedTags_subtitle": "啟用的詞在發送時自動加入",
+  "fixedTags_positiveTab": "正面",
+  "fixedTags_negativeTab": "負面",
+  "fixedTags_searchHint": "搜尋固定詞",
+  "fixedTags_sortTitle": "排序",
+  "fixedTags_sortFrequent": "常用",
+  "fixedTags_sortFrequentHint": "最近兩週用得越多越靠前，越久沒用分量越輕",
+  "fixedTags_sortRecent": "最近使用",
+  "fixedTags_sortRecentHint": "按上次隨生成發送的時間",
+  "fixedTags_sortCustom": "自訂",
+  "fixedTags_sortCustomHint": "按分組排列，順序可以手動調整",
+  "fixedTags_sortName": "名稱",
+  "fixedTags_sortNameHint": "按名稱排列，中文按拼音",
+  "fixedTags_enabledFirst": "已啟用的排在前面",
+  "fixedTags_enabledFirstHint": "一眼看到正在用的詞",
+  "fixedTags_group": "分組",
+  "fixedTags_groupFollowsLibrary": "跟隨詞庫",
+  "fixedTags_weightDecrease": "降低權重",
+  "fixedTags_weightIncrease": "提高權重",
+  "fixedTags_usageSummary": "共隨 {count} 張圖發送 · 上次{when}",
+  "@fixedTags_usageSummary": {"placeholders": {"count": {"type": "int"}, "when": {"type": "String"}}},
+  "fixedTags_usageNever": "還沒隨生成發送過",
+  "fixedTags_fromLibraryNote": "來自詞庫「{name}」，內容和分組與詞條保持同步",
+  "@fixedTags_fromLibraryNote": {"placeholders": {"name": {"type": "String"}}},
+  "tagLibrary_searchCount": "搜尋 {count} 條詞條",
+  "@tagLibrary_searchCount": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_manageGroups": "管理分組",
+  "tagLibrary_manageGroupsHint": "拖動調整順序；預設分組自帶圖示，自訂分組用通用圖示",
+  "tagLibrary_noGroups": "還沒有分組",
+  "tagLibrary_newGroupHint": "點選預設分組，或在下面取一個自己的名字",
+  "tagLibrary_presetGroups": "預設分組",
+  "tagLibrary_customGroup": "自訂分組",
+  "tagLibrary_customGroupHint": "分組名稱，例如：我的 OC",
+  "tagLibrary_groupCreated": "已新建分組「{name}」",
+  "@tagLibrary_groupCreated": {"placeholders": {"name": {"type": "String"}}},
+  "tagLibrary_sendToPrompt": "發送到提示詞",
+  "tagLibrary_moreTargets": "其他發送方式",
+  "tagLibrary_sendSelected": "發送 {count} 條到提示詞",
+  "@tagLibrary_sendSelected": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_selectedCount": "已選 {count} 條",
+  "@tagLibrary_selectedCount": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_addedToPrompt": "已加入正面提示詞",
+  "tagLibrary_addedEntriesToPrompt": "已將 {count} 條加入正面提示詞",
+  "@tagLibrary_addedEntriesToPrompt": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_goGenerate": "去生成",
+  "tagLibrary_usedTimes": "用過 {count} 次",
+  "@tagLibrary_usedTimes": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_neverUsed": "還沒用過",
+  "tagLibrary_isFixedTag": "已是固定詞",
+  "tagLibrary_addAsFixed": "新增為固定詞",
+  "tagLibrary_addedAsFixed": "已新增 {count} 個固定詞",
+  "@tagLibrary_addedAsFixed": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_alreadyFixed": "這些詞條已經是固定詞",
+  "tagLibrary_setPreview": "設定預覽圖",
+  "tagLibrary_replacePreview": "更換預覽圖",
+  "tagLibrary_removePreview": "移除預覽圖",
+  "tagLibrary_sortTitle": "排序",
+  "tagLibrary_sortFrequent": "常用",
+  "tagLibrary_sortFrequentHint": "最近用得越多越靠前，越久沒用分量越輕",
+  "tagLibrary_sortRecent": "最近使用",
+  "tagLibrary_sortRecentHint": "按上次發送的時間",
+  "tagLibrary_sortCustomHint": "按分組排列，保持你排好的順序",
+  "tagLibrary_sortNameHint": "按名稱排列，中文按拼音",
+  "tagLibrary_favoritesFirst": "收藏置頂",
+  "tagLibrary_favoritesFirstHint": "「全部」裡把收藏單獨排在最上面",
+  "sendToHome_titleFor": "發送「{name}」",
+  "@sendToHome_titleFor": {"placeholders": {"name": {"type": "String"}}},
+  "sendToHome_chooseTarget": "選擇加入的位置"
 }

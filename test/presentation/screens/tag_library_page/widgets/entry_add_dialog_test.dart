@@ -92,7 +92,7 @@ void main() {
           matching: find.byType(Scrollable),
         )
         .first;
-    for (final label in ['预览图', '名称', '分类', '标签', '提示词内容']) {
+    for (final label in ['预览图', '名称', '分组', '标签', '提示词内容']) {
       final target = find.text(label);
       await tester.scrollUntilVisible(target, 180, scrollable: scrollable);
       expect(target, findsOneWidget);

@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:synchronized/synchronized.dart';
 
+import '../../core/constants/storage_keys.dart';
 import '../../core/storage/local_storage_service.dart';
 import '../../core/utils/app_logger.dart';
 import '../../core/utils/last_result_memo.dart';
@@ -11,6 +13,7 @@ import '../../data/models/tag_library/import_plan.dart';
 import '../../data/models/tag_library/tag_library_category.dart';
 import '../../data/models/tag_library/tag_library_entry.dart';
 import 'fixed_tags_provider.dart';
+import 'name_sort_key_provider.dart';
 import '../../data/models/gallery/gallery_tree_drop_slot.dart';
 import '../../data/models/gallery/library_tree_order.dart';
 import '../utils/library_category_counts.dart';
@@ -29,20 +32,23 @@ enum TagLibraryViewMode {
   grouped,
 }
 
-/// 词库排序方式
+/// 词库排序方式；按序号持久化，只能在末尾追加。
 enum TagLibrarySortBy {
-  /// 按排序顺序
+  /// 自定义顺序
   order,
 
   /// 按名称
   name,
 
-  /// 按使用次数
-  useCount,
+  /// 常用：使用次数随时间衰减
+  frequent,
 
-  /// 按更新时间
-  updatedAt,
+  /// 最近使用
+  recentlyUsed,
 }
+
+/// [TagLibraryPageState.selectedCategoryId] for showing only favorites.
+const tagLibraryFavoritesFilter = 'favorites';
 
 typedef _TagLibraryCriteria = ({
   List<TagLibraryEntry> entries,
@@ -50,6 +56,8 @@ typedef _TagLibraryCriteria = ({
   String? selectedCategoryId,
   String searchQuery,
   TagLibrarySortBy sortBy,
+  bool favoritesFirst,
+  NameSortKey? nameSortKey,
 });
 
 /// 词库页面状态
@@ -60,6 +68,12 @@ class TagLibraryPageState {
   final String searchQuery;
   final TagLibraryViewMode viewMode;
   final TagLibrarySortBy sortBy;
+
+  /// 收藏的条目排在前面；在“全部”里单独成为“收藏”一节。
+  final bool favoritesFirst;
+
+  /// 按名称排序时用的拼音写法，拼音表加载前为空。
+  final NameSortKey? nameSortKey;
   final bool isLoading;
   final String? error;
 
@@ -70,6 +84,8 @@ class TagLibraryPageState {
     this.searchQuery = '',
     this.viewMode = TagLibraryViewMode.grouped,
     this.sortBy = TagLibrarySortBy.order,
+    this.favoritesFirst = true,
+    this.nameSortKey,
     this.isLoading = false,
     this.error,
   });
@@ -82,6 +98,8 @@ class TagLibraryPageState {
     String? searchQuery,
     TagLibraryViewMode? viewMode,
     TagLibrarySortBy? sortBy,
+    bool? favoritesFirst,
+    NameSortKey? nameSortKey,
     bool? isLoading,
     String? error,
   }) {
@@ -94,6 +112,8 @@ class TagLibraryPageState {
       searchQuery: searchQuery ?? this.searchQuery,
       viewMode: viewMode ?? this.viewMode,
       sortBy: sortBy ?? this.sortBy,
+      favoritesFirst: favoritesFirst ?? this.favoritesFirst,
+      nameSortKey: nameSortKey ?? this.nameSortKey,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -116,6 +136,8 @@ class TagLibraryPageState {
     selectedCategoryId: selectedCategoryId,
     searchQuery: searchQuery,
     sortBy: sortBy,
+    favoritesFirst: favoritesFirst,
+    nameSortKey: nameSortKey,
   ), _filterAndSort);
 
   static List<TagLibraryEntry> _filterAndSort(_TagLibraryCriteria criteria) {
@@ -124,7 +146,7 @@ class TagLibraryPageState {
 
     // 按分类筛选
     if (selectedCategoryId != null) {
-      if (selectedCategoryId == 'favorites') {
+      if (selectedCategoryId == tagLibraryFavoritesFilter) {
         result = result.where((e) => e.isFavorite).toList();
       } else {
         // 包括子分类的条目
@@ -143,21 +165,20 @@ class TagLibraryPageState {
       result = result.search(criteria.searchQuery);
     }
 
-    // 排序
-    List<TagLibraryEntry> sorted;
-    switch (criteria.sortBy) {
-      case TagLibrarySortBy.order:
-        sorted = result.sortedByOrder();
-      case TagLibrarySortBy.name:
-        sorted = result.sortedByName();
-      case TagLibrarySortBy.useCount:
-        sorted = result.sortedByUseCount();
-      case TagLibrarySortBy.updatedAt:
-        sorted = result.sortedByUpdatedAt();
-    }
+    // 排序；先按自定义顺序，让并列的条目保持用户排好的先后。
+    final ordered = result.sortedByOrder();
+    final sorted = switch (criteria.sortBy) {
+      TagLibrarySortBy.order => ordered,
+      TagLibrarySortBy.name => ordered.sortedByName(
+        sortKey: criteria.nameSortKey,
+      ),
+      TagLibrarySortBy.frequent => ordered.sortedByFrecency(DateTime.now()),
+      TagLibrarySortBy.recentlyUsed => ordered.sortedByLastUsed(),
+    };
 
-    // 收藏条目始终排在前面（收藏夹视图除外，因为全部都是收藏）
-    if (selectedCategoryId != 'favorites') {
+    // 收藏夹视图全部都是收藏，不用再提前。
+    if (criteria.favoritesFirst &&
+        selectedCategoryId != tagLibraryFavoritesFilter) {
       final favorites = sorted.where((e) => e.isFavorite).toList();
       final nonFavorites = sorted.where((e) => !e.isFavorite).toList();
       return List.unmodifiable([...favorites, ...nonFavorites]);
@@ -184,8 +205,22 @@ class TagLibraryPageNotifier extends _$TagLibraryPageNotifier {
   @override
   TagLibraryPageState build() {
     _storage = ref.watch(localStorageServiceProvider);
-    // 直接返回加载的数据
-    return _loadData();
+    final loaded = _loadData();
+    if (loaded.sortBy == TagLibrarySortBy.name) {
+      Future.microtask(_loadNameSortKey);
+    }
+    return loaded;
+  }
+
+  /// 拼音表只在按名称排序时加载；加载失败就继续按字符排序。
+  Future<void> _loadNameSortKey() async {
+    if (state.nameSortKey != null) return;
+    try {
+      final key = await ref.read(nameSortKeyProvider.future);
+      state = state.copyWith(nameSortKey: key);
+    } catch (e) {
+      AppLogger.w('Pinyin sort keys unavailable: $e', 'TagLibraryPage');
+    }
   }
 
   /// 从存储加载数据
@@ -227,11 +262,21 @@ class TagLibraryPageNotifier extends _$TagLibraryPageNotifier {
         2 => TagLibraryViewMode.grouped,
         _ => TagLibraryViewMode.grouped,
       };
+      final sortIndex = _storage.getSetting<int>(StorageKeys.tagLibrarySortBy);
 
       return TagLibraryPageState(
         entries: entries,
         categories: categories,
         viewMode: viewMode,
+        sortBy:
+            sortIndex != null &&
+                sortIndex >= 0 &&
+                sortIndex < TagLibrarySortBy.values.length
+            ? TagLibrarySortBy.values[sortIndex]
+            : TagLibrarySortBy.order,
+        favoritesFirst:
+            _storage.getSetting<bool>(StorageKeys.tagLibraryFavoritesFirst) ??
+            true,
       );
     } catch (e, stack) {
       AppLogger.e(
@@ -438,28 +483,76 @@ class TagLibraryPageNotifier extends _$TagLibraryPageNotifier {
   }
 
   /// 记录使用
-  Future<void> recordUsage(String entryId) async {
-    final index = state.entries.indexWhere((e) => e.id == entryId);
-    if (index == -1) return;
+  Future<void> recordUsage(String entryId) => recordUsages([entryId]);
 
-    final newEntries = [...state.entries];
-    newEntries[index] = newEntries[index].recordUsage();
-    state = state.copyWith(entries: newEntries);
+  /// 记录一次同时发送的多个条目，只保存一次。
+  Future<void> recordUsages(Iterable<String> entryIds) async {
+    final ids = entryIds.toSet();
+    if (!state.entries.any((entry) => ids.contains(entry.id))) return;
+    state = state.copyWith(
+      entries: [
+        for (final entry in state.entries)
+          ids.contains(entry.id) ? entry.recordUsage() : entry,
+      ],
+    );
     await _saveEntries();
   }
 
-  /// 移动条目到分类
-  Future<void> moveEntryToCategory(String entryId, String? categoryId) async {
-    final index = state.entries.indexWhere((e) => e.id == entryId);
-    if (index == -1) return;
-
-    final newEntries = [...state.entries];
-    newEntries[index] = newEntries[index].copyWith(
-      categoryId: categoryId,
-      updatedAt: DateTime.now(),
+  /// 把多个条目设为收藏或取消收藏，只保存一次。
+  Future<void> setFavorite(Iterable<String> entryIds, bool favorite) async {
+    final ids = entryIds.toSet();
+    final changing = state.entries.any(
+      (entry) => ids.contains(entry.id) && entry.isFavorite != favorite,
     );
-    state = state.copyWith(entries: newEntries);
+    if (!changing) return;
+    state = state.copyWith(
+      entries: [
+        for (final entry in state.entries)
+          ids.contains(entry.id) && entry.isFavorite != favorite
+              ? entry.toggleFavorite()
+              : entry,
+      ],
+    );
     await _saveEntries();
+  }
+
+  /// 移动条目到分组；关联的固定词随之移动。
+  Future<void> moveEntryToCategory(String entryId, String? categoryId) =>
+      moveEntriesToCategory([entryId], categoryId);
+
+  /// 把多个条目移到同一分组，只保存一次。
+  Future<void> moveEntriesToCategory(
+    Iterable<String> entryIds,
+    String? categoryId,
+  ) async {
+    final ids = entryIds.toSet();
+    final moving = {
+      for (final entry in state.entries)
+        if (ids.contains(entry.id) && entry.categoryId != categoryId) entry.id,
+    };
+    if (moving.isEmpty) return;
+    final now = DateTime.now();
+    state = state.copyWith(
+      entries: [
+        for (final entry in state.entries)
+          moving.contains(entry.id)
+              ? entry.copyWith(categoryId: categoryId, updatedAt: now)
+              : entry,
+      ],
+    );
+    await _saveEntries();
+    await _syncFixedTagCategories();
+  }
+
+  /// 固定词分组与词库保持一致，见 [FixedTagsNotifier.reconcileCategoriesWithLibrary]。
+  Future<void> _syncFixedTagCategories() async {
+    try {
+      await ref
+          .read(fixedTagsNotifierProvider.notifier)
+          .reconcileCategoriesWithLibrary();
+    } catch (e) {
+      AppLogger.w('Failed to sync fixed tag groups: $e', 'TagLibraryPage');
+    }
   }
 
   /// 批量删除条目
@@ -569,6 +662,7 @@ class TagLibraryPageNotifier extends _$TagLibraryPageNotifier {
 
     await _saveCategories();
     await _saveEntries();
+    await _syncFixedTagCategories();
   }
 
   /// 重命名分类
@@ -715,6 +809,14 @@ class TagLibraryPageNotifier extends _$TagLibraryPageNotifier {
   /// 设置排序方式
   void setSortBy(TagLibrarySortBy sortBy) {
     state = state.copyWith(sortBy: sortBy);
+    _storage.setSetting(StorageKeys.tagLibrarySortBy, sortBy.index);
+    if (sortBy == TagLibrarySortBy.name) unawaited(_loadNameSortKey());
+  }
+
+  /// 设置收藏是否置顶
+  void setFavoritesFirst(bool value) {
+    state = state.copyWith(favoritesFirst: value);
+    _storage.setSetting(StorageKeys.tagLibraryFavoritesFirst, value);
   }
 
   /// 刷新数据
@@ -771,6 +873,9 @@ class TagLibraryPageNotifier extends _$TagLibraryPageNotifier {
       await _saveCategories();
       await _saveEntries();
       rethrow;
+    }
+    if (removedCategoryIds.isNotEmpty || removedEntryIds.isNotEmpty) {
+      await _syncFixedTagCategories();
     }
 
     return TagLibraryImportApplyResult(

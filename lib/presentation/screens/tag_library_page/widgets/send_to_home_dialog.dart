@@ -8,7 +8,9 @@ import '../../../../core/utils/sd_to_nai_converter.dart';
 import '../../../../data/models/tag_library/tag_library_entry.dart';
 import '../../../../presentation/providers/pending_prompt_provider.dart';
 import '../../../adaptive/adaptive_presenter.dart';
+import '../../../themes/core/layered_surface_style.dart';
 import '../../../widgets/common/adaptive_dialog_frame.dart';
+import '../../../widgets/common/themed_radio.dart';
 import '../../../widgets/common/translated_tag_text.dart';
 
 // 使用现有的 SendTargetType 从 pending_prompt_provider.dart
@@ -43,23 +45,29 @@ class SendToHomeDialog extends ConsumerStatefulWidget {
   }) {
     return AdaptivePresenter.showForm<SendOptions>(
       context: context,
-      titleBuilder: (panelContext) => Row(
-        children: [
-          Icon(
-            Icons.send_outlined,
-            color: Theme.of(panelContext).colorScheme.primary,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              panelContext.l10n.sendToHome_dialogTitle,
-              style: Theme.of(
-                panelContext,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+      titleBuilder: (panelContext) {
+        final theme = Theme.of(panelContext);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              panelContext.l10n.sendToHome_titleFor(entry.displayName),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-        ],
-      ),
+            Text(
+              panelContext.l10n.sendToHome_chooseTarget,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        );
+      },
       dialogWidth: 480,
       builder: (panelContext, scrollController) =>
           SendToHomeDialog(entry: entry, scrollController: scrollController),
@@ -190,8 +198,6 @@ class _SendToHomeDialogState extends ConsumerState<SendToHomeDialog> {
       children: [
         // 主提示词选项（始终可用）
         _TargetOptionTile(
-          icon: Icons.auto_awesome,
-          iconColor: theme.colorScheme.primary,
           title: context.l10n.sendToHome_mainPrompt,
           subtitle: _isPipeFormat
               ? context.l10n.sendToHome_mainPromptPipeSubtitle
@@ -202,10 +208,7 @@ class _SendToHomeDialogState extends ConsumerState<SendToHomeDialog> {
         ),
         // 智能分解选项（仅竖线格式可用）
         if (_isPipeFormat) ...[
-          const SizedBox(height: 8),
           _TargetOptionTile(
-            icon: Icons.account_tree,
-            iconColor: theme.colorScheme.secondary,
             title: context.l10n.sendToHome_smartDecompose,
             subtitle: context.l10n.sendToHome_smartDecomposeSubtitle(
               _parsedResult.characters.length,
@@ -217,20 +220,14 @@ class _SendToHomeDialogState extends ConsumerState<SendToHomeDialog> {
           ),
         ],
         // 角色选项
-        const SizedBox(height: 8),
         _TargetOptionTile(
-          icon: Icons.swap_horiz,
-          iconColor: theme.colorScheme.tertiary,
           title: context.l10n.sendToHome_replaceCharacter,
           subtitle: context.l10n.sendToHome_replaceCharacterSubtitle,
           isSelected: _selectedTarget == SendTargetType.replaceCharacter,
           onTap: () =>
               setState(() => _selectedTarget = SendTargetType.replaceCharacter),
         ),
-        const SizedBox(height: 8),
         _TargetOptionTile(
-          icon: Icons.person_add,
-          iconColor: theme.colorScheme.tertiary,
           title: context.l10n.sendToHome_appendCharacter,
           subtitle: context.l10n.sendToHome_appendCharacterSubtitle,
           isSelected: _selectedTarget == SendTargetType.appendCharacter,
@@ -238,10 +235,7 @@ class _SendToHomeDialogState extends ConsumerState<SendToHomeDialog> {
               setState(() => _selectedTarget = SendTargetType.appendCharacter),
         ),
         // 固定词选项
-        const SizedBox(height: 8),
         _TargetOptionTile(
-          icon: Icons.push_pin,
-          iconColor: Colors.orange,
           title: context.l10n.sendToHome_fixedTags,
           subtitle: context.l10n.sendToHome_fixedTagsSubtitle,
           isSelected: _selectedTarget == SendTargetType.fixedTag,
@@ -254,46 +248,54 @@ class _SendToHomeDialogState extends ConsumerState<SendToHomeDialog> {
 
   /// 构建别名解析开关
   Widget _buildAliasToggle(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.transform,
-            size: 20,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    // The whole row toggles, so the label is as easy to hit as the switch.
+    return MergeSemantics(
+      child: Material(
+        color: controlSurfaceColor(theme.colorScheme),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          key: const ValueKey('send-to-home-alias-row'),
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => setState(() => _sendAsAlias = !_sendAsAlias),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
               children: [
-                Text(
-                  context.l10n.sendToHome_sendAsAlias,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
+                Icon(
+                  Icons.data_object_rounded,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.sendToHome_sendAsAlias,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        context.l10n.sendToHome_sendAsAliasSubtitle(
+                          widget.entry.name,
+                        ),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  context.l10n.sendToHome_sendAsAliasSubtitle(
-                    widget.entry.name,
-                  ),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                Switch(
+                  value: _sendAsAlias,
+                  onChanged: (value) => setState(() => _sendAsAlias = value),
                 ),
               ],
             ),
           ),
-          Switch(
-            value: _sendAsAlias,
-            onChanged: (value) => setState(() => _sendAsAlias = value),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -304,8 +306,8 @@ class _SendToHomeDialogState extends ConsumerState<SendToHomeDialog> {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(12),
+        color: sectionSurfaceColor(theme.colorScheme),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -442,10 +444,8 @@ class ParsedResult {
   ParsedResult({required this.mainPrompt, required this.characters});
 }
 
-/// 目标选项卡片
+/// 一个发送目标：单选圆点、名称与说明。
 class _TargetOptionTile extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
   final String title;
   final String subtitle;
   final bool isSelected;
@@ -453,8 +453,6 @@ class _TargetOptionTile extends StatelessWidget {
   final bool isRecommended;
 
   const _TargetOptionTile({
-    required this.icon,
-    required this.iconColor,
     required this.title,
     required this.subtitle,
     required this.isSelected,
@@ -465,94 +463,77 @@ class _TargetOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    return Material(
-      color: isSelected
-          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
-          : theme.colorScheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(12),
+    final colors = theme.colorScheme;
+    return Semantics(
+      selected: isSelected,
+      inMutuallyExclusiveGroup: true,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: isSelected
-                ? Border.all(color: theme.colorScheme.primary, width: 2)
-                : null,
-          ),
-          child: Row(
-            children: [
-              Stack(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(icon, color: iconColor, size: 20),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              children: [
+                ExcludeSemantics(
+                  child: ThemedRadio<bool>(
+                    value: true,
+                    groupValue: isSelected,
+                    onChanged: (_) => onTap(),
                   ),
-                  if (isRecommended)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          context.l10n.sendToHome_recommended,
-                          style: TextStyle(
-                            fontSize: 8,
-                            color: theme.colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Wrap(
+                        spacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            title,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                            ),
                           ),
+                          if (isRecommended)
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: colors.primaryContainer,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1,
+                                ),
+                                child: Text(
+                                  context.l10n.sendToHome_recommended,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: colors.onPrimaryContainer,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
                         ),
                       ),
-                    ),
-                ],
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              if (isSelected)
-                Icon(
-                  Icons.check_circle,
-                  color: theme.colorScheme.primary,
-                  size: 20,
-                )
-              else
-                Icon(
-                  Icons.circle_outlined,
-                  color: theme.colorScheme.outline,
-                  size: 20,
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -617,7 +598,6 @@ class _PreviewItem extends StatelessWidget {
               selectable: false,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface,
-                fontFamily: 'monospace',
                 height: 1.4,
               ),
               maxLines: 5,

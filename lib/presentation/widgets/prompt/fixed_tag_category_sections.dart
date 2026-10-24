@@ -27,14 +27,19 @@ class FixedTagCategorySection {
 /// Groups fixed tags by library category: known categories in library order,
 /// then categories the library no longer has, then uncategorized tags. Empty
 /// groups are left out. Shared by the sidebar and the management dialog so
-/// both show the same grouping.
+/// both show the same grouping. [categoryOf] gives a tag's group when it is
+/// not simply its own `categoryId`, such as its library entry's group.
 List<FixedTagCategorySection> groupFixedTagsByCategory(
   List<FixedTagEntry> entries,
-  List<TagLibraryCategory> categories,
-) {
+  List<TagLibraryCategory> categories, {
+  String? Function(FixedTagEntry entry)? categoryOf,
+}) {
   final grouped = <String?, List<FixedTagEntry>>{};
   for (final entry in entries) {
-    grouped.putIfAbsent(entry.categoryId, () => []).add(entry);
+    final categoryId = categoryOf == null
+        ? entry.categoryId
+        : categoryOf(entry);
+    grouped.putIfAbsent(categoryId, () => []).add(entry);
   }
   final known = {for (final category in categories) category.id};
   return [

@@ -193,7 +193,7 @@ class VibeCategoryTreeView extends ConsumerWidget {
             children: [
               const Icon(Icons.add, size: 18),
               const SizedBox(width: 8),
-              Text(context.l10n.tagLibrary_newCategory),
+              Text(context.l10n.vibeLibrary_createCategoryTitle),
             ],
           ),
         ),

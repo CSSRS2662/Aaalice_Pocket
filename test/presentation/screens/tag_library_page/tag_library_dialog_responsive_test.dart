@@ -53,13 +53,13 @@ void main() {
         find.byKey(const ValueKey('send-to-home-dialog-frame')),
         findsOneWidget,
       );
-      expect(find.text('发送到主提示词'), findsOneWidget);
+      expect(find.text('追加到正面提示词'), findsOneWidget);
       expect(find.text('智能分解'), findsWidgets);
       expect(find.text('替换角色提示词'), findsOneWidget);
       expect(find.text('追加角色提示词'), findsOneWidget);
-      expect(find.text('发送到固定词'), findsOneWidget);
-      expect(find.text('作为别名发送'), findsOneWidget);
-      expect(find.text('发送预览'), findsOneWidget);
+      expect(find.text('添加为固定词'), findsOneWidget);
+      expect(find.text('以引用发送'), findsOneWidget);
+      expect(find.text('将写入'), findsOneWidget);
       expect(find.text('1girl, red hair'), findsOneWidget);
       expect(find.text('1boy, blue eyes'), findsOneWidget);
       expect(
@@ -70,9 +70,9 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.ensureVisible(find.text('发送到固定词'));
-      await tester.tap(find.text('发送到固定词'));
-      await tester.ensureVisible(find.text('作为别名发送'));
+      await tester.ensureVisible(find.text('添加为固定词'));
+      await tester.tap(find.text('添加为固定词'));
+      await tester.ensureVisible(find.byType(Switch));
       await tester.tap(find.byType(Switch));
       final send = find.text('发送');
       await tester.ensureVisible(send);

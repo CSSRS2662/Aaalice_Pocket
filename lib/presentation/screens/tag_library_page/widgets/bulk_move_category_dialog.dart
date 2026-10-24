@@ -5,6 +5,7 @@ import '../../../../data/models/tag_library/tag_library_category.dart';
 import '../../../adaptive/adaptive_presenter.dart';
 import '../../../adaptive/window_size_class.dart';
 import '../../../widgets/common/adaptive_dialog_frame.dart';
+import '../../../widgets/tag_library/library_group_style.dart';
 
 /// 批量转移分类对话框
 class BulkMoveCategoryDialog extends StatelessWidget {
@@ -141,6 +142,7 @@ class _BulkMoveCategoryContent extends StatelessWidget {
                   _CategoryTile(
                     id: null,
                     name: context.l10n.tagLibrary_rootCategory,
+                    style: LibraryGroupStyle.generic,
                     isSelected: currentCategoryId == null,
                     onTap: () => Navigator.of(context).pop(''),
                     depth: 0,
@@ -183,6 +185,7 @@ class _BulkMoveCategoryContent extends StatelessWidget {
         _CategoryTile(
           id: category.id,
           name: category.displayName,
+          style: LibraryGroupStyle.of(category.id, categories),
           isSelected: category.id == currentCategoryId,
           onTap: () => Navigator.of(context).pop(category.id),
           depth: depth,
@@ -199,6 +202,7 @@ class _BulkMoveCategoryContent extends StatelessWidget {
 class _CategoryTile extends StatelessWidget {
   final String? id;
   final String name;
+  final LibraryGroupStyle style;
   final bool isSelected;
   final VoidCallback onTap;
   final int depth;
@@ -206,6 +210,7 @@ class _CategoryTile extends StatelessWidget {
   const _CategoryTile({
     required this.id,
     required this.name,
+    required this.style,
     required this.isSelected,
     required this.onTap,
     required this.depth,
@@ -221,7 +226,8 @@ class _CategoryTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: EdgeInsets.fromLTRB(8 + depth * 20, 10, 12, 10),
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: EdgeInsets.fromLTRB(8 + depth * 20, 6, 12, 6),
           decoration: BoxDecoration(
             color: isSelected
                 ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
@@ -230,14 +236,8 @@ class _CategoryTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(
-                isSelected ? Icons.folder : Icons.folder_outlined,
-                size: 20,
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 10),
+              LibraryGroupIcon(style: style, size: 30),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   name,

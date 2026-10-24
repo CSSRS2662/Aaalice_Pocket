@@ -14,95 +14,108 @@ import 'package:nai_launcher/presentation/screens/tag_library_page/tag_library_p
 import '../../../helpers/light_theme_contrast.dart';
 
 void main() {
-  testWidgets('open category panel immediately applies sorting and collapse', (
+  testWidgets('desktop group sidebar applies sorting and collapse at once', (
     tester,
   ) async {
-    await _setViewport(tester, const Size(390, 844));
+    await _setViewport(tester, const Size(1180, 844));
     await _pumpTagLibrary(tester, _SortingTagLibraryPageNotifier.new);
-    await tester.tap(find.byKey(const Key('tag-library-categories-button')));
-    await tester.pumpAndSettle();
     expect(
-      tester.getTopLeft(find.text('分类 10')).dy,
-      lessThan(tester.getTopLeft(find.text('分类 2')).dy),
+      tester.getTopLeft(find.text('分类 10').last).dy,
+      lessThan(tester.getTopLeft(find.text('分类 2').last).dy),
     );
-    final categoryElement = tester.element(find.text('分类 10'));
     await tester.tap(find.byKey(const ValueKey('sidebar-sort-tagCategories')));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey('sidebar-sort-option-nameAscending')),
     );
     await tester.pumpAndSettle();
+    final sidebar = find.byKey(const Key('tag-library-category-sidebar'));
+    Finder inSidebar(String text) =>
+        find.descendant(of: sidebar, matching: find.text(text));
     expect(
-      tester.getTopLeft(find.text('分类 2')).dy,
-      lessThan(tester.getTopLeft(find.text('分类 10')).dy),
+      tester.getTopLeft(inSidebar('分类 2')).dy,
+      lessThan(tester.getTopLeft(inSidebar('分类 10')).dy),
     );
-    expect(tester.element(find.text('分类 10')), same(categoryElement));
     final headerTitle = find.descendant(
       of: find.byKey(const Key('tag-library-category-section-toggle')),
-      matching: find.text('分类'),
+      matching: find.text('分组'),
     );
     await tester.tap(headerTitle);
     await tester.pumpAndSettle();
-    expect(find.text('分类 2'), findsNothing);
+    expect(inSidebar('分类 2'), findsNothing);
     await tester.tap(headerTitle);
     await tester.pumpAndSettle();
-    expect(find.text('分类 2'), findsOneWidget);
+    expect(inSidebar('分类 2'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-  testWidgets(
-    'mobile category selection closes its panel without popping route',
-    (tester) async {
-      tester.view.physicalSize = const Size(390, 844);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
 
-      final router = GoRouter(
-        routes: [
-          GoRoute(path: '/', builder: (_, _) => const TagLibraryPageScreen()),
-        ],
-      );
-      addTearDown(router.dispose);
+  testWidgets('phone group chips choose a group without popping the route', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            tagLibraryPageNotifierProvider.overrideWith(
-              _TestTagLibraryPageNotifier.new,
-            ),
-            shortcutConfigNotifierProvider.overrideWith(
-              _TestShortcutConfigNotifier.new,
-            ),
-          ],
-          child: MaterialApp.router(
-            routerConfig: router,
-            locale: const Locale('zh'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
+    final router = GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const TagLibraryPageScreen()),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          localStorageServiceProvider.overrideWith(
+            (ref) => InMemoryLocalStorageService(),
           ),
+          tagLibraryPageNotifierProvider.overrideWith(
+            _TestTagLibraryPageNotifier.new,
+          ),
+          shortcutConfigNotifierProvider.overrideWith(
+            _TestShortcutConfigNotifier.new,
+          ),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('tag-library-categories-button')));
-      await tester.pumpAndSettle();
-      expect(find.text('测试类别'), findsOneWidget);
+    await tester.tap(
+      find.byKey(const ValueKey('tag-library-chip-test-category')),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('测试类别'));
-      await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(TagLibraryPageScreen)),
+    );
+    expect(
+      container.read(tagLibraryPageNotifierProvider).selectedCategoryId,
+      'test-category',
+    );
+    expect(router.routeInformationProvider.value.uri.path, '/');
 
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TagLibraryPageScreen)),
-      );
-      expect(
-        container.read(tagLibraryPageNotifierProvider).selectedCategoryId,
-        'test-category',
-      );
-      expect(router.routeInformationProvider.value.uri.path, '/');
-      expect(find.text('测试类别'), findsNothing);
-      expect(tester.takeException(), isNull);
-    },
-  );
+    // Its subgroup row appears and narrows to the subgroup.
+    await tester.tap(
+      find.byKey(const ValueKey('tag-library-subgroup-test-child-category')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      container.read(tagLibraryPageNotifierProvider).selectedCategoryId,
+      'test-child-category',
+    );
+    expect(
+      find.byKey(const ValueKey('tag-library-subgroup-test-child-category')),
+      findsOne,
+    );
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('category expansion survives round trips across 840px', (
     tester,
@@ -157,31 +170,6 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('compact category panel keeps expansion after close and reopen', (
-    tester,
-  ) async {
-    await _setViewport(tester, const Size(390, 700));
-    await _pumpTagLibrary(tester, _TestTagLibraryPageNotifier.new);
-
-    final categoriesButton = find.byKey(
-      const Key('tag-library-categories-button'),
-    );
-    await tester.tap(categoriesButton);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.chevron_right));
-    await tester.pump();
-    expect(find.text('测试子类别'), findsOneWidget);
-
-    await tester.tap(find.text('测试子类别'));
-    await tester.pumpAndSettle();
-    expect(find.text('测试子类别'), findsNothing);
-
-    await tester.tap(categoriesButton);
-    await tester.pumpAndSettle();
-    expect(find.text('测试子类别'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets('toolbar opens add import and export through adaptive forms', (
     tester,
   ) async {
@@ -205,27 +193,15 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('card tail and content context menu both create entries', (
-    tester,
-  ) async {
+  testWidgets('right-click on the list creates an entry', (tester) async {
     await _setViewport(tester, const Size(1180, 800));
     await _pumpTagLibrary(tester, _DialogTagLibraryPageNotifier.new);
 
-    await tester.tap(find.byKey(const Key('tag-library-create-card')));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('adaptive-centered-form')),
-      findsOneWidget,
+    await tester.tap(
+      find.byKey(const ValueKey('tag-library-sections')),
+      buttons: kSecondaryMouseButton,
     );
-    await tester.tap(find.byIcon(Icons.close));
     await tester.pumpAndSettle();
-
-    await tester.tap(find.byType(GridView), buttons: kSecondaryMouseButton);
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const Key('tag-library-context-create-entry')),
-      findsOneWidget,
-    );
     await tester.tap(find.byKey(const Key('tag-library-context-create-entry')));
     await tester.pumpAndSettle();
     expect(
@@ -235,7 +211,31 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('new category input survives compact SafeArea IME and 3x text', (
+  testWidgets('tapping an entry opens its details with send and actions', (
+    tester,
+  ) async {
+    await _setViewport(tester, const Size(390, 844));
+    await _pumpTagLibrary(tester, _DialogTagLibraryPageNotifier.new);
+
+    await tester.tap(
+      find.byKey(const ValueKey('tag-library-entry-dialog-entry')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('tag-library-entry-sheet')), findsOne);
+    for (final key in [
+      'tag-library-entry-send',
+      'tag-library-entry-send-more',
+      'tag-library-entry-favorite',
+      'tag-library-entry-edit',
+      'tag-library-entry-more',
+    ]) {
+      expect(find.byKey(ValueKey(key)).hitTestable(), findsOne, reason: key);
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('new group form survives compact SafeArea IME and 3x text', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 568);
@@ -252,24 +252,23 @@ void main() {
       textScale: 3,
     );
 
-    await tester.tap(find.byKey(const Key('tag-library-categories-button')));
+    await tester.tap(find.byKey(const ValueKey('tag-library-more-menu')));
     await tester.pumpAndSettle();
-    final createCategory = find.byTooltip('新建');
-    await tester.ensureVisible(createCategory);
-    await tester.tap(createCategory);
+    await tester.tap(
+      find.byKey(const ValueKey('tag-library-menu-manageGroups')),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('tag-library-new-group')),
+    );
+    await tester.tap(find.byKey(const ValueKey('tag-library-new-group')));
     await tester.pumpAndSettle();
 
     final panels = find.byKey(const ValueKey('adaptive-bottom-sheet'));
     expect(panels, findsNWidgets(2));
-    final panel = panels.last;
-    expect(
-      find.byKey(const ValueKey('tag-library-add-category-form')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('tag-library-group-create')), findsOne);
     expect(find.byType(Dialog), findsNothing);
-    expect(find.text('取消'), findsOneWidget);
-    expect(find.text('创建'), findsOneWidget);
-    final rect = tester.getRect(panel);
+    final rect = tester.getRect(panels.last);
     expect(rect.top, greaterThanOrEqualTo(24));
     expect(rect.bottom, lessThanOrEqualTo(408));
     expect(tester.takeException(), isNull);
@@ -277,7 +276,7 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(
-      find.byKey(const ValueKey('tag-library-add-category-form')),
+      find.byKey(const ValueKey('tag-library-group-create')),
       findsNothing,
     );
     expect(find.byKey(const ValueKey('adaptive-bottom-sheet')), findsOneWidget);
@@ -294,6 +293,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          localStorageServiceProvider.overrideWith(
+            (ref) => InMemoryLocalStorageService(),
+          ),
           tagLibraryPageNotifierProvider.overrideWith(
             _ScrollableTagLibraryPageNotifier.new,
           ),
@@ -311,14 +313,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.drag(find.byType(GridView), const Offset(0, -420));
+    final list = find.byKey(const ValueKey('tag-library-sections'));
+    await tester.drag(list, const Offset(0, -420));
     await tester.pumpAndSettle();
     double offset() => tester
         .state<ScrollableState>(
-          find.descendant(
-            of: find.byType(GridView),
-            matching: find.byType(Scrollable),
-          ),
+          find.descendant(of: list, matching: find.byType(Scrollable)).first,
         )
         .position
         .pixels;

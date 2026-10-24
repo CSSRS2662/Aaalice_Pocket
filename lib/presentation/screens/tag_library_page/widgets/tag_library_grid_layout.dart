@@ -2,10 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../widgets/common/grid_column_count.dart';
-import 'entry_card.dart';
-
-/// Shared grid geometry for the flat and grouped tag library views.
+/// Grid geometry for the library list: two columns on a phone, more on wider
+/// panes, one when large text leaves too little room.
 @immutable
 class TagLibraryGridLayout {
   const TagLibraryGridLayout({
@@ -14,7 +12,9 @@ class TagLibraryGridLayout {
     required this.padding,
   });
 
-  static const double spacing = 12;
+  static const double spacing = 8;
+  static const int preferredColumns = 2;
+  static const double maxCellWidth = 320;
 
   final int columns;
   final double mainAxisExtent;
@@ -28,35 +28,31 @@ class TagLibraryGridLayout {
   );
 }
 
-/// Resolves the user's column choice for the available width. Cells keep the
-/// avatar-beside-name row while wide enough and otherwise become vertical
-/// tiles, which need more height for the avatar and two lines of name.
+/// The layout for [availableWidth] with cards [cardExtent] tall.
 TagLibraryGridLayout computeTagLibraryGridLayout(
   double availableWidth,
   double textScale, {
-  int preferredColumns = GridColumnCount.fallback,
+  required double cardExtent,
 }) {
   final padding = availableWidth < 600 ? 12.0 : 16.0;
-  final scale = textScale.clamp(1.0, 3.0);
   final width = math.max(0.0, availableWidth - padding * 2);
-  final columns = GridColumnCount.resolve(
-    width: width,
-    preferred: preferredColumns,
-    spacing: TagLibraryGridLayout.spacing,
-    minCellWidth: 104 * scale,
+  const spacing = TagLibraryGridLayout.spacing;
+  final minCell = 140 * textScale.clamp(1.0, 3.0);
+  final fitting = math.max(
+    1,
+    ((width + spacing) / (minCell + spacing)).floor(),
   );
-  final cellWidth = GridColumnCount.cellWidth(
-    width: width,
-    columns: columns,
-    spacing: TagLibraryGridLayout.spacing,
+  // Cards stop growing at maxCellWidth; wider panes add columns instead.
+  final needed =
+      ((width + spacing) / (TagLibraryGridLayout.maxCellWidth + spacing))
+          .ceil();
+  final columns = math.min(
+    fitting,
+    math.max(TagLibraryGridLayout.preferredColumns, needed),
   );
-  // Vertical tile: 12 + 52 avatar + 8 + two name lines + 10, plus 4 of slack.
-  final nameLines = 2 * 14 * entryCardNameLineHeight * scale;
   return TagLibraryGridLayout(
     columns: columns,
-    mainAxisExtent: cellWidth < entryCardVerticalBreakpoint
-        ? 86 + nameLines
-        : 68 + (scale - 1) * 40,
+    mainAxisExtent: cardExtent,
     padding: padding,
   );
 }

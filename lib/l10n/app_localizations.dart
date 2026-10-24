@@ -545,18 +545,6 @@ abstract class AppLocalizations {
   /// **'Filter'**
   String get common_filter;
 
-  /// No description provided for @common_grid.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid'**
-  String get common_grid;
-
-  /// No description provided for @common_grouped.
-  ///
-  /// In en, this message translates to:
-  /// **'Grouped'**
-  String get common_grouped;
-
   /// No description provided for @common_date.
   ///
   /// In en, this message translates to:
@@ -2093,18 +2081,6 @@ abstract class AppLocalizations {
   /// **'{fileName} is larger than {maxSizeMB} MB.'**
   String agentChat_imageTooLarge(String fileName, int maxSizeMB);
 
-  /// No description provided for @agentChat_enableWebAccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable web access'**
-  String get agentChat_enableWebAccess;
-
-  /// No description provided for @agentChat_disableWebAccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Disable web access'**
-  String get agentChat_disableWebAccess;
-
   /// No description provided for @agentChat_webAccessLabel.
   ///
   /// In en, this message translates to:
@@ -3556,18 +3532,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Imported {count} character(s)'**
   String prompt_importedCharacters(int count);
-
-  /// No description provided for @prompt_characterPromptReplaced.
-  ///
-  /// In en, this message translates to:
-  /// **'Replaced character prompts'**
-  String get prompt_characterPromptReplaced;
-
-  /// No description provided for @prompt_characterPromptAppended.
-  ///
-  /// In en, this message translates to:
-  /// **'Appended character prompts ({count} character(s))'**
-  String prompt_characterPromptAppended(Object count);
 
   /// No description provided for @prompt_smartDecomposedWithCharacters.
   ///
@@ -12297,13 +12261,13 @@ abstract class AppLocalizations {
   /// No description provided for @fixedTags_unknownCategory.
   ///
   /// In en, this message translates to:
-  /// **'Unknown Category'**
+  /// **'Unknown group'**
   String get fixedTags_unknownCategory;
 
   /// No description provided for @fixedTags_uncategorized.
   ///
   /// In en, this message translates to:
-  /// **'Uncategorized'**
+  /// **'Ungrouped'**
   String get fixedTags_uncategorized;
 
   /// No description provided for @fixedTags_clickManageLongPressSidebar.
@@ -12417,12 +12381,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disable All'**
   String get fixedTags_disableAll;
-
-  /// No description provided for @fixedTags_searchTarget.
-  ///
-  /// In en, this message translates to:
-  /// **'Search {target}...'**
-  String fixedTags_searchTarget(Object target);
 
   /// No description provided for @fixedTags_noMatching.
   ///
@@ -13489,13 +13447,13 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_categories.
   ///
   /// In en, this message translates to:
-  /// **'Categories'**
+  /// **'Groups'**
   String get tagLibrary_categories;
 
   /// No description provided for @tagLibrary_newCategory.
   ///
   /// In en, this message translates to:
-  /// **'New Category'**
+  /// **'New group'**
   String get tagLibrary_newCategory;
 
   /// No description provided for @tagLibrary_addEntry.
@@ -13531,7 +13489,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_sortCustom.
   ///
   /// In en, this message translates to:
-  /// **'Custom Sort'**
+  /// **'Custom'**
   String get tagLibrary_sortCustom;
 
   /// No description provided for @tagLibrary_sortName.
@@ -13540,22 +13498,10 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get tagLibrary_sortName;
 
-  /// No description provided for @tagLibrary_sortUseCount.
-  ///
-  /// In en, this message translates to:
-  /// **'Usage'**
-  String get tagLibrary_sortUseCount;
-
-  /// No description provided for @tagLibrary_sortUpdatedAt.
-  ///
-  /// In en, this message translates to:
-  /// **'Updated'**
-  String get tagLibrary_sortUpdatedAt;
-
   /// No description provided for @tagLibrary_transferCategory.
   ///
   /// In en, this message translates to:
-  /// **'Move Category'**
+  /// **'Move to group'**
   String get tagLibrary_transferCategory;
 
   /// No description provided for @tagLibrary_copyContent.
@@ -13567,13 +13513,13 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_moveToCategoryTitle.
   ///
   /// In en, this message translates to:
-  /// **'Move to Category'**
+  /// **'Move to group'**
   String get tagLibrary_moveToCategoryTitle;
 
   /// No description provided for @tagLibrary_selectTargetCategory.
   ///
   /// In en, this message translates to:
-  /// **'Select target category:'**
+  /// **'Choose a group:'**
   String get tagLibrary_selectTargetCategory;
 
   /// No description provided for @tagLibrary_includeThumbnails.
@@ -13609,7 +13555,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_categoriesLabel.
   ///
   /// In en, this message translates to:
-  /// **'Categories'**
+  /// **'Groups'**
   String get tagLibrary_categoriesLabel;
 
   /// No description provided for @tagLibrary_selectExportContent.
@@ -13681,7 +13627,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_categoryCountLabel.
   ///
   /// In en, this message translates to:
-  /// **'Categories'**
+  /// **'Groups'**
   String get tagLibrary_categoryCountLabel;
 
   /// No description provided for @tagLibrary_exportDateLabel.
@@ -13699,7 +13645,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_categoriesSection.
   ///
   /// In en, this message translates to:
-  /// **'Categories ({count})'**
+  /// **'Groups ({count})'**
   String tagLibrary_categoriesSection(Object count);
 
   /// No description provided for @tagLibrary_entriesSection.
@@ -13771,7 +13717,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_importedCategoriesCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} categories'**
+  /// **'{count} groups'**
   String tagLibrary_importedCategoriesCount(Object count);
 
   /// No description provided for @tagLibrary_renamedCount.
@@ -13801,7 +13747,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_unknownCategory.
   ///
   /// In en, this message translates to:
-  /// **'Unknown Category'**
+  /// **'Unknown group'**
   String get tagLibrary_unknownCategory;
 
   /// No description provided for @tagLibrary_selectEntryToUpdate.
@@ -13821,12 +13767,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Will replace existing thumbnail'**
   String get tagLibrary_replaceThumbnailHint;
-
-  /// No description provided for @tagLibrary_sentEntriesToMainPrompt.
-  ///
-  /// In en, this message translates to:
-  /// **'Sent {count} entries to main prompt'**
-  String tagLibrary_sentEntriesToMainPrompt(Object count);
 
   /// No description provided for @tagLibrary_confirmDeleteSelectedEntries.
   ///
@@ -13915,7 +13855,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_addSubCategory.
   ///
   /// In en, this message translates to:
-  /// **'Add Subcategory'**
+  /// **'Add subgroup'**
   String get tagLibrary_addSubCategory;
 
   /// No description provided for @tagLibrary_moveToRoot.
@@ -13927,19 +13867,19 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_categoryNameHint.
   ///
   /// In en, this message translates to:
-  /// **'Enter category name'**
+  /// **'Group name'**
   String get tagLibrary_categoryNameHint;
 
   /// No description provided for @tagLibrary_deleteCategoryTitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete Category'**
+  /// **'Delete group'**
   String get tagLibrary_deleteCategoryTitle;
 
   /// No description provided for @tagLibrary_deleteCategoryConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete category \"{name}\"? {count} entries will be moved to root.'**
+  /// **'Delete the group “{name}”? Its {count} entries will become ungrouped.'**
   String tagLibrary_deleteCategoryConfirm(Object name, Object count);
 
   /// No description provided for @tagLibrary_deleteEntryTitle.
@@ -13969,7 +13909,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_categoryEmpty.
   ///
   /// In en, this message translates to:
-  /// **'This category is empty'**
+  /// **'This group has no entries yet'**
   String get tagLibrary_categoryEmpty;
 
   /// No description provided for @tagLibrary_empty.
@@ -14002,16 +13942,10 @@ abstract class AppLocalizations {
   /// **'All Categories'**
   String get tagLibraryPicker_allCategories;
 
-  /// No description provided for @tagLibrary_addedToFixed.
-  ///
-  /// In en, this message translates to:
-  /// **'Added to Fixed Tags'**
-  String get tagLibrary_addedToFixed;
-
   /// No description provided for @tagLibrary_entryMoved.
   ///
   /// In en, this message translates to:
-  /// **'Entry moved to target category'**
+  /// **'Entry moved to the group'**
   String get tagLibrary_entryMoved;
 
   /// No description provided for @tagLibrary_thumbnail.
@@ -14047,13 +13981,13 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_category.
   ///
   /// In en, this message translates to:
-  /// **'Category'**
+  /// **'Group'**
   String get tagLibrary_category;
 
   /// No description provided for @tagLibrary_rootCategory.
   ///
   /// In en, this message translates to:
-  /// **'Root'**
+  /// **'Ungrouped'**
   String get tagLibrary_rootCategory;
 
   /// No description provided for @tagLibrary_tags.
@@ -14203,7 +14137,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_categoryNameExists.
   ///
   /// In en, this message translates to:
-  /// **'Category name already exists'**
+  /// **'A group with this name already exists'**
   String get tagLibrary_categoryNameExists;
 
   /// No description provided for @tagLibrary_addToLibrary.
@@ -14233,7 +14167,7 @@ abstract class AppLocalizations {
   /// No description provided for @tagLibrary_uncategorized.
   ///
   /// In en, this message translates to:
-  /// **'Uncategorized'**
+  /// **'Ungrouped'**
   String get tagLibrary_uncategorized;
 
   /// No description provided for @tagLibrary_contentPreview.
@@ -14806,12 +14740,6 @@ abstract class AppLocalizations {
   /// **'No activity'**
   String get statistics_heatmapNoActivity;
 
-  /// No description provided for @sendToHome_dialogTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Send to Home'**
-  String get sendToHome_dialogTitle;
-
   /// No description provided for @sendToHome_send.
   ///
   /// In en, this message translates to:
@@ -14821,19 +14749,19 @@ abstract class AppLocalizations {
   /// No description provided for @sendToHome_mainPrompt.
   ///
   /// In en, this message translates to:
-  /// **'Send to Main Prompt'**
+  /// **'Add to the positive prompt'**
   String get sendToHome_mainPrompt;
 
   /// No description provided for @sendToHome_mainPromptSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Fill into the main prompt input field'**
+  /// **'Goes after what is already there'**
   String get sendToHome_mainPromptSubtitle;
 
   /// No description provided for @sendToHome_mainPromptPipeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Send the full content to the main prompt (including pipes)'**
+  /// **'Adds everything, pipes included, after the current prompt'**
   String get sendToHome_mainPromptPipeSubtitle;
 
   /// No description provided for @sendToHome_smartDecompose.
@@ -14875,31 +14803,31 @@ abstract class AppLocalizations {
   /// No description provided for @sendToHome_fixedTags.
   ///
   /// In en, this message translates to:
-  /// **'Send to Fixed Tags'**
+  /// **'Add as fixed tag'**
   String get sendToHome_fixedTags;
 
   /// No description provided for @sendToHome_fixedTagsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Append to the fixed tag list'**
+  /// **'Added to every generation from now on'**
   String get sendToHome_fixedTagsSubtitle;
 
   /// No description provided for @sendToHome_sendAsAlias.
   ///
   /// In en, this message translates to:
-  /// **'Send as Alias'**
+  /// **'Send as a reference'**
   String get sendToHome_sendAsAlias;
 
   /// No description provided for @sendToHome_sendAsAliasSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Wrap as <{name}> when sending to home'**
+  /// **'Writes <{name}>, which follows later edits to the entry'**
   String sendToHome_sendAsAliasSubtitle(Object name);
 
   /// No description provided for @sendToHome_preview.
   ///
   /// In en, this message translates to:
-  /// **'Send Preview'**
+  /// **'Will add'**
   String get sendToHome_preview;
 
   /// No description provided for @sendToHome_characterPrompt.
@@ -14925,12 +14853,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recommended'**
   String get sendToHome_recommended;
-
-  /// No description provided for @sendToHome_successMainPrompt.
-  ///
-  /// In en, this message translates to:
-  /// **'Sent to main prompt'**
-  String get sendToHome_successMainPrompt;
 
   /// No description provided for @sendToHome_successReplaceCharacter.
   ///
@@ -19982,12 +19904,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to extract prompt: {error}'**
   String toast_extractPromptFailed(Object error);
-
-  /// No description provided for @toast_smartDecomposeSent.
-  ///
-  /// In en, this message translates to:
-  /// **'Smart decomposed and sent'**
-  String get toast_smartDecomposeSent;
 
   /// No description provided for @toast_addedToFixedTags.
   ///
@@ -28632,6 +28548,474 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Changed since saved to characters'**
   String get characterLibrary_unsaved;
+
+  /// No description provided for @libraryGroup_character.
+  ///
+  /// In en, this message translates to:
+  /// **'Character'**
+  String get libraryGroup_character;
+
+  /// No description provided for @libraryGroup_hair.
+  ///
+  /// In en, this message translates to:
+  /// **'Hair'**
+  String get libraryGroup_hair;
+
+  /// No description provided for @libraryGroup_eyes.
+  ///
+  /// In en, this message translates to:
+  /// **'Eyes'**
+  String get libraryGroup_eyes;
+
+  /// No description provided for @libraryGroup_expression.
+  ///
+  /// In en, this message translates to:
+  /// **'Expression'**
+  String get libraryGroup_expression;
+
+  /// No description provided for @libraryGroup_outfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Outfit'**
+  String get libraryGroup_outfit;
+
+  /// No description provided for @libraryGroup_accessory.
+  ///
+  /// In en, this message translates to:
+  /// **'Accessories'**
+  String get libraryGroup_accessory;
+
+  /// No description provided for @libraryGroup_pose.
+  ///
+  /// In en, this message translates to:
+  /// **'Pose'**
+  String get libraryGroup_pose;
+
+  /// No description provided for @libraryGroup_composition.
+  ///
+  /// In en, this message translates to:
+  /// **'Composition'**
+  String get libraryGroup_composition;
+
+  /// No description provided for @libraryGroup_scene.
+  ///
+  /// In en, this message translates to:
+  /// **'Scene'**
+  String get libraryGroup_scene;
+
+  /// No description provided for @libraryGroup_background.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get libraryGroup_background;
+
+  /// No description provided for @libraryGroup_lighting.
+  ///
+  /// In en, this message translates to:
+  /// **'Lighting'**
+  String get libraryGroup_lighting;
+
+  /// No description provided for @libraryGroup_weather.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather'**
+  String get libraryGroup_weather;
+
+  /// No description provided for @libraryGroup_style.
+  ///
+  /// In en, this message translates to:
+  /// **'Style'**
+  String get libraryGroup_style;
+
+  /// No description provided for @libraryGroup_artist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get libraryGroup_artist;
+
+  /// No description provided for @libraryGroup_color.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get libraryGroup_color;
+
+  /// No description provided for @libraryGroup_quality.
+  ///
+  /// In en, this message translates to:
+  /// **'Quality'**
+  String get libraryGroup_quality;
+
+  /// No description provided for @libraryGroup_prop.
+  ///
+  /// In en, this message translates to:
+  /// **'Props'**
+  String get libraryGroup_prop;
+
+  /// No description provided for @libraryGroup_animal.
+  ///
+  /// In en, this message translates to:
+  /// **'Animals'**
+  String get libraryGroup_animal;
+
+  /// No description provided for @libraryGroup_effect.
+  ///
+  /// In en, this message translates to:
+  /// **'Effects'**
+  String get libraryGroup_effect;
+
+  /// No description provided for @libraryGroup_negative.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative'**
+  String get libraryGroup_negative;
+
+  /// No description provided for @fixedTags_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled tags are added when you generate'**
+  String get fixedTags_subtitle;
+
+  /// No description provided for @fixedTags_positiveTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Positive'**
+  String get fixedTags_positiveTab;
+
+  /// No description provided for @fixedTags_negativeTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative'**
+  String get fixedTags_negativeTab;
+
+  /// No description provided for @fixedTags_searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search fixed tags'**
+  String get fixedTags_searchHint;
+
+  /// No description provided for @fixedTags_sortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get fixedTags_sortTitle;
+
+  /// No description provided for @fixedTags_sortFrequent.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequent'**
+  String get fixedTags_sortFrequent;
+
+  /// No description provided for @fixedTags_sortFrequentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags used more in the last two weeks come first; older uses count less'**
+  String get fixedTags_sortFrequentHint;
+
+  /// No description provided for @fixedTags_sortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently used'**
+  String get fixedTags_sortRecent;
+
+  /// No description provided for @fixedTags_sortRecentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'By when a tag was last sent with a generation'**
+  String get fixedTags_sortRecentHint;
+
+  /// No description provided for @fixedTags_sortCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get fixedTags_sortCustom;
+
+  /// No description provided for @fixedTags_sortCustomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'By group, in the order you set'**
+  String get fixedTags_sortCustomHint;
+
+  /// No description provided for @fixedTags_sortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get fixedTags_sortName;
+
+  /// No description provided for @fixedTags_sortNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Alphabetical; Chinese names by pinyin'**
+  String get fixedTags_sortNameHint;
+
+  /// No description provided for @fixedTags_enabledFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled first'**
+  String get fixedTags_enabledFirst;
+
+  /// No description provided for @fixedTags_enabledFirstHint.
+  ///
+  /// In en, this message translates to:
+  /// **'See the tags in use at a glance'**
+  String get fixedTags_enabledFirstHint;
+
+  /// No description provided for @fixedTags_group.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get fixedTags_group;
+
+  /// No description provided for @fixedTags_groupFollowsLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'follows library'**
+  String get fixedTags_groupFollowsLibrary;
+
+  /// No description provided for @fixedTags_weightDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower weight'**
+  String get fixedTags_weightDecrease;
+
+  /// No description provided for @fixedTags_weightIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Raise weight'**
+  String get fixedTags_weightIncrease;
+
+  /// No description provided for @fixedTags_usageSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent with {count} images · last {when}'**
+  String fixedTags_usageSummary(int count, String when);
+
+  /// No description provided for @fixedTags_usageNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent with a generation yet'**
+  String get fixedTags_usageNever;
+
+  /// No description provided for @fixedTags_fromLibraryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'From library entry “{name}”; content and group stay in sync'**
+  String fixedTags_fromLibraryNote(String name);
+
+  /// No description provided for @tagLibrary_searchCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Search {count} entries'**
+  String tagLibrary_searchCount(int count);
+
+  /// No description provided for @tagLibrary_manageGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage groups'**
+  String get tagLibrary_manageGroups;
+
+  /// No description provided for @tagLibrary_manageGroupsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder. Preset groups have their own icons; custom groups use a general one'**
+  String get tagLibrary_manageGroupsHint;
+
+  /// No description provided for @tagLibrary_noGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups yet'**
+  String get tagLibrary_noGroups;
+
+  /// No description provided for @tagLibrary_newGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a preset, or name your own below'**
+  String get tagLibrary_newGroupHint;
+
+  /// No description provided for @tagLibrary_presetGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Presets'**
+  String get tagLibrary_presetGroups;
+
+  /// No description provided for @tagLibrary_customGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom group'**
+  String get tagLibrary_customGroup;
+
+  /// No description provided for @tagLibrary_customGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name, e.g. My OCs'**
+  String get tagLibrary_customGroupHint;
+
+  /// No description provided for @tagLibrary_groupCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created group “{name}”'**
+  String tagLibrary_groupCreated(String name);
+
+  /// No description provided for @tagLibrary_sendToPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to prompt'**
+  String get tagLibrary_sendToPrompt;
+
+  /// No description provided for @tagLibrary_moreTargets.
+  ///
+  /// In en, this message translates to:
+  /// **'More ways to send'**
+  String get tagLibrary_moreTargets;
+
+  /// No description provided for @tagLibrary_sendSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Send {count} to prompt'**
+  String tagLibrary_sendSelected(int count);
+
+  /// No description provided for @tagLibrary_selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String tagLibrary_selectedCount(int count);
+
+  /// No description provided for @tagLibrary_addedToPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to the positive prompt'**
+  String get tagLibrary_addedToPrompt;
+
+  /// No description provided for @tagLibrary_addedEntriesToPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count} entries to the positive prompt'**
+  String tagLibrary_addedEntriesToPrompt(int count);
+
+  /// No description provided for @tagLibrary_goGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get tagLibrary_goGenerate;
+
+  /// No description provided for @tagLibrary_usedTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {count} times'**
+  String tagLibrary_usedTimes(int count);
+
+  /// No description provided for @tagLibrary_neverUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not used yet'**
+  String get tagLibrary_neverUsed;
+
+  /// No description provided for @tagLibrary_isFixedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed tag'**
+  String get tagLibrary_isFixedTag;
+
+  /// No description provided for @tagLibrary_addAsFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Add as fixed tags'**
+  String get tagLibrary_addAsFixed;
+
+  /// No description provided for @tagLibrary_addedAsFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count} fixed tags'**
+  String tagLibrary_addedAsFixed(int count);
+
+  /// No description provided for @tagLibrary_alreadyFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'These entries are already fixed tags'**
+  String get tagLibrary_alreadyFixed;
+
+  /// No description provided for @tagLibrary_setPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Set preview image'**
+  String get tagLibrary_setPreview;
+
+  /// No description provided for @tagLibrary_replacePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace preview image'**
+  String get tagLibrary_replacePreview;
+
+  /// No description provided for @tagLibrary_removePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove preview image'**
+  String get tagLibrary_removePreview;
+
+  /// No description provided for @tagLibrary_sortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get tagLibrary_sortTitle;
+
+  /// No description provided for @tagLibrary_sortFrequent.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequent'**
+  String get tagLibrary_sortFrequent;
+
+  /// No description provided for @tagLibrary_sortFrequentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries used more lately come first; older uses count less'**
+  String get tagLibrary_sortFrequentHint;
+
+  /// No description provided for @tagLibrary_sortRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently used'**
+  String get tagLibrary_sortRecent;
+
+  /// No description provided for @tagLibrary_sortRecentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'By when an entry was last sent'**
+  String get tagLibrary_sortRecentHint;
+
+  /// No description provided for @tagLibrary_sortCustomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'By group, in the order you set'**
+  String get tagLibrary_sortCustomHint;
+
+  /// No description provided for @tagLibrary_sortNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Alphabetical; Chinese names by pinyin'**
+  String get tagLibrary_sortNameHint;
+
+  /// No description provided for @tagLibrary_favoritesFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites first'**
+  String get tagLibrary_favoritesFirst;
+
+  /// No description provided for @tagLibrary_favoritesFirstHint.
+  ///
+  /// In en, this message translates to:
+  /// **'In All, favorites get their own section at the top'**
+  String get tagLibrary_favoritesFirstHint;
+
+  /// No description provided for @sendToHome_titleFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Send “{name}”'**
+  String sendToHome_titleFor(String name);
+
+  /// No description provided for @sendToHome_chooseTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where it goes'**
+  String get sendToHome_chooseTarget;
 }
 
 class _AppLocalizationsDelegate

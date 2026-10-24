@@ -116,8 +116,12 @@ class StorageKeys {
   static const String fixedTagsSidebarViewMode = 'fixed_tags_sidebar_view_mode';
   static const String fixedTagsNegativeHeight = 'fixed_tags_negative_height';
 
-  /// 固定词管理网格列数（本机偏好，不参与云同步）
-  static const String fixedTagsGridColumns = 'fixed_tags_grid_columns';
+  /// 固定词管理的排序方式与“已启用排在前面”（随云同步）
+  static const String fixedTagsSort = 'fixed_tags_sort';
+  static const String fixedTagsEnabledFirst = 'fixed_tags_enabled_first';
+
+  /// 各固定词最近的使用分数（本机记录，不参与云同步）
+  static const String fixedTagUsageScores = 'fixed_tag_usage_scores_v1';
 
   // Generation Workbench Panel Expansion State Keys (生图工作台面板展开状态)
   static const String advancedOptionsExpanded = 'advanced_options_expanded';
@@ -325,8 +329,9 @@ class StorageKeys {
   static const String tagLibraryCategoriesData = 'tag_library_categories_data';
   static const String tagLibraryViewMode = 'tag_library_view_mode';
 
-  /// 词库网格列数（本机偏好，不参与云同步）
-  static const String tagLibraryGridColumns = 'tag_library_grid_columns';
+  /// 词库的排序方式与“收藏置顶”（随云同步）
+  static const String tagLibrarySortBy = 'tag_library_sort_by';
+  static const String tagLibraryFavoritesFirst = 'tag_library_favorites_first';
 
   /// 各瀑布流的列数（本机偏好，不参与云同步）
   static const String localGalleryMasonryColumns =

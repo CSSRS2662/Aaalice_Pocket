@@ -113,8 +113,6 @@
   "common_exit": "退出",
   "common_folder": "文件夹",
   "common_filter": "筛选",
-  "common_grid": "网格",
-  "common_grouped": "分组",
   "common_date": "日期",
   "common_pack": "打包",
   "common_multiSelect": "多选",
@@ -439,8 +437,6 @@
   "agentChat_noResources": "这里暂时没有可用资源。",
   "agentChat_imageTooLarge": "{fileName} 超过 {maxSizeMB} MB。",
   "@agentChat_imageTooLarge": {"placeholders":{"fileName":{"type":"String"},"maxSizeMB":{"type":"int"}}},
-  "agentChat_enableWebAccess": "开启联网",
-  "agentChat_disableWebAccess": "关闭联网",
   "agentChat_webAccessLabel": "联网",
   "agentChat_contextUsageLabel": "上下文",
   "agentChat_unsupportedImageFormat": "不支持的图片格式：{fileName}",
@@ -763,13 +759,6 @@
       "count": {
         "type": "int"
       }
-    }
-  },
-  "prompt_characterPromptReplaced": "已替换角色提示词",
-  "prompt_characterPromptAppended": "已追加角色提示词 ({count} 个角色)",
-  "@prompt_characterPromptAppended": {
-    "placeholders": {
-      "count": {}
     }
   },
   "prompt_smartDecomposedWithCharacters": "已分解：主提示词 + {count} 个角色",
@@ -3228,8 +3217,8 @@
   "fixedTags_emptyNegative": "暂无负向固定词",
   "fixedTags_noMatchingNegative": "没有匹配的负向固定词",
   "fixedTags_addedToSidebar": "已添加到固定词侧栏",
-  "fixedTags_unknownCategory": "未知分类",
-  "fixedTags_uncategorized": "未分类",
+  "fixedTags_unknownCategory": "未知分组",
+  "fixedTags_uncategorized": "未分组",
   "fixedTags_clickManageLongPressSidebar": "点击管理，长按打开侧栏",
   "fixedTags_clickManageLongPressCompact": "点击管理，长按侧栏",
   "fixedTags_linkCount": "{count} 个联动",
@@ -3276,12 +3265,6 @@
   },
   "fixedTags_enableAll": "全开",
   "fixedTags_disableAll": "全关",
-  "fixedTags_searchTarget": "搜索 {target}...",
-  "@fixedTags_searchTarget": {
-    "placeholders": {
-      "target": {}
-    }
-  },
   "fixedTags_noMatching": "无匹配固定词",
   "fixedTags_emptyTarget": "暂无{target}",
   "@fixedTags_emptyTarget": {
@@ -3543,21 +3526,19 @@
   "common_rename": "重命名",
   "common_create": "创建",
 
-  "tagLibrary_categories": "分类",
-  "tagLibrary_newCategory": "新建分类",
+  "tagLibrary_categories": "分组",
+  "tagLibrary_newCategory": "新建分组",
   "tagLibrary_addEntry": "添加条目",
   "tagLibrary_editEntry": "编辑条目",
   "tagLibrary_searchHint": "搜索条目...",
   "tagLibrary_import": "导入",
   "tagLibrary_export": "导出",
-  "tagLibrary_sortCustom": "自定义排序",
+  "tagLibrary_sortCustom": "自定义",
   "tagLibrary_sortName": "名称",
-  "tagLibrary_sortUseCount": "使用频率",
-  "tagLibrary_sortUpdatedAt": "更新时间",
-  "tagLibrary_transferCategory": "转移分类",
+  "tagLibrary_transferCategory": "移动分组",
   "tagLibrary_copyContent": "复制内容",
-  "tagLibrary_moveToCategoryTitle": "移动到分类",
-  "tagLibrary_selectTargetCategory": "选择目标分类：",
+  "tagLibrary_moveToCategoryTitle": "移动到分组",
+  "tagLibrary_selectTargetCategory": "选择目标分组：",
   "tagLibrary_includeThumbnails": "包含预览图",
   "tagLibrary_includeThumbnailsSubtitle": "将增加文件大小",
   "tagLibrary_selectedExportCount": "导出 ({count} 项)",
@@ -3573,7 +3554,7 @@
     }
   },
   "tagLibrary_entriesLabel": "条目",
-  "tagLibrary_categoriesLabel": "分类",
+  "tagLibrary_categoriesLabel": "分组",
   "tagLibrary_selectExportContent": "选择要导出的内容",
   "tagLibrary_selectImportContent": "选择要导入的内容",
   "tagLibrary_selectSaveLocation": "选择保存位置",
@@ -3590,7 +3571,7 @@
   "tagLibrary_reselect": "重新选择",
   "tagLibrary_fileInfo": "文件信息",
   "tagLibrary_entryCountLabel": "条目数",
-  "tagLibrary_categoryCountLabel": "分类数",
+  "tagLibrary_categoryCountLabel": "分组数",
   "tagLibrary_exportDateLabel": "导出时间",
   "tagLibrary_importConflictsHint": "发现 {count} 个冲突项，请点击下方冲突项选择处理方式",
   "@tagLibrary_importConflictsHint": {
@@ -3598,7 +3579,7 @@
       "count": {}
     }
   },
-  "tagLibrary_categoriesSection": "分类 ({count})",
+  "tagLibrary_categoriesSection": "分组 ({count})",
   "@tagLibrary_categoriesSection": {
     "placeholders": {
       "count": {}
@@ -3640,7 +3621,7 @@
       "count": {}
     }
   },
-  "tagLibrary_importedCategoriesCount": "{count} 分类",
+  "tagLibrary_importedCategoriesCount": "{count} 个分组",
   "@tagLibrary_importedCategoriesCount": {
     "placeholders": {
       "count": {}
@@ -3670,16 +3651,10 @@
       "count": {}
     }
   },
-  "tagLibrary_unknownCategory": "未知分类",
+  "tagLibrary_unknownCategory": "未知分组",
   "tagLibrary_selectEntryToUpdate": "选择要更新的词条",
   "tagLibrary_updatePreview": "更新预览图",
   "tagLibrary_replaceThumbnailHint": "将替换现有预览图",
-  "tagLibrary_sentEntriesToMainPrompt": "已发送 {count} 个词条到主提示词",
-  "@tagLibrary_sentEntriesToMainPrompt": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "tagLibrary_confirmDeleteSelectedEntries": "确定要删除选中的 {count} 个词条吗？此操作不可撤销。",
   "@tagLibrary_confirmDeleteSelectedEntries": {
     "placeholders": {
@@ -3729,11 +3704,11 @@
   "tagLibrary_updateExistingThumbnailSubtitle": "选择词条并替换其预览图",
   "tagLibrary_allEntries": "全部",
   "tagLibrary_favorites": "收藏",
-  "tagLibrary_addSubCategory": "添加子分类",
+  "tagLibrary_addSubCategory": "添加子分组",
   "tagLibrary_moveToRoot": "移动到根目录",
-  "tagLibrary_categoryNameHint": "输入分类名称",
-  "tagLibrary_deleteCategoryTitle": "删除分类",
-  "tagLibrary_deleteCategoryConfirm": "确定要删除分类 \"{name}\" 吗？该分类下的 {count} 个条目将移至根目录。",
+  "tagLibrary_categoryNameHint": "输入分组名称",
+  "tagLibrary_deleteCategoryTitle": "删除分组",
+  "tagLibrary_deleteCategoryConfirm": "确定要删除分组“{name}”吗？其中的 {count} 个词条会移到未分组。",
   "@tagLibrary_deleteCategoryConfirm": {
     "placeholders": {
       "name": {},
@@ -3749,7 +3724,7 @@
   },
   "tagLibrary_noSearchResults": "没有找到匹配的条目",
   "tagLibrary_tryDifferentSearch": "尝试使用其他关键词搜索",
-  "tagLibrary_categoryEmpty": "该分类暂无条目",
+  "tagLibrary_categoryEmpty": "这个分组还没有词条",
   "tagLibrary_empty": "词库为空",
   "tagLibrary_addFirstEntry": "点击上方按钮添加第一个条目",
 
@@ -3757,15 +3732,14 @@
   "tagLibraryPicker_searchHint": "搜索词条...",
   "tagLibraryPicker_allCategories": "全部分类",
 
-  "tagLibrary_addedToFixed": "已添加到固定词",
-  "tagLibrary_entryMoved": "条目已移动到目标分类",
+  "tagLibrary_entryMoved": "词条已移到目标分组",
   "tagLibrary_thumbnail": "预览图",
   "tagLibrary_selectImage": "选择图片",
   "tagLibrary_thumbnailHint": "支持 PNG、JPG、WEBP、GIF、BMP、TIFF 等格式",
   "tagLibrary_name": "名称",
   "tagLibrary_nameHint": "输入条目名称",
-  "tagLibrary_category": "分类",
-  "tagLibrary_rootCategory": "根目录",
+  "tagLibrary_category": "分组",
+  "tagLibrary_rootCategory": "未分组",
   "tagLibrary_tags": "标签",
   "tagLibrary_tagsHint": "输入标签，用逗号分隔",
   "tagLibrary_tagsHelper": "标签用于筛选和搜索",
@@ -3802,12 +3776,12 @@
   },
   "settings_proxyRestartHint": "代理设置已更改，建议重启应用",
 
-  "tagLibrary_categoryNameExists": "该分类名称已存在",
+  "tagLibrary_categoryNameExists": "已有同名分组",
   "tagLibrary_addToLibrary": "收藏到词库",
   "tagLibrary_saveToLibrary": "保存到词库",
   "tagLibrary_entrySaved": "收藏成功",
   "tagLibrary_entryUpdated": "条目已更新",
-  "tagLibrary_uncategorized": "未分类",
+  "tagLibrary_uncategorized": "未分组",
   "tagLibrary_contentPreview": "内容预览",
   "tagLibrary_confirmAdd": "确认收藏",
   "tagLibrary_entryName": "名称",
@@ -3966,11 +3940,10 @@
   },
   "statistics_heatmapNoActivity": "无活动",
 
-  "sendToHome_dialogTitle": "发送到主页",
   "sendToHome_send": "发送",
-  "sendToHome_mainPrompt": "发送到主提示词",
-  "sendToHome_mainPromptSubtitle": "填充到主页的正向提示词输入框",
-  "sendToHome_mainPromptPipeSubtitle": "发送完整内容到主提示词（包含竖线）",
+  "sendToHome_mainPrompt": "追加到正面提示词",
+  "sendToHome_mainPromptSubtitle": "加在当前提示词末尾",
+  "sendToHome_mainPromptPipeSubtitle": "整段加在当前提示词末尾（含竖线）",
   "sendToHome_smartDecompose": "智能分解",
   "sendToHome_smartDecomposeSubtitle": "主提示词 + {count}个角色",
   "@sendToHome_smartDecomposeSubtitle": {
@@ -3982,16 +3955,16 @@
   "sendToHome_replaceCharacterSubtitle": "清空现有角色，添加为新角色",
   "sendToHome_appendCharacter": "追加角色提示词",
   "sendToHome_appendCharacterSubtitle": "保留现有角色，追加新角色",
-  "sendToHome_fixedTags": "发送到固定词",
-  "sendToHome_fixedTagsSubtitle": "追加到固定词列表",
-  "sendToHome_sendAsAlias": "作为别名发送",
-  "sendToHome_sendAsAliasSubtitle": "发送到主页时包装为 <{name}>",
+  "sendToHome_fixedTags": "添加为固定词",
+  "sendToHome_fixedTagsSubtitle": "以后每次生成自动加入",
+  "sendToHome_sendAsAlias": "以引用发送",
+  "sendToHome_sendAsAliasSubtitle": "写成 <{name}>，词条修改后自动跟着变",
   "@sendToHome_sendAsAliasSubtitle": {
     "placeholders": {
       "name": {}
     }
   },
-  "sendToHome_preview": "发送预览",
+  "sendToHome_preview": "将写入",
   "sendToHome_characterPrompt": "角色提示词",
   "sendToHome_characterPromptCount": "角色提示词 ({count}个)",
   "@sendToHome_characterPromptCount": {
@@ -4006,7 +3979,6 @@
     }
   },
   "sendToHome_recommended": "推荐",
-  "sendToHome_successMainPrompt": "已发送到主提示词",
   "sendToHome_successReplaceCharacter": "已替换角色提示词",
   "sendToHome_successAppendCharacter": "已追加角色提示词",
 
@@ -5311,7 +5283,6 @@
       "error": {}
     }
   },
-  "toast_smartDecomposeSent": "已智能分解并发送",
   "toast_addedToFixedTags": "已添加到固定词",
   "toast_renameNameRequired": "名称不能为空",
   "toast_renameNameConflict": "名称已存在，请使用其他名称",
@@ -7903,5 +7874,93 @@
     }
   },
   "characterLibrary_fromLibrary": "来自角色库",
-  "characterLibrary_unsaved": "有改动未存入角色库"
+  "characterLibrary_unsaved": "有改动未存入角色库",
+  "libraryGroup_character": "人物",
+  "libraryGroup_hair": "发型",
+  "libraryGroup_eyes": "眼睛",
+  "libraryGroup_expression": "表情",
+  "libraryGroup_outfit": "服装",
+  "libraryGroup_accessory": "饰品",
+  "libraryGroup_pose": "动作",
+  "libraryGroup_composition": "构图",
+  "libraryGroup_scene": "场景",
+  "libraryGroup_background": "背景",
+  "libraryGroup_lighting": "光影",
+  "libraryGroup_weather": "天气",
+  "libraryGroup_style": "风格",
+  "libraryGroup_artist": "画师",
+  "libraryGroup_color": "色彩",
+  "libraryGroup_quality": "质量",
+  "libraryGroup_prop": "道具",
+  "libraryGroup_animal": "动物",
+  "libraryGroup_effect": "特效",
+  "libraryGroup_negative": "负面",
+  "fixedTags_subtitle": "启用的词在发送时自动加入",
+  "fixedTags_positiveTab": "正面",
+  "fixedTags_negativeTab": "负面",
+  "fixedTags_searchHint": "搜索固定词",
+  "fixedTags_sortTitle": "排序",
+  "fixedTags_sortFrequent": "常用",
+  "fixedTags_sortFrequentHint": "最近两周用得越多越靠前，越久没用分量越轻",
+  "fixedTags_sortRecent": "最近使用",
+  "fixedTags_sortRecentHint": "按上次随生成发送的时间",
+  "fixedTags_sortCustom": "自定义",
+  "fixedTags_sortCustomHint": "按分组排列，顺序可以手动调整",
+  "fixedTags_sortName": "名称",
+  "fixedTags_sortNameHint": "按名称排列，中文按拼音",
+  "fixedTags_enabledFirst": "已启用的排在前面",
+  "fixedTags_enabledFirstHint": "一眼看到正在用的词",
+  "fixedTags_group": "分组",
+  "fixedTags_groupFollowsLibrary": "跟随词库",
+  "fixedTags_weightDecrease": "降低权重",
+  "fixedTags_weightIncrease": "提高权重",
+  "fixedTags_usageSummary": "共随 {count} 张图发送 · 上次{when}",
+  "@fixedTags_usageSummary": {"placeholders": {"count": {"type": "int"}, "when": {"type": "String"}}},
+  "fixedTags_usageNever": "还没随生成发送过",
+  "fixedTags_fromLibraryNote": "来自词库“{name}”，内容和分组与词条保持同步",
+  "@fixedTags_fromLibraryNote": {"placeholders": {"name": {"type": "String"}}},
+  "tagLibrary_searchCount": "搜索 {count} 条词条",
+  "@tagLibrary_searchCount": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_manageGroups": "管理分组",
+  "tagLibrary_manageGroupsHint": "拖动调整顺序；预设分组自带图标，自定义分组用通用图标",
+  "tagLibrary_noGroups": "还没有分组",
+  "tagLibrary_newGroupHint": "点选预设分组，或在下面起一个自己的名字",
+  "tagLibrary_presetGroups": "预设分组",
+  "tagLibrary_customGroup": "自定义分组",
+  "tagLibrary_customGroupHint": "分组名称，例如：我的 OC",
+  "tagLibrary_groupCreated": "已新建分组“{name}”",
+  "@tagLibrary_groupCreated": {"placeholders": {"name": {"type": "String"}}},
+  "tagLibrary_sendToPrompt": "发送到提示词",
+  "tagLibrary_moreTargets": "其他发送方式",
+  "tagLibrary_sendSelected": "发送 {count} 条到提示词",
+  "@tagLibrary_sendSelected": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_selectedCount": "已选 {count} 条",
+  "@tagLibrary_selectedCount": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_addedToPrompt": "已加入正面提示词",
+  "tagLibrary_addedEntriesToPrompt": "已将 {count} 条加入正面提示词",
+  "@tagLibrary_addedEntriesToPrompt": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_goGenerate": "去生成",
+  "tagLibrary_usedTimes": "用过 {count} 次",
+  "@tagLibrary_usedTimes": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_neverUsed": "还没用过",
+  "tagLibrary_isFixedTag": "已是固定词",
+  "tagLibrary_addAsFixed": "添加为固定词",
+  "tagLibrary_addedAsFixed": "已添加 {count} 个固定词",
+  "@tagLibrary_addedAsFixed": {"placeholders": {"count": {"type": "int"}}},
+  "tagLibrary_alreadyFixed": "这些词条已经是固定词",
+  "tagLibrary_setPreview": "设置预览图",
+  "tagLibrary_replacePreview": "更换预览图",
+  "tagLibrary_removePreview": "移除预览图",
+  "tagLibrary_sortTitle": "排序",
+  "tagLibrary_sortFrequent": "常用",
+  "tagLibrary_sortFrequentHint": "最近用得越多越靠前，越久没用分量越轻",
+  "tagLibrary_sortRecent": "最近使用",
+  "tagLibrary_sortRecentHint": "按上次发送的时间",
+  "tagLibrary_sortCustomHint": "按分组排列，保持你排好的顺序",
+  "tagLibrary_sortNameHint": "按名称排列，中文按拼音",
+  "tagLibrary_favoritesFirst": "收藏置顶",
+  "tagLibrary_favoritesFirstHint": "“全部”里把收藏单独排在最上面",
+  "sendToHome_titleFor": "发送“{name}”",
+  "@sendToHome_titleFor": {"placeholders": {"name": {"type": "String"}}},
+  "sendToHome_chooseTarget": "选择加入的位置"
 }

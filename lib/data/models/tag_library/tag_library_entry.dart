@@ -1,7 +1,10 @@
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:uuid/uuid.dart';
+
+import '../../../core/utils/usage_frecency.dart';
 
 part 'tag_library_entry.freezed.dart';
 part 'tag_library_entry.g.dart';
@@ -230,19 +233,13 @@ class TagLibraryEntry with _$TagLibraryEntry {
 
   /// 切换收藏状态
   TagLibraryEntry toggleFavorite() {
-    return copyWith(
-      isFavorite: !isFavorite,
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(isFavorite: !isFavorite, updatedAt: DateTime.now());
   }
 
   /// 添加标签
   TagLibraryEntry addTag(String tag) {
     if (tags.contains(tag)) return this;
-    return copyWith(
-      tags: [...tags, tag],
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(tags: [...tags, tag], updatedAt: DateTime.now());
   }
 
   /// 移除标签
@@ -268,33 +265,50 @@ extension TagLibraryEntryListExtension on List<TagLibraryEntry> {
     return [...this]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   }
 
-  /// 按更新时间排序（最新的在前）
-  List<TagLibraryEntry> sortedByUpdatedAt() {
-    return [...this]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  /// 最近用过的在前，没用过的保持原顺序排在最后。
+  List<TagLibraryEntry> sortedByLastUsed() {
+    final epoch = DateTime.fromMillisecondsSinceEpoch(0);
+    final sorted = [...this];
+    mergeSort(
+      sorted,
+      compare: (a, b) =>
+          (b.lastUsedAt ?? epoch).compareTo(a.lastUsedAt ?? epoch),
+    );
+    return sorted;
   }
 
-  /// 按使用次数排序（最多的在前）
-  List<TagLibraryEntry> sortedByUseCount() {
-    return [...this]..sort((a, b) => b.useCount.compareTo(a.useCount));
+  /// 常用的在前：使用次数随时间衰减，见 [UsageFrecency.estimate]。
+  List<TagLibraryEntry> sortedByFrecency(DateTime now) {
+    final scores = {
+      for (final entry in this)
+        entry.id: UsageFrecency.estimate(
+          count: entry.useCount,
+          lastUsedAt: entry.lastUsedAt,
+          now: now,
+        ),
+    };
+    final sorted = [...this];
+    mergeSort(
+      sorted,
+      compare: (a, b) => scores[b.id]!.compareTo(scores[a.id]!),
+    );
+    return sorted;
   }
 
-  /// 按名称排序
-  List<TagLibraryEntry> sortedByName() {
-    return [...this]..sort(
-        (a, b) =>
-            a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
-      );
+  /// 按名称排序；[sortKey] 可把中文名换成拼音等排序用的写法。
+  List<TagLibraryEntry> sortedByName({String Function(String name)? sortKey}) {
+    String keyOf(TagLibraryEntry entry) => sortKey == null
+        ? entry.displayName.toLowerCase()
+        : sortKey(entry.displayName);
+    final sorted = [...this];
+    mergeSort(sorted, compare: (a, b) => keyOf(a).compareTo(keyOf(b)));
+    return sorted;
   }
 
   /// 更新排序顺序
   List<TagLibraryEntry> reindex() {
     return indexed
-        .map(
-          (e) => e.$2.copyWith(
-            sortOrder: e.$1,
-            updatedAt: DateTime.now(),
-          ),
-        )
+        .map((e) => e.$2.copyWith(sortOrder: e.$1, updatedAt: DateTime.now()))
         .toList();
   }
 

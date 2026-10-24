@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../adaptive/adaptive_presenter.dart';
+import '../../providers/fixed_tag_usage_provider.dart';
 import '../../providers/fixed_tags_provider.dart';
+import '../../providers/fixed_tags_sort_provider.dart';
+import '../../providers/name_sort_key_provider.dart';
 import '../../providers/tag_library_page_provider.dart';
 import 'fixed_tags_dialog_controller.dart';
 import 'fixed_tags_dialog_coordinator.dart';
@@ -40,6 +43,13 @@ class _FixedTagsDialogState extends ConsumerState<FixedTagsDialog> {
   void initState() {
     super.initState();
     _controller = FixedTagsDialogController();
+    // 旧数据里关联条目的分组可能已落后于词库。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(fixedTagsNotifierProvider.notifier)
+          .reconcileCategoriesWithLibrary();
+    });
   }
 
   @override
@@ -50,6 +60,7 @@ class _FixedTagsDialogState extends ConsumerState<FixedTagsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final sort = ref.watch(fixedTagsSortProvider);
     final viewData = FixedTagsDialogViewData(
       state: ref.watch(fixedTagsNotifierProvider),
       libraryEntries: ref.watch(
@@ -58,6 +69,12 @@ class _FixedTagsDialogState extends ConsumerState<FixedTagsDialog> {
       libraryCategories: ref.watch(
         tagLibraryPageNotifierProvider.select((state) => state.categories),
       ),
+      sort: sort,
+      usage: ref.watch(fixedTagUsageProvider),
+      // 拼音表只在按名称排序时加载。
+      nameSortKey: sort.sort == FixedTagsSort.name
+          ? ref.watch(nameSortKeyProvider).valueOrNull
+          : null,
     );
     final commands = FixedTagsDialogCoordinator(ref).commands(context);
     return ListenableBuilder(

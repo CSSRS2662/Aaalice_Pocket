@@ -63,7 +63,7 @@ class _PreciseRefLibrarySidebarState extends State<PreciseRefLibrarySidebar> {
           GallerySidebarSectionHeader(
             toggleKey: const Key('precise-ref-type-section-toggle'),
             icon: Icons.category_outlined,
-            title: l10n.tagLibrary_categories,
+            title: l10n.common_categories,
             isExpanded: _typesExpanded,
             onToggle: () => setState(() => _typesExpanded = !_typesExpanded),
           ),

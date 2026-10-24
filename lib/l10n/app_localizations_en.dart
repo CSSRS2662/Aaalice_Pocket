@@ -248,12 +248,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_filter => 'Filter';
 
   @override
-  String get common_grid => 'Grid';
-
-  @override
-  String get common_grouped => 'Grouped';
-
-  @override
   String get common_date => 'Date';
 
   @override
@@ -1096,12 +1090,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get agentChat_enableWebAccess => 'Enable web access';
-
-  @override
-  String get agentChat_disableWebAccess => 'Disable web access';
-
-  @override
   String get agentChat_webAccessLabel => 'Web access';
 
   @override
@@ -1915,14 +1903,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String prompt_importedCharacters(int count) {
     return 'Imported $count character(s)';
-  }
-
-  @override
-  String get prompt_characterPromptReplaced => 'Replaced character prompts';
-
-  @override
-  String prompt_characterPromptAppended(Object count) {
-    return 'Appended character prompts ($count character(s))';
   }
 
   @override
@@ -6940,10 +6920,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fixedTags_addedToSidebar => 'Added to fixed tags sidebar';
 
   @override
-  String get fixedTags_unknownCategory => 'Unknown Category';
+  String get fixedTags_unknownCategory => 'Unknown group';
 
   @override
-  String get fixedTags_uncategorized => 'Uncategorized';
+  String get fixedTags_uncategorized => 'Ungrouped';
 
   @override
   String get fixedTags_clickManageLongPressSidebar =>
@@ -7014,11 +6994,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fixedTags_disableAll => 'Disable All';
-
-  @override
-  String fixedTags_searchTarget(Object target) {
-    return 'Search $target...';
-  }
 
   @override
   String get fixedTags_noMatching => 'No matching fixed tags';
@@ -7620,10 +7595,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_create => 'Create';
 
   @override
-  String get tagLibrary_categories => 'Categories';
+  String get tagLibrary_categories => 'Groups';
 
   @override
-  String get tagLibrary_newCategory => 'New Category';
+  String get tagLibrary_newCategory => 'New group';
 
   @override
   String get tagLibrary_addEntry => 'Add Entry';
@@ -7641,28 +7616,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagLibrary_export => 'Export';
 
   @override
-  String get tagLibrary_sortCustom => 'Custom Sort';
+  String get tagLibrary_sortCustom => 'Custom';
 
   @override
   String get tagLibrary_sortName => 'Name';
 
   @override
-  String get tagLibrary_sortUseCount => 'Usage';
-
-  @override
-  String get tagLibrary_sortUpdatedAt => 'Updated';
-
-  @override
-  String get tagLibrary_transferCategory => 'Move Category';
+  String get tagLibrary_transferCategory => 'Move to group';
 
   @override
   String get tagLibrary_copyContent => 'Copy Content';
 
   @override
-  String get tagLibrary_moveToCategoryTitle => 'Move to Category';
+  String get tagLibrary_moveToCategoryTitle => 'Move to group';
 
   @override
-  String get tagLibrary_selectTargetCategory => 'Select target category:';
+  String get tagLibrary_selectTargetCategory => 'Choose a group:';
 
   @override
   String get tagLibrary_includeThumbnails => 'Include thumbnails';
@@ -7684,7 +7653,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagLibrary_entriesLabel => 'Entries';
 
   @override
-  String get tagLibrary_categoriesLabel => 'Categories';
+  String get tagLibrary_categoriesLabel => 'Groups';
 
   @override
   String get tagLibrary_selectExportContent => 'Select content to export';
@@ -7723,7 +7692,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagLibrary_entryCountLabel => 'Entries';
 
   @override
-  String get tagLibrary_categoryCountLabel => 'Categories';
+  String get tagLibrary_categoryCountLabel => 'Groups';
 
   @override
   String get tagLibrary_exportDateLabel => 'Export Date';
@@ -7735,7 +7704,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tagLibrary_categoriesSection(Object count) {
-    return 'Categories ($count)';
+    return 'Groups ($count)';
   }
 
   @override
@@ -7784,7 +7753,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tagLibrary_importedCategoriesCount(Object count) {
-    return '$count categories';
+    return '$count groups';
   }
 
   @override
@@ -7808,7 +7777,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tagLibrary_unknownCategory => 'Unknown Category';
+  String get tagLibrary_unknownCategory => 'Unknown group';
 
   @override
   String get tagLibrary_selectEntryToUpdate => 'Select Entry to Update';
@@ -7819,11 +7788,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tagLibrary_replaceThumbnailHint =>
       'Will replace existing thumbnail';
-
-  @override
-  String tagLibrary_sentEntriesToMainPrompt(Object count) {
-    return 'Sent $count entries to main prompt';
-  }
 
   @override
   String tagLibrary_confirmDeleteSelectedEntries(Object count) {
@@ -7885,20 +7849,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagLibrary_favorites => 'Favorites';
 
   @override
-  String get tagLibrary_addSubCategory => 'Add Subcategory';
+  String get tagLibrary_addSubCategory => 'Add subgroup';
 
   @override
   String get tagLibrary_moveToRoot => 'Move to Root';
 
   @override
-  String get tagLibrary_categoryNameHint => 'Enter category name';
+  String get tagLibrary_categoryNameHint => 'Group name';
 
   @override
-  String get tagLibrary_deleteCategoryTitle => 'Delete Category';
+  String get tagLibrary_deleteCategoryTitle => 'Delete group';
 
   @override
   String tagLibrary_deleteCategoryConfirm(Object name, Object count) {
-    return 'Are you sure you want to delete category \"$name\"? $count entries will be moved to root.';
+    return 'Delete the group “$name”? Its $count entries will become ungrouped.';
   }
 
   @override
@@ -7916,7 +7880,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagLibrary_tryDifferentSearch => 'Try different keywords';
 
   @override
-  String get tagLibrary_categoryEmpty => 'This category is empty';
+  String get tagLibrary_categoryEmpty => 'This group has no entries yet';
 
   @override
   String get tagLibrary_empty => 'Library is empty';
@@ -7935,10 +7899,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagLibraryPicker_allCategories => 'All Categories';
 
   @override
-  String get tagLibrary_addedToFixed => 'Added to Fixed Tags';
-
-  @override
-  String get tagLibrary_entryMoved => 'Entry moved to target category';
+  String get tagLibrary_entryMoved => 'Entry moved to the group';
 
   @override
   String get tagLibrary_thumbnail => 'Thumbnail';
@@ -7957,10 +7918,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagLibrary_nameHint => 'Enter entry name';
 
   @override
-  String get tagLibrary_category => 'Category';
+  String get tagLibrary_category => 'Group';
 
   @override
-  String get tagLibrary_rootCategory => 'Root';
+  String get tagLibrary_rootCategory => 'Ungrouped';
 
   @override
   String get tagLibrary_tags => 'Tags';
@@ -8044,7 +8005,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Proxy settings changed, restart recommended';
 
   @override
-  String get tagLibrary_categoryNameExists => 'Category name already exists';
+  String get tagLibrary_categoryNameExists =>
+      'A group with this name already exists';
 
   @override
   String get tagLibrary_addToLibrary => 'Add to Library';
@@ -8059,7 +8021,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagLibrary_entryUpdated => 'Entry updated';
 
   @override
-  String get tagLibrary_uncategorized => 'Uncategorized';
+  String get tagLibrary_uncategorized => 'Ungrouped';
 
   @override
   String get tagLibrary_contentPreview => 'Content Preview';
@@ -8376,21 +8338,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statistics_heatmapNoActivity => 'No activity';
 
   @override
-  String get sendToHome_dialogTitle => 'Send to Home';
-
-  @override
   String get sendToHome_send => 'Send';
 
   @override
-  String get sendToHome_mainPrompt => 'Send to Main Prompt';
+  String get sendToHome_mainPrompt => 'Add to the positive prompt';
 
   @override
   String get sendToHome_mainPromptSubtitle =>
-      'Fill into the main prompt input field';
+      'Goes after what is already there';
 
   @override
   String get sendToHome_mainPromptPipeSubtitle =>
-      'Send the full content to the main prompt (including pipes)';
+      'Adds everything, pipes included, after the current prompt';
 
   @override
   String get sendToHome_smartDecompose => 'Smart Decompose';
@@ -8415,21 +8374,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep existing characters and append new';
 
   @override
-  String get sendToHome_fixedTags => 'Send to Fixed Tags';
+  String get sendToHome_fixedTags => 'Add as fixed tag';
 
   @override
-  String get sendToHome_fixedTagsSubtitle => 'Append to the fixed tag list';
+  String get sendToHome_fixedTagsSubtitle =>
+      'Added to every generation from now on';
 
   @override
-  String get sendToHome_sendAsAlias => 'Send as Alias';
+  String get sendToHome_sendAsAlias => 'Send as a reference';
 
   @override
   String sendToHome_sendAsAliasSubtitle(Object name) {
-    return 'Wrap as <$name> when sending to home';
+    return 'Writes <$name>, which follows later edits to the entry';
   }
 
   @override
-  String get sendToHome_preview => 'Send Preview';
+  String get sendToHome_preview => 'Will add';
 
   @override
   String get sendToHome_characterPrompt => 'Character Prompt';
@@ -8446,9 +8406,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sendToHome_recommended => 'Recommended';
-
-  @override
-  String get sendToHome_successMainPrompt => 'Sent to main prompt';
 
   @override
   String get sendToHome_successReplaceCharacter => 'Character prompt replaced';
@@ -11432,9 +11389,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String toast_extractPromptFailed(Object error) {
     return 'Failed to extract prompt: $error';
   }
-
-  @override
-  String get toast_smartDecomposeSent => 'Smart decomposed and sent';
 
   @override
   String get toast_addedToFixedTags => 'Added to fixed tags';
@@ -16539,4 +16493,263 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get characterLibrary_unsaved => 'Changed since saved to characters';
+
+  @override
+  String get libraryGroup_character => 'Character';
+
+  @override
+  String get libraryGroup_hair => 'Hair';
+
+  @override
+  String get libraryGroup_eyes => 'Eyes';
+
+  @override
+  String get libraryGroup_expression => 'Expression';
+
+  @override
+  String get libraryGroup_outfit => 'Outfit';
+
+  @override
+  String get libraryGroup_accessory => 'Accessories';
+
+  @override
+  String get libraryGroup_pose => 'Pose';
+
+  @override
+  String get libraryGroup_composition => 'Composition';
+
+  @override
+  String get libraryGroup_scene => 'Scene';
+
+  @override
+  String get libraryGroup_background => 'Background';
+
+  @override
+  String get libraryGroup_lighting => 'Lighting';
+
+  @override
+  String get libraryGroup_weather => 'Weather';
+
+  @override
+  String get libraryGroup_style => 'Style';
+
+  @override
+  String get libraryGroup_artist => 'Artist';
+
+  @override
+  String get libraryGroup_color => 'Color';
+
+  @override
+  String get libraryGroup_quality => 'Quality';
+
+  @override
+  String get libraryGroup_prop => 'Props';
+
+  @override
+  String get libraryGroup_animal => 'Animals';
+
+  @override
+  String get libraryGroup_effect => 'Effects';
+
+  @override
+  String get libraryGroup_negative => 'Negative';
+
+  @override
+  String get fixedTags_subtitle => 'Enabled tags are added when you generate';
+
+  @override
+  String get fixedTags_positiveTab => 'Positive';
+
+  @override
+  String get fixedTags_negativeTab => 'Negative';
+
+  @override
+  String get fixedTags_searchHint => 'Search fixed tags';
+
+  @override
+  String get fixedTags_sortTitle => 'Sort';
+
+  @override
+  String get fixedTags_sortFrequent => 'Frequent';
+
+  @override
+  String get fixedTags_sortFrequentHint =>
+      'Tags used more in the last two weeks come first; older uses count less';
+
+  @override
+  String get fixedTags_sortRecent => 'Recently used';
+
+  @override
+  String get fixedTags_sortRecentHint =>
+      'By when a tag was last sent with a generation';
+
+  @override
+  String get fixedTags_sortCustom => 'Custom';
+
+  @override
+  String get fixedTags_sortCustomHint => 'By group, in the order you set';
+
+  @override
+  String get fixedTags_sortName => 'Name';
+
+  @override
+  String get fixedTags_sortNameHint => 'Alphabetical; Chinese names by pinyin';
+
+  @override
+  String get fixedTags_enabledFirst => 'Enabled first';
+
+  @override
+  String get fixedTags_enabledFirstHint => 'See the tags in use at a glance';
+
+  @override
+  String get fixedTags_group => 'Group';
+
+  @override
+  String get fixedTags_groupFollowsLibrary => 'follows library';
+
+  @override
+  String get fixedTags_weightDecrease => 'Lower weight';
+
+  @override
+  String get fixedTags_weightIncrease => 'Raise weight';
+
+  @override
+  String fixedTags_usageSummary(int count, String when) {
+    return 'Sent with $count images · last $when';
+  }
+
+  @override
+  String get fixedTags_usageNever => 'Not sent with a generation yet';
+
+  @override
+  String fixedTags_fromLibraryNote(String name) {
+    return 'From library entry “$name”; content and group stay in sync';
+  }
+
+  @override
+  String tagLibrary_searchCount(int count) {
+    return 'Search $count entries';
+  }
+
+  @override
+  String get tagLibrary_manageGroups => 'Manage groups';
+
+  @override
+  String get tagLibrary_manageGroupsHint =>
+      'Drag to reorder. Preset groups have their own icons; custom groups use a general one';
+
+  @override
+  String get tagLibrary_noGroups => 'No groups yet';
+
+  @override
+  String get tagLibrary_newGroupHint => 'Pick a preset, or name your own below';
+
+  @override
+  String get tagLibrary_presetGroups => 'Presets';
+
+  @override
+  String get tagLibrary_customGroup => 'Custom group';
+
+  @override
+  String get tagLibrary_customGroupHint => 'Group name, e.g. My OCs';
+
+  @override
+  String tagLibrary_groupCreated(String name) {
+    return 'Created group “$name”';
+  }
+
+  @override
+  String get tagLibrary_sendToPrompt => 'Send to prompt';
+
+  @override
+  String get tagLibrary_moreTargets => 'More ways to send';
+
+  @override
+  String tagLibrary_sendSelected(int count) {
+    return 'Send $count to prompt';
+  }
+
+  @override
+  String tagLibrary_selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get tagLibrary_addedToPrompt => 'Added to the positive prompt';
+
+  @override
+  String tagLibrary_addedEntriesToPrompt(int count) {
+    return 'Added $count entries to the positive prompt';
+  }
+
+  @override
+  String get tagLibrary_goGenerate => 'Generate';
+
+  @override
+  String tagLibrary_usedTimes(int count) {
+    return 'Used $count times';
+  }
+
+  @override
+  String get tagLibrary_neverUsed => 'Not used yet';
+
+  @override
+  String get tagLibrary_isFixedTag => 'Fixed tag';
+
+  @override
+  String get tagLibrary_addAsFixed => 'Add as fixed tags';
+
+  @override
+  String tagLibrary_addedAsFixed(int count) {
+    return 'Added $count fixed tags';
+  }
+
+  @override
+  String get tagLibrary_alreadyFixed => 'These entries are already fixed tags';
+
+  @override
+  String get tagLibrary_setPreview => 'Set preview image';
+
+  @override
+  String get tagLibrary_replacePreview => 'Replace preview image';
+
+  @override
+  String get tagLibrary_removePreview => 'Remove preview image';
+
+  @override
+  String get tagLibrary_sortTitle => 'Sort';
+
+  @override
+  String get tagLibrary_sortFrequent => 'Frequent';
+
+  @override
+  String get tagLibrary_sortFrequentHint =>
+      'Entries used more lately come first; older uses count less';
+
+  @override
+  String get tagLibrary_sortRecent => 'Recently used';
+
+  @override
+  String get tagLibrary_sortRecentHint => 'By when an entry was last sent';
+
+  @override
+  String get tagLibrary_sortCustomHint => 'By group, in the order you set';
+
+  @override
+  String get tagLibrary_sortNameHint => 'Alphabetical; Chinese names by pinyin';
+
+  @override
+  String get tagLibrary_favoritesFirst => 'Favorites first';
+
+  @override
+  String get tagLibrary_favoritesFirstHint =>
+      'In All, favorites get their own section at the top';
+
+  @override
+  String sendToHome_titleFor(String name) {
+    return 'Send “$name”';
+  }
+
+  @override
+  String get sendToHome_chooseTarget => 'Choose where it goes';
 }

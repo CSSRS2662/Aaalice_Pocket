@@ -68,6 +68,7 @@ class FixedTagsDialogView extends StatelessWidget {
                     data: data,
                     commands: commands,
                     isCompact: isCompact,
+                    showClose: !(presentationManaged && isCompact),
                   ),
                   Expanded(
                     child:
@@ -82,11 +83,9 @@ class FixedTagsDialogView extends StatelessWidget {
                             isCompact: isCompact,
                           ),
                   ),
-                  FixedTagsDialogFooter(
-                    data: data,
-                    commands: commands,
-                    isCompact: isCompact,
-                  ),
+                  // On a phone these actions live in the header menus.
+                  if (!isCompact)
+                    FixedTagsDialogFooter(data: data, commands: commands),
                 ],
               ),
             ),

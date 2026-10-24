@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nai_launcher/data/models/fixed_tag/fixed_tag_entry.dart';
 import 'package:nai_launcher/data/models/fixed_tag/fixed_tag_prompt_type.dart';
+import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/themes/core/layered_surface_style.dart';
-import 'package:nai_launcher/presentation/themes/prompt_semantic_colors.dart';
 import 'package:nai_launcher/presentation/widgets/prompt/fixed_tag_chip.dart';
 
 void main() {
@@ -16,6 +16,9 @@ void main() {
     final calls = <String>[];
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Center(
             child: SizedBox(
@@ -50,20 +53,18 @@ void main() {
     expect(calls, ['toggle', 'details', 'details']);
   });
 
-  testWidgets('只显示名称；启用时带勾选标记和语义色面，未启用为中性色面', (tester) async {
+  testWidgets('启用时为主题浅色面加主题色描边，未启用为中性色面', (tester) async {
     final enabled = FixedTagEntry.create(name: '启用', content: 'a, b');
     await pumpChip(tester, enabled);
     final theme = Theme.of(tester.element(find.byType(FixedTagChip)));
     final resting = controlSurfaceColor(theme.colorScheme);
 
     expect(find.text('a, b'), findsNothing);
-    expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.check_circle_rounded), findsNothing);
+    expect(decorationOf(tester).color, theme.colorScheme.primaryContainer);
     expect(
-      decorationOf(tester).color,
-      Color.alphaBlend(
-        theme.promptSemanticColors.positiveFixedTag.withValues(alpha: 0.22),
-        resting,
-      ),
+      (decorationOf(tester).border! as Border).top.color,
+      theme.colorScheme.primary,
     );
     expect(
       tester.getSemantics(find.text('启用')),
@@ -84,12 +85,25 @@ void main() {
         promptType: FixedTagPromptType.negative,
       ),
     );
-    expect(find.byIcon(Icons.check_circle_rounded), findsNothing);
     expect(decorationOf(tester).color, resting);
     expect(
       (decorationOf(tester).border! as Border).top.color,
       Colors.transparent,
     );
+  });
+
+  testWidgets('后缀与权重显示在名称下方', (tester) async {
+    await pumpChip(
+      tester,
+      FixedTagEntry.create(
+        name: '胶片颗粒',
+        content: 'film grain',
+        position: FixedTagPosition.suffix,
+        weight: 0.9,
+      ),
+    );
+    expect(find.text('后缀 · ×0.9'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('有联动时显示联动标记', (tester) async {

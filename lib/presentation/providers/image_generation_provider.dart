@@ -33,6 +33,7 @@ import '../services/generation_history_storage_service.dart';
 import '../../data/services/auth_provider.dart';
 import 'dlss_provider.dart';
 import 'character_prompt_provider.dart';
+import 'fixed_tag_usage_provider.dart';
 import 'fixed_tags_provider.dart';
 import 'generation/generated_image_file_cache.dart';
 import 'generation/generated_image_save_queue.dart';
@@ -768,6 +769,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         _saveVibeEncodings(vibeEncodings);
         _retainHistoryCaches();
         _recordPromptGroups(images);
+        _recordFixedTagUsage(images.length);
       case GenerationRequestSkipped(:final startImage, :final requestSize):
         _appendFailedSnapshots(event.runId);
         for (var i = 0; i < requestSize; i++) {
@@ -860,6 +862,20 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
   }
 
   String _snapshotKey(int runId, int imageNumber) => '$runId:$imageNumber';
+
+  /// 固定词“常用”排序的依据：每张生成的图给随它发送的固定词各记一次。
+  void _recordFixedTagUsage(int images) {
+    final usage = _activeFixedTagUsageSnapshot;
+    if (usage == null || images <= 0) return;
+    final ids = usage.entries
+        .map((entry) => entry.fixedTagId)
+        .whereType<String>();
+    try {
+      ref.read(fixedTagUsageProvider.notifier).record(ids, images: images);
+    } catch (error, stackTrace) {
+      AppLogger.e('Failed to record fixed tag usage', error, stackTrace);
+    }
+  }
 
   /// 为取消、跳过或失败那一刻各槽位的最后一帧留下只读快照。
   ///

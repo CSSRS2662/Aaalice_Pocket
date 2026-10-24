@@ -87,17 +87,17 @@ void main() {
     await tester.pumpAndSettle();
 
     final chip = find.byKey(ValueKey('fixed-tag-entry-${entry.id}'));
+    bool chipEnabled() => tester
+        .widget<FixedTagChip>(
+          find.ancestor(of: chip, matching: find.byType(FixedTagChip)),
+        )
+        .entry
+        .enabled;
     expect(
       find.descendant(of: chip, matching: find.text('masterpiece')),
       findsNothing,
     );
-    expect(
-      find.descendant(
-        of: chip,
-        matching: find.byIcon(Icons.check_circle_rounded),
-      ),
-      findsNothing,
-    );
+    expect(chipEnabled(), isFalse);
 
     await tester.tap(find.text('clickable fixed tag'));
     await tester.pumpAndSettle();
@@ -109,13 +109,7 @@ void main() {
       container.read(fixedTagsNotifierProvider).entries.single.enabled,
       isTrue,
     );
-    expect(
-      find.descendant(
-        of: chip,
-        matching: find.byIcon(Icons.check_circle_rounded),
-      ),
-      findsOneWidget,
-    );
+    expect(chipEnabled(), isTrue);
   });
 
   for (final width in [320.0, 600.0, 840.0, 1180.0, 1600.0]) {
@@ -160,11 +154,27 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-          final filter = find.byKey(const ValueKey('fixed-tags-enabled-only'));
-          expect(filter.hitTestable(), findsOneWidget);
-          await tester.tap(filter);
-          await tester.pumpAndSettle();
-          expect(tester.widget<IconButton>(filter).isSelected, isTrue);
+          // Wide layouts show the filter as a header button; phones keep it
+          // in the header menu.
+          Future<void> toggleEnabledOnly() async {
+            final filter = find.byKey(
+              const ValueKey('fixed-tags-enabled-only'),
+            );
+            if (filter.hitTestable().evaluate().isNotEmpty) {
+              await tester.tap(filter);
+            } else {
+              await tester.tap(
+                find.byKey(const ValueKey('fixed-tags-header-menu')),
+              );
+              await tester.pumpAndSettle();
+              await tester.tap(
+                find.byKey(const ValueKey('fixed-tags-menu-enabled-only')),
+              );
+            }
+            await tester.pumpAndSettle();
+          }
+
+          await toggleEnabledOnly();
           expect(find.text('positive-true'), findsOneWidget);
           expect(find.text('positive-false'), findsNothing);
           final negativeTab = find.byKey(
@@ -176,8 +186,7 @@ void main() {
           }
           expect(find.text('negative-true'), findsOneWidget);
           expect(find.text('negative-false'), findsNothing);
-          await tester.tap(filter);
-          await tester.pumpAndSettle();
+          await toggleEnabledOnly();
           await tester.scrollUntilVisible(
             find.text('negative-false'),
             120,
@@ -194,13 +203,6 @@ void main() {
             matching: find.byType(FixedTagChip),
           );
           expect(tester.widget<FixedTagChip>(chip).entry.enabled, isFalse);
-          expect(
-            find.descendant(
-              of: chip,
-              matching: find.byIcon(Icons.check_circle_rounded),
-            ),
-            findsNothing,
-          );
           expect(tester.takeException(), isNull);
         },
       );
@@ -856,8 +858,13 @@ void main() {
         await tester.pumpAndSettle();
       }
 
+      // Columns follow the width; the sort button sits by the search.
       expect(
         find.byKey(const ValueKey('fixed-tags-columns-button')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('fixed-tags-sort-button')),
         findsOneWidget,
       );
       await expectAddMenu('新建正向固定词');
@@ -3298,71 +3305,77 @@ void main() {
     },
   );
 
-  testWidgets(
-    'management grid groups tags by library category like the sidebar',
-    (tester) async {
-      tester.view.physicalSize = const Size(411, 860);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      final storage = _SidebarTestStorage(
-        fixedEntries: [
-          FixedTagEntry.create(
-            name: 'categorized tag',
-            content: 'a',
-            categoryId: 'cat-clothes',
-          ),
-          FixedTagEntry.create(name: 'loose tag', content: 'b'),
-        ],
-        categories: [
-          TagLibraryCategory(
-            id: 'cat-clothes',
-            name: '服装',
-            sortOrder: 0,
-            createdAt: DateTime(2026),
-          ),
-        ],
-        libraryEntries: const [],
-      );
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            localStorageServiceProvider.overrideWith((ref) => storage),
-          ],
-          child: const MaterialApp(
-            locale: Locale('zh'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: FixedTagsDialog()),
-          ),
+  testWidgets('custom order groups the management grid by library group', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(411, 860);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final storage = _SidebarTestStorage(
+      fixedEntries: [
+        FixedTagEntry.create(
+          name: 'categorized tag',
+          content: 'a',
+          categoryId: 'cat-clothes',
         ),
-      );
-      await tester.pumpAndSettle();
+        FixedTagEntry.create(name: 'loose tag', content: 'b'),
+      ],
+      categories: [
+        TagLibraryCategory(
+          id: 'cat-clothes',
+          name: '服装',
+          sortOrder: 0,
+          createdAt: DateTime(2026),
+        ),
+      ],
+      libraryEntries: const [],
+    );
 
-      final clothes = find.byKey(
-        const ValueKey('fixed-tags-section-cat-clothes'),
-      );
-      final none = find.byKey(const ValueKey('fixed-tags-section-none'));
-      expect(
-        find.descendant(of: clothes, matching: find.text('服装')),
-        findsOneWidget,
-      );
-      expect(find.descendant(of: none, matching: find.text('未分类')), findsOne);
-      expect(
-        tester.getTopLeft(clothes).dy,
-        lessThan(tester.getTopLeft(find.text('categorized tag')).dy),
-      );
-      expect(
-        tester.getTopLeft(find.text('categorized tag')).dy,
-        lessThan(tester.getTopLeft(none).dy),
-      );
-      expect(
-        tester.getTopLeft(none).dy,
-        lessThan(tester.getTopLeft(find.text('loose tag')).dy),
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [localStorageServiceProvider.overrideWith((ref) => storage)],
+        child: const MaterialApp(
+          locale: Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: FixedTagsDialog()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final clothes = find.byKey(
+      const ValueKey('fixed-tags-section-cat-clothes'),
+    );
+    final none = find.byKey(const ValueKey('fixed-tags-section-none'));
+    // The default 常用 order ranks every tag in one grid.
+    expect(clothes, findsNothing);
+    await tester.tap(find.byKey(const ValueKey('fixed-tags-sort-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('sort-option-FixedTagsSort.custom')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(of: clothes, matching: find.text('服装')),
+      findsOneWidget,
+    );
+    expect(find.descendant(of: none, matching: find.text('未分组')), findsOne);
+    expect(
+      tester.getTopLeft(clothes).dy,
+      lessThan(tester.getTopLeft(find.text('categorized tag')).dy),
+    );
+    expect(
+      tester.getTopLeft(find.text('categorized tag')).dy,
+      lessThan(tester.getTopLeft(none).dy),
+    );
+    expect(
+      tester.getTopLeft(none).dy,
+      lessThan(tester.getTopLeft(find.text('loose tag')).dy),
+    );
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('touch long-press on the workbench segment opens the manager', (
     tester,

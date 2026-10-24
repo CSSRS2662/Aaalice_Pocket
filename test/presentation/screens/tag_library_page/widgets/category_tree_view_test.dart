@@ -9,6 +9,7 @@ import 'package:nai_launcher/presentation/adaptive/interaction_policy.dart';
 import 'package:nai_launcher/presentation/screens/tag_library_page/widgets/category_tree_view.dart';
 import 'package:nai_launcher/presentation/widgets/common/themed_divider.dart';
 import 'package:nai_launcher/presentation/widgets/gallery/gallery_sidebar.dart';
+import 'package:nai_launcher/presentation/widgets/tag_library/library_group_style.dart';
 
 void main() {
   testWidgets('分类悬停切换时仅高亮当前行且不改变选中行', (tester) async {
@@ -60,23 +61,31 @@ void main() {
     expect(find.byType(GallerySidebarNavigationItem), findsOneWidget);
     expect(find.byType(ThemedDivider), findsNothing);
 
-    double navigationIconX(Finder row) {
-      return tester
-          .getCenter(
-            find.descendant(of: row, matching: find.byType(Icon)).first,
-          )
-          .dx;
-    }
-
-    expect(
-      navigationIconX(
-        find.ancestor(of: find.text('已选分类'), matching: find.byType(InkWell)),
-      ),
-      closeTo(
-        navigationIconX(find.byKey(const ValueKey('tag-library-favorites'))),
-        0.1,
-      ),
-    );
+    // Group tiles start where the navigation icons start, keeping one column.
+    final groupTileLeft = tester
+        .getTopLeft(
+          find
+              .descendant(
+                of: find.ancestor(
+                  of: find.text('已选分类'),
+                  matching: find.byType(InkWell),
+                ),
+                matching: find.byType(LibraryGroupIcon),
+              )
+              .first,
+        )
+        .dx;
+    final navigationIconLeft = tester
+        .getTopLeft(
+          find
+              .descendant(
+                of: find.byKey(const ValueKey('tag-library-favorites')),
+                matching: find.byType(Icon),
+              )
+              .first,
+        )
+        .dx;
+    expect(groupTileLeft, closeTo(navigationIconLeft, 0.1));
 
     Container categoryBackground(String label) {
       final finder = find.ancestor(

@@ -1,20 +1,20 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/agent/resources/agent_chat_resource_reference.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../../data/models/fixed_tag/fixed_tag_entry.dart';
 import '../../../data/models/fixed_tag/fixed_tag_prompt_type.dart';
-import '../../../data/models/tag_library/tag_library_entry.dart';
+import '../../../data/models/tag_library/tag_library_category.dart';
 import '../../adaptive/interaction_policy.dart';
 import '../../agent_chat/widgets/agent_resource_drop_region.dart';
 import '../../providers/fixed_tags_provider.dart';
-import '../../providers/grid_columns_provider.dart';
+import '../../providers/fixed_tags_sort_provider.dart';
 import '../../themes/core/layered_surface_style.dart';
 import '../common/grid_column_count.dart';
 import '../common/themed_input.dart';
+import '../tag_library/library_group_style.dart';
 import '../tag_library/tag_library_entry_hover_preview.dart';
 import 'fixed_tag_category_sections.dart';
 import 'fixed_tag_chip.dart';
@@ -25,9 +25,10 @@ const fixedTagColumnGap = 28.0;
 const _gridSpacing = 8.0;
 const _gridPadding = 12.0;
 
-enum _AddAction { create, library }
+/// Three columns where they fit; narrower panes and large text get fewer.
+const _preferredColumns = 3;
 
-class FixedTagsColumns extends ConsumerWidget {
+class FixedTagsColumns extends StatelessWidget {
   const FixedTagsColumns({
     super.key,
     required this.data,
@@ -42,39 +43,20 @@ class FixedTagsColumns extends ConsumerWidget {
   final bool isCompact;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final columns = ref.watch(
-      gridColumnsProvider(GridColumnsSurface.fixedTags),
-    );
-    void cycleColumns() => ref
-        .read(gridColumnsProvider(GridColumnsSurface.fixedTags).notifier)
-        .cycle();
+  Widget build(BuildContext context) {
     FixedTagColumnConfig configFor(FixedTagPromptType promptType) =>
-        _configFor(context, promptType, columns, cycleColumns);
+        _configFor(context, promptType);
 
     if (isCompact) {
       final promptType = controller.mobilePromptType;
       return Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 4),
-            child: Row(
-              children: [
-                for (final type in FixedTagPromptType.values) ...[
-                  if (type == FixedTagPromptType.negative)
-                    const SizedBox(width: 8),
-                  Expanded(
-                    child: _PromptTypeTab(
-                      promptType: type,
-                      selected: promptType == type,
-                      count: type == FixedTagPromptType.positive
-                          ? data.state.positiveEntries.length
-                          : data.state.negativeEntries.length,
-                      onTap: () => controller.selectMobilePromptType(type),
-                    ),
-                  ),
-                ],
-              ],
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+            child: _PromptTypeTabs(
+              data: data,
+              selected: promptType,
+              onSelected: controller.selectMobilePromptType,
             ),
           ),
           Expanded(child: FixedTagColumn(config: configFor(promptType))),
@@ -109,8 +91,6 @@ class FixedTagsColumns extends ConsumerWidget {
   FixedTagColumnConfig _configFor(
     BuildContext context,
     FixedTagPromptType promptType,
-    int columns,
-    VoidCallback cycleColumns,
   ) {
     return FixedTagColumnConfig(
       title: promptType == FixedTagPromptType.positive
@@ -125,7 +105,6 @@ class FixedTagsColumns extends ConsumerWidget {
       allEntries: promptType == FixedTagPromptType.positive
           ? data.state.positiveEntries
           : data.state.negativeEntries,
-      libraryEntries: data.libraryEntries,
       searchController: controller.searchControllerFor(promptType),
       searchQuery: controller.searchQueryFor(promptType),
       scrollController: controller.listControllerFor(promptType),
@@ -133,8 +112,6 @@ class FixedTagsColumns extends ConsumerWidget {
       commands: commands,
       data: data,
       compact: isCompact,
-      columns: columns,
-      onCycleColumns: cycleColumns,
     );
   }
 }
@@ -146,7 +123,6 @@ class FixedTagColumnConfig {
     required this.promptType,
     required this.entries,
     required this.allEntries,
-    required this.libraryEntries,
     required this.searchController,
     required this.searchQuery,
     required this.scrollController,
@@ -154,15 +130,14 @@ class FixedTagColumnConfig {
     required this.commands,
     required this.data,
     required this.compact,
-    required this.columns,
-    required this.onCycleColumns,
   });
 
   final String title;
   final FixedTagPromptType promptType;
+
+  /// Matching tags in display order.
   final List<FixedTagEntry> entries;
   final List<FixedTagEntry> allEntries;
-  final List<TagLibraryEntry> libraryEntries;
   final TextEditingController searchController;
   final String searchQuery;
   final ScrollController scrollController;
@@ -170,8 +145,6 @@ class FixedTagColumnConfig {
   final FixedTagsDialogCommands commands;
   final FixedTagsDialogViewData data;
   final bool compact;
-  final int columns;
-  final VoidCallback onCycleColumns;
 
   bool get hasSearch => searchQuery.trim().isNotEmpty;
   bool get isFiltered => hasSearch || controller.enabledOnly;
@@ -192,10 +165,10 @@ class FixedTagColumn extends StatelessWidget {
       return Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
             child: config.reordering
                 ? _ReorderBanner(config: config)
-                : _CompactToolbar(config: config),
+                : _SearchRow(config: config),
           ),
           Expanded(child: body),
         ],
@@ -207,7 +180,7 @@ class FixedTagColumn extends StatelessWidget {
         if (!config.reordering)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-            child: _SearchField(config: config),
+            child: _SearchRow(config: config),
           ),
         Expanded(child: body),
       ],
@@ -290,8 +263,9 @@ class _ColumnHeader extends StatelessWidget {
   }
 }
 
-class _CompactToolbar extends StatelessWidget {
-  const _CompactToolbar({required this.config});
+/// Search with the sort button beside it.
+class _SearchRow extends StatelessWidget {
+  const _SearchRow({required this.config});
   final FixedTagColumnConfig config;
 
   @override
@@ -299,45 +273,10 @@ class _CompactToolbar extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: _SearchField(config: config)),
-        const SizedBox(width: 4),
-        GridColumnCountButton(
-          key: const ValueKey('fixed-tags-columns-button'),
-          columns: config.columns,
-          onPressed: config.onCycleColumns,
-        ),
-        PopupMenuButton<_AddAction>(
-          key: const ValueKey('fixed-tags-add-menu'),
-          tooltip: context.l10n.fixedTags_addMenu,
-          icon: const Icon(Icons.add_rounded),
-          onSelected: (action) => switch (action) {
-            _AddAction.create => config.commands.editEntry(
-              null,
-              config.promptType,
-            ),
-            _AddAction.library => config.commands.pickFromLibrary(
-              config.promptType,
-            ),
-          },
-          itemBuilder: (_) => [
-            PopupMenuItem(
-              key: const ValueKey('fixed-tags-add-new'),
-              value: _AddAction.create,
-              child: ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.add_rounded),
-                title: Text(context.l10n.fixedTags_newTarget(config.title)),
-              ),
-            ),
-            PopupMenuItem(
-              key: const ValueKey('fixed-tags-add-library'),
-              value: _AddAction.library,
-              child: ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.playlist_add_rounded),
-                title: Text(context.l10n.fixedTags_addFromLibrary),
-              ),
-            ),
-          ],
+        const SizedBox(width: 8),
+        FixedTagsSortButton(
+          sort: config.data.sort.sort,
+          onPressed: config.commands.showSortOptions,
         ),
       ],
     );
@@ -354,7 +293,7 @@ class _SearchField extends StatelessWidget {
       key: ValueKey('fixed-tags-search-${config.promptType.name}'),
       controller: config.searchController,
       decoration: InputDecoration(
-        hintText: context.l10n.fixedTags_searchTarget(config.title),
+        hintText: context.l10n.fixedTags_searchHint,
         prefixIcon: const Icon(Icons.search_rounded, size: 18),
         suffixIcon: config.hasSearch
             ? IconButton(
@@ -367,6 +306,47 @@ class _SearchField extends StatelessWidget {
       ),
       onChanged: (value) =>
           config.controller.setSearchQuery(config.promptType, value),
+    );
+  }
+}
+
+/// The current sort's name; opens the sort choices.
+class FixedTagsSortButton extends StatelessWidget {
+  const FixedTagsSortButton({
+    super.key,
+    required this.sort,
+    required this.onPressed,
+  });
+
+  final FixedTagsSort sort;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final label = switch (sort) {
+      FixedTagsSort.frequent => context.l10n.fixedTags_sortFrequent,
+      FixedTagsSort.recent => context.l10n.fixedTags_sortRecent,
+      FixedTagsSort.custom => context.l10n.fixedTags_sortCustom,
+      FixedTagsSort.name => context.l10n.fixedTags_sortName,
+    };
+    return Tooltip(
+      message: context.l10n.fixedTags_sortTitle,
+      child: TextButton.icon(
+        key: const ValueKey('fixed-tags-sort-button'),
+        onPressed: onPressed,
+        icon: const Icon(Icons.swap_vert_rounded, size: 18),
+        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        style: TextButton.styleFrom(
+          foregroundColor: theme.colorScheme.onSurface,
+          backgroundColor: controlSurfaceColor(theme.colorScheme),
+          minimumSize: Size(0, context.interactionPolicy.minimumControlExtent),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -423,16 +403,26 @@ class _EntryGrid extends StatelessWidget {
         final width = math.max(0.0, constraints.maxWidth - _gridPadding * 2);
         final columns = GridColumnCount.resolve(
           width: width,
-          preferred: config.columns,
+          preferred: _preferredColumns,
           spacing: _gridSpacing,
           minCellWidth: 92 * textScale.clamp(1.0, 3.0),
         );
-        final maxLines = columns == 1 ? 1 : 2;
-        final lineHeight =
-            textScaler.scale(theme.textTheme.bodyMedium?.fontSize ?? 14) * 1.25;
-        final extent = math.max(
-          policy.minimumControlExtent,
-          maxLines * lineHeight + 16,
+        final extent = FixedTagChip.extentFor(context, textScaler: textScaler);
+        SliverGrid grid(List<FixedTagEntry> entries) => SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            mainAxisExtent: extent,
+            mainAxisSpacing: _gridSpacing,
+            crossAxisSpacing: _gridSpacing,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => _gridItem(
+              context,
+              entries[index],
+              linkCounts[entries[index].id] ?? 0,
+            ),
+            childCount: entries.length,
+          ),
         );
         return CustomScrollView(
           key: ValueKey('fixed-tags-grid-${config.promptType.name}'),
@@ -455,37 +445,38 @@ class _EntryGrid extends StatelessWidget {
                 ),
               )
             else ...[
-              // Tags from the library keep their categories as headed groups,
-              // matching the sidebar; without categories the grid stays flat.
-              for (final section in _sections()) ...[
-                if (section != null)
-                  SliverToBoxAdapter(child: _CategoryHeader(section: section)),
+              // The custom order shows the library groups as headed sections;
+              // the other orders are one ranked grid.
+              if (config.data.sort.groupsByCategory)
+                for (final section in config.data.sectionsOf(
+                  config.entries,
+                )) ...[
+                  SliverToBoxAdapter(
+                    child: FixedTagSectionHeader(
+                      section: section,
+                      categories: config.data.libraryCategories,
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(
+                      _gridPadding,
+                      4,
+                      _gridPadding,
+                      8,
+                    ),
+                    sliver: grid(section.entries),
+                  ),
+                ]
+              else
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
                     _gridPadding,
-                    4,
+                    6,
                     _gridPadding,
                     8,
                   ),
-                  sliver: SliverGrid(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: columns,
-                      mainAxisExtent: extent,
-                      mainAxisSpacing: _gridSpacing,
-                      crossAxisSpacing: _gridSpacing,
-                    ),
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final entry = (section?.entries ?? config.entries)[index];
-                      return _gridItem(
-                        context,
-                        entry,
-                        linkCounts[entry.id] ?? 0,
-                        maxLines,
-                      );
-                    }, childCount: (section?.entries ?? config.entries).length),
-                  ),
+                  sliver: grid(config.entries),
                 ),
-              ],
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
@@ -508,16 +499,10 @@ class _EntryGrid extends StatelessWidget {
     );
   }
 
-  Widget _gridItem(
-    BuildContext context,
-    FixedTagEntry entry,
-    int linkCount,
-    int maxLines,
-  ) {
+  Widget _gridItem(BuildContext context, FixedTagEntry entry, int linkCount) {
     final chip = FixedTagChip(
       entry: entry,
       linkCount: linkCount,
-      maxLines: maxLines,
       onToggle: () => config.commands.toggleEntry(entry),
       onShowDetails: () => config.commands.showDetails(entry),
     );
@@ -526,7 +511,7 @@ class _EntryGrid extends StatelessWidget {
     }
     final libraryEntry = resolveFixedTagLibraryEntry(
       entry,
-      config.libraryEntries,
+      config.data.libraryEntries,
     );
     return AgentResourceDragSource(
       key: ValueKey(entry.id),
@@ -539,17 +524,6 @@ class _EntryGrid extends StatelessWidget {
       child: libraryEntry == null
           ? chip
           : TagLibraryEntryHoverPreview(entry: libraryEntry, child: chip),
-    );
-  }
-
-  /// One null section means a flat grid.
-  List<FixedTagCategorySection?> _sections() {
-    if (config.entries.every((entry) => entry.categoryId == null)) {
-      return const [null];
-    }
-    return groupFixedTagsByCategory(
-      config.entries,
-      config.data.libraryCategories,
     );
   }
 
@@ -571,10 +545,16 @@ class _EntryGrid extends StatelessWidget {
   }
 }
 
-class _CategoryHeader extends StatelessWidget {
-  const _CategoryHeader({required this.section});
+/// A group's icon, name and how many of its tags are enabled.
+class FixedTagSectionHeader extends StatelessWidget {
+  const FixedTagSectionHeader({
+    super.key,
+    required this.section,
+    required this.categories,
+  });
 
   final FixedTagCategorySection section;
+  final List<TagLibraryCategory> categories;
 
   @override
   Widget build(BuildContext context) {
@@ -585,18 +565,18 @@ class _CategoryHeader extends StatelessWidget {
         context.l10n.fixedTags_unknownCategory,
       FixedTagSectionKind.uncategorized => context.l10n.fixedTags_uncategorized,
     };
+    final style = section.kind == FixedTagSectionKind.category
+        ? LibraryGroupStyle.of(section.categoryId, categories)
+        : LibraryGroupStyle.generic;
+    final enabled = section.entries.where((entry) => entry.enabled).length;
     return Padding(
       key: ValueKey('fixed-tags-section-${section.categoryId ?? 'none'}'),
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 2),
       child: Row(
         children: [
-          Icon(
-            Icons.folder_rounded,
-            size: 16,
-            color: fixedTagCategoryColor(section.categoryId, theme.colorScheme),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
+          LibraryGroupIcon(style: style, size: 22, iconSize: 14, radius: 7),
+          const SizedBox(width: 8),
+          Flexible(
             child: Text(
               name,
               maxLines: 1,
@@ -606,8 +586,9 @@ class _CategoryHeader extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: 6),
           Text(
-            '${section.entries.length}',
+            '$enabled/${section.entries.length}',
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -701,63 +682,121 @@ class _ReorderRow extends StatelessWidget {
   }
 }
 
+/// 正面 / 负面 as one segmented control, each with enabled/total.
+class _PromptTypeTabs extends StatelessWidget {
+  const _PromptTypeTabs({
+    required this.data,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final FixedTagsDialogViewData data;
+  final FixedTagPromptType selected;
+  final ValueChanged<FixedTagPromptType> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: controlSurfaceColor(theme.colorScheme),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Row(
+          children: [
+            for (final type in FixedTagPromptType.values)
+              Expanded(
+                child: _PromptTypeTab(
+                  promptType: type,
+                  selected: selected == type,
+                  entries: type == FixedTagPromptType.positive
+                      ? data.state.positiveEntries
+                      : data.state.negativeEntries,
+                  onTap: () => onSelected(type),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _PromptTypeTab extends StatelessWidget {
   const _PromptTypeTab({
     required this.promptType,
     required this.selected,
-    required this.count,
+    required this.entries,
     required this.onTap,
   });
   final FixedTagPromptType promptType;
   final bool selected;
-  final int count;
+  final List<FixedTagEntry> entries;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final positive = promptType == FixedTagPromptType.positive;
-    final color = positive
-        ? theme.colorScheme.secondary
-        : theme.colorScheme.error;
-    return Material(
-      key: ValueKey('fixed-tags-mobile-tab-${promptType.name}'),
-      color: selected
-          ? color.withValues(alpha: 0.14)
-          : theme.colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
+    final colors = theme.colorScheme;
+    final enabled = entries.where((entry) => entry.enabled).length;
+    final title = promptType == FixedTagPromptType.positive
+        ? context.l10n.fixedTags_positiveTab
+        : context.l10n.fixedTags_negativeTab;
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Material(
+        key: ValueKey('fixed-tags-mobile-tab-${promptType.name}'),
+        color: selected ? colors.surface : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                positive ? Icons.auto_awesome_rounded : Icons.block_rounded,
-                size: 16,
-                color: selected ? color : theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  positive
-                      ? context.l10n.fixedTags_positiveTitle
-                      : context.l10n.fixedTags_negativeTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: selected
-                        ? color
-                        : theme.colorScheme.onSurfaceVariant,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: context.interactionPolicy.minimumControlExtent - 4,
+            ),
+            // Centered in the segment; large text puts the count under the
+            // title instead of squeezing it.
+            child: Align(
+              heightFactor: 1,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  children: [
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: selected
+                            ? colors.onSurface
+                            : colors.onSurfaceVariant,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      context.l10n.fixedTags_columnCount(
+                        enabled,
+                        entries.length,
+                      ),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 5),
-              Text(count.toString(), style: theme.textTheme.labelSmall),
-            ],
+            ),
           ),
         ),
       ),
