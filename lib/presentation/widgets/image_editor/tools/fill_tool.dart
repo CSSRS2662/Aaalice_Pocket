@@ -42,6 +42,10 @@ class FillTool extends EditorTool {
   @override
   bool get isPaintTool => true;
 
+  /// A fill is a tap; there is no stroke to follow.
+  @override
+  bool get showsTouchLoupe => false;
+
   @override
   void onPointerDown(PointerDownEvent event, EditorState state) {
     final request = _FillRequest.capture(

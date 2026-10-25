@@ -395,9 +395,15 @@ class CompletionOrchestrator extends ChangeNotifier {
     );
     if (candidates.isEmpty) return null;
 
-    final exact = candidates.where(_isExactTagMatch).firstOrNull;
+    // Written tags lead a typed list; the word being resolved is still the
+    // best match among the unwritten ones first.
+    final ordered = [
+      ...candidates.where((candidate) => !candidate.isExisting),
+      ...candidates.where((candidate) => candidate.isExisting),
+    ];
+    final exact = ordered.where(_isExactTagMatch).firstOrNull;
     return _RelatedTagResolution(
-      canonicalTag: (exact ?? candidates.first).canonicalTag,
+      canonicalTag: (exact ?? ordered.first).canonicalTag,
       isExact: exact != null,
     );
   }

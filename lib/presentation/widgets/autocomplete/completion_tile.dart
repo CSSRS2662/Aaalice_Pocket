@@ -8,9 +8,9 @@ import 'completion_tile_layout.dart';
 
 /// One candidate as a compact block: the tag on the first line with its
 /// count raised after it, the translation under it like ruby text, and on
-/// that second line the match seal, the grouped-prompt sections and one dot
+/// that second line the match seal, the written badge and one dot
 /// per source. Tags already written are faded and cannot be inserted; their
-/// section badge stays clear.
+/// written badge stays clear.
 class CompletionTile extends StatelessWidget {
   const CompletionTile({
     super.key,
@@ -147,7 +147,9 @@ class CompletionTile extends StatelessWidget {
           .map((source) => CompletionSourceStyle.name(context, source))
           .join(' · '),
       if (sections != null)
-        context.l10n.autocomplete_duplicateInSections(sections.join('、')),
+        context.l10n.autocomplete_duplicateInSections(sections.join('、'))
+      else if (content.writtenLabel != null)
+        context.l10n.autocomplete_writtenTooltip,
     ].where((part) => part.isNotEmpty).join(', ');
   }
 }
@@ -283,11 +285,11 @@ class _SecondaryLine extends StatelessWidget {
               ),
             ),
           ),
-          if (content.sections case final sections?) ...[
+          if (content.badgeLabel case final label?) ...[
             const SizedBox(width: CompletionTileMetrics.trailingGap),
-            _SectionBadge(
-              sections: sections,
-              label: content.sectionLabel!,
+            _WrittenBadge(
+              sections: content.sections,
+              label: label,
               metrics: metrics,
             ),
           ],
@@ -341,30 +343,36 @@ class _MatchSeal extends StatelessWidget {
   }
 }
 
-/// Where an already written tag sits in a grouped prompt: the section icon
-/// and the section numbers, counted like the cards (left to right, top to
-/// bottom). Three numbers at most; the tooltip lists them all.
-class _SectionBadge extends StatelessWidget {
-  const _SectionBadge({
+/// Marks an already written tag. In a grouped prompt it names the sections
+/// holding the tag, counted like the cards (left to right, top to bottom),
+/// three numbers at most with the tooltip listing them all; elsewhere it
+/// just says the tag is written.
+class _WrittenBadge extends StatelessWidget {
+  const _WrittenBadge({
     required this.sections,
     required this.label,
     required this.metrics,
   });
 
-  final List<int> sections;
+  final List<int>? sections;
   final String label;
   final CompletionTileMetrics metrics;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final description = context.l10n.autocomplete_duplicateInSections(
-      sections.join('、'),
-    );
+    final sections = this.sections;
+    final description = sections == null
+        ? context.l10n.autocomplete_writtenTooltip
+        : context.l10n.autocomplete_duplicateInSections(sections.join('、'));
     return Tooltip(
       message: description,
       child: Container(
-        key: const ValueKey('autocomplete-candidate-sections'),
+        key: ValueKey(
+          sections == null
+              ? 'autocomplete-candidate-written'
+              : 'autocomplete-candidate-sections',
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         decoration: BoxDecoration(
           color: colors.secondaryContainer,
@@ -374,7 +382,9 @@ class _SectionBadge extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.view_agenda_outlined,
+              sections == null
+                  ? Icons.done_rounded
+                  : Icons.view_agenda_outlined,
               size: metrics.sectionIconSize,
               color: colors.onSecondaryContainer,
             ),

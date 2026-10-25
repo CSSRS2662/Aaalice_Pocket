@@ -11286,6 +11286,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get detail_copyPromptTitle => 'ポジティブプロンプトをコピー';
 
   @override
+  String get detail_pickTags => 'タグを選んでコピー';
+
+  @override
+  String get detail_pickTagsHint => 'コピーするタグを選択';
+
+  @override
+  String detail_pickedTagCount(int count) {
+    return '$count 個のタグを選択中';
+  }
+
+  @override
+  String detail_pickedTagsCopied(int count) {
+    return '$count 個のタグをコピーしました';
+  }
+
+  @override
   String get detail_copyPromptDescription =>
       'コピーするプロンプトのカテゴリを選択してください。固定タグには非公開文字列や個人用マーカーが含まれる場合があります。共有前に確認してください。';
 
@@ -13123,6 +13139,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String autocomplete_duplicateInSections(String sections) {
     return 'セクション $sections に記入済み';
   }
+
+  @override
+  String get autocomplete_writtenBadge => '記入済み';
+
+  @override
+  String get autocomplete_writtenTooltip => 'このプロンプトに記入済み';
 
   @override
   String autocomplete_relatedFilterCount(String category, int count) {

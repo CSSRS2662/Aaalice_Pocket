@@ -8,12 +8,14 @@ import '../../../../../core/utils/nai_prompt_parser.dart';
 import '../../../../adaptive/interaction_policy.dart';
 import '../../app_toast.dart';
 import '../../translated_tag_text.dart';
+import 'detail_tag_picks.dart';
 import 'selection_copy_shortcuts.dart';
 
 /// 提示词分组展示组件
 ///
 /// 用于在图像详情页中展示分组提示词（主提示词、固定词、质量词等）
-/// 支持展开/折叠、复制、添加到词库等功能
+/// 支持展开/折叠、复制、添加到词库等功能。给出 [tagPicks] 时，长按词条
+/// 开始多选，之后轻点即选中或取消，标题栏换成本组的全选。
 class PromptSection extends StatefulWidget {
   final String title;
   final IconData icon;
@@ -32,6 +34,12 @@ class PromptSection extends StatefulWidget {
   final Set<int>? characterTagIndexes;
   final bool allTagsAreFixed;
   final bool isNegative;
+
+  /// The picks shared by the panel's sections; null turns picking off.
+  final DetailTagPicks? tagPicks;
+
+  /// Which prompt this section's tags are picked as.
+  final DetailTagSide pickSide;
 
   const PromptSection({
     super.key,
@@ -52,6 +60,8 @@ class PromptSection extends StatefulWidget {
     this.characterTagIndexes,
     this.allTagsAreFixed = false,
     this.isNegative = false,
+    this.tagPicks,
+    this.pickSide = DetailTagSide.positive,
   });
 
   @override
@@ -81,6 +91,25 @@ class _PromptSectionState extends State<PromptSection> {
     AppToast.success(context, context.l10n.toast_tagCopied);
   }
 
+  bool get _picking => widget.tagPicks?.active ?? false;
+
+  /// A tap copies the tag, or picks it while picking.
+  void _tapTag(int index, String tag) {
+    final picks = widget.tagPicks;
+    if (picks != null && picks.active) {
+      picks.toggle(widget.pickSide, index, tag);
+    } else {
+      _copyTag(tag);
+    }
+  }
+
+  /// A long press starts picking with the tag, or picks it.
+  VoidCallback? _longPressTag(int index, String tag) {
+    final picks = widget.tagPicks;
+    if (picks == null) return null;
+    return () => picks.toggle(widget.pickSide, index, tag);
+  }
+
   List<String> get _displayTags {
     if (widget.tags != null) return widget.tags!;
     if (widget.content.isEmpty) return [];
@@ -94,6 +123,15 @@ class _PromptSectionState extends State<PromptSection> {
 
   @override
   Widget build(BuildContext context) {
+    final picks = widget.tagPicks;
+    if (picks == null) return _buildSection(context);
+    return ListenableBuilder(
+      listenable: picks,
+      builder: (context, _) => _buildSection(context),
+    );
+  }
+
+  Widget _buildSection(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final hasContent = widget.content.isNotEmpty;
@@ -159,38 +197,48 @@ class _PromptSectionState extends State<PromptSection> {
                       color: hasContent ? accentColor : titleColor,
                     ),
                     const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        widget.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: titleColor,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    // The title takes the room it needs before the count;
+                    // the chevron keeps to the end.
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              widget.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                color: titleColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          if (hasContent)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: accentColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                _picking
+                                    ? '${widget.tagPicks!.countOf(widget.pickSide)}'
+                                          '/$_tagCount'
+                                    : '$_tagCount',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: accentColor,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    if (hasContent)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '$_tagCount',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: accentColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    const Spacer(),
                     if (hasContent)
                       Icon(
                         _isExpanded ? Icons.expand_less : Icons.expand_more,
@@ -203,7 +251,10 @@ class _PromptSectionState extends State<PromptSection> {
             ),
           ),
         ),
-        if (hasContent) ...[
+        if (hasContent && _picking) ...[
+          const SizedBox(width: 4),
+          _buildPickAllButton(colorScheme, actionTargetSize),
+        ] else if (hasContent) ...[
           const SizedBox(width: 4),
           IconButton(
             onPressed: widget.onCopy ?? _copyContent,
@@ -237,6 +288,30 @@ class _PromptSectionState extends State<PromptSection> {
     );
   }
 
+  /// Picks every tag of the section, or drops them once all are picked.
+  Widget _buildPickAllButton(ColorScheme colorScheme, double targetSize) {
+    final picks = widget.tagPicks!;
+    final tags = _displayTags;
+    final all =
+        tags.isNotEmpty && picks.countOf(widget.pickSide) == tags.length;
+    return IconButton(
+      key: ValueKey('detail-pick-all-${widget.pickSide.name}'),
+      onPressed: () => picks.setAll(widget.pickSide, tags, picked: !all),
+      icon: Icon(
+        all ? Icons.deselect_rounded : Icons.select_all_rounded,
+        size: 18,
+        color: all ? colorScheme.primary : colorScheme.onSurfaceVariant,
+      ),
+      tooltip: all
+          ? context.l10n.common_deselectAll
+          : context.l10n.common_selectAll,
+      style: IconButton.styleFrom(
+        padding: const EdgeInsets.all(6),
+        minimumSize: Size.square(targetSize),
+      ),
+    );
+  }
+
   Widget _buildContent(
     ColorScheme colorScheme,
     ThemeData theme,
@@ -259,7 +334,12 @@ class _PromptSectionState extends State<PromptSection> {
           (tags.isNotEmpty
               ? _TagChipGrid(
                   tags: tags,
-                  onTagTap: _copyTag,
+                  onTagTap: _tapTag,
+                  onTagLongPress: _longPressTag,
+                  pickedOf: _picking
+                      ? (index) =>
+                            widget.tagPicks!.isPicked(widget.pickSide, index)
+                      : null,
                   showTranslation: widget.showTranslation,
                   fixedTags: widget.fixedTags,
                   characterTags: widget.characterTags,
@@ -293,7 +373,11 @@ String _normalizePromptTag(String tag) {
 /// 标签芯片网格组件
 class _TagChipGrid extends StatelessWidget {
   final List<String> tags;
-  final void Function(String) onTagTap;
+  final void Function(int index, String tag) onTagTap;
+  final VoidCallback? Function(int index, String tag) onTagLongPress;
+
+  /// Whether the tag at an index is picked; null while not picking.
+  final bool Function(int index)? pickedOf;
   final bool showTranslation;
   final List<String> fixedTags;
   final List<String> characterTags;
@@ -305,6 +389,8 @@ class _TagChipGrid extends StatelessWidget {
   const _TagChipGrid({
     required this.tags,
     required this.onTagTap,
+    required this.onTagLongPress,
+    required this.pickedOf,
     required this.fixedTags,
     required this.characterTags,
     required this.fixedTagIndexes,
@@ -336,7 +422,9 @@ class _TagChipGrid extends StatelessWidget {
           .map(
             (entry) => _TranslatedTagChip(
               tag: entry.value,
-              onTap: () => onTagTap(entry.value),
+              onTap: () => onTagTap(entry.key, entry.value),
+              onLongPress: onTagLongPress(entry.key, entry.value),
+              picked: pickedOf?.call(entry.key),
               showTranslation: showTranslation,
               isFixed:
                   allTagsAreFixed ||
@@ -361,6 +449,10 @@ class _TagChipGrid extends StatelessWidget {
 class _TranslatedTagChip extends ConsumerStatefulWidget {
   final String tag;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  /// Whether the chip is picked; null while not picking.
+  final bool? picked;
   final bool showTranslation;
   final bool isFixed;
   final bool isCharacter;
@@ -369,6 +461,8 @@ class _TranslatedTagChip extends ConsumerStatefulWidget {
   const _TranslatedTagChip({
     required this.tag,
     required this.onTap,
+    required this.onLongPress,
+    required this.picked,
     required this.isFixed,
     required this.isCharacter,
     required this.isNegative,
@@ -453,19 +547,26 @@ class _TranslatedTagChipState extends ConsumerState<_TranslatedTagChip> {
         ? colorScheme.error
         : colorScheme.onSurfaceVariant;
     final isCategorized = widget.isFixed || widget.isCharacter;
-    final bgColor = isCategorized
+    final picked = widget.picked ?? false;
+    final bgColor = picked
+        ? colorScheme.primaryContainer
+        : isCategorized
         ? accent.withValues(alpha: _isHovered ? 0.20 : 0.12)
         : colorScheme.surfaceContainerHighest.withValues(
             alpha: _isHovered ? 0.85 : 0.60,
           );
+    final textColor = picked
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.onSurface;
 
-    return MouseRegion(
+    final chip = MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
         child: ConstrainedBox(
           constraints: BoxConstraints(
             minHeight: context.interactionPolicy.minimumControlExtent,
@@ -474,10 +575,16 @@ class _TranslatedTagChipState extends ConsumerState<_TranslatedTagChip> {
             duration: MediaQuery.disableAnimationsOf(context)
                 ? Duration.zero
                 : const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            // The ring is always there, clear unless picked, so picking
+            // never changes the chip's size.
+            padding: const EdgeInsets.symmetric(horizontal: 6.5, vertical: 2.5),
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: picked ? colorScheme.primary : Colors.transparent,
+                width: 1.5,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -486,7 +593,7 @@ class _TranslatedTagChipState extends ConsumerState<_TranslatedTagChip> {
                   Icon(
                     widget.isFixed ? Icons.push_pin : Icons.person_outline,
                     size: 11,
-                    color: accent,
+                    color: picked ? textColor : accent,
                   ),
                   const SizedBox(width: 4),
                 ],
@@ -495,7 +602,7 @@ class _TranslatedTagChipState extends ConsumerState<_TranslatedTagChip> {
                     _displayText,
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontSize: 11,
-                      color: colorScheme.onSurface,
+                      color: textColor,
                       fontWeight: isCategorized
                           ? FontWeight.w600
                           : FontWeight.w500,
@@ -509,6 +616,10 @@ class _TranslatedTagChipState extends ConsumerState<_TranslatedTagChip> {
         ),
       ),
     );
+    final pickState = widget.picked;
+    return pickState == null
+        ? chip
+        : Semantics(selected: pickState, child: chip);
   }
 }
 

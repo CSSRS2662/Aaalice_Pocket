@@ -12,20 +12,19 @@ import '../../../../../core/utils/nai_prompt_parser.dart';
 import '../../../../../core/utils/nai_resolution_adapter.dart';
 import '../../../../../data/models/fixed_tag/fixed_tag_entry.dart';
 import '../../../../../data/models/gallery/nai_image_metadata.dart';
-import '../../../../../data/models/gallery/nai_prompt_export_codec.dart';
 import '../../../../../data/models/vibe/vibe_reference.dart';
-import '../../../../adaptive/interaction_policy.dart';
 import '../../../../providers/fixed_tags_provider.dart';
 import '../../../../utils/fixed_tag_metadata_matcher.dart';
 import '../../add_to_library_dialog.dart';
 import '../../app_toast.dart';
-import '../../prompt_copy_split_button.dart';
-import '../../save_as_preset_dialog.dart';
 import '../../save_vibe_dialog.dart';
 import '../../themed_divider.dart';
 import '../../model_family_icon.dart';
 import '../file_image_detail_data.dart';
 import '../image_detail_data.dart';
+import 'detail_action_buttons.dart';
+import 'detail_tag_pick_bar.dart';
+import 'detail_tag_picks.dart';
 import 'prompt_copy_dialog.dart';
 import 'prompt_section.dart';
 import 'selection_copy_shortcuts.dart';
@@ -75,11 +74,20 @@ class _DetailMetadataPanelState extends ConsumerState<DetailMetadataPanel> {
   NaiImageMetadata? _loadedMetadata;
   (int, int)? _actualImageSize;
   FileInfo? _fileInfo;
+  final _tagPicks = DetailTagPicks();
+
+  /// Holds focus while tags are picked, so Esc leaves picking before it
+  /// reaches the viewer.
+  final _pickFocus = FocusNode(
+    debugLabel: 'detail-tag-picks',
+    skipTraversal: true,
+  );
 
   @override
   void initState() {
     super.initState();
     _isExpanded = widget.initialExpanded;
+    _tagPicks.addListener(_onTagPicksChanged);
     _startMetadataLoading();
   }
 
@@ -88,8 +96,48 @@ class _DetailMetadataPanelState extends ConsumerState<DetailMetadataPanel> {
     super.didUpdateWidget(oldWidget);
     // 当图片变化时重新加载元数据
     if (widget.currentImage?.identifier != oldWidget.currentImage?.identifier) {
+      _tagPicks.end();
       _startMetadataLoading();
     }
+  }
+
+  @override
+  void dispose() {
+    _tagPicks
+      ..removeListener(_onTagPicksChanged)
+      ..dispose();
+    _pickFocus.dispose();
+    super.dispose();
+  }
+
+  void _onTagPicksChanged() {
+    if (_tagPicks.active) {
+      if (!_pickFocus.hasFocus) _pickFocus.requestFocus();
+    } else if (_pickFocus.hasFocus) {
+      _pickFocus.unfocus(
+        disposition: UnfocusDisposition.previouslyFocusedChild,
+      );
+    }
+  }
+
+  KeyEventResult _handlePickKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.escape ||
+        !_tagPicks.active) {
+      return KeyEventResult.ignored;
+    }
+    _tagPicks.end();
+    return KeyEventResult.handled;
+  }
+
+  Future<void> _copyPickedTags() async {
+    final count = _tagPicks.count;
+    final text = _tagPicks.text;
+    if (count == 0 || text.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    _tagPicks.end();
+    AppToast.success(context, context.l10n.detail_pickedTagsCopied(count));
   }
 
   /// 启动元数据加载（双通道架构）
@@ -328,7 +376,7 @@ class _DetailMetadataPanelState extends ConsumerState<DetailMetadataPanel> {
     final isLoading = _metadataFuture != null && _loadedMetadata == null;
     final colorScheme = theme.colorScheme;
 
-    return Column(
+    final panel = Column(
       children: [
         if (widget.collapsible) ...[
           _PanelHeader(isExpanded: true, onToggle: _toggleExpanded),
@@ -353,6 +401,7 @@ class _DetailMetadataPanelState extends ConsumerState<DetailMetadataPanel> {
                     negativeFixedTagEntries: fixedTagsState.negativeEntries,
                     fileInfo: _fileInfo,
                     actualImageSize: _actualImageSize,
+                    tagPicks: _tagPicks,
                   ),
                 )
               : _buildNoMetadataState(theme),
@@ -363,10 +412,39 @@ class _DetailMetadataPanelState extends ConsumerState<DetailMetadataPanel> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const ThemedDivider(height: 1),
-              _ActionButtons(metadata: metadata),
+              ListenableBuilder(
+                listenable: _tagPicks,
+                builder: (context, _) => _tagPicks.active
+                    ? DetailTagPickBar(
+                        count: _tagPicks.count,
+                        onCopy: _copyPickedTags,
+                        onLeave: _tagPicks.end,
+                      )
+                    : DetailActionButtons(
+                        metadata: metadata,
+                        onPickTags: _tagPicks.start,
+                      ),
+              ),
             ],
           ),
       ],
+    );
+
+    return Focus(
+      focusNode: _pickFocus,
+      onKeyEvent: _handlePickKey,
+      child: ListenableBuilder(
+        listenable: _tagPicks,
+        // Back leaves picking before it closes the sheet or the viewer.
+        builder: (context, child) => PopScope(
+          canPop: !_tagPicks.active,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _tagPicks.end();
+          },
+          child: child!,
+        ),
+        child: panel,
+      ),
     );
   }
 
@@ -513,6 +591,7 @@ class _MetadataContent extends StatelessWidget {
   final List<FixedTagEntry> negativeFixedTagEntries;
   final FileInfo? fileInfo;
   final (int, int)? actualImageSize;
+  final DetailTagPicks? tagPicks;
 
   const _MetadataContent({
     required this.metadata,
@@ -520,6 +599,7 @@ class _MetadataContent extends StatelessWidget {
     this.negativeFixedTagEntries = const [],
     this.fileInfo,
     this.actualImageSize,
+    this.tagPicks,
   });
 
   @override
@@ -690,6 +770,8 @@ class _MetadataContent extends StatelessWidget {
           characterTags: characterTags,
           fixedTagIndexes: fixedPositiveIndexes,
           characterTagIndexes: characterPositiveIndexes,
+          tagPicks: tagPicks,
+          pickSide: DetailTagSide.positive,
         ),
         if (negativePrompt.isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -707,6 +789,8 @@ class _MetadataContent extends StatelessWidget {
             fixedTagIndexes: fixedNegativeIndexes,
             characterTagIndexes: characterNegativeIndexes,
             isNegative: true,
+            tagPicks: tagPicks,
+            pickSide: DetailTagSide.negative,
           ),
         ],
         if (metadata.vibeReferences.isNotEmpty) ...[
@@ -911,187 +995,6 @@ class _InfoRow extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-/// 底部操作按钮
-class _ActionButtons extends StatelessWidget {
-  final NaiImageMetadata metadata;
-
-  const _ActionButtons({required this.metadata});
-
-  Future<void> _copyPositivePrompt(BuildContext context) async {
-    final prompt = await PromptCopyDialog.show(context, metadata: metadata);
-    if (!context.mounted) return;
-    await _writePrompt(context, prompt);
-  }
-
-  Future<void> _copyAllTags(BuildContext context) =>
-      _writePrompt(context, NaiPromptExportCodec.encode(metadata));
-
-  Future<void> _customCopyTags(BuildContext context) async {
-    final prompt = await PromptCopyDialog.showExport(
-      context,
-      metadata: metadata,
-    );
-    if (!context.mounted) return;
-    await _writePrompt(context, prompt);
-  }
-
-  Future<void> _writePrompt(BuildContext context, String? prompt) async {
-    if (prompt == null || prompt.trim().isEmpty || !context.mounted) return;
-    await Clipboard.setData(ClipboardData(text: prompt));
-    if (context.mounted) {
-      AppToast.success(context, context.l10n.gallery_promptCopied);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 第一行：复制按钮
-          Row(
-            children: [
-              Expanded(
-                child: PromptCopySplitButton(
-                  primaryLabel: context.l10n.onlineGallery_copyAllTags,
-                  menuTooltip: context.l10n.common_copy,
-                  onPressed: () => _copyAllTags(context),
-                  menuChildren: [
-                    MenuItemButton(
-                      onPressed: () => _customCopyTags(context),
-                      leadingIcon: const Icon(Icons.tune, size: 18),
-                      child: Text(context.l10n.onlineGallery_customCopyTags),
-                    ),
-                    MenuItemButton(
-                      onPressed: () => _copyPositivePrompt(context),
-                      leadingIcon: const Icon(Icons.shield_outlined, size: 18),
-                      child: Text(
-                        context.l10n.detail_copyLabel(
-                          context.l10n.prompt_positivePrompt,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (metadata.seed != null)
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.tag,
-                    label: context.l10n.detail_copyLabel('Seed'),
-                    onPressed: () {
-                      Clipboard.setData(
-                        ClipboardData(text: metadata.seed.toString()),
-                      );
-                      AppToast.success(
-                        context,
-                        context.l10n.gallery_seedCopied,
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 第二行：保存按钮
-          Row(
-            children: [
-              Expanded(
-                child: _ActionButton(
-                  icon: Icons.bookmark_add,
-                  label: context.l10n.detail_savePreset,
-                  onPressed: () =>
-                      SaveAsPresetDialog.show(context, metadata: metadata),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 操作按钮
-class _ActionButton extends StatefulWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-
-  @override
-  State<_ActionButton> createState() => _ActionButtonState();
-}
-
-class _ActionButtonState extends State<_ActionButton> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: AnimatedContainer(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 150),
-          constraints: BoxConstraints(
-            minHeight: context.interactionPolicy.minimumControlExtent,
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: _isHovered
-                ? colorScheme.primary.withValues(alpha: 0.1)
-                : colorScheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                widget.icon,
-                size: 16,
-                color: _isHovered
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  widget.label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: _isHovered
-                        ? colorScheme.primary
-                        : colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

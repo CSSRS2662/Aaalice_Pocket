@@ -11090,6 +11090,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get detail_copyPromptTitle => '复制正面提示词';
 
   @override
+  String get detail_pickTags => '选择词条复制';
+
+  @override
+  String get detail_pickTagsHint => '选择要复制的词条';
+
+  @override
+  String detail_pickedTagCount(int count) {
+    return '已选 $count 个词条';
+  }
+
+  @override
+  String detail_pickedTagsCopied(int count) {
+    return '已复制 $count 个词条';
+  }
+
+  @override
   String get detail_copyPromptDescription =>
       '勾选需要复制的提示词类别。固定词可能包含私密串或个人标记，请确认后再分享。';
 
@@ -12905,6 +12921,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String autocomplete_duplicateInSections(String sections) {
     return '已在分区 $sections 中';
   }
+
+  @override
+  String get autocomplete_writtenBadge => '已写';
+
+  @override
+  String get autocomplete_writtenTooltip => '提示词中已写过';
 
   @override
   String autocomplete_relatedFilterCount(String category, int count) {
@@ -27105,6 +27127,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get detail_copyPromptTitle => '複製正面提示詞';
 
   @override
+  String get detail_pickTags => '選擇詞條複製';
+
+  @override
+  String get detail_pickTagsHint => '選擇要複製的詞條';
+
+  @override
+  String detail_pickedTagCount(int count) {
+    return '已選 $count 個詞條';
+  }
+
+  @override
+  String detail_pickedTagsCopied(int count) {
+    return '已複製 $count 個詞條';
+  }
+
+  @override
   String get detail_copyPromptDescription =>
       '勾選需要複製的提示詞類別。固定詞可能包含私密字串或個人標記，請確認後再分享。';
 
@@ -28920,6 +28958,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String autocomplete_duplicateInSections(String sections) {
     return '已在分區 $sections 中';
   }
+
+  @override
+  String get autocomplete_writtenBadge => '已寫';
+
+  @override
+  String get autocomplete_writtenTooltip => '提示詞中已寫過';
 
   @override
   String autocomplete_relatedFilterCount(String category, int count) {

@@ -36,13 +36,15 @@ void main() {
         translation: '未穿袜',
       ),
     ], query: query);
+    // A written tag found by meaning keeps its cosine place.
     expect(rows.map((row) => row.canonicalTag), [
+      'already_used',
       'no_socks',
       'socks',
-      'already_used',
     ]);
-    expect(rows.first.semanticScore, .91);
-    expect(rows.first.translation, '未穿袜');
+    expect(rows.first.isExisting, isTrue);
+    expect(rows[1].semanticScore, .91);
+    expect(rows[1].translation, '未穿袜');
     final mergedAgain = CompletionRanker.mergeAndSort(rows, query: query);
     expect(
       mergedAgain.map((row) => row.canonicalTag),

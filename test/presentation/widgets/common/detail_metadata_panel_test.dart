@@ -264,6 +264,125 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
+  testWidgets('a long press picks tags that copy in prompt order', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final clipboard = _mockClipboard(tester);
+    await _pumpPanel(
+      tester,
+      const NaiImageMetadata(
+        prompt: '1girl, blue hair, smile',
+        negativePrompt: 'lowres',
+      ),
+    );
+
+    await tester.longPress(find.text('smile'));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('detail-tag-pick-bar')), findsOneWidget);
+    expect(find.text('复制全部 TAG'), findsNothing);
+    expect(find.text('已选 1 个词条'), findsOneWidget);
+    expect(find.text('1/3'), findsOneWidget);
+
+    // While picking a tap picks instead of copying the tag.
+    await tester.tap(find.text('1girl'));
+    await tester.pump();
+    expect(find.text('已选 2 个词条'), findsOneWidget);
+    expect(clipboard.text, isNull);
+
+    final copy = find.byKey(const ValueKey('detail-tag-pick-copy'));
+    await tester.ensureVisible(copy);
+    await tester.tap(copy);
+    await tester.pump();
+    expect(clipboard.text, '1girl, smile');
+    expect(find.byKey(const ValueKey('detail-tag-pick-bar')), findsNothing);
+    expect(find.text('复制全部 TAG'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('picking starts from the copy menu and Esc leaves it', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final clipboard = _mockClipboard(tester);
+    await _pumpPanel(
+      tester,
+      const NaiImageMetadata(prompt: '1girl, smile', negativePrompt: 'lowres'),
+    );
+
+    final menu = find.byKey(const ValueKey('detail-copy-menu'));
+    await tester.ensureVisible(menu);
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('detail-pick-tags')));
+    await tester.pumpAndSettle();
+    expect(find.text('选择要复制的词条'), findsOneWidget);
+    final copy = find.byKey(const ValueKey('detail-tag-pick-copy'));
+    expect(tester.widget<FilledButton>(copy).onPressed, isNull);
+
+    // Select all of each prompt; both copy in the two-line form.
+    await tester.tap(find.byKey(const ValueKey('detail-pick-all-positive')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('detail-pick-all-negative')));
+    await tester.pump();
+    expect(find.text('已选 3 个词条'), findsOneWidget);
+    expect(find.text('1/1'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('detail-pick-all-positive')));
+    await tester.pump();
+    expect(find.text('0/2'), findsOneWidget);
+    await tester.tap(find.text('1girl'));
+    await tester.pump();
+    await tester.ensureVisible(copy);
+    await tester.tap(copy);
+    await tester.pump();
+    expect(clipboard.text, 'positive: 1girl\nnegative: lowres');
+    await tester.pump(const Duration(seconds: 3));
+
+    await tester.longPress(find.text('smile'));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('detail-tag-pick-bar')), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('detail-tag-pick-bar')), findsNothing);
+    expect(find.text('1girl'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the pick bar fits a narrow panel with large text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await _pumpPanel(
+      tester,
+      const NaiImageMetadata(prompt: '1girl, smile'),
+      textScale: 3,
+    );
+
+    await tester.longPress(find.text('smile'));
+    await tester.pump();
+    final bar = find.byKey(const ValueKey('detail-tag-pick-bar'));
+    expect(bar, findsOneWidget);
+    final copy = find.byKey(const ValueKey('detail-tag-pick-copy'));
+    final leave = find.byKey(const ValueKey('detail-tag-pick-leave'));
+    for (final control in [copy, leave]) {
+      final rect = tester.getRect(control);
+      expect(rect.left, greaterThanOrEqualTo(0));
+      expect(rect.right, lessThanOrEqualTo(320));
+      expect(rect.height, greaterThanOrEqualTo(44));
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('keeps a comma inside nested weights as one detail chip', (
     tester,
   ) async {
@@ -437,4 +556,63 @@ class _FakeFixedTagsNotifier extends FixedTagsNotifier {
 class _FakeShortcutConfigNotifier extends ShortcutConfigNotifier {
   @override
   Future<ShortcutConfig> build() async => ShortcutConfig.createDefault();
+}
+
+class _Clipboard {
+  String? text;
+}
+
+_Clipboard _mockClipboard(WidgetTester tester) {
+  final clipboard = _Clipboard();
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.platform,
+    (call) async {
+      if (call.method == 'Clipboard.setData') {
+        clipboard.text = (call.arguments as Map)['text'] as String?;
+      }
+      return null;
+    },
+  );
+  addTearDown(
+    () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      null,
+    ),
+  );
+  return clipboard;
+}
+
+Future<void> _pumpPanel(
+  WidgetTester tester,
+  NaiImageMetadata metadata, {
+  double textScale = 1,
+}) async {
+  final image = img.Image(width: 1, height: 1);
+  final detail = GeneratedImageDetailData(
+    imageBytes: Uint8List.fromList(img.encodePng(image)),
+    metadata: metadata,
+  );
+  await tester.pumpWidget(
+    ProviderScope(
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: DetailMetadataPanel(
+            currentImage: detail,
+            expandedWidth: tester.view.physicalSize.width,
+            collapsible: false,
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
 }

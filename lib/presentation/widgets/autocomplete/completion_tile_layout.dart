@@ -28,6 +28,7 @@ class CompletionTileContent {
     required this.secondaryKind,
     required this.sections,
     required this.showSources,
+    this.writtenLabel,
   });
 
   factory CompletionTileContent.resolve(
@@ -61,6 +62,7 @@ class CompletionTileContent {
       _ => ('', CompletionSecondaryKind.none),
     };
     final note = showMatchNote ? completionMatchSeal(context, candidate) : null;
+    final inSections = sections != null && sections.isNotEmpty;
     return CompletionTileContent(
       candidate: candidate,
       showIcon:
@@ -71,8 +73,11 @@ class CompletionTileContent {
       sealTooltip: note?.tooltip,
       secondary: secondary,
       secondaryKind: kind,
-      sections: sections == null || sections.isEmpty ? null : sections,
+      sections: inSections ? sections : null,
       showSources: candidate.sources.isNotEmpty,
+      writtenLabel: candidate.isExisting && !inSections
+          ? l10n.autocomplete_writtenBadge
+          : null,
     );
   }
 
@@ -87,6 +92,10 @@ class CompletionTileContent {
   final List<int>? sections;
   final bool showSources;
 
+  /// The badge of a tag already written outside a grouped prompt, which has
+  /// no sections to name.
+  final String? writtenLabel;
+
   /// Section numbers shown on the badge: three at most, the rest counted.
   String? get sectionLabel {
     final numbers = sections;
@@ -97,6 +106,10 @@ class CompletionTileContent {
     ].join(' ');
   }
 
+  /// The text of the badge on an already written tag: where it sits in a
+  /// grouped prompt, else that it is written.
+  String? get badgeLabel => sectionLabel ?? writtenLabel;
+
   /// Everything that changes the tile's natural size.
   String get signature => [
     candidate.stableId,
@@ -106,7 +119,7 @@ class CompletionTileContent {
     seal,
     secondary,
     secondaryKind.name,
-    sectionLabel,
+    badgeLabel,
     candidate.sources.length,
   ].join('\u0001');
 }
@@ -363,9 +376,9 @@ class CompletionTileMeasurer {
     final seal = content.seal == null
         ? null
         : _painter(content.seal!, metrics.seal, metrics);
-    final section = content.sectionLabel == null
+    final section = content.badgeLabel == null
         ? null
-        : _painter(content.sectionLabel!, metrics.section, metrics);
+        : _painter(content.badgeLabel!, metrics.section, metrics);
 
     final leadWidth =
         (content.showIcon

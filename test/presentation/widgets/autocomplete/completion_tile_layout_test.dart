@@ -116,7 +116,10 @@ void main() {
       width: 330,
       gap: 4,
     );
-    expect(layout.rows.single.widths.single, measurer.measure(content, metrics).width);
+    expect(
+      layout.rows.single.widths.single,
+      measurer.measure(content, metrics).width,
+    );
   });
 
   testWidgets('a tile wider than the row takes the row and grows taller', (
@@ -181,6 +184,13 @@ void main() {
     expect(related.secondaryKind, CompletionSecondaryKind.missing);
     expect(related.secondary, '未汉化');
     expect(related.sectionLabel, '1 · 2 · 3 +1');
+    expect(related.badgeLabel, '1 · 2 · 3 +1');
+    expect(related.writtenLabel, isNull);
+
+    // Outside a grouped prompt a written tag says so without sections.
+    final written = _content(context, _candidate('sky', isExisting: true));
+    expect(written.sectionLabel, isNull);
+    expect(written.badgeLabel, '已写');
 
     final general = _content(context, _candidate('sky', postCount: 1250000));
     expect(general.showIcon, isFalse);

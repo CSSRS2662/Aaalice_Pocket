@@ -20235,6 +20235,30 @@ abstract class AppLocalizations {
   /// **'Copy Positive Prompt'**
   String get detail_copyPromptTitle;
 
+  /// No description provided for @detail_pickTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick tags to copy'**
+  String get detail_pickTags;
+
+  /// No description provided for @detail_pickTagsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the tags to copy'**
+  String get detail_pickTagsHint;
+
+  /// No description provided for @detail_pickedTagCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 tag picked} other{{count} tags picked}}'**
+  String detail_pickedTagCount(int count);
+
+  /// No description provided for @detail_pickedTagsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Copied 1 tag} other{Copied {count} tags}}'**
+  String detail_pickedTagsCopied(int count);
+
   /// No description provided for @detail_copyPromptDescription.
   ///
   /// In en, this message translates to:
@@ -23400,6 +23424,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Already in section {sections}'**
   String autocomplete_duplicateInSections(String sections);
+
+  /// No description provided for @autocomplete_writtenBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'In prompt'**
+  String get autocomplete_writtenBadge;
+
+  /// No description provided for @autocomplete_writtenTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in this prompt'**
+  String get autocomplete_writtenTooltip;
 
   /// No description provided for @autocomplete_relatedFilterCount.
   ///

@@ -39,6 +39,10 @@ abstract class EditorTool {
   /// 是否是绘画工具
   bool get isPaintTool => false;
 
+  /// Whether a finger dragging this tool gets the loupe that shows what the
+  /// finger hides: strokes and selection outlines, not taps.
+  bool get showsTouchLoupe => isPaintTool || isSelectionTool;
+
   /// 工具是否自行处理 Alt 键（跳过临时拾色器切换）
   bool get handlesAltKey => false;
 

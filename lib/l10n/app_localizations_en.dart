@@ -11578,6 +11578,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detail_copyPromptTitle => 'Copy Positive Prompt';
 
   @override
+  String get detail_pickTags => 'Pick tags to copy';
+
+  @override
+  String get detail_pickTagsHint => 'Pick the tags to copy';
+
+  @override
+  String detail_pickedTagCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tags picked',
+      one: '1 tag picked',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String detail_pickedTagsCopied(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Copied $count tags',
+      one: 'Copied 1 tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get detail_copyPromptDescription =>
       'Select the prompt categories to copy. Fixed tags may contain private strings or personal markers, so review them before sharing.';
 
@@ -13485,6 +13513,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String autocomplete_duplicateInSections(String sections) {
     return 'Already in section $sections';
   }
+
+  @override
+  String get autocomplete_writtenBadge => 'In prompt';
+
+  @override
+  String get autocomplete_writtenTooltip => 'Already in this prompt';
 
   @override
   String autocomplete_relatedFilterCount(String category, int count) {

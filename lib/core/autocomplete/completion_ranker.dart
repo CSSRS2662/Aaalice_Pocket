@@ -78,7 +78,8 @@ class CompletionRanker {
 
     final results = merged.values.toList()
       ..sort((a, b) {
-        if (a.isExisting != b.isExisting) return a.isExisting ? 1 : -1;
+        final band = _band(a, query).compareTo(_band(b, query));
+        if (band != 0) return band;
         if (query.relatedTag != null) {
           final relatedScore = (b.relatedScore ?? 0).compareTo(
             a.relatedScore ?? 0,
@@ -97,6 +98,23 @@ class CompletionRanker {
       });
     return results.take(limit ?? query.limit).toList(growable: false);
   }
+
+  /// A typed tag the prompt already holds leads the list when it matches the
+  /// input literally, so the duplicate is seen before it is written again.
+  /// Looser matches (pinyin, typo fixes, meaning) arrive later and keep
+  /// their place among the others, so rows on screen never jump. Related
+  /// suggestions put written tags last; they are dropped from them anyway.
+  static int _band(CompletionCandidate candidate, CompletionQuery query) {
+    if (!candidate.isExisting) return 1;
+    if (query.relatedTag != null) return 2;
+    return _isLiteralMatch(candidate.matchKind) ? 0 : 1;
+  }
+
+  /// Whether [kind] matched the typed text itself rather than a reading,
+  /// a correction or a meaning of it.
+  static bool _isLiteralMatch(CompletionMatchKind kind) =>
+      _matchPriority(kind) <=
+      _matchPriority(CompletionMatchKind.chineseContains);
 
   static CompletionCandidate _score(
     CompletionCandidate candidate,
@@ -125,7 +143,6 @@ class CompletionRanker {
     final popularity = candidate.postCount <= 0
         ? 0.0
         : candidate.postCount.toString().length * 10.0;
-    final existingPenalty = candidate.isExisting ? 100000.0 : 0.0;
     // Quality spans 40000 so exact rows of a kind stay above prefix rows; the
     // context and habit boost (at most 6000) then reorders within those.
     final quality = candidate.matchQuality.clamp(0.0, 1.0) * 40000.0;
@@ -137,8 +154,7 @@ class CompletionRanker {
           quality +
           sourceBoost +
           popularity +
-          boost -
-          existingPenalty,
+          boost,
     );
   }
 

@@ -108,6 +108,10 @@ class EditorState extends ChangeNotifier {
   /// 避免光标移动触发整个 UI 重建
   final ValueNotifier<Offset?> cursorNotifier = ValueNotifier(null);
 
+  /// Where a finger is drawing, in global coordinates; null while no finger
+  /// draws. The loupe that shows what the finger hides follows it.
+  final ValueNotifier<Offset?> touchDrawPoint = ValueNotifier(null);
+
   // ===== 画布状态 =====
 
   /// 取景框：文档坐标中实际导出、送去生成的区域
@@ -800,6 +804,7 @@ class EditorState extends ChangeNotifier {
     canvasSizeNotifier.dispose();
     frameNotifier.dispose();
     framePreviewNotifier.dispose();
+    touchDrawPoint.dispose();
 
     super.dispose();
   }

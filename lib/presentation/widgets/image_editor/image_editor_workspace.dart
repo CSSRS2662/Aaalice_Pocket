@@ -40,6 +40,7 @@ import 'tools/closed_region_fill_tool.dart';
 import 'tools/frame_tool.dart';
 import 'tools/tool_base.dart';
 import 'canvas/editor_canvas.dart';
+import 'canvas/editor_touch_loupe.dart';
 import 'widgets/toolbar/desktop_toolbar.dart';
 import 'widgets/toolbar/editor_view_menu.dart';
 import 'widgets/toolbar/editor_toolbar_tools.dart';
@@ -1570,7 +1571,12 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
     return trimmed.isEmpty ? 'dropped_image.png' : trimmed;
   }
 
-  Widget _buildCanvasArea({bool showFocusedCard = true}) {
+  /// [showTouchLoupe] off leaves the loupe to a layout that puts more on
+  /// the canvas and wants the loupe above it.
+  Widget _buildCanvasArea({
+    bool showFocusedCard = true,
+    bool showTouchLoupe = true,
+  }) {
     final focusAreaRect = _focusedInpaintEnabled
         ? _focusedSelectionState.resolveActiveRect(
             previewPath: _state.previewPath,
@@ -1658,6 +1664,8 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
         Positioned.fill(
           child: MagicWandProgressOverlay(controller: _magicWandController),
         ),
+        if (showTouchLoupe)
+          Positioned.fill(child: EditorTouchLoupe(state: _state)),
       ],
     );
   }
@@ -2660,7 +2668,7 @@ class ImageEditorWorkspaceState extends State<ImageEditorWorkspace> {
     return MobileEditorLayout(
       state: _state,
       title: _editorTitle(),
-      canvas: _buildCanvasArea(showFocusedCard: false),
+      canvas: _buildCanvasArea(showFocusedCard: false, showTouchLoupe: false),
       doneLabel: widget.completionLabel ?? context.l10n.editor_done,
       onDone: () => unawaited(_exportAndClose()),
       doneListenable: _frameController,

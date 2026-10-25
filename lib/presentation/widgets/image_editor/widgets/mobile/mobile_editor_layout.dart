@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../canvas/editor_touch_loupe.dart';
 import '../../core/editor_state.dart';
 import '../../layers/layer_role.dart';
 import '../toolbar/mobile_toolbar.dart';
@@ -253,6 +254,8 @@ class _CanvasStack extends StatelessWidget {
                 ),
               ),
             ),
+            // Last, so it shows the chips too and nothing covers it.
+            Positioned.fill(child: EditorTouchLoupe(state: state)),
           ],
         );
       },

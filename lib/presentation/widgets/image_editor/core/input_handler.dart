@@ -400,8 +400,16 @@ class InputHandler {
         _drawingPointerId = event.pointer;
         _drawingPointerKind = event.kind;
         tool.onPointerDown(PointerDownEvent(position: canvasPosition), state);
+        _followFinger(event.kind, event.position);
       }
     }
+  }
+
+  /// Shows the loupe at a finger that draws with a tool that wants it.
+  void _followFinger(PointerDeviceKind kind, Offset globalPosition) {
+    if (kind != PointerDeviceKind.touch) return;
+    if (!(state.currentTool?.showsTouchLoupe ?? false)) return;
+    state.touchDrawPoint.value = globalPosition;
   }
 
   /// 处理指针抬起
@@ -447,6 +455,7 @@ class InputHandler {
       _drawingPointerId = null;
       _drawingPointerKind = null;
       gesture.isPrimaryButtonDown = false;
+      state.touchDrawPoint.value = null;
     }
   }
 
@@ -520,6 +529,7 @@ class InputHandler {
           frame: state.frame,
         );
         tool.onPointerMove(PointerMoveEvent(position: canvasPosition), state);
+        _followFinger(event.kind, event.position);
       }
     }
   }
@@ -644,6 +654,7 @@ class InputHandler {
     _drawingPointerId = null;
     _drawingPointerKind = null;
     gesture.isPrimaryButtonDown = false;
+    state.touchDrawPoint.value = null;
   }
 
   /// 获取当前光标样式

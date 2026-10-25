@@ -177,6 +177,77 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('a tag already written in the box leads the list', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: 'blue_eyes, blu');
+    controller.selection = const TextSelection.collapsed(offset: 14);
+    final focusNode = FocusNode();
+    addTearDown(() {
+      controller.dispose();
+      focusNode.dispose();
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          autocompleteServicesProvider.overrideWithValue(
+            AutocompleteServices(
+              localSources: [_TwoBlueSource()],
+              dictionaryTranslations: const _NoTranslations(),
+              llmTranslations: const _NoTranslations(),
+              danbooru: _NoDanbooru(),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: AutocompleteWrapper(
+              controller: controller,
+              focusNode: focusNode,
+              child: TextField(controller: controller, focusNode: focusNode),
+            ),
+          ),
+        ),
+      ),
+    );
+    focusNode.requestFocus();
+    await tester.pump();
+    await _typeCurrentText(tester, controller);
+
+    final written = find.ancestor(
+      of: find.text('blue_eyes'),
+      matching: find.byType(InkWell),
+    );
+    final other = find.ancestor(
+      of: find.text('blue_bow'),
+      matching: find.byType(InkWell),
+    );
+    expect(written, findsOneWidget);
+    // Reading order: an earlier row, or further left on the same row.
+    final writtenAt = tester.getTopLeft(written);
+    final otherAt = tester.getTopLeft(other);
+    expect(
+      writtenAt.dy < otherAt.dy ||
+          (writtenAt.dy == otherAt.dy && writtenAt.dx < otherAt.dx),
+      isTrue,
+    );
+    expect(
+      find.byKey(const ValueKey('autocomplete-candidate-written')),
+      findsOneWidget,
+    );
+    expect(find.text('In prompt'), findsOneWidget);
+
+    // The written tag is skipped: Enter writes the first new one.
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(controller.text, 'blue_eyes, blue_bow, ');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('artist colon opens artist-only results and preserves prefix', (
     tester,
   ) async {
@@ -2136,6 +2207,27 @@ class _BaseSource implements CompletionSource {
       ),
     ];
   }
+}
+
+class _TwoBlueSource implements CompletionSource {
+  @override
+  Future<List<CompletionCandidate>> search(CompletionQuery query) async =>
+      const [
+        CompletionCandidate(
+          canonicalTag: 'blue_bow',
+          category: TagCategory.general,
+          postCount: 1000,
+          matchKind: CompletionMatchKind.englishPrefix,
+          sources: {CompletionSourceKind.base},
+        ),
+        CompletionCandidate(
+          canonicalTag: 'blue_eyes',
+          category: TagCategory.general,
+          postCount: 500,
+          matchKind: CompletionMatchKind.englishPrefix,
+          sources: {CompletionSourceKind.base},
+        ),
+      ];
 }
 
 class _ArtistCategorySource implements CompletionSource {

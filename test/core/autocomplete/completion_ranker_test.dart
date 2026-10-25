@@ -60,26 +60,55 @@ void main() {
   );
 
   test(
-    'uses fixed match priority then popularity and moves existing tags last',
+    'uses fixed match priority then popularity and puts written tags first',
     () {
       final results = CompletionRanker.mergeAndSort([
-        _candidate('blue_hair', CompletionMatchKind.englishExact, 999999),
         _candidate('blue_eyes', CompletionMatchKind.englishPrefix, 100),
         _candidate('blue_archive', CompletionMatchKind.aliasExact, 900000),
         _candidate('azure_eyes', CompletionMatchKind.chineseExact, 999999),
         _candidate('blue_bow', CompletionMatchKind.englishPrefix, 500),
+        _candidate('blue_hair', CompletionMatchKind.chineseContains, 9),
       ], query: query);
 
       expect(results.map((candidate) => candidate.canonicalTag), [
+        'blue_hair',
         'blue_bow',
         'blue_eyes',
         'blue_archive',
         'azure_eyes',
-        'blue_hair',
       ]);
-      expect(results.last.isExisting, isTrue);
+      expect(results.first.isExisting, isTrue);
     },
   );
+
+  test('a written tag matched loosely keeps its place among the others', () {
+    final results = CompletionRanker.mergeAndSort([
+      _candidate('blue_bow', CompletionMatchKind.englishPrefix, 500),
+      _candidate('blue_hair', CompletionMatchKind.pinyin, 999999),
+      _candidate('blush', CompletionMatchKind.pinyin, 10),
+      _candidate('bluesy', CompletionMatchKind.approximate, 999999),
+    ], query: query);
+
+    expect(results.map((candidate) => candidate.canonicalTag), [
+      'blue_bow',
+      'blue_hair',
+      'blush',
+      'bluesy',
+    ]);
+    expect(results[1].isExisting, isTrue);
+  });
+
+  test('related suggestions keep written tags last', () {
+    final results = CompletionRanker.mergeAndSort([
+      _candidate('blue_hair', CompletionMatchKind.related, 999999),
+      _candidate('blue_eyes', CompletionMatchKind.related, 100),
+    ], query: query.copyWith(relatedTag: 'blue', token: ''));
+
+    expect(results.map((candidate) => candidate.canonicalTag), [
+      'blue_eyes',
+      'blue_hair',
+    ]);
+  });
 }
 
 CompletionCandidate _candidate(
