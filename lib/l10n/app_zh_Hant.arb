@@ -1827,6 +1827,7 @@
   "onlineGallery_aiTagPromptQuery": "AI Prompt 搜尋（可搜尋 artist: 等 Prompt 原文）",
   "onlineGallery_sourceQuickTagCloud": "法典圖鑑",
   "onlineGallery_codexSearchHint": "搜尋標題、提示詞、備註、分類或貢獻者",
+  "onlineGallery_codexSearchHintShort": "搜尋法典",
   "onlineGallery_codexLabel": "法典",
   "onlineGallery_codexSelect": "選擇法典",
   "onlineGallery_codexAll": "全部法典",

@@ -4200,6 +4200,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Search titles, prompts, notes, categories, or contributors';
 
   @override
+  String get onlineGallery_codexSearchHintShort => 'Search the codex';
+
+  @override
   String get onlineGallery_codexLabel => 'Codex';
 
   @override

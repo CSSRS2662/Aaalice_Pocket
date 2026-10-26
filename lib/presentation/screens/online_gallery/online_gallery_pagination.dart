@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/utils/localization_extension.dart';
 import '../../providers/online_gallery_provider.dart';
+import '../../widgets/common/one_line_field_width.dart';
 import '../../widgets/common/themed_input.dart';
 import '../../widgets/gallery/gallery_sidebar.dart';
 import 'online_gallery_screen_controller.dart';
@@ -198,8 +199,8 @@ class OnlineGalleryPagination extends StatelessWidget {
   }
 
   Widget _buildPageInput(BuildContext context, ThemeData theme) {
-    return SizedBox(
-      width: 80,
+    return ContentWidthField(
+      minWidth: 80,
       child: ThemedInput(
         controller: controller.pageController,
         focusNode: controller.pageFocusNode,

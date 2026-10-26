@@ -6,7 +6,9 @@ import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../../core/utils/nai_resolution_adapter.dart';
 import '../../../../data/models/image/resolution_preset.dart';
+import '../../../adaptive/interaction_policy.dart';
 import '../../../widgets/common/app_toast.dart';
+import '../../../widgets/common/one_line_field_width.dart';
 import '../../../widgets/common/themed_dropdown.dart';
 import 'saved_resolution_presets.dart';
 
@@ -312,6 +314,8 @@ class _SizeSelectorState extends State<SizeSelector> {
     }
   }
 
+  static const TextStyle _dimensionStyle = TextStyle(fontSize: 13);
+
   Widget _buildDimensionField({
     required TextEditingController controller,
     required FocusNode focusNode,
@@ -322,7 +326,7 @@ class _SizeSelectorState extends State<SizeSelector> {
       focusNode: focusNode,
       keyboardType: TextInputType.number,
       labelText: label,
-      style: const TextStyle(fontSize: 13),
+      style: _dimensionStyle,
       onChanged: (_) => _onManualSizeChanged(),
     );
   }
@@ -386,36 +390,80 @@ class _SizeSelectorState extends State<SizeSelector> {
         _selectedPresetId == 'custom' ||
         _findSavedPresetById(_selectedPresetId ?? '') != null;
 
-    Widget fieldsAndSwap() => Row(
-      children: [
-        Expanded(
-          child: _buildDimensionField(
-            controller: _widthController,
-            focusNode: _widthFocusNode,
-            label: l10n.resolution_width,
+    Widget fieldsAndSwap() {
+      final widthField = _buildDimensionField(
+        controller: _widthController,
+        focusNode: _widthFocusNode,
+        label: l10n.resolution_width,
+      );
+      final heightField = _buildDimensionField(
+        controller: _heightController,
+        focusNode: _heightFocusNode,
+        label: l10n.resolution_height,
+      );
+      final times = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Text(
+          '×',
+          style: TextStyle(
+            fontSize: 16,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Text(
-            '×',
-            style: TextStyle(
-              fontSize: 16,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-          ),
-        ),
-        Expanded(
-          child: _buildDimensionField(
-            controller: _heightController,
-            focusNode: _heightFocusNode,
-            label: l10n.resolution_height,
-          ),
-        ),
-        const SizedBox(width: 4),
-        _buildSwapButton(context),
-      ],
-    );
+      );
+      // Four digits must show whole; with large text two fields side by
+      // side get too narrow, so they stack instead of scrolling.
+      final fieldNeed = oneLineFieldWidth(
+        context,
+        samples: const ['0000'],
+        style: _dimensionStyle,
+        horizontalPadding: 24,
+      );
+      // The sign between the fields grows with the text as well.
+      final timesWidth = oneLineFieldWidth(
+        context,
+        samples: const ['×'],
+        style: const TextStyle(fontSize: 16),
+        horizontalPadding: 12,
+      );
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final perField =
+              (constraints.maxWidth -
+                  context.interactionPolicy.minimumControlExtent -
+                  4 -
+                  timesWidth) /
+              2;
+          if (!constraints.hasBoundedWidth || perField >= fieldNeed) {
+            return Row(
+              children: [
+                Expanded(child: widthField),
+                times,
+                Expanded(child: heightField),
+                const SizedBox(width: 4),
+                _buildSwapButton(context),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    widthField,
+                    const SizedBox(height: 8),
+                    heightField,
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              _buildSwapButton(context),
+            ],
+          );
+        },
+      );
+    }
 
     if (!customMode) return fieldsAndSwap();
 

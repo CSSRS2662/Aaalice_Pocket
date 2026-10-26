@@ -4014,6 +4014,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineGallery_codexSearchHint => '搜索标题、提示词、备注、分类或贡献者';
 
   @override
+  String get onlineGallery_codexSearchHintShort => '搜索法典';
+
+  @override
   String get onlineGallery_codexLabel => '法典';
 
   @override
@@ -20049,6 +20052,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onlineGallery_codexSearchHint => '搜尋標題、提示詞、備註、分類或貢獻者';
+
+  @override
+  String get onlineGallery_codexSearchHintShort => '搜尋法典';
 
   @override
   String get onlineGallery_codexLabel => '法典';

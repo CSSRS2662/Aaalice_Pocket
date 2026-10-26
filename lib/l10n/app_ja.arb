@@ -1883,6 +1883,7 @@
   "onlineGallery_aiTagPromptQuery": "AI Prompt 検索（artist: などの Prompt 原文を検索）",
   "onlineGallery_sourceQuickTagCloud": "法典図鑑",
   "onlineGallery_codexSearchHint": "タイトル、プロンプト、メモ、カテゴリ、投稿者を検索",
+  "onlineGallery_codexSearchHintShort": "法典を検索",
   "onlineGallery_codexLabel": "法典",
   "onlineGallery_codexSelect": "法典を選択",
   "onlineGallery_codexAll": "すべての法典",
@@ -5576,7 +5577,7 @@
   "detail_fileSize": "ファイルサイズ",
   "detail_noContent": "(コンテンツなし)",
   "detail_savePreset": "プリセットの保存",
-  "detail_copyLabel": "{label} をコピーします",
+  "detail_copyLabel": "{label}をコピー",
   "@detail_copyLabel": {
     "placeholders": {
       "label": {}
@@ -5601,7 +5602,7 @@
   "detail_promptCategoryUnavailable": "このカテゴリは画像に記録されていません",
   "detail_copyPromptDefaultHint": "主体とキャラクターは既定で選択され、品質タグと固定タグは除外されます。",
   "detail_copyCharacterPrompt": "キャラクタープロンプトをコピー",
-  "detail_copyAllVibeData": "すべての Vibe データをコピーします",
+  "detail_copyAllVibeData": "すべての Vibe データをコピー",
   "detail_saveToVibeLibrary": "バイブライブラリに保存",
   "pagination_firstPage": "最初のページ",
   "pagination_previousPage": "前のページ",

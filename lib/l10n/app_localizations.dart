@@ -7441,6 +7441,12 @@ abstract class AppLocalizations {
   /// **'Search titles, prompts, notes, categories, or contributors'**
   String get onlineGallery_codexSearchHint;
 
+  /// No description provided for @onlineGallery_codexSearchHintShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the codex'**
+  String get onlineGallery_codexSearchHintShort;
+
   /// No description provided for @onlineGallery_codexLabel.
   ///
   /// In en, this message translates to:

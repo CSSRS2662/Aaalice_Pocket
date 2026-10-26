@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/utils/localization_extension.dart';
 import '../../../data/services/dlss/dlss_options.dart';
+import '../../widgets/common/one_line_field_width.dart';
 import 'dlss_parameter_row.dart';
 
 class DlssParameterSlider extends StatefulWidget {
@@ -42,7 +43,16 @@ class _DlssParameterSliderState extends State<DlssParameterSlider> {
     _focus.addListener(_onFocusChanged);
   }
 
-  String get _formattedValue => widget.value.toString();
+  String get _formattedValue => _format(widget.value);
+
+  /// Two decimals at most, without trailing zeros: slider steps of 0.05
+  /// come back as 0.6500000000000001 and would not fit the field.
+  static String _format(double value) {
+    final fixed = value.toStringAsFixed(2);
+    if (!fixed.contains('.')) return fixed;
+    final trimmed = fixed.replaceFirst(RegExp(r'0+$'), '');
+    return trimmed.endsWith('.') ? '${trimmed}0' : trimmed;
+  }
 
   @override
   void didUpdateWidget(covariant DlssParameterSlider oldWidget) {
@@ -93,6 +103,18 @@ class _DlssParameterSliderState extends State<DlssParameterSlider> {
             description: widget.description,
             valueLabel: widget.valueLabel,
             error: _invalid ? context.l10n.dlss_invalidNumber : null,
+            trailingWidth: oneLineFieldWidth(
+              context,
+              samples: [
+                _formattedValue,
+                _format(widget.minimum),
+                _format(maximum),
+              ],
+              // Content padding on both sides and what the outlined
+              // decoration keeps beside it.
+              horizontalPadding: 32,
+              minWidth: 96,
+            ),
             trailing: Semantics(
               label: widget.label,
               child: TextField(

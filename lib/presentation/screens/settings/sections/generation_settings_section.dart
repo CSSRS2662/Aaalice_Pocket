@@ -13,6 +13,7 @@ import '../../../providers/generation/generation_settings_notifiers.dart';
 import '../../../providers/notification_settings_provider.dart';
 import '../../../themes/core/input_surface_style.dart';
 import '../../../widgets/common/app_toast.dart';
+import '../../../widgets/common/one_line_field_width.dart';
 import '../../../widgets/common/themed_input.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/settings_page_layout.dart';
@@ -428,8 +429,8 @@ class _GenerationSettingsSectionState
     final valueEditor = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          width: 64,
+        ContentWidthField(
+          minWidth: 64,
           child: ThemedInput(
             controller: controller,
             keyboardType: keyboardType,

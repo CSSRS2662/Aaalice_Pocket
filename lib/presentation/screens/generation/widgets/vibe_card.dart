@@ -198,7 +198,7 @@ class _VibeCardState extends ConsumerState<VibeCard> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        status,
+        Flexible(child: status),
         const Spacer(),
         _buildEnabledSwitch(context),
         const SizedBox(width: 4),
@@ -350,7 +350,7 @@ class _VibeCardState extends ConsumerState<VibeCard> {
         icon: Icons.broken_image_outlined,
         text: l10n.vibe_statusSourceImageRequired,
         color: theme.colorScheme.error,
-        maxWidth: 130,
+        maxWidth: _statusMaxWidth,
       );
     } else if (supportsEncoding && isEncoded && !needsEncoding) {
       // 已编码状态（编码与当前模型匹配）
@@ -359,7 +359,7 @@ class _VibeCardState extends ConsumerState<VibeCard> {
         icon: Icons.check_circle,
         text: l10n.vibe_statusEncoded,
         color: Colors.green,
-        maxWidth: 80,
+        maxWidth: _statusMaxWidth,
       );
     } else if (needsEncoding) {
       // 需要编码状态 - 可点击按钮
@@ -387,7 +387,7 @@ class _VibeCardState extends ConsumerState<VibeCard> {
                       ? l10n.vibe_statusNeedsReencode
                       : l10n.vibe_statusPendingEncode),
             color: Colors.orange,
-            maxWidth: 130,
+            maxWidth: _statusMaxWidth,
           ),
         ),
       );
@@ -398,10 +398,14 @@ class _VibeCardState extends ConsumerState<VibeCard> {
         icon: Icons.file_present,
         text: context.vibeSourceTypeLabel(widget.vibe.sourceType),
         color: Colors.blue,
-        maxWidth: 80,
+        maxWidth: _statusMaxWidth,
       );
     }
   }
+
+  /// Status labels take the room the header leaves, up to this, so a longer
+  /// translation shows whole when it fits.
+  static const double _statusMaxWidth = 220;
 
   /// 构建状态标签
   Widget _buildStatusChip({

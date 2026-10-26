@@ -8,6 +8,7 @@ import '../../../../core/utils/localization_extension.dart';
 import '../../../../data/models/settings/proxy_settings.dart';
 import '../../../../core/network/proxy_settings_provider.dart';
 import '../../../widgets/common/app_toast.dart';
+import '../../../widgets/common/one_line_field_width.dart';
 import '../../../widgets/common/themed_input.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/settings_page_layout.dart';
@@ -180,7 +181,16 @@ class NetworkSettingsSectionState
                           onSubmitted: (_) => _saveManualProxy(),
                         );
 
-                        if (constraints.maxWidth < 440) {
+                        // The port keeps a quarter of the row; with large
+                        // text that is too narrow for five digits, so the
+                        // fields stack instead of the number scrolling.
+                        final portWidth = oneLineFieldWidth(
+                          context,
+                          samples: const ['65535'],
+                          horizontalPadding: 32,
+                        );
+                        if (constraints.maxWidth < 440 ||
+                            (constraints.maxWidth - 12) / 4 < portWidth) {
                           return Column(
                             children: [
                               hostInput,

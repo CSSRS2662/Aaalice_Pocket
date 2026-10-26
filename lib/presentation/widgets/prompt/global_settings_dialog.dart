@@ -15,6 +15,7 @@ import '../../widgets/common/themed_divider.dart';
 import '../../widgets/common/app_toast.dart';
 import 'package:nai_launcher/presentation/widgets/common/themed_form_input.dart';
 import 'package:nai_launcher/presentation/widgets/common/themed_input.dart';
+import 'package:nai_launcher/presentation/widgets/common/one_line_field_width.dart';
 
 /// 人数类别配置对话框
 ///
@@ -296,8 +297,8 @@ class _GlobalSettingsDialogState extends ConsumerState<GlobalSettingsDialog> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      SizedBox(
-                        width: 72,
+                      ContentWidthField(
+                        minWidth: 72,
                         child: ThemedFormInput(
                           initialValue: '${category.weight}',
                           keyboardType: TextInputType.number,
@@ -393,8 +394,8 @@ class _GlobalSettingsDialogState extends ConsumerState<GlobalSettingsDialog> {
         ),
       ],
     );
-    final weightField = SizedBox(
-      width: 76,
+    final weightField = ContentWidthField(
+      minWidth: 76,
       child: ThemedFormInput(
         key: ValueKey(option.id),
         initialValue: '${option.weight}',

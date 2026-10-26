@@ -24,7 +24,9 @@ class InverseActionBar extends StatelessWidget {
     final stacked = MediaQuery.textScalerOf(context).scale(1) >= 2;
     final text = Text(
       message,
-      maxLines: stacked ? 4 : 2,
+      // A notice is one sentence; three lines keep a longer translation
+      // whole beside the action on a narrow phone.
+      maxLines: stacked ? 4 : 3,
       overflow: TextOverflow.ellipsis,
       style: theme.textTheme.bodyMedium?.copyWith(
         color: colors.onInverseSurface,

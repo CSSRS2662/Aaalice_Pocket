@@ -453,9 +453,12 @@ class _EntryAddDialogState extends ConsumerState<EntryAddDialog> {
     ),
     child: PromptEditorControlRow(
       sessionId: _modeId,
+      // The help names the syntax and gives an example; one line would cut
+      // the example off on a phone. Very large text keeps one line so the
+      // footer still fits above the keyboard.
       leading: Text(
         context.l10n.tagLibrary_characterNegativeSyntaxHelp,
-        maxLines: 1,
+        maxLines: MediaQuery.textScalerOf(context).scale(1) >= 2 ? 1 : 3,
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.62),

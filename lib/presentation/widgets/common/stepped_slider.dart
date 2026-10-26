@@ -51,60 +51,81 @@ class SteppedSlider extends StatelessWidget {
     final l10n = context.l10n;
     final onChanged = this.onChanged;
     final buttonExtent = context.interactionPolicy.minimumControlExtent;
-    return LayoutBuilder(
-      builder: (context, constraints) => Row(
-        children: [
-          _StepButton(
-            key: _key('decrease'),
-            icon: Icons.remove_rounded,
-            label: l10n.common_decrease,
-            onStep: onChanged != null && current > min
-                ? () => onChanged(_snap(value - step))
-                : null,
-          ),
-          Expanded(
-            child: ThemedSlider(
-              value: current,
-              min: min,
-              max: max,
-              divisions: divisions,
-              onChanged: onChanged,
-            ),
-          ),
-          _StepButton(
-            key: _key('increase'),
-            icon: Icons.add_rounded,
-            label: l10n.common_increase,
-            onStep: onChanged != null && current < max
-                ? () => onChanged(_snap(value + step))
-                : null,
-          ),
-          const SizedBox(width: 4),
-          // Large text widens the field; keep at least half the row for the
-          // track so the row never overflows.
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: constraints.hasBoundedWidth
-                  ? ((constraints.maxWidth - buttonExtent * 2 - 4) / 2)
-                        .clamp(0, double.infinity)
-                        .toDouble()
-                  : double.infinity,
-            ),
-            child: EditableDoubleField(
-              key: _key('value'),
-              value: current,
-              min: min,
-              max: max,
-              decimals: decimals,
-              width: 56,
-              enabled: onChanged != null,
-              onChanged: (typed) => onChanged?.call(_snap(typed)),
-            ),
-          ),
-        ],
+    final decrease = _StepButton(
+      key: _key('decrease'),
+      icon: Icons.remove_rounded,
+      label: l10n.common_decrease,
+      onStep: onChanged != null && current > min
+          ? () => onChanged(_snap(value - step))
+          : null,
+    );
+    final increase = _StepButton(
+      key: _key('increase'),
+      icon: Icons.add_rounded,
+      label: l10n.common_increase,
+      onStep: onChanged != null && current < max
+          ? () => onChanged(_snap(value + step))
+          : null,
+    );
+    final track = Expanded(
+      child: ThemedSlider(
+        value: current,
+        min: min,
+        max: max,
+        divisions: divisions,
+        onChanged: onChanged,
       ),
     );
+    final field = EditableDoubleField(
+      key: _key('value'),
+      value: current,
+      min: min,
+      max: max,
+      decimals: decimals,
+      width: _fieldWidth,
+      enabled: onChanged != null,
+      onChanged: (typed) => onChanged?.call(_snap(typed)),
+    );
+    final fieldWidth = EditableDoubleField.widthFor(
+      context,
+      value: current,
+      min: min,
+      max: max,
+      decimals: decimals,
+      width: _fieldWidth,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // The track keeps at least half of what the buttons leave. When large
+        // text makes the field wider than that, it moves under the track
+        // instead of being squeezed until the number scrolls.
+        final besideTrack =
+            !constraints.hasBoundedWidth ||
+            fieldWidth <= (constraints.maxWidth - buttonExtent * 2 - 4) / 2;
+        if (besideTrack) {
+          return Row(
+            children: [
+              decrease,
+              track,
+              increase,
+              const SizedBox(width: 4),
+              field,
+            ],
+          );
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Row(children: [decrease, track, increase]),
+            field,
+          ],
+        );
+      },
+    );
   }
+
+  static const double _fieldWidth = 56;
 }
 
 /// Steps once per tap and repeats while held, faster the longer it is held.

@@ -89,29 +89,20 @@ class FocusedInpaintBar extends StatelessWidget {
                 ),
               ],
             ),
-            Row(
-              children: [
-                Flexible(
-                  flex: 2,
-                  child: Text(
-                    l10n.editor_focusMinimumContextArea(minimumContext.round()),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(color: muted),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Slider(
-                    value: minimumContext.clamp(16, 192),
-                    min: 16,
-                    max: 192,
-                    divisions: 176,
-                    label: '${minimumContext.round()}',
-                    onChanged: onMinimumContextChanged,
-                  ),
-                ),
-              ],
+            _MinimumContextRow(
+              label: l10n.editor_focusMinimumContextArea(
+                minimumContext.round(),
+              ),
+              widestLabel: l10n.editor_focusMinimumContextArea(192),
+              style: theme.textTheme.labelMedium?.copyWith(color: muted),
+              slider: Slider(
+                value: minimumContext.clamp(16, 192),
+                min: 16,
+                max: 192,
+                divisions: 176,
+                label: '${minimumContext.round()}',
+                onChanged: onMinimumContextChanged,
+              ),
             ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,6 +170,65 @@ class _StepBadge extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The minimum context label and its slider. The label keeps the width of
+/// its widest value so the track does not move while dragging, and goes
+/// over the track when the bar is too narrow for both.
+class _MinimumContextRow extends StatelessWidget {
+  const _MinimumContextRow({
+    required this.label,
+    required this.widestLabel,
+    required this.style,
+    required this.slider,
+  });
+
+  final String label;
+  final String widestLabel;
+  final TextStyle? style;
+  final Widget slider;
+
+  static const double _minTrack = 120;
+
+  @override
+  Widget build(BuildContext context) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: widestLabel,
+        style: DefaultTextStyle.of(context).style.merge(style),
+      ),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final labelWidth = painter.width.ceilToDouble();
+    painter.dispose();
+    final text = Text(label, maxLines: 1, style: style);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= labelWidth + _minTrack) {
+          return Row(
+            children: [
+              SizedBox(width: labelWidth, child: text),
+              Expanded(child: slider),
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: style,
+            ),
+            slider,
+          ],
+        );
+      },
     );
   }
 }

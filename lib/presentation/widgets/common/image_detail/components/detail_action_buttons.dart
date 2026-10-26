@@ -57,49 +57,48 @@ class DetailActionButtons extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 第一行：复制按钮
+          // The copy menu takes a row of its own so its label shows whole
+          // on a phone; the seed and preset actions share the next row.
+          SizedBox(
+            width: double.infinity,
+            child: PromptCopySplitButton(
+              primaryLabel: context.l10n.onlineGallery_copyAllTags,
+              menuTooltip: context.l10n.common_copy,
+              menuButtonKey: const ValueKey('detail-copy-menu'),
+              onPressed: () => _copyAllTags(context),
+              menuChildren: [
+                if (onPickTags case final pickTags?)
+                  MenuItemButton(
+                    key: const ValueKey('detail-pick-tags'),
+                    onPressed: pickTags,
+                    leadingIcon: const Icon(Icons.checklist_rounded, size: 18),
+                    child: Text(context.l10n.detail_pickTags),
+                  ),
+                MenuItemButton(
+                  onPressed: () => _customCopyTags(context),
+                  leadingIcon: const Icon(Icons.tune, size: 18),
+                  child: Text(context.l10n.onlineGallery_customCopyTags),
+                ),
+                MenuItemButton(
+                  onPressed: () => _copyPositivePrompt(context),
+                  leadingIcon: const Icon(Icons.shield_outlined, size: 18),
+                  child: Text(
+                    context.l10n.detail_copyLabel(
+                      context.l10n.prompt_positivePrompt,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: PromptCopySplitButton(
-                  primaryLabel: context.l10n.onlineGallery_copyAllTags,
-                  menuTooltip: context.l10n.common_copy,
-                  menuButtonKey: const ValueKey('detail-copy-menu'),
-                  onPressed: () => _copyAllTags(context),
-                  menuChildren: [
-                    if (onPickTags case final pickTags?)
-                      MenuItemButton(
-                        key: const ValueKey('detail-pick-tags'),
-                        onPressed: pickTags,
-                        leadingIcon: const Icon(
-                          Icons.checklist_rounded,
-                          size: 18,
-                        ),
-                        child: Text(context.l10n.detail_pickTags),
-                      ),
-                    MenuItemButton(
-                      onPressed: () => _customCopyTags(context),
-                      leadingIcon: const Icon(Icons.tune, size: 18),
-                      child: Text(context.l10n.onlineGallery_customCopyTags),
-                    ),
-                    MenuItemButton(
-                      onPressed: () => _copyPositivePrompt(context),
-                      leadingIcon: const Icon(Icons.shield_outlined, size: 18),
-                      child: Text(
-                        context.l10n.detail_copyLabel(
-                          context.l10n.prompt_positivePrompt,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (metadata.seed != null)
+              if (metadata.seed != null) ...[
                 Expanded(
                   child: _ActionButton(
                     icon: Icons.tag,
-                    label: context.l10n.detail_copyLabel('Seed'),
+                    label: context.l10n.localGallery_copySeed,
                     onPressed: () {
                       Clipboard.setData(
                         ClipboardData(text: metadata.seed.toString()),
@@ -111,12 +110,8 @@ class DetailActionButtons extends StatelessWidget {
                     },
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 第二行：保存按钮
-          Row(
-            children: [
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: _ActionButton(
                   icon: Icons.bookmark_add,

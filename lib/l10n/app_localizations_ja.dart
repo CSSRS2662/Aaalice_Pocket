@@ -4089,6 +4089,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onlineGallery_codexSearchHint => 'タイトル、プロンプト、メモ、カテゴリ、投稿者を検索';
 
   @override
+  String get onlineGallery_codexSearchHintShort => '法典を検索';
+
+  @override
   String get onlineGallery_codexLabel => '法典';
 
   @override
@@ -11279,7 +11282,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String detail_copyLabel(Object label) {
-    return '$label をコピーします';
+    return '$labelをコピー';
   }
 
   @override
@@ -11340,7 +11343,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get detail_copyCharacterPrompt => 'キャラクタープロンプトをコピー';
 
   @override
-  String get detail_copyAllVibeData => 'すべての Vibe データをコピーします';
+  String get detail_copyAllVibeData => 'すべての Vibe データをコピー';
 
   @override
   String get detail_saveToVibeLibrary => 'バイブライブラリに保存';

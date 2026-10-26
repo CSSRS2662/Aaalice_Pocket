@@ -64,7 +64,7 @@ class OnlineGalleryToolbarSearch {
       );
     }
     if (activeSource == GallerySourceId.quickTagCloud) {
-      return _buildCodexSearchField(theme);
+      return _buildCodexSearchField(theme, compact: true);
     }
     if (activeSource == GallerySourceId.aiTag) {
       final controller = isPopular
@@ -86,6 +86,7 @@ class OnlineGalleryToolbarSearch {
     }
     return _buildSearchField(
       theme,
+      compact: true,
       controller: isPopular
           ? _controller.popularSearchController
           : _controller.searchController,
@@ -307,7 +308,9 @@ class OnlineGalleryToolbarSearch {
     );
   }
 
-  Widget _buildCodexSearchField(ThemeData theme) {
+  /// [compact] is the phone row: a shorter hint, and the tag count only
+  /// once something is typed, so the hint is not cut to a few characters.
+  Widget _buildCodexSearchField(ThemeData theme, {bool compact = false}) {
     final fieldHeight = gallerySearchFieldHeightFor(context);
     return InputSurfaceContainer(
       height: fieldHeight,
@@ -322,7 +325,9 @@ class OnlineGalleryToolbarSearch {
           textAlignVertical: TextAlignVertical.center,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
-            hintText: context.l10n.onlineGallery_codexSearchHint,
+            hintText: compact
+                ? context.l10n.onlineGallery_codexSearchHintShort
+                : context.l10n.onlineGallery_codexSearchHint,
             filled: false,
             hintStyle: TextStyle(
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
@@ -333,14 +338,16 @@ class OnlineGalleryToolbarSearch {
               size: 18,
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
-            suffixIcon: _buildTagCountSuffix(
-              theme,
-              _controller.searchController,
-              onClear: () {
-                _controller.searchController.clear();
-                _galleryNotifier.search('');
-              },
-            ),
+            suffixIcon: compact && value.text.isEmpty
+                ? null
+                : _buildTagCountSuffix(
+                    theme,
+                    _controller.searchController,
+                    onClear: () {
+                      _controller.searchController.clear();
+                      _galleryNotifier.search('');
+                    },
+                  ),
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
@@ -404,11 +411,14 @@ class OnlineGalleryToolbarSearch {
     );
   }
 
+  /// [compact] is the phone row: the tag count appears once something is
+  /// typed, so an empty field shows its whole hint.
   Widget _buildSearchField(
     ThemeData theme, {
     required TextEditingController controller,
     required FocusNode focusNode,
     required ValueChanged<String> onSubmitted,
+    bool compact = false,
   }) {
     final fieldHeight = gallerySearchFieldHeightFor(context);
     return AutocompleteWrapper(
@@ -450,15 +460,19 @@ class OnlineGalleryToolbarSearch {
                   alpha: 0.6,
                 ),
               ),
-              suffixIcon: _buildTagCountSuffix(
-                theme,
-                controller,
-                onClear: () {
-                  controller.clear();
-                  onSubmitted('');
-                },
-              ),
-              suffixIconConstraints: const BoxConstraints(minWidth: 64),
+              suffixIcon: compact && controller.text.isEmpty
+                  ? null
+                  : _buildTagCountSuffix(
+                      theme,
+                      controller,
+                      onClear: () {
+                        controller.clear();
+                        onSubmitted('');
+                      },
+                    ),
+              suffixIconConstraints: compact && controller.text.isEmpty
+                  ? null
+                  : const BoxConstraints(minWidth: 64),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,

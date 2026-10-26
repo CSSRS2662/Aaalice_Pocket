@@ -289,7 +289,7 @@ class _FixedTagEditDialogState extends ConsumerState<FixedTagEditDialog> {
       sessionId: _modeId,
       leading: Text(
         context.l10n.fixedTags_syntaxHelp,
-        maxLines: 1,
+        maxLines: MediaQuery.textScalerOf(context).scale(1) >= 2 ? 1 : 3,
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.62),

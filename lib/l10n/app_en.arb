@@ -1896,6 +1896,7 @@
   "onlineGallery_aiTagPromptQuery": "AI Prompt search (search raw Prompt text such as artist:)",
   "onlineGallery_sourceQuickTagCloud": "Codex Gallery",
   "onlineGallery_codexSearchHint": "Search titles, prompts, notes, categories, or contributors",
+  "onlineGallery_codexSearchHintShort": "Search the codex",
   "onlineGallery_codexLabel": "Codex",
   "onlineGallery_codexSelect": "Select codex",
   "onlineGallery_codexAll": "All codexes",

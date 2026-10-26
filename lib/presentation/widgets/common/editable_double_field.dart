@@ -3,7 +3,10 @@ import 'package:flutter/services.dart';
 
 import '../../adaptive/interaction_policy.dart';
 import '../../themes/core/input_surface_style.dart';
+import 'one_line_field_width.dart';
 
+/// A compact field for typing a number, sized to its values so the number
+/// never scrolls sideways under the finger.
 class EditableDoubleField extends StatefulWidget {
   const EditableDoubleField({
     super.key,
@@ -25,6 +28,39 @@ class EditableDoubleField extends StatefulWidget {
   final double width;
   final TextStyle? textStyle;
   final bool enabled;
+
+  /// Horizontal content padding of the field, both sides together.
+  static const double _horizontalPadding = 16;
+
+  /// What the outlined decoration takes beside the padding.
+  static const double _decorationRoom = 8;
+
+  /// The width the field takes for [value] and its bounds: at least
+  /// [width], and wide enough for the widest of the three when formatted.
+  /// Callers that share a row with the field use it to decide whether the
+  /// field still fits beside the rest.
+  static double widthFor(
+    BuildContext context, {
+    required double value,
+    double? min,
+    double? max,
+    int decimals = 2,
+    double width = 64,
+    TextStyle? textStyle,
+  }) {
+    String format(double number) => number.toStringAsFixed(decimals);
+    return oneLineFieldWidth(
+      context,
+      samples: [
+        format(value),
+        if (min != null && min.isFinite) format(min),
+        if (max != null && max.isFinite) format(max),
+      ],
+      style: textStyle,
+      horizontalPadding: _horizontalPadding + _decorationRoom,
+      minWidth: width,
+    );
+  }
 
   @override
   State<EditableDoubleField> createState() => _EditableDoubleFieldState();
@@ -91,23 +127,25 @@ class _EditableDoubleFieldState extends State<EditableDoubleField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textStyle = widget.textStyle ?? theme.textTheme.bodyLarge;
-    final textPainter = TextPainter(
-      text: TextSpan(text: _format(widget.value), style: textStyle),
-      textScaler: MediaQuery.textScalerOf(context),
-      textDirection: Directionality.of(context),
-      maxLines: 1,
-    )..layout();
-    final responsiveWidth = (textPainter.width + 16)
-        .clamp(widget.width, double.infinity)
-        .toDouble();
+    // The estimate keeps the width steady while the value moves; the field's
+    // own intrinsic width covers what the estimate cannot see (the
+    // decoration, the caret, a longer number being typed).
+    final minWidth = EditableDoubleField.widthFor(
+      context,
+      value: widget.value,
+      min: widget.min,
+      max: widget.max,
+      decimals: widget.decimals,
+      width: widget.width,
+      textStyle: widget.textStyle,
+    );
 
-    return SizedBox(
-      width: responsiveWidth,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minHeight: context.interactionPolicy.minimumControlExtent,
-        ),
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minWidth: minWidth,
+        minHeight: context.interactionPolicy.minimumControlExtent,
+      ),
+      child: IntrinsicWidth(
         child: TextField(
           controller: _controller,
           focusNode: _focusNode,

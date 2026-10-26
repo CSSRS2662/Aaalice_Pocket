@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../../../core/utils/localization_extension.dart';
@@ -239,16 +241,14 @@ class _SizePresetChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // The chips scroll sideways; the short label keeps its full width.
     return Row(
       children: [
-        Flexible(
-          child: Text(
-            context.l10n.editor_size,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+        Text(
+          context.l10n.editor_size,
+          maxLines: 1,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(width: 8),
@@ -325,42 +325,94 @@ class _InlineSlider extends StatelessWidget {
   final String suffix;
   final ValueChanged<double>? onChanged;
 
+  /// The narrowest track still worth dragging.
+  static const double _minTrack = 96;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final style = theme.textTheme.labelMedium?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
-    return Row(
-      children: [
-        Flexible(
-          flex: 2,
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: style,
-          ),
-        ),
-        Expanded(
-          flex: 5,
-          child: Slider(
-            value: value.clamp(0, max),
-            max: max,
-            label: label,
-            onChanged: onChanged,
-          ),
-        ),
-        Text(
-          '${value.round()}$suffix',
-          style: style?.copyWith(
-            color: theme.colorScheme.onSurface,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-      ],
+    final valueStyle = style?.copyWith(
+      color: theme.colorScheme.onSurface,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    // The readout keeps the width of its largest value, so the track does
+    // not shift under the finger as the number gains a digit.
+    final valueWidth = _quickTextWidth(
+      context,
+      '${max.round()}$suffix',
+      valueStyle,
+    );
+    final labelWidth = _quickTextWidth(context, label, style);
+    final labelText = Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+    final valueText = SizedBox(
+      width: valueWidth,
+      child: Text(
+        '${value.round()}$suffix',
+        maxLines: 1,
+        textAlign: TextAlign.end,
+        style: valueStyle,
+      ),
+    );
+    final slider = Expanded(
+      child: Slider(
+        value: value.clamp(0, max),
+        max: max,
+        label: label,
+        onChanged: onChanged,
+      ),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= labelWidth + valueWidth + _minTrack) {
+          return Row(children: [labelText, slider, valueText]);
+        }
+        // Too narrow for a row of three: the name sits over the value
+        // beside the track, rather than being cut to a few letters.
+        final caption = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            labelText,
+            Text('${value.round()}$suffix', maxLines: 1, style: valueStyle),
+          ],
+        );
+        final captionWidth = math.max(labelWidth, valueWidth);
+        return Row(
+          children: [
+            if (constraints.maxWidth >= captionWidth + _minTrack / 2)
+              caption
+            else
+              Flexible(child: caption),
+            slider,
+          ],
+        );
+      },
     );
   }
+}
+
+/// The single-line width of [text] in [style] at the current text scale.
+double _quickTextWidth(BuildContext context, String text, TextStyle? style) {
+  final painter = TextPainter(
+    text: TextSpan(
+      text: text,
+      style: DefaultTextStyle.of(context).style.merge(style),
+    ),
+    textDirection: Directionality.of(context),
+    textScaler: MediaQuery.textScalerOf(context),
+    maxLines: 1,
+  )..layout();
+  final width = painter.width.ceilToDouble();
+  painter.dispose();
+  return width;
 }
 
 class _Hint extends StatelessWidget {
@@ -464,33 +516,52 @@ class _CloneSourceOptions extends StatelessWidget {
       builder: (context, _) {
         final theme = Theme.of(context);
         final picking = tool.isPickingSource;
-        return Row(
-          spacing: 8,
-          children: [
-            Flexible(
-              child: EditorQuickChip(
-                key: const ValueKey('editor-quick-clone-source'),
-                icon: Icons.my_location,
-                label: context.l10n.editor_cloneStampSetSource,
-                selected: picking,
-                onTap: () => tool.setPickingSource(!picking),
-              ),
-            ),
-            Expanded(
-              child: Semantics(
-                liveRegion: true,
-                child: Text(
-                  cloneStampSourceStatus(context, tool),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+        final chip = EditorQuickChip(
+          key: const ValueKey('editor-quick-clone-source'),
+          icon: Icons.my_location,
+          label: context.l10n.editor_cloneStampSetSource,
+          selected: picking,
+          onTap: () => tool.setPickingSource(!picking),
+        );
+        // The chip keeps its whole label; the status takes what is left and
+        // only gives way when the strip is too narrow for both.
+        final chipWidth =
+            _quickTextWidth(
+              context,
+              context.l10n.editor_cloneStampSetSource,
+              theme.textTheme.labelLarge,
+            ) +
+            24 +
+            18 +
+            6;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // Too narrow for the chip and a readable status: the chip wins,
+            // and its selected state still shows that a point is awaited.
+            if (constraints.maxWidth < chipWidth + 72) {
+              return Row(children: [Flexible(child: chip)]);
+            }
+            return Row(
+              spacing: 8,
+              children: [
+                chip,
+                Expanded(
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      cloneStampSourceStatus(context, tool),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );
