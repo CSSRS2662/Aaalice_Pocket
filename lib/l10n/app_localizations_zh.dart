@@ -15225,10 +15225,26 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get stamina_notConsumed => '当前设置不消耗体力';
+  String get stamina_perImage => '每张约占用';
 
   @override
-  String get stamina_nextPercent => '下一个 1% 回充';
+  String stamina_perImageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get stamina_refillRate => '回充速度';
+
+  @override
+  String stamina_refillRateValue(String percent, String count) {
+    return '每天约 $percent%\n约 $count 张';
+  }
+
+  @override
+  String get stamina_extraUsage => '额外配额';
+
+  @override
+  String get stamina_notConsumed => '当前设置不消耗体力';
 
   @override
   String get stamina_timeToFull => '回满（估算）';
@@ -15238,11 +15254,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get stamina_overCap => '超出上限，暂停回充';
-
-  @override
-  String stamina_hoursMinutes(Object hours, Object minutes) {
-    return '$hours 小时 $minutes 分';
-  }
 
   @override
   String stamina_aboutDaysHours(Object days, Object hours) {
@@ -15258,14 +15269,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get stamina_exhaustedNote => '体力已耗尽，V5 生成改按 Anlas 计费；体力自动回充后恢复免费生成。';
 
   @override
-  String get stamina_rateNote => '回充速度随订阅时长不同，约每天 11%–14%，回满时间按此估算。';
+  String get stamina_rateNote =>
+      '张数按当前档位、尺寸、步数与重绘强度下一张图的 Anlas 价格折算：官方按价格扣减体力，默认的标准档 832×1216、23 步约每 1% 17 张。回充速度与回满时间取服务端当前的速度。';
 
   @override
   String get stamina_rulesTitle => '规则';
 
   @override
   String get stamina_ruleConsumes =>
-      '消耗体力：V5，标准尺寸（面积不超过 1024×1024），不超过 28 步，每个请求的第一张。';
+      '消耗体力：V5，面积不超过 1024×1024、不超过 28 步，每个请求的第一张；按这张图的 Anlas 价格扣减，节约档、小尺寸扣得更少。';
 
   @override
   String get stamina_ruleAnlas =>
@@ -31267,10 +31279,26 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get stamina_notConsumed => '目前設定不消耗體力';
+  String get stamina_perImage => '每張約佔用';
 
   @override
-  String get stamina_nextPercent => '下一個 1% 回充';
+  String stamina_perImageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get stamina_refillRate => '回充速度';
+
+  @override
+  String stamina_refillRateValue(String percent, String count) {
+    return '每天約 $percent%\n約 $count 張';
+  }
+
+  @override
+  String get stamina_extraUsage => '額外配額';
+
+  @override
+  String get stamina_notConsumed => '目前設定不消耗體力';
 
   @override
   String get stamina_timeToFull => '回滿（估算）';
@@ -31280,11 +31308,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get stamina_overCap => '超出上限，暫停回充';
-
-  @override
-  String stamina_hoursMinutes(Object hours, Object minutes) {
-    return '$hours 小時 $minutes 分';
-  }
 
   @override
   String stamina_aboutDaysHours(Object days, Object hours) {
@@ -31300,14 +31323,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get stamina_exhaustedNote => '體力已耗盡，V5 生成改按 Anlas 計費；體力自動回充後恢復免費生成。';
 
   @override
-  String get stamina_rateNote => '回充速度隨訂閱時長不同，約每天 11%–14%，回滿時間依此估算。';
+  String get stamina_rateNote =>
+      '張數依目前檔位、尺寸、步數與重繪強度下一張圖的 Anlas 價格換算：官方依價格扣減體力，預設的標準檔 832×1216、23 步約每 1% 17 張。回充速度與回滿時間取伺服器目前的速度。';
 
   @override
   String get stamina_rulesTitle => '規則';
 
   @override
   String get stamina_ruleConsumes =>
-      '消耗體力：V5，標準尺寸（面積不超過 1024×1024），不超過 28 步，每個請求的第一張。';
+      '消耗體力：V5，面積不超過 1024×1024、不超過 28 步，每個請求的第一張；依這張圖的 Anlas 價格扣減，節約檔、小尺寸扣得更少。';
 
   @override
   String get stamina_ruleAnlas =>

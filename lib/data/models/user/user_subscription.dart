@@ -110,8 +110,13 @@ class OpusUsageInfo with _$OpusUsageInfo {
     /// 配额是否已透支
     @Default(false) bool isNegative,
 
-    /// 距下一个 1% 回充的秒数
+    /// 当前回充速度：每回充 1% 需要的秒数。网页端按 86400 / 该值显示
+    /// “每天回充多少”，它不是倒计时（连续请求时保持不变）。
     @Default(0) double timeUntilNextPercent,
+
+    /// 另行购买的额外配额百分比（网页端最多 400%），与 [percent] 一起计入
+    /// 可用量。
+    @Default(0) double purchasedPercent,
   }) = _OpusUsageInfo;
 
   factory OpusUsageInfo.fromJson(Map<String, dynamic> json) =>

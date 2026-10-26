@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/services/anlas_calculator.dart';
 import '../../../core/services/opus_usage_estimator.dart';
 import '../../../core/utils/localization_extension.dart';
-import '../../../data/models/image/image_params.dart';
 import '../../adaptive/adaptive_presenter.dart';
 import '../../adaptive/content_sized_adaptive_form.dart';
 import '../../providers/cost_estimate_provider.dart';
@@ -40,26 +38,19 @@ class OpusStaminaDetails extends ConsumerWidget {
     final colors = theme.colorScheme;
     final level = OpusStaminaLevel.from(usage);
 
-    final billing = ref.watch(
-      generationParamsNotifierProvider.select((params) {
-        final size = resolveGenerationBillingSize(
-          width: params.width,
-          height: params.height,
-          maxEnhance: params.effectiveUpscaledEnhance,
-        );
-        return (area: size.width * size.height, steps: params.steps);
-      }),
-    );
-    final isUpscale = ref.watch(
-      imageWorkflowControllerProvider.select((workflow) => workflow.isUpscale),
+    final params = ref.watch(generationParamsNotifierProvider);
+    final workflow = ref.watch(imageWorkflowControllerProvider);
+    final focusedMask = ref.watch(focusedInpaintMaskRequestSizeProvider);
+    // The limit is charged by the Anlas price of each free image, so the count
+    // follows the effort, size, steps and strength in use.
+    final imageAnlas = opusUsageImageAnlas(
+      params,
+      workflow,
+      focusedMaskGeometry: focusedMask,
     );
     final cost = ref.watch(estimatedCostProvider);
     final balance = ref.watch(anlasBalanceProvider);
-    final consumesStamina =
-        !isUpscale &&
-        !level.exhausted &&
-        billing.steps <= 28 &&
-        billing.area <= AnlasCalculator.opusFreeMaxPixels;
+    final consumesStamina = imageAnlas != null && !level.exhausted;
     final formatter = NumberFormat('#,###');
 
     final stateLabel = level.exhausted
@@ -69,25 +60,45 @@ class OpusStaminaDetails extends ConsumerWidget {
         : level.low
         ? l10n.stamina_stateLow
         : l10n.stamina_stateAvailable;
-    final images = OpusUsageEstimator.estimateImages(
-      percent: level.percent,
-      area: billing.area,
-    );
-    final imagesText = !consumesStamina && !level.exhausted
+    final images = imageAnlas == null
+        ? 0
+        : OpusUsageEstimator.imagesForPercent(
+            level.available,
+            imageAnlas: imageAnlas,
+          );
+    final imagesText = imageAnlas == null && !level.exhausted
         ? l10n.stamina_notConsumed
         : l10n.stamina_imagesValue(formatter.format(images));
-    final nextSeconds = usage.timeUntilNextPercent.round();
-    final nextText = level.percent >= 100
-        ? (level.overflow ? l10n.stamina_overCap : l10n.stamina_full)
-        : l10n.stamina_hoursMinutes(
-            nextSeconds ~/ 3600,
-            (nextSeconds % 3600) ~/ 60,
+    final perImageText = imageAnlas == null
+        ? '--'
+        : l10n.stamina_perImageValue(
+            _percentText(OpusUsageEstimator.percentPerImage(imageAnlas)),
+          );
+    final ratePerDay = OpusUsageEstimator.refillPercentPerDay(
+      usage.timeUntilNextPercent,
+    );
+    final rateText = level.percent > 100
+        ? l10n.stamina_overCap
+        : level.percent == 100
+        ? l10n.stamina_full
+        : ratePerDay <= 0
+        ? '--'
+        : l10n.stamina_refillRateValue(
+            _ratePerDayText(ratePerDay),
+            formatter.format(
+              OpusUsageEstimator.imagesForPercent(
+                ratePerDay,
+                imageAnlas: imageAnlas ?? OpusUsageEstimator.defaultImageAnlas,
+              ),
+            ),
           );
     final toFull = OpusUsageEstimator.timeToFull(
       percent: level.percent,
-      secondsUntilNextPercent: usage.timeUntilNextPercent,
+      secondsPerPercent: usage.timeUntilNextPercent,
     );
-    final fullText = toFull == Duration.zero
+    final fullText = toFull == null
+        ? '--'
+        : toFull == Duration.zero
         ? l10n.stamina_full
         : toFull.inDays > 0
         ? l10n.stamina_aboutDaysHours(toFull.inDays, toFull.inHours % 24)
@@ -142,7 +153,10 @@ class OpusStaminaDetails extends ConsumerWidget {
         _DetailRows(
           rows: [
             (l10n.stamina_estimateImages, imagesText),
-            (l10n.stamina_nextPercent, nextText),
+            (l10n.stamina_perImage, perImageText),
+            if (level.purchased > 0)
+              (l10n.stamina_extraUsage, '+${level.purchased.round()}%'),
+            (l10n.stamina_refillRate, rateText),
             (l10n.stamina_timeToFull, fullText),
           ],
         ),
@@ -235,9 +249,10 @@ class _DetailRows extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Flexible(
+                      // Values form a column; a value on two lines keeps
+                      // both lines in it.
                       child: Text(
                         rows[i].$2,
-                        textAlign: TextAlign.end,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -287,4 +302,20 @@ class _RuleRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A small share of the allowance with enough digits to tell settings apart:
+/// 0.058, 0.12, 1.5.
+String _percentText(double percent) {
+  if (percent >= 1) return percent.toStringAsFixed(1);
+  if (percent >= 0.1) return percent.toStringAsFixed(2);
+  return percent.toStringAsFixed(3);
+}
+
+/// The refill rate to one decimal, as the website shows it: 14.3, 11.
+String _ratePerDayText(double percentPerDay) {
+  final tenths = (percentPerDay * 10).round();
+  return tenths % 10 == 0
+      ? '${tenths ~/ 10}'
+      : (tenths / 10).toStringAsFixed(1);
 }

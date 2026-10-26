@@ -5,6 +5,7 @@ import '../../../core/services/opus_usage_estimator.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../../data/models/image/image_params.dart';
 import '../../providers/cost_estimate_provider.dart';
+import '../../providers/generation/image_workflow_controller.dart';
 import '../../providers/image_generation_provider.dart';
 import '../../providers/subscription_provider.dart';
 
@@ -30,22 +31,17 @@ class OpusUsageChip extends ConsumerWidget {
             : null,
       ),
     );
-    final modelInfo = ref.watch(
-      generationParamsNotifierProvider.select((params) {
-        final billingSize = resolveGenerationBillingSize(
-          width: params.width,
-          height: params.height,
-          maxEnhance: params.effectiveUpscaledEnhance,
-        );
-        return (
-          hasOpusUsageLimit: params.capabilities.hasOpusUsageLimit,
-          area: billingSize.width * billingSize.height,
-        );
-      }),
-    );
-    if (usage == null || !modelInfo.hasOpusUsageLimit) {
+    final params = ref.watch(generationParamsNotifierProvider);
+    if (usage == null || !params.capabilities.hasOpusUsageLimit) {
       return const SizedBox.shrink();
     }
+    final workflow = ref.watch(imageWorkflowControllerProvider);
+    final focusedMask = ref.watch(focusedInpaintMaskRequestSizeProvider);
+    final imageAnlas = opusUsageImageAnlas(
+      params,
+      workflow,
+      focusedMaskGeometry: focusedMask,
+    );
 
     final theme = Theme.of(context);
     final l10n = context.l10n;
@@ -55,16 +51,24 @@ class OpusUsageChip extends ConsumerWidget {
     final accentColor = exhausted
         ? theme.colorScheme.error
         : theme.colorScheme.primary;
-    // 按当前生成尺寸折算：大图一张消耗多份配额，估算张数随之缩减。
-    final estimatedImages = OpusUsageEstimator.estimateImages(
-      percent: percent,
-      area: modelInfo.area,
-    );
+    // The limit is charged by each free image's Anlas price; extra usage
+    // bought counts as well.
+    final available = percent + usage.purchasedPercent.clamp(0, 400);
+    final estimatedImages = imageAnlas == null
+        ? 0
+        : OpusUsageEstimator.imagesForPercent(
+            available,
+            imageAnlas: imageAnlas,
+          );
 
+    // Settings above 1 MP or 28 steps cost Anlas and leave the limit alone.
+    final estimateLine = imageAnlas == null
+        ? l10n.stamina_notConsumed
+        : l10n.generation_opusUsageEstimate(estimatedImages.toString());
     final tooltip = exhausted
         ? l10n.generation_opusUsageExhausted
         : '${l10n.generation_opusUsageRemaining(percent.round().toString())}\n'
-              '${l10n.generation_opusUsageEstimate(estimatedImages.toString())}\n'
+              '$estimateLine\n'
               '${l10n.generation_opusUsageRefill}';
 
     return Tooltip(

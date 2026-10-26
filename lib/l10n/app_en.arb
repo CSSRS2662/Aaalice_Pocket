@@ -7328,18 +7328,17 @@
       "count": {}
     }
   },
+  "stamina_perImage": "Per image",
+  "stamina_perImageValue": "{percent}%",
+  "@stamina_perImageValue": {"placeholders": {"percent": {"type": "String"}}},
+  "stamina_refillRate": "Refill rate",
+  "stamina_refillRateValue": "About {percent}% a day\n~{count} images",
+  "@stamina_refillRateValue": {"placeholders": {"percent": {"type": "String"}, "count": {"type": "String"}}},
+  "stamina_extraUsage": "Extra usage",
   "stamina_notConsumed": "Stamina not used",
-  "stamina_nextPercent": "Next +1%",
   "stamina_timeToFull": "Full in (estimate)",
   "stamina_full": "Full",
   "stamina_overCap": "Above cap, recharge paused",
-  "stamina_hoursMinutes": "{hours}h {minutes}m",
-  "@stamina_hoursMinutes": {
-    "placeholders": {
-      "hours": {},
-      "minutes": {}
-    }
-  },
   "stamina_aboutDaysHours": "About {days}d {hours}h",
   "@stamina_aboutDaysHours": {
     "placeholders": {
@@ -7354,9 +7353,9 @@
     }
   },
   "stamina_exhaustedNote": "Stamina is depleted, so V5 generations are billed in Anlas until it recharges.",
-  "stamina_rateNote": "Recharge speed depends on subscription age, about 11–14% per day; the time to full is an estimate.",
+  "stamina_rateNote": "Images are counted from the Anlas price of one image at the current effort, size, steps and strength: the allowance is charged by price, about 17 images per 1% at the default Standard, 832×1216, 23 steps. Refill rate and time to full use the server's current rate.",
   "stamina_rulesTitle": "Rules",
-  "stamina_ruleConsumes": "Uses stamina: V5 at normal size (up to a 1024×1024 area) and at most 28 steps, for the first image of each request.",
+  "stamina_ruleConsumes": "Uses stamina: V5 up to a 1024×1024 area and 28 steps, for the first image of each request; it is charged by that image's Anlas price, so Medium effort and smaller sizes use less.",
   "stamina_ruleAnlas": "Billed in Anlas: large sizes, more than 28 steps, extra images in a multi-image request, and generations after stamina runs out.",
   "stamina_ruleOtherModels": "V4.5 and earlier models are not limited by stamina.",
   "stamina_anlasBalance": "Anlas balance",

@@ -7397,18 +7397,17 @@
       "count": {}
     }
   },
+  "stamina_perImage": "每张约占用",
+  "stamina_perImageValue": "{percent}%",
+  "@stamina_perImageValue": {"placeholders": {"percent": {"type": "String"}}},
+  "stamina_refillRate": "回充速度",
+  "stamina_refillRateValue": "每天约 {percent}%\n约 {count} 张",
+  "@stamina_refillRateValue": {"placeholders": {"percent": {"type": "String"}, "count": {"type": "String"}}},
+  "stamina_extraUsage": "额外配额",
   "stamina_notConsumed": "当前设置不消耗体力",
-  "stamina_nextPercent": "下一个 1% 回充",
   "stamina_timeToFull": "回满（估算）",
   "stamina_full": "已满",
   "stamina_overCap": "超出上限，暂停回充",
-  "stamina_hoursMinutes": "{hours} 小时 {minutes} 分",
-  "@stamina_hoursMinutes": {
-    "placeholders": {
-      "hours": {},
-      "minutes": {}
-    }
-  },
   "stamina_aboutDaysHours": "约 {days} 天 {hours} 小时",
   "@stamina_aboutDaysHours": {
     "placeholders": {
@@ -7423,9 +7422,9 @@
     }
   },
   "stamina_exhaustedNote": "体力已耗尽，V5 生成改按 Anlas 计费；体力自动回充后恢复免费生成。",
-  "stamina_rateNote": "回充速度随订阅时长不同，约每天 11%–14%，回满时间按此估算。",
+  "stamina_rateNote": "张数按当前档位、尺寸、步数与重绘强度下一张图的 Anlas 价格折算：官方按价格扣减体力，默认的标准档 832×1216、23 步约每 1% 17 张。回充速度与回满时间取服务端当前的速度。",
   "stamina_rulesTitle": "规则",
-  "stamina_ruleConsumes": "消耗体力：V5，标准尺寸（面积不超过 1024×1024），不超过 28 步，每个请求的第一张。",
+  "stamina_ruleConsumes": "消耗体力：V5，面积不超过 1024×1024、不超过 28 步，每个请求的第一张；按这张图的 Anlas 价格扣减，节约档、小尺寸扣得更少。",
   "stamina_ruleAnlas": "按 Anlas 计费：大尺寸、超过 28 步、一次请求多张时的其余张数，以及体力耗尽后的生成。",
   "stamina_ruleOtherModels": "V4.5 及更早模型不受体力限制。",
   "stamina_anlasBalance": "Anlas 余额",

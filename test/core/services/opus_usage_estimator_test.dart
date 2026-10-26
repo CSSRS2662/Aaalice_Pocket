@@ -3,59 +3,70 @@ import 'package:nai_launcher/core/services/opus_usage_estimator.dart';
 
 void main() {
   group('OpusUsageEstimator', () {
-    test('大图一张按面积档位消耗多份配额', () {
-      expect(OpusUsageEstimator.quotaUnitsForArea(832 * 1216), 1);
-      expect(OpusUsageEstimator.quotaUnitsForArea(1024 * 1536), 2);
-      expect(OpusUsageEstimator.quotaUnitsForArea(1472 * 1472), 3);
-      expect(OpusUsageEstimator.quotaUnitsForArea(1920 * 1088), 3);
-      expect(OpusUsageEstimator.quotaUnitsForArea(4096 * 4096), 4);
+    test('at the default price it counts what the website shows', () {
+      // The website: round(17.3 × percent), for the default 26-Anlas image.
+      for (final percent in const [1.0, 11.0, 37.5, 86.0, 100.0]) {
+        expect(
+          OpusUsageEstimator.imagesForPercent(
+            percent,
+            imageAnlas: OpusUsageEstimator.defaultImageAnlas,
+          ),
+          (17.3 * percent).round(),
+          reason: '$percent%',
+        );
+      }
+      expect(OpusUsageEstimator.imagesForPercent(100, imageAnlas: 26), 1730);
     });
 
-    test('估算张数随面积折算，透支时为 0', () {
-      expect(
-        OpusUsageEstimator.estimateImages(percent: 86, area: 832 * 1216),
-        1488,
-      );
-      expect(
-        OpusUsageEstimator.estimateImages(percent: 86, area: 1024 * 1536),
-        744,
-      );
-      expect(OpusUsageEstimator.estimateImages(percent: 0, area: 1), 0);
-      expect(OpusUsageEstimator.estimateImages(percent: -3, area: 1), 0);
+    test('cheaper images fit more, dearer ones fewer', () {
+      // Medium effort at 832×1216 is 17 Anlas, 28 standard steps 30,
+      // 512×768 at 23 steps 11.
+      expect(OpusUsageEstimator.imagesForPercent(100, imageAnlas: 17), 2646);
+      expect(OpusUsageEstimator.imagesForPercent(100, imageAnlas: 30), 1499);
+      expect(OpusUsageEstimator.imagesForPercent(100, imageAnlas: 11), 4089);
+      expect(OpusUsageEstimator.percentPerImage(26), closeTo(1 / 17.3, 1e-9));
+      expect(OpusUsageEstimator.percentPerImage(17), lessThan(1 / 17.3));
     });
 
-    test('已满或超出上限时回满时间为 0', () {
+    test('nothing left or no price counts nothing', () {
+      expect(OpusUsageEstimator.imagesForPercent(0, imageAnlas: 26), 0);
+      expect(OpusUsageEstimator.imagesForPercent(-3, imageAnlas: 26), 0);
+      expect(OpusUsageEstimator.imagesForPercent(50, imageAnlas: 0), 0);
+      expect(OpusUsageEstimator.percentPerImage(0), 0);
+    });
+
+    test('the refill rate is a day over the seconds per percent', () {
       expect(
-        OpusUsageEstimator.timeToFull(percent: 100, secondsUntilNextPercent: 0),
+        OpusUsageEstimator.refillPercentPerDay(6048),
+        closeTo(14.2857, 1e-3),
+      );
+      expect(
+        OpusUsageEstimator.refillPercentPerDay(7888),
+        closeTo(10.95, 1e-2),
+      );
+      expect(OpusUsageEstimator.refillPercentPerDay(0), 0);
+    });
+
+    test('time to full follows the current refill rate', () {
+      expect(
+        OpusUsageEstimator.timeToFull(percent: 67, secondsPerPercent: 6048),
+        const Duration(seconds: 33 * 6048),
+      );
+      expect(
+        OpusUsageEstimator.timeToFull(percent: -5, secondsPerPercent: 6048),
+        const Duration(seconds: 100 * 6048),
+      );
+      expect(
+        OpusUsageEstimator.timeToFull(percent: 100, secondsPerPercent: 6048),
         Duration.zero,
       );
       expect(
-        OpusUsageEstimator.timeToFull(
-          percent: 130,
-          secondsUntilNextPercent: 7888,
-        ),
+        OpusUsageEstimator.timeToFull(percent: 140, secondsPerPercent: 0),
         Duration.zero,
       );
-    });
-
-    test('回满时间以下一个 1% 的剩余秒数与较慢的回充周期推算', () {
-      // 缺 14 个百分点；剩余秒数超过最快周期，说明当前回充更慢，整段按它计。
       expect(
-        OpusUsageEstimator.timeToFull(
-          percent: 86,
-          secondsUntilNextPercent: 6780,
-        ),
-        const Duration(seconds: 6780 * 14),
-      );
-      // 剩余秒数短于最快周期时，其余百分点按最快周期估算。
-      expect(
-        OpusUsageEstimator.timeToFull(
-          percent: 98.5,
-          secondsUntilNextPercent: 600,
-        ),
-        const Duration(
-          seconds: 600 + OpusUsageEstimator.fastestSecondsPerPercent,
-        ),
+        OpusUsageEstimator.timeToFull(percent: 50, secondsPerPercent: 0),
+        isNull,
       );
     });
   });

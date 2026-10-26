@@ -15945,10 +15945,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get stamina_notConsumed => 'Stamina not used';
+  String get stamina_perImage => 'Per image';
 
   @override
-  String get stamina_nextPercent => 'Next +1%';
+  String stamina_perImageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get stamina_refillRate => 'Refill rate';
+
+  @override
+  String stamina_refillRateValue(String percent, String count) {
+    return 'About $percent% a day\n~$count images';
+  }
+
+  @override
+  String get stamina_extraUsage => 'Extra usage';
+
+  @override
+  String get stamina_notConsumed => 'Stamina not used';
 
   @override
   String get stamina_timeToFull => 'Full in (estimate)';
@@ -15958,11 +15974,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stamina_overCap => 'Above cap, recharge paused';
-
-  @override
-  String stamina_hoursMinutes(Object hours, Object minutes) {
-    return '${hours}h ${minutes}m';
-  }
 
   @override
   String stamina_aboutDaysHours(Object days, Object hours) {
@@ -15980,14 +15991,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stamina_rateNote =>
-      'Recharge speed depends on subscription age, about 11–14% per day; the time to full is an estimate.';
+      'Images are counted from the Anlas price of one image at the current effort, size, steps and strength: the allowance is charged by price, about 17 images per 1% at the default Standard, 832×1216, 23 steps. Refill rate and time to full use the server\'s current rate.';
 
   @override
   String get stamina_rulesTitle => 'Rules';
 
   @override
   String get stamina_ruleConsumes =>
-      'Uses stamina: V5 at normal size (up to a 1024×1024 area) and at most 28 steps, for the first image of each request.';
+      'Uses stamina: V5 up to a 1024×1024 area and 28 steps, for the first image of each request; it is charged by that image\'s Anlas price, so Medium effort and smaller sizes use less.';
 
   @override
   String get stamina_ruleAnlas =>

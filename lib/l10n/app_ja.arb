@@ -7353,18 +7353,17 @@
       "count": {}
     }
   },
+  "stamina_perImage": "1 枚あたり",
+  "stamina_perImageValue": "{percent}%",
+  "@stamina_perImageValue": {"placeholders": {"percent": {"type": "String"}}},
+  "stamina_refillRate": "回復速度",
+  "stamina_refillRateValue": "1 日約 {percent}%\n約 {count} 枚",
+  "@stamina_refillRateValue": {"placeholders": {"percent": {"type": "String"}, "count": {"type": "String"}}},
+  "stamina_extraUsage": "追加使用枠",
   "stamina_notConsumed": "スタミナを消費しません",
-  "stamina_nextPercent": "次の +1%",
   "stamina_timeToFull": "全回復まで（目安）",
   "stamina_full": "満タン",
   "stamina_overCap": "上限超過のため回復停止中",
-  "stamina_hoursMinutes": "{hours}時間{minutes}分",
-  "@stamina_hoursMinutes": {
-    "placeholders": {
-      "hours": {},
-      "minutes": {}
-    }
-  },
   "stamina_aboutDaysHours": "約{days}日{hours}時間",
   "@stamina_aboutDaysHours": {
     "placeholders": {
@@ -7379,9 +7378,9 @@
     }
   },
   "stamina_exhaustedNote": "スタミナを使い切ったため、回復するまで V5 の生成は Anlas で課金されます。",
-  "stamina_rateNote": "回復速度はサブスクリプションの期間で変わり、1 日あたり約 11〜14% です。全回復までの時間は目安です。",
+  "stamina_rateNote": "枚数は現在の Effort、サイズ、ステップ数、強度での 1 枚の Anlas 価格から換算します。使用量は価格に応じて減り、既定の Standard・832×1216・23 ステップでは 1% あたり約 17 枚です。回復速度と全回復までの時間はサーバーの現在の速度を使います。",
   "stamina_rulesTitle": "ルール",
-  "stamina_ruleConsumes": "スタミナを消費：V5・標準サイズ（面積 1024×1024 以下）・28 ステップ以下の、各リクエストの 1 枚目。",
+  "stamina_ruleConsumes": "スタミナを消費：V5・面積 1024×1024 以下・28 ステップ以下の、各リクエストの 1 枚目。その 1 枚の Anlas 価格に応じて減るため、Medium や小さいサイズほど消費が少なくなります。",
   "stamina_ruleAnlas": "Anlas で課金：大きいサイズ、28 ステップ超、1 回のリクエストで複数枚を生成するときの 2 枚目以降、スタミナ切れ後の生成。",
   "stamina_ruleOtherModels": "V4.5 以前のモデルはスタミナの制限を受けません。",
   "stamina_anlasBalance": "Anlas 残高",

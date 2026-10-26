@@ -100,10 +100,53 @@ void main() {
       ),
       findsOneWidget,
     );
+    // Default settings (Standard, 832×1216, 23 steps): what the website
+    // shows, round(17.3 × 86).
     expect(find.text('约 1,488 张'), findsOneWidget);
-    expect(find.text('1 小时 53 分'), findsOneWidget);
+    expect(find.text('0.058%'), findsOneWidget);
+    // The rate is 86400 / 6780 s per percent.
+    expect(find.text('每天约 12.7%\n约 220 张'), findsOneWidget);
     expect(find.text('约 1 天 2 小时'), findsOneWidget);
     expect(find.text('体力'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('节约档按它的 Anlas 价格估算，不受标准档步数影响', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    // Steps set for the standard effort stay at 40; Medium always sends 14.
+    await tester.pumpWidget(
+      _subject(
+        _subscription(tier: 3, percent: 86),
+        model: ImageModels.animeDiffusionV5FullMedium,
+        steps: 40,
+      ),
+    );
+    await tester.pump();
+    await tester.tap(bar);
+    await tester.pumpAndSettle();
+
+    // 17 Anlas instead of 26: round(86 × 17.3 × 26 / 17).
+    expect(find.text('约 2,275 张'), findsOneWidget);
+    expect(find.text('0.038%'), findsOneWidget);
+    expect(find.text('当前设置不消耗体力'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('额外购买的配额计入可生成张数', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      _subject(_subscription(tier: 3, percent: 86, purchased: 100)),
+    );
+    await tester.pump();
+    await tester.tap(bar);
+    await tester.pumpAndSettle();
+
+    expect(find.text('额外配额'), findsOneWidget);
+    expect(find.text('+100%'), findsOneWidget);
+    // round(17.3 × 186)
+    expect(find.text('约 3,218 张'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -142,6 +185,7 @@ UserSubscription _subscription({
   required int tier,
   required double? percent,
   bool negative = false,
+  double purchased = 0,
 }) => UserSubscription(
   tier: tier,
   active: true,
@@ -151,12 +195,14 @@ UserSubscription _subscription({
           percent: percent,
           isNegative: negative,
           timeUntilNextPercent: 6780,
+          purchasedPercent: purchased,
         ),
 );
 
 Widget _subject(
   UserSubscription subscription, {
   String model = ImageModels.animeDiffusionV5Full,
+  int steps = 23,
   int cost = 0,
 }) => ProviderScope(
   overrides: [
@@ -164,7 +210,7 @@ Widget _subject(
       () => _FakeSubscriptionNotifier(subscription),
     ),
     generationParamsNotifierProvider.overrideWith(
-      () => _FakeGenerationParamsNotifier(model),
+      () => _FakeGenerationParamsNotifier(model, steps),
     ),
     estimatedCostProvider.overrideWith((ref) => cost),
   ],
@@ -199,10 +245,11 @@ class _FakeSubscriptionNotifier extends SubscriptionNotifier {
 }
 
 class _FakeGenerationParamsNotifier extends GenerationParamsNotifier {
-  _FakeGenerationParamsNotifier(this.model);
+  _FakeGenerationParamsNotifier(this.model, this.steps);
 
   final String model;
+  final int steps;
 
   @override
-  ImageParams build() => ImageParams(model: model);
+  ImageParams build() => ImageParams(model: model, steps: steps);
 }

@@ -88,6 +88,41 @@ _GenerationCostInput _resolveGenerationCostInput(
   );
 }
 
+/// The Anlas price of the free image a request takes from the V5 Opus usage
+/// limit (its first image), which is what the limit is charged by. Null when
+/// the current settings do not use the limit: another model, upscaling, more
+/// than 1 MP or more than 28 steps (the Medium effort always sends 14).
+int? opusUsageImageAnlas(
+  ImageParams params,
+  ImageWorkflowState workflow, {
+  FocusedInpaintGeometry? focusedMaskGeometry,
+}) {
+  if (workflow.isUpscale || !params.capabilities.hasOpusUsageLimit) {
+    return null;
+  }
+  final input = _resolveGenerationCostInput(
+    params,
+    workflow,
+    focusedMaskGeometry,
+  );
+  final steps = params.capabilities.fixedSettings?.steps ?? params.steps;
+  if (steps > 28 ||
+      input.width * input.height > AnlasCalculator.opusFreeMaxPixels) {
+    return null;
+  }
+  final price = AnlasCalculator.calculateFromValues(
+    width: input.width,
+    height: input.height,
+    steps: params.steps,
+    nSamples: 1,
+    smea: params.effectiveSmea,
+    smeaDyn: params.effectiveSmeaDyn,
+    model: params.model,
+    strength: input.strength,
+  );
+  return price == AnlasCalculator.invalidCost || price <= 0 ? null : price;
+}
+
 /// 聚焦重绘"仅蒙版"场景下的请求尺寸（轻量路径）。
 ///
 /// 只解码蒙版求外接矩形，不做完整 prepareRequest 的裁剪/缩放/PNG 编码。

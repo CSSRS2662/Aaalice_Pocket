@@ -15494,10 +15494,26 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get stamina_notConsumed => 'スタミナを消費しません';
+  String get stamina_perImage => '1 枚あたり';
 
   @override
-  String get stamina_nextPercent => '次の +1%';
+  String stamina_perImageValue(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get stamina_refillRate => '回復速度';
+
+  @override
+  String stamina_refillRateValue(String percent, String count) {
+    return '1 日約 $percent%\n約 $count 枚';
+  }
+
+  @override
+  String get stamina_extraUsage => '追加使用枠';
+
+  @override
+  String get stamina_notConsumed => 'スタミナを消費しません';
 
   @override
   String get stamina_timeToFull => '全回復まで（目安）';
@@ -15507,11 +15523,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get stamina_overCap => '上限超過のため回復停止中';
-
-  @override
-  String stamina_hoursMinutes(Object hours, Object minutes) {
-    return '$hours時間$minutes分';
-  }
 
   @override
   String stamina_aboutDaysHours(Object days, Object hours) {
@@ -15529,14 +15540,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get stamina_rateNote =>
-      '回復速度はサブスクリプションの期間で変わり、1 日あたり約 11〜14% です。全回復までの時間は目安です。';
+      '枚数は現在の Effort、サイズ、ステップ数、強度での 1 枚の Anlas 価格から換算します。使用量は価格に応じて減り、既定の Standard・832×1216・23 ステップでは 1% あたり約 17 枚です。回復速度と全回復までの時間はサーバーの現在の速度を使います。';
 
   @override
   String get stamina_rulesTitle => 'ルール';
 
   @override
   String get stamina_ruleConsumes =>
-      'スタミナを消費：V5・標準サイズ（面積 1024×1024 以下）・28 ステップ以下の、各リクエストの 1 枚目。';
+      'スタミナを消費：V5・面積 1024×1024 以下・28 ステップ以下の、各リクエストの 1 枚目。その 1 枚の Anlas 価格に応じて減るため、Medium や小さいサイズほど消費が少なくなります。';
 
   @override
   String get stamina_ruleAnlas =>

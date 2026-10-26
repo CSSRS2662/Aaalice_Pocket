@@ -27679,17 +27679,41 @@ abstract class AppLocalizations {
   /// **'About {count} images'**
   String stamina_imagesValue(Object count);
 
+  /// No description provided for @stamina_perImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Per image'**
+  String get stamina_perImage;
+
+  /// No description provided for @stamina_perImageValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String stamina_perImageValue(String percent);
+
+  /// No description provided for @stamina_refillRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Refill rate'**
+  String get stamina_refillRate;
+
+  /// No description provided for @stamina_refillRateValue.
+  ///
+  /// In en, this message translates to:
+  /// **'About {percent}% a day\n~{count} images'**
+  String stamina_refillRateValue(String percent, String count);
+
+  /// No description provided for @stamina_extraUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra usage'**
+  String get stamina_extraUsage;
+
   /// No description provided for @stamina_notConsumed.
   ///
   /// In en, this message translates to:
   /// **'Stamina not used'**
   String get stamina_notConsumed;
-
-  /// No description provided for @stamina_nextPercent.
-  ///
-  /// In en, this message translates to:
-  /// **'Next +1%'**
-  String get stamina_nextPercent;
 
   /// No description provided for @stamina_timeToFull.
   ///
@@ -27708,12 +27732,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Above cap, recharge paused'**
   String get stamina_overCap;
-
-  /// No description provided for @stamina_hoursMinutes.
-  ///
-  /// In en, this message translates to:
-  /// **'{hours}h {minutes}m'**
-  String stamina_hoursMinutes(Object hours, Object minutes);
 
   /// No description provided for @stamina_aboutDaysHours.
   ///
@@ -27736,7 +27754,7 @@ abstract class AppLocalizations {
   /// No description provided for @stamina_rateNote.
   ///
   /// In en, this message translates to:
-  /// **'Recharge speed depends on subscription age, about 11–14% per day; the time to full is an estimate.'**
+  /// **'Images are counted from the Anlas price of one image at the current effort, size, steps and strength: the allowance is charged by price, about 17 images per 1% at the default Standard, 832×1216, 23 steps. Refill rate and time to full use the server\'s current rate.'**
   String get stamina_rateNote;
 
   /// No description provided for @stamina_rulesTitle.
@@ -27748,7 +27766,7 @@ abstract class AppLocalizations {
   /// No description provided for @stamina_ruleConsumes.
   ///
   /// In en, this message translates to:
-  /// **'Uses stamina: V5 at normal size (up to a 1024×1024 area) and at most 28 steps, for the first image of each request.'**
+  /// **'Uses stamina: V5 up to a 1024×1024 area and 28 steps, for the first image of each request; it is charged by that image\'s Anlas price, so Medium effort and smaller sizes use less.'**
   String get stamina_ruleConsumes;
 
   /// No description provided for @stamina_ruleAnlas.

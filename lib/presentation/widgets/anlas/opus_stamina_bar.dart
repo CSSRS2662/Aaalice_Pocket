@@ -14,15 +14,28 @@ import 'opus_stamina_sheet.dart';
 /// V5 体力在界面上的归一化读数。
 class OpusStaminaLevel {
   OpusStaminaLevel.from(OpusUsageInfo usage)
-    : exhausted = usage.isNegative || usage.percent <= 0,
-      percent = usage.isNegative ? 0 : math.max(0, usage.percent);
+    : percent = usage.isNegative ? 0 : math.max(0, usage.percent),
+      purchased = math.max(0, usage.purchasedPercent),
+      exhausted =
+          (usage.isNegative || usage.percent <= 0) &&
+          usage.purchasedPercent <= 0;
 
+  /// Free generation is gone: the allowance is spent and no extra usage
+  /// is left.
   final bool exhausted;
+
+  /// The allowance that refills over time.
   final double percent;
+
+  /// Extra usage bought on top of the allowance.
+  final double purchased;
+
+  /// What can still be spent: the allowance and the extra usage.
+  double get available => percent + purchased;
 
   /// 活动加成可让剩余量超过 100%。
   bool get overflow => percent > 100;
-  bool get low => !exhausted && percent < 10;
+  bool get low => !exhausted && available < 10;
 
   /// 超出上限时按实际值拉伸刻度，并在 100% 处画一条分界线。
   double get _scale => math.max(100, percent);
