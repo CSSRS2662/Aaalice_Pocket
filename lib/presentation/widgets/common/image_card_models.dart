@@ -33,6 +33,7 @@ class ImageCardViewData {
     this.postprocessPhase,
     this.retryAttempt = 0,
     this.maxRetries = 0,
+    this.showStreamPreview = true,
   });
 
   final Uint8List? imageBytes;
@@ -49,6 +50,7 @@ class ImageCardViewData {
   final Widget? underlay;
   final Widget? imageContent;
   final bool isGenerating;
+  final bool showStreamPreview;
   final double? progress;
   final ImagePostprocessPhase? postprocessPhase;
   final int? currentImage;

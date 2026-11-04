@@ -20,6 +20,7 @@ class GenerationCommand {
     this.focusedSelectionRect,
     this.focusedContextCrop,
     this.materializeRandomSeed = true,
+    this.firstRandomSeed,
     this.requestEachImage = false,
     this.cancellableFallback = true,
     this.streamPreviewEnabled = true,
@@ -36,6 +37,7 @@ class GenerationCommand {
   final Rect? focusedSelectionRect;
   final Rect? focusedContextCrop;
   final bool materializeRandomSeed;
+  final int? firstRandomSeed;
   final bool requestEachImage;
   final bool cancellableFallback;
   final bool streamPreviewEnabled;
@@ -128,6 +130,7 @@ class GenerationPreviewReceived extends GenerationEvent {
     required this.bytes,
     this.currentStep,
     this.totalSteps,
+    this.sampleIndex = 0,
     this.focusedPreviewPlacement,
   });
 
@@ -138,6 +141,7 @@ class GenerationPreviewReceived extends GenerationEvent {
   final Uint8List bytes;
   final int? currentStep;
   final int? totalSteps;
+  final int sampleIndex;
   final FocusedStreamPreviewPlacement? focusedPreviewPlacement;
 }
 
@@ -147,10 +151,12 @@ class GenerationImageFinalizing extends GenerationEvent {
     required super.runId,
     required this.imageNumber,
     required this.totalImages,
+    this.seed = -1,
   });
 
   final int imageNumber;
   final int totalImages;
+  final int seed;
 }
 
 class GenerationPostprocessChanged extends GenerationEvent {
@@ -223,11 +229,13 @@ class GenerationRetrying extends GenerationEvent {
     required this.attempt,
     required this.maxRetries,
     required this.error,
+    this.seed = -1,
   });
 
   final int startImage;
   final int requestSize;
   final int totalImages;
+  final int seed;
 
   /// 1-based number of this retry.
   final int attempt;

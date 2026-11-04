@@ -120,53 +120,52 @@ void main() {
     }
   });
 
-  testWidgets('stream preview progress stays legible over image content', (
-    tester,
-  ) async {
-    final preview = Uint8List.fromList(
-      img.encodePng(img.Image(width: 32, height: 32)),
-    );
-    await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          theme: ThemeData.dark(),
-          home: Scaffold(
-            body: SizedBox.square(
-              dimension: 160,
-              child: SelectableImageCard(
-                isGenerating: true,
-                progress: 0.42,
-                currentImage: 1,
-                totalImages: 1,
-                streamPreview: preview,
-                imageWidth: 32,
-                imageHeight: 32,
-                enableSelection: false,
+  testWidgets(
+    'stream preview uses the image without rings or canvas progress captions',
+    (tester) async {
+      final preview = Uint8List.fromList(
+        img.encodePng(img.Image(width: 32, height: 32)),
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ThemeData.dark(),
+            home: Scaffold(
+              body: SizedBox.square(
+                dimension: 160,
+                child: SelectableImageCard(
+                  isGenerating: true,
+                  progress: 0.42,
+                  currentImage: 1,
+                  totalImages: 1,
+                  streamPreview: preview,
+                  imageWidth: 32,
+                  imageHeight: 32,
+                  enableSelection: false,
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    final indicator = tester.widget<CircularProgressIndicator>(
-      find.byKey(const ValueKey('stream-generation-progress-ring')),
-    );
-    final count = tester.widget<Text>(
-      find.byKey(const ValueKey('stream-generation-progress-count')),
-    );
-    final percent = tester.widget<Text>(
-      find.byKey(const ValueKey('stream-generation-progress-percent')),
-    );
-    expect(indicator.color, Colors.white);
-    expect(indicator.backgroundColor, Colors.white.withValues(alpha: 0.24));
-    expect(count.style?.color, Colors.white);
-    expect(percent.style?.color, Colors.white);
-    expect(percent.style?.shadows, isNotEmpty);
-  });
+      expect(find.byType(ImageCardStreamPreview), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(
+        find.byKey(const ValueKey('stream-generation-progress-count')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('stream-generation-progress-percent')),
+        findsNothing,
+      );
+    },
+  );
 
-  testWidgets('generating cards show the retry count', (tester) async {
+  testWidgets('generating cards keep retries and batch counts off the canvas', (
+    tester,
+  ) async {
     final preview = Uint8List.fromList(
       img.encodePng(img.Image(width: 32, height: 32)),
     );
@@ -209,8 +208,9 @@ void main() {
       await tester.pump();
 
       final label = find.byKey(const ValueKey('generation-retry-label'));
-      expect(label, findsOneWidget, reason: 'preview $streamPreview, $size');
-      expect(tester.widget<Text>(label).data, '重试 2/5');
+      expect(label, findsNothing, reason: 'preview $streamPreview, $size');
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('1/4'), findsNothing);
       expect(tester.takeException(), isNull, reason: 'size $size');
     }
 
@@ -658,8 +658,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byType(SelectableImageCard), findsNWidgets(2));
-    expect(find.text('1/2'), findsOneWidget);
-    expect(find.text('2/2'), findsOneWidget);
+    expect(find.text('1/2'), findsNothing);
+    expect(find.text('2/2'), findsNothing);
+    expect(find.byType(ImageCardStreamPreview), findsNWidgets(2));
   });
 
   testWidgets('focused stream preview with mask uses masked preview path', (
@@ -769,6 +770,8 @@ void main() {
       () => find.byType(TransparencyBackgroundLayer).evaluate().isNotEmpty,
     );
 
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
     expect(find.byType(TransparencyBackgroundLayer), findsOneWidget);
     expect(find.byType(ImageCardStreamPreview), findsNothing);
 
@@ -950,12 +953,14 @@ Widget _buildCompletionApp({
 
 ImageCardStreamPreviewPainter _streamPreviewPainter(WidgetTester tester) {
   return tester
-          .widget<CustomPaint>(
-            find.descendant(
-              of: find.byType(ImageCardStreamPreview),
-              matching: find.byType(CustomPaint),
+          .widgetList<CustomPaint>(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is CustomPaint &&
+                  widget.painter is ImageCardStreamPreviewPainter,
             ),
           )
+          .last
           .painter!
       as ImageCardStreamPreviewPainter;
 }

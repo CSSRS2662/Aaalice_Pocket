@@ -6,6 +6,7 @@ import 'package:nai_launcher/core/utils/localization_extension.dart';
 import '../../../../../core/autocomplete/tag_translation_lookup.dart';
 import '../../../../../core/utils/nai_prompt_parser.dart';
 import '../../../../adaptive/interaction_policy.dart';
+import '../../../../themes/core/layered_surface_style.dart';
 import '../../app_toast.dart';
 import '../../translated_tag_text.dart';
 import 'detail_tag_picks.dart';
@@ -40,6 +41,10 @@ class PromptSection extends StatefulWidget {
 
   /// Which prompt this section's tags are picked as.
   final DetailTagSide pickSide;
+  final int tagIndexOffset;
+  final bool cardStyle;
+  final bool encloseContent;
+  final VoidCallback? onReuse;
 
   const PromptSection({
     super.key,
@@ -62,6 +67,10 @@ class PromptSection extends StatefulWidget {
     this.isNegative = false,
     this.tagPicks,
     this.pickSide = DetailTagSide.positive,
+    this.tagIndexOffset = 0,
+    this.cardStyle = false,
+    this.encloseContent = true,
+    this.onReuse,
   });
 
   @override
@@ -97,7 +106,7 @@ class _PromptSectionState extends State<PromptSection> {
   void _tapTag(int index, String tag) {
     final picks = widget.tagPicks;
     if (picks != null && picks.active) {
-      picks.toggle(widget.pickSide, index, tag);
+      picks.toggle(widget.pickSide, widget.tagIndexOffset + index, tag);
     } else {
       _copyTag(tag);
     }
@@ -107,7 +116,8 @@ class _PromptSectionState extends State<PromptSection> {
   VoidCallback? _longPressTag(int index, String tag) {
     final picks = widget.tagPicks;
     if (picks == null) return null;
-    return () => picks.toggle(widget.pickSide, index, tag);
+    return () =>
+        picks.toggle(widget.pickSide, widget.tagIndexOffset + index, tag);
   }
 
   List<String> get _displayTags {
@@ -120,6 +130,15 @@ class _PromptSectionState extends State<PromptSection> {
     if (widget.tags != null) return widget.tags!.length;
     return _displayTags.length;
   }
+
+  int get _pickedCount => List.generate(_tagCount, (index) => index)
+      .where(
+        (index) => widget.tagPicks!.isPicked(
+          widget.pickSide,
+          widget.tagIndexOffset + index,
+        ),
+      )
+      .length;
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +154,7 @@ class _PromptSectionState extends State<PromptSection> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final hasContent = widget.content.isNotEmpty;
+    if (widget.cardStyle) return _buildCard(theme, colorScheme, hasContent);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,6 +178,94 @@ class _PromptSectionState extends State<PromptSection> {
       ],
     );
   }
+
+  Widget _buildCard(ThemeData theme, ColorScheme colors, bool hasContent) {
+    final radius = BorderRadius.circular(12);
+    return IntrinsicHeight(
+      child: Material(
+        color: sectionSurfaceColor(colors),
+        borderRadius: radius,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: hasContent
+              ? () => setState(() => _isExpanded = !_isExpanded)
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildCardTitle(theme, colors),
+                if (_isExpanded && hasContent) ...[
+                  const SizedBox(height: 8),
+                  _buildContent(colors, theme, _displayTags),
+                ] else if (!widget.allTagsAreFixed && hasContent)
+                  Text(
+                    widget.content,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                const Spacer(),
+                const SizedBox(height: 4),
+                _buildCardActions(theme, colors),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardTitle(ThemeData theme, ColorScheme colors) => ConstrainedBox(
+    constraints: const BoxConstraints(minHeight: 44),
+    child: Row(
+      children: [
+        Icon(
+          widget.icon,
+          size: 14,
+          color: widget.allTagsAreFixed
+              ? colors.tertiary
+              : widget.isNegative
+              ? colors.error
+              : colors.primary,
+        ),
+        const SizedBox(width: 4),
+        Expanded(child: Text(widget.title, style: theme.textTheme.titleSmall)),
+        const SizedBox(width: 4),
+        Icon(
+          _isExpanded ? Icons.expand_less : Icons.expand_more,
+          size: 16,
+          color: colors.onSurfaceVariant,
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildCardActions(ThemeData theme, ColorScheme colors) => Wrap(
+    alignment: WrapAlignment.spaceBetween,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      Text(
+        _picking ? '$_pickedCount/$_tagCount' : '$_tagCount',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: colors.onSurfaceVariant,
+        ),
+      ),
+      if (_picking)
+        _buildPickAllButton(colors, 44)
+      else
+        IconButton(
+          key: const ValueKey('detail-reuse-group'),
+          tooltip: context.l10n.detail_reusePromptGroup,
+          onPressed: widget.onReuse,
+          icon: const Icon(Icons.playlist_add, size: 20),
+          style: IconButton.styleFrom(minimumSize: const Size.square(44)),
+        ),
+    ],
+  );
 
   Widget _buildHeader(
     ColorScheme colorScheme,
@@ -226,7 +334,7 @@ class _PromptSectionState extends State<PromptSection> {
                               ),
                               child: Text(
                                 _picking
-                                    ? '${widget.tagPicks!.countOf(widget.pickSide)}'
+                                    ? '$_pickedCount'
                                           '/$_tagCount'
                                     : '$_tagCount',
                                 style: theme.textTheme.labelSmall?.copyWith(
@@ -292,11 +400,15 @@ class _PromptSectionState extends State<PromptSection> {
   Widget _buildPickAllButton(ColorScheme colorScheme, double targetSize) {
     final picks = widget.tagPicks!;
     final tags = _displayTags;
-    final all =
-        tags.isNotEmpty && picks.countOf(widget.pickSide) == tags.length;
+    final all = tags.isNotEmpty && _pickedCount == tags.length;
     return IconButton(
       key: ValueKey('detail-pick-all-${widget.pickSide.name}'),
-      onPressed: () => picks.setAll(widget.pickSide, tags, picked: !all),
+      onPressed: () => picks.setRange(
+        widget.pickSide,
+        tags,
+        offset: widget.tagIndexOffset,
+        picked: !all,
+      ),
       icon: Icon(
         all ? Icons.deselect_rounded : Icons.select_all_rounded,
         size: 18,
@@ -322,6 +434,35 @@ class _PromptSectionState extends State<PromptSection> {
         : widget.borderColor?.withValues(alpha: 0.10) ??
               colorScheme.surfaceContainerLow;
 
+    final content =
+        widget.customContent ??
+        (tags.isNotEmpty
+            ? _TagChipGrid(
+                tags: tags,
+                onTagTap: _tapTag,
+                onTagLongPress: _longPressTag,
+                pickedOf: _picking
+                    ? (index) => widget.tagPicks!.isPicked(
+                        widget.pickSide,
+                        widget.tagIndexOffset + index,
+                      )
+                    : null,
+                showTranslation: widget.showTranslation,
+                fixedTags: widget.fixedTags,
+                characterTags: widget.characterTags,
+                fixedTagIndexes: widget.fixedTagIndexes,
+                characterTagIndexes: widget.characterTagIndexes,
+                allTagsAreFixed: widget.allTagsAreFixed,
+                isNegative: widget.isNegative,
+              )
+            : Text(
+                context.l10n.detail_noContent,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
+              ));
+    if (widget.cardStyle || !widget.encloseContent) return content;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -329,32 +470,7 @@ class _PromptSectionState extends State<PromptSection> {
         color: surfaceColor,
         borderRadius: BorderRadius.circular(8),
       ),
-      child:
-          widget.customContent ??
-          (tags.isNotEmpty
-              ? _TagChipGrid(
-                  tags: tags,
-                  onTagTap: _tapTag,
-                  onTagLongPress: _longPressTag,
-                  pickedOf: _picking
-                      ? (index) =>
-                            widget.tagPicks!.isPicked(widget.pickSide, index)
-                      : null,
-                  showTranslation: widget.showTranslation,
-                  fixedTags: widget.fixedTags,
-                  characterTags: widget.characterTags,
-                  fixedTagIndexes: widget.fixedTagIndexes,
-                  characterTagIndexes: widget.characterTagIndexes,
-                  allTagsAreFixed: widget.allTagsAreFixed,
-                  isNegative: widget.isNegative,
-                )
-              : Text(
-                  context.l10n.detail_noContent,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontStyle: FontStyle.italic,
-                  ),
-                )),
+      child: content,
     );
   }
 }

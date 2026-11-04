@@ -131,7 +131,12 @@ class LocalImageDetailData implements ImageDetailData {
   Future<NaiImageMetadata?> getMetadataAsync() async {
     // 1. 先检查已缓存的元数据
     final cachedRecordMetadata = metadata;
-    if (cachedRecordMetadata != null) return cachedRecordMetadata;
+    if (cachedRecordMetadata != null) {
+      return ImageMetadataService().withRecordedSnapshots(
+        record.path,
+        cachedRecordMetadata,
+      );
+    }
 
     // 2. 在 Isolate 中解析（不阻塞 UI）
     // 先尝试快速路径（缓存）
@@ -142,7 +147,10 @@ class LocalImageDetailData implements ImageDetailData {
 
     // 3. 使用 Isolate 深度解析（针对大文件或复杂格式）
     final isolateService = IsolateMetadataService.instance;
-    return isolateService.parseForDetailView(record.path);
+    return ImageMetadataService().withRecordedSnapshots(
+      record.path,
+      await isolateService.parseForDetailView(record.path),
+    );
   }
 
   @override

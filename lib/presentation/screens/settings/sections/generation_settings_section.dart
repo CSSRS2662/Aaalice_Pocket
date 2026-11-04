@@ -10,6 +10,7 @@ import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../providers/generation/generation_params_notifier.dart';
 import '../../../providers/generation/generation_settings_notifiers.dart';
+import '../../../providers/generation/generation_preview_visibility_provider.dart';
 import '../../../providers/notification_settings_provider.dart';
 import '../../../themes/core/input_surface_style.dart';
 import '../../../widgets/common/app_toast.dart';
@@ -222,6 +223,28 @@ class _GenerationSettingsSectionState
             children: [
               SwitchListTile(
                 secondary: const Icon(Icons.preview_outlined),
+                title: Text(l10n.settings_generationShowStreamPreview),
+                subtitle: Text(
+                  l10n.settings_generationShowStreamPreviewSubtitle,
+                ),
+                value: ref.watch(generationPreviewVisibilityProvider),
+                onChanged: (value) async {
+                  final messenger = ScaffoldMessenger.maybeOf(context);
+                  try {
+                    await ref
+                        .read(generationPreviewVisibilityProvider.notifier)
+                        .setEnabled(value);
+                  } catch (error) {
+                    messenger?.showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.globalSettings_saveFailed('$error')),
+                      ),
+                    );
+                  }
+                },
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.sync_rounded),
                 title: Text(l10n.settings_generationStreamPreview),
                 subtitle: Text(l10n.settings_generationStreamPreviewSubtitle),
                 value: streamPreviewEnabled,

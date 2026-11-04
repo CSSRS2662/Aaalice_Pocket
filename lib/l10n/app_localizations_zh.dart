@@ -440,7 +440,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get auth_thirdPartyStreamingHint =>
-      '如果第三方站点不支持流式生成，请前往「设置 > 生成 > 图像输出」，关闭「流式预览」后再生成。';
+      '如果第三方站点不支持流式生成，请前往「设置 > 生成 > 图像输出」，关闭「流式生成」后再生成。';
 
   @override
   String get anlas_thirdPartyUnavailable => '当前站点不提供 Anlas 余额信息';
@@ -680,11 +680,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_generationFeedbackSection => '完成提醒';
 
   @override
-  String get settings_generationStreamPreview => '流式预览';
+  String get settings_generationShowStreamPreview => '显示流式图像预览';
+
+  @override
+  String get settings_generationShowStreamPreviewSubtitle =>
+      '关闭后只显示最终图像，生成按钮中的进度仍会更新。';
+
+  @override
+  String get settings_generationStreamPreview => '流式生成';
 
   @override
   String get settings_generationStreamPreviewSubtitle =>
-      '生成时显示中间图像；关闭后将直接等待最终图像。';
+      '生成时实时接收进度；站点不支持流式生成时可关闭。';
 
   @override
   String get settings_alphaModeTitle => '透明图像 Alpha 模式';
@@ -960,7 +967,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get generation_streamingUnsupportedHint =>
-      '请前往「设置 > 生成 > 图像输出」，关闭「流式预览」后重试。';
+      '请前往「设置 > 生成 > 图像输出」，关闭「流式生成」后重试。';
 
   @override
   String get generation_params => '参数';
@@ -14475,6 +14482,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tagMode_cut => '剪切';
 
   @override
+  String get prompt_moveTagsToSection => '移动到分组';
+
+  @override
+  String get detail_reusePromptGroup => '复用此分区';
+
+  @override
+  String get detail_otherPromptTags => '其他提示词';
+
+  @override
+  String get detail_reusePromptGroupFailed => '无法添加提示词分区，请重试';
+
+  @override
   String get tagMode_movePrevious => '前移';
 
   @override
@@ -16492,7 +16511,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get auth_thirdPartyStreamingHint =>
-      '若第三方站點不支援串流生成，請前往「設定 > 生成 > 影象輸出」，關閉「串流預覽」後再生成。';
+      '若第三方站點不支援串流生成，請前往「設定 > 生成 > 影象輸出」，關閉「串流生成」後再生成。';
 
   @override
   String get anlas_thirdPartyUnavailable => '目前站點不提供 Anlas 餘額資訊';
@@ -16732,11 +16751,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settings_generationFeedbackSection => '完成提醒';
 
   @override
-  String get settings_generationStreamPreview => '串流預覽';
+  String get settings_generationShowStreamPreview => '顯示串流圖像預覽';
+
+  @override
+  String get settings_generationShowStreamPreviewSubtitle =>
+      '關閉後只顯示最終圖像，生成按鈕中的進度仍會更新。';
+
+  @override
+  String get settings_generationStreamPreview => '串流生成';
 
   @override
   String get settings_generationStreamPreviewSubtitle =>
-      '生成時顯示中間圖像；關閉後將直接等待最終圖像。';
+      '生成時即時接收進度；站點不支援串流生成時可關閉。';
 
   @override
   String get settings_alphaModeTitle => '透明影象 Alpha 模式';
@@ -17012,7 +17038,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get generation_streamingUnsupportedHint =>
-      '請前往「設定 > 生成 > 影象輸出」，關閉「串流預覽」後重試。';
+      '請前往「設定 > 生成 > 影象輸出」，關閉「串流生成」後重試。';
 
   @override
   String get generation_params => '引數';
@@ -30527,6 +30553,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get tagMode_cut => '剪下';
+
+  @override
+  String get prompt_moveTagsToSection => '移動到分組';
+
+  @override
+  String get detail_reusePromptGroup => '重用此分區';
+
+  @override
+  String get detail_otherPromptTags => '其他提示詞';
+
+  @override
+  String get detail_reusePromptGroupFailed => '無法加入提示詞分區，請重試';
 
   @override
   String get tagMode_movePrevious => '前移';

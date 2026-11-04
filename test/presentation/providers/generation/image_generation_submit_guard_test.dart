@@ -77,6 +77,7 @@ void main() {
     expect(armed.isPreparing, isTrue);
     expect(armed.isGenerating, isFalse);
     expect(armed.isBusy, isTrue);
+    expect(armed.activeSeed, greaterThanOrEqualTo(0));
 
     await notifier.generate(params);
     await _pumpUntil(
@@ -85,6 +86,20 @@ void main() {
     );
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(streamCall, 1);
+    final request =
+        verify(
+              () => api.generateImageStream(
+                captureAny(),
+                focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+                minimumContextMegaPixels: any(
+                  named: 'minimumContextMegaPixels',
+                ),
+                focusedSelectionRect: any(named: 'focusedSelectionRect'),
+                cancellationLease: null,
+              ),
+            ).captured.single
+            as ImageParams;
+    expect(request.seed, armed.activeSeed);
 
     notifier.cancel();
     await stream.close();

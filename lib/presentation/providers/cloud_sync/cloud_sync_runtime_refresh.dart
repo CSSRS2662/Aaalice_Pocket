@@ -11,6 +11,7 @@ import '../font_provider.dart';
 import '../font_scale_provider.dart';
 import '../gallery_album_provider.dart';
 import '../generation/generation_settings_notifiers.dart';
+import '../generation/generation_preview_visibility_provider.dart';
 import '../history_click_behavior_provider.dart';
 import '../image_save_settings_provider.dart';
 import '../../../core/utils/locale_provider.dart';
@@ -68,6 +69,7 @@ Future<void> refreshCloudSyncRuntime(Ref ref, Set<String> adapterIds) async {
     ref.invalidate(randomPromptModeProvider);
     ref.invalidate(randomPromptToolsVisibilityProvider);
     ref.invalidate(generationStreamPreviewSettingsProvider);
+    ref.invalidate(generationPreviewVisibilityProvider);
     ref.invalidate(imagesPerRequestProvider);
     ref.invalidate(qualityPresetNotifierProvider);
     ref.invalidate(ucPresetNotifierProvider);

@@ -15,6 +15,7 @@ import 'image_card_models.dart';
 import 'image_card_surface.dart';
 import 'image_card_action_region.dart';
 import 'image_card_batch_scope.dart';
+import '../../providers/generation/generation_preview_visibility_provider.dart';
 import '../../selection/card_selection_scope.dart';
 
 export 'image_card_actions.dart'
@@ -176,6 +177,7 @@ class _SelectableImageCardState extends ConsumerState<SelectableImageCard>
     underlay: widget.underlay,
     imageContent: widget.imageContent,
     isGenerating: widget.isGenerating,
+    showStreamPreview: ref.read(generationPreviewVisibilityProvider),
     progress: widget.progress,
     postprocessPhase: widget.postprocessPhase,
     currentImage: widget.currentImage,
@@ -256,7 +258,7 @@ class _SelectableImageCardState extends ConsumerState<SelectableImageCard>
   @override
   void didUpdateWidget(covariant SelectableImageCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _controller.update(vsync: this, data: _data, capabilities: _capabilities);
+    _controller.update(data: _data, capabilities: _capabilities);
   }
 
   @override
@@ -267,9 +269,13 @@ class _SelectableImageCardState extends ConsumerState<SelectableImageCard>
 
   @override
   Widget build(BuildContext context) {
+    final showStreamPreview = ref.watch(generationPreviewVisibilityProvider);
     final data = _data;
+    if (showStreamPreview != _controller.data.showStreamPreview) {
+      _controller.update(data: data, capabilities: _capabilities);
+    }
     if (data.isGenerating) {
-      return ImageCardGenerating(data: data, controller: _controller);
+      return ImageCardGenerating(data: data);
     }
     final capabilities = _capabilities;
     ref.watch(

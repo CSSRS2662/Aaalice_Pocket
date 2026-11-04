@@ -27,6 +27,7 @@ import 'prompt_weight_controls.dart';
 import 'tag_editor_tree.dart';
 import 'tag_editor_commands.dart';
 import 'tag_editor_session.dart';
+import 'tag_selection_bar.dart';
 
 class TagEditorView extends ConsumerStatefulWidget {
   static const scrollViewKey = ValueKey('tag-editor-scroll-view');
@@ -46,6 +47,7 @@ class TagEditorView extends ConsumerStatefulWidget {
     this.enableAutocomplete = true,
     this.onSearch,
     this.focusNode,
+    this.onMoveSelection,
   });
   final TagEditorSession session;
   final Color? surfaceColor;
@@ -54,6 +56,7 @@ class TagEditorView extends ConsumerStatefulWidget {
   final bool enableAutocomplete;
   final ValueChanged<bool>? onSearch;
   final FocusNode? focusNode;
+  final Future<void> Function(TagEditorSession)? onMoveSelection;
   @override
   ConsumerState<TagEditorView> createState() => _TagEditorViewState();
 }
@@ -143,6 +146,7 @@ class _TagEditorViewState extends ConsumerState<TagEditorView> {
       setState(() {});
       final show =
           session.selected.isNotEmpty &&
+          !session.touchSelection &&
           session.editing == null &&
           !_boxSelecting &&
           !_draggingTags &&
@@ -378,7 +382,10 @@ class _TagEditorViewState extends ConsumerState<TagEditorView> {
   }
 
   bool get _wheelAdjustmentEnabled =>
-      widget.enabled && commands.canAdjust && session.editing == null;
+      widget.enabled &&
+      commands.canAdjust &&
+      session.editing == null &&
+      !session.touchSelection;
 
   bool _claimsWeightWheel(Offset globalPosition) {
     if (!_wheelAdjustmentEnabled) return false;
@@ -430,6 +437,19 @@ class _TagEditorViewState extends ConsumerState<TagEditorView> {
                   enabled: widget.enabled && commands.canAdjust,
                   onWeight: (value) => commands.adjustWeight(value: value),
                   onStep: (step) => commands.adjustWeight(step: step),
+                  trailing: [
+                    IconButton(
+                      key: const ValueKey('tag-weight-form-cut'),
+                      tooltip: context.l10n.tagMode_cut,
+                      onPressed: widget.enabled && session.selected.isNotEmpty
+                          ? () async {
+                              await _action(TagEditorAction.cut);
+                              if (context.mounted) Navigator.of(context).pop();
+                            }
+                          : null,
+                      icon: const Icon(Icons.content_cut, size: 18),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -459,6 +479,8 @@ class _TagEditorViewState extends ConsumerState<TagEditorView> {
             session.selected.containsAll(ids) &&
             session.selected.length == ids.length) {
           session.deleteSelected();
+        } else if (action == TagEditorAction.copy && session.touchSelection) {
+          session.clearSelection();
         }
       case TagEditorAction.paste:
         final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
@@ -657,6 +679,14 @@ class _TagEditorViewState extends ConsumerState<TagEditorView> {
                   onStep: (step) => commands.adjustWeight(step: step),
                   trailing: [
                     IconButton(
+                      key: const ValueKey('tag-cut-button'),
+                      tooltip: context.l10n.tagMode_cut,
+                      onPressed: widget.enabled
+                          ? () => _action(TagEditorAction.cut)
+                          : null,
+                      icon: const Icon(Icons.content_cut, size: 18),
+                    ),
+                    IconButton(
                       tooltip: allDisabled
                           ? context.l10n.tagMode_enable
                           : context.l10n.tagMode_disable,
@@ -789,6 +819,37 @@ class _TagEditorViewState extends ConsumerState<TagEditorView> {
     );
   }
 
+  Widget _buildEditorContent(BuildContext context, BoxConstraints constraints) {
+    final content = _buildContent(context, constraints);
+    if (!session.touchSelection || session.selected.isEmpty) return content;
+    final bar = TagSelectionBar(
+      key: const ValueKey('tag-selection-bar'),
+      count: session.selected.length,
+      onClose: session.clearSelection,
+      onCopy: () => _action(TagEditorAction.copy),
+      onSelectAll: session.selectAll,
+      onMove:
+          widget.enabled &&
+              widget.onMoveSelection != null &&
+              session.structureComplete
+          ? () => widget.onMoveSelection!(session)
+          : null,
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (constraints.hasBoundedHeight) Expanded(child: content) else content,
+        if (constraints.hasBoundedHeight)
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: constraints.maxHeight / 2),
+            child: SingleChildScrollView(child: bar),
+          )
+        else
+          bar,
+      ],
+    );
+  }
+
   Widget _buildContent(BuildContext context, BoxConstraints constraints) {
     final width = (constraints.maxWidth - 24).clamp(0.0, double.infinity);
     return BoxSelectionOverlay(
@@ -911,7 +972,7 @@ class _TagEditorViewState extends ConsumerState<TagEditorView> {
                 onTap: context.interactionPolicy.prefersTouchPresentation
                     ? _dismissTouchSelection
                     : null,
-                child: LayoutBuilder(builder: _buildContent),
+                child: LayoutBuilder(builder: _buildEditorContent),
               ),
             ),
           ),

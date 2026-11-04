@@ -19,6 +19,7 @@ import '../../../widgets/prompt/unified/unified_prompt_config.dart';
 import '../../../widgets/prompt/unified/unified_prompt_input.dart';
 import 'prompt_completion_exclusions.dart';
 import 'prompt_group_controller.dart';
+import 'prompt_group_tag_move.dart';
 import 'prompt_input_models.dart';
 
 /// What the section editor needs from the host besides the sections.
@@ -375,6 +376,18 @@ class _PromptGroupEditorState extends ConsumerState<_PromptGroupEditor> {
       focusNode: section.focusNode,
       sessionId: '${_modeSessionId}_group_${section.id}',
       tagModeSessionId: _modeSessionId,
+      onMoveTagSelection:
+          widget.groups.sections.any(
+            (other) => other.id != section.id && !other.isFixedTag,
+          )
+          ? (session) => movePromptGroupTags(
+              context,
+              groups: widget.groups,
+              sourceId: section.id,
+              session: session,
+              onChanged: callbacks.onChanged,
+            )
+          : null,
       surfaceColor: inputSurfaceFillColor(colors),
       config: UnifiedPromptConfig(
         enableSyntaxHighlight: ref.watch(highlightEmphasisSettingsProvider),

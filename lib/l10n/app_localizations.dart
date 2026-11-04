@@ -932,7 +932,7 @@ abstract class AppLocalizations {
   /// No description provided for @auth_thirdPartyStreamingHint.
   ///
   /// In en, this message translates to:
-  /// **'If the third-party site does not support streaming generation, go to Settings > Generation > Image Output and turn off Streaming preview before generating.'**
+  /// **'If the third-party site does not support streaming generation, go to Settings > Generation > Image Output and turn off Streaming generation before generating.'**
   String get auth_thirdPartyStreamingHint;
 
   /// No description provided for @anlas_thirdPartyUnavailable.
@@ -1391,16 +1391,28 @@ abstract class AppLocalizations {
   /// **'Completion Alert'**
   String get settings_generationFeedbackSection;
 
+  /// No description provided for @settings_generationShowStreamPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Show live image previews'**
+  String get settings_generationShowStreamPreview;
+
+  /// No description provided for @settings_generationShowStreamPreviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When off, show only the final image; button progress still updates.'**
+  String get settings_generationShowStreamPreviewSubtitle;
+
   /// No description provided for @settings_generationStreamPreview.
   ///
   /// In en, this message translates to:
-  /// **'Streaming preview'**
+  /// **'Streaming generation'**
   String get settings_generationStreamPreview;
 
   /// No description provided for @settings_generationStreamPreviewSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Show intermediate images while generating. Turn this off to wait for the final image instead.'**
+  /// **'Receive real-time generation progress; disable this if your service does not support streaming.'**
   String get settings_generationStreamPreviewSubtitle;
 
   /// No description provided for @settings_alphaModeTitle.
@@ -1910,7 +1922,7 @@ abstract class AppLocalizations {
   /// No description provided for @generation_streamingUnsupportedHint.
   ///
   /// In en, this message translates to:
-  /// **'Go to Settings > Generation > Image Output, turn off Streaming preview, and try again.'**
+  /// **'Go to Settings > Generation > Image Output, turn off Streaming generation, and try again.'**
   String get generation_streamingUnsupportedHint;
 
   /// No description provided for @generation_params.
@@ -26298,6 +26310,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cut'**
   String get tagMode_cut;
+
+  /// No description provided for @prompt_moveTagsToSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to section'**
+  String get prompt_moveTagsToSection;
+
+  /// No description provided for @detail_reusePromptGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Reuse this section'**
+  String get detail_reusePromptGroup;
+
+  /// No description provided for @detail_otherPromptTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Other prompt tags'**
+  String get detail_otherPromptTags;
+
+  /// No description provided for @detail_reusePromptGroupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add the prompt section. Please try again.'**
+  String get detail_reusePromptGroupFailed;
 
   /// No description provided for @tagMode_movePrevious.
   ///

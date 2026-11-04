@@ -122,6 +122,51 @@ void main() {
     expect(value, 20);
   });
 
+  testWidgets('聚焦数字框后切换锁定档位，显示值随锁定与解锁同步', (tester) async {
+    var locked = false;
+    var stored = 35.0;
+    await tester.pumpWidget(
+      _app(
+        StatefulBuilder(
+          builder: (context, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                onPressed: () => setState(() => locked = !locked),
+                child: const Text('切换档位'),
+              ),
+              SteppedSlider(
+                idPrefix: 'param',
+                value: locked ? 14 : stored,
+                min: 1,
+                max: 50,
+                step: 1,
+                onChanged: locked
+                    ? null
+                    : (value) => setState(() => stored = value),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    final field = find.descendant(
+      of: find.byKey(const ValueKey('param-value')),
+      matching: find.byType(TextField),
+    );
+    await tester.tap(field);
+    await tester.pump();
+    await tester.tap(find.text('切换档位'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(field).controller!.text, '14');
+    expect(stored, 35);
+    await tester.tap(find.text('切换档位'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(field).controller!.text, '35');
+    expect(stored, 35);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('鼠标与触屏都能点按步进', (tester) async {
     var value = 10.0;
     await tester.pumpWidget(

@@ -270,6 +270,33 @@ void main() {
     });
   });
 
+  for (final tagMode in [false, true]) {
+    testWidgets('权重工具栏剪切保留别名语义且只写一次 tagMode=$tagMode', (tester) async {
+      await onWindows(() async {
+        await pumpInput(
+          tester,
+          resolveAliasOnCopy: true,
+          enableTagMode: tagMode,
+        );
+        await tester.enterText(find.byType(TextField), _promptText);
+        final editable = tester.widget<EditableText>(find.byType(EditableText));
+        editable.controller.selection = const TextSelection(
+          baseOffset: 0,
+          extentOffset: _promptText.length,
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const ValueKey('prompt-selection-cut-button')),
+        );
+        await tester.pump();
+        expect(lastClipboardText(), _expandedText);
+        expect(clipboardWriteCount(), 1);
+        expect(editable.controller.text, isEmpty);
+        expect(tester.takeException(), isNull);
+      });
+    });
+  }
+
   testWidgets('选区不含别名时不额外写入剪贴板', (tester) async {
     await onWindows(() async {
       await pumpInput(tester, resolveAliasOnCopy: true);

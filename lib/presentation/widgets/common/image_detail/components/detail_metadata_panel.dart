@@ -15,6 +15,7 @@ import '../../../../../data/models/gallery/nai_image_metadata.dart';
 import '../../../../../data/models/vibe/vibe_reference.dart';
 import '../../../../providers/fixed_tags_provider.dart';
 import '../../../../utils/fixed_tag_metadata_matcher.dart';
+import '../../../../utils/detail_prompt_groups.dart';
 import '../../add_to_library_dialog.dart';
 import '../../app_toast.dart';
 import '../../save_vibe_dialog.dart';
@@ -25,6 +26,8 @@ import '../image_detail_data.dart';
 import 'detail_action_buttons.dart';
 import 'detail_tag_pick_bar.dart';
 import 'detail_tag_picks.dart';
+import 'detail_prompt_groups.dart';
+import 'detail_prompt_group_reuse.dart';
 import 'prompt_copy_dialog.dart';
 import 'prompt_section.dart';
 import 'selection_copy_shortcuts.dart';
@@ -75,6 +78,7 @@ class _DetailMetadataPanelState extends ConsumerState<DetailMetadataPanel> {
   (int, int)? _actualImageSize;
   FileInfo? _fileInfo;
   final _tagPicks = DetailTagPicks();
+  bool _reusingGroup = false;
 
   /// Holds focus while tags are picked, so Esc leaves picking before it
   /// reaches the viewer.
@@ -140,6 +144,28 @@ class _DetailMetadataPanelState extends ConsumerState<DetailMetadataPanel> {
     AppToast.success(context, context.l10n.detail_pickedTagsCopied(count));
   }
 
+  Future<void> _reuseGroup(DetailPromptGroup group, bool negative) async {
+    if (_reusingGroup) return;
+    setState(() => _reusingGroup = true);
+    try {
+      await appendDetailPromptGroup(
+        ref.read(detailPromptGroupStateProvider),
+        group.text,
+        negative: negative,
+      );
+      if (mounted) {
+        AppToast.success(context, context.l10n.tagLibrary_addedToPrompt);
+      }
+    } catch (error, stack) {
+      AppLogger.e('Failed to append an image prompt section', error, stack);
+      if (mounted) {
+        AppToast.error(context, context.l10n.detail_reusePromptGroupFailed);
+      }
+    } finally {
+      if (mounted) setState(() => _reusingGroup = false);
+    }
+  }
+
   /// 启动元数据加载（双通道架构）
   ///
   /// **前台高优先级通道**：
@@ -186,7 +212,8 @@ class _DetailMetadataPanelState extends ConsumerState<DetailMetadataPanel> {
       );
       _loadedMetadata = syncMetadata;
       _metadataFuture = null;
-      return;
+      // Gallery records contain PNG fields; local snapshots are mounted later.
+      if (image is! LocalImageDetailData) return;
     }
 
     // 2. 异步加载元数据（支持所有数据源）
@@ -227,7 +254,8 @@ class _DetailMetadataPanelState extends ConsumerState<DetailMetadataPanel> {
               '[MetadataFlow] Async load completed: hasData=${metadata?.hasData}, prompt length=${metadata?.fullPrompt.length ?? 0}',
               'DetailMetadataPanel',
             );
-            if (mounted) {
+            if (mounted &&
+                widget.currentImage?.identifier == image.identifier) {
               setState(() => _loadedMetadata = metadata);
             }
             return metadata;
@@ -396,12 +424,14 @@ class _DetailMetadataPanelState extends ConsumerState<DetailMetadataPanel> {
               ? SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: _MetadataContent(
+                    key: ValueKey(widget.currentImage!.identifier),
                     metadata: metadata,
                     positiveFixedTagEntries: fixedTagsState.positiveEntries,
                     negativeFixedTagEntries: fixedTagsState.negativeEntries,
                     fileInfo: _fileInfo,
                     actualImageSize: _actualImageSize,
                     tagPicks: _tagPicks,
+                    onReuseGroup: _reusingGroup ? null : _reuseGroup,
                   ),
                 )
               : _buildNoMetadataState(theme),
@@ -592,14 +622,17 @@ class _MetadataContent extends StatelessWidget {
   final FileInfo? fileInfo;
   final (int, int)? actualImageSize;
   final DetailTagPicks? tagPicks;
+  final void Function(DetailPromptGroup, bool)? onReuseGroup;
 
   const _MetadataContent({
+    super.key,
     required this.metadata,
     this.positiveFixedTagEntries = const [],
     this.negativeFixedTagEntries = const [],
     this.fileInfo,
     this.actualImageSize,
     this.tagPicks,
+    this.onReuseGroup,
   });
 
   @override
@@ -752,6 +785,11 @@ class _MetadataContent extends StatelessWidget {
     };
     final positivePrompt = positiveTags.join(', ');
     final negativePrompt = negativeTags.join(', ');
+    final positiveGroups = detailPromptGroups(
+      resolvedMetadata,
+      negative: false,
+    );
+    final negativeGroups = detailPromptGroups(resolvedMetadata, negative: true);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -761,6 +799,17 @@ class _MetadataContent extends StatelessWidget {
           icon: Icons.add_circle_outline,
           content: positivePrompt,
           tags: positiveTags,
+          encloseContent: positiveGroups == null,
+          customContent: positiveGroups == null
+              ? null
+              : DetailPromptGroups(
+                  groups: positiveGroups,
+                  negative: false,
+                  tagPicks: tagPicks,
+                  onReuse: onReuseGroup == null
+                      ? null
+                      : (group) => onReuseGroup!(group, false),
+                ),
           initiallyExpanded: true,
           showAddToLibrary: positivePrompt.isNotEmpty,
           onAddToLibrary: () =>
@@ -780,6 +829,17 @@ class _MetadataContent extends StatelessWidget {
             icon: Icons.remove_circle_outline,
             content: negativePrompt,
             tags: negativeTags,
+            encloseContent: negativeGroups == null,
+            customContent: negativeGroups == null
+                ? null
+                : DetailPromptGroups(
+                    groups: negativeGroups,
+                    negative: true,
+                    tagPicks: tagPicks,
+                    onReuse: onReuseGroup == null
+                        ? null
+                        : (group) => onReuseGroup!(group, true),
+                  ),
             initiallyExpanded: false,
             showAddToLibrary: true,
             onAddToLibrary: () =>

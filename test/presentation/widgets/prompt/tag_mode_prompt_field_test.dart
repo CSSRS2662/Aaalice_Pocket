@@ -1080,6 +1080,8 @@ void main() {
             .where((w) => w.selected),
         hasLength(2),
       );
+      expect(find.byKey(const ValueKey('tag-selection-bar')), findsOneWidget);
+      expect(find.byKey(const ValueKey('tag-action-toolbar')), findsNothing);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(
@@ -1092,6 +1094,81 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+  testWidgets('copying touch-selected tags keeps syntax and exits selection', (
+    tester,
+  ) async {
+    final source = TextEditingController(text: '{cat, dog}, bird');
+    addTearDown(source.dispose);
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await pumpEditor(tester, source);
+    await tester.tap(find.byKey(const ValueKey('tag-mode-button')));
+    await tester.pumpAndSettle();
+    await tester.longPress(find.text('cat'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('bird'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('tag-action-toolbar')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('tag-selection-copy')));
+    await tester.pumpAndSettle();
+    expect(copied, '{cat}, bird');
+    expect(source.text, '{cat, dog}, bird');
+    expect(find.byKey(const ValueKey('tag-selection-bar')), findsNothing);
+    expect(find.byKey(const ValueKey('tag-action-toolbar')), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+  testWidgets('the weight toolbar cuts selected tags and supports undo', (
+    tester,
+  ) async {
+    final source = TextEditingController(text: 'cat, dog, bird');
+    addTearDown(source.dispose);
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await pumpEditor(tester, source);
+    await tester.tap(find.byKey(const ValueKey('tag-mode-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('dog'));
+    await tester.pumpAndSettle();
+    final session = tester
+        .widget<TagEditorView>(find.byType(TagEditorView))
+        .session;
+    await tester.tap(find.byKey(const ValueKey('tag-cut-button')));
+    await tester.pumpAndSettle();
+    expect(copied, 'dog');
+    expect(source.text, 'cat, bird');
+    session.undo();
+    await tester.pumpAndSettle();
+    expect(source.text, 'cat, dog, bird');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
   testWidgets(
     'IME comma does not split the composing input or replace its controller',
     (tester) async {

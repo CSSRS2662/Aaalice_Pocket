@@ -49,6 +49,7 @@ class WeightAdjustToolbarWrapper extends StatefulWidget {
 
   /// Copies the semantic prompt selection when the host projects or expands it.
   final VoidCallback? onCopySelection;
+  final VoidCallback? onCutSelection;
 
   /// Shows tags related to the one at the caret. The toolbar offers it for
   /// the selected tag, the touch counterpart of Ctrl+click.
@@ -62,6 +63,7 @@ class WeightAdjustToolbarWrapper extends StatefulWidget {
     this.enabled = true,
     this.enableWheelAdjustment = true,
     this.onCopySelection,
+    this.onCutSelection,
     this.onShowRelated,
   });
 
@@ -377,6 +379,7 @@ class _WeightAdjustToolbarWrapperState
       overlaySize: layoutInfo.overlaySize,
       onClose: _hideToolbar,
       onCopySelection: widget.onCopySelection,
+      onCutSelection: widget.onCutSelection,
       onShowRelated: widget.onShowRelated == null ? null : _showRelated,
       enableWheelAdjustment: widget.enableWheelAdjustment,
       onInteractingChanged: (interacting) {
@@ -435,6 +438,7 @@ class _WeightAdjustToolbar extends StatelessWidget {
     required this.overlaySize,
     required this.onClose,
     required this.onCopySelection,
+    required this.onCutSelection,
     required this.onShowRelated,
     required this.enableWheelAdjustment,
     required this.onInteractingChanged,
@@ -444,6 +448,7 @@ class _WeightAdjustToolbar extends StatelessWidget {
   final Size overlaySize;
   final VoidCallback onClose;
   final VoidCallback? onCopySelection;
+  final VoidCallback? onCutSelection;
   final VoidCallback? onShowRelated;
   final bool enableWheelAdjustment;
   final ValueChanged<bool> onInteractingChanged;
@@ -498,6 +503,25 @@ class _WeightAdjustToolbar extends StatelessWidget {
     );
   }
 
+  Future<void> _cutSelection(BuildContext context) async {
+    if (onCutSelection case final cut?) {
+      cut();
+      return;
+    }
+    final before = controller.value;
+    final selection = before.selection;
+    if (!selection.isValid || selection.isCollapsed) return;
+    await Clipboard.setData(
+      ClipboardData(text: selection.textInside(before.text)),
+    );
+    if (!context.mounted || controller.value != before) return;
+    controller.value = TextEditingValue(
+      text:
+          selection.textBefore(before.text) + selection.textAfter(before.text),
+      selection: TextSelection.collapsed(offset: selection.start),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final selection = controller.selection;
@@ -540,6 +564,12 @@ class _WeightAdjustToolbar extends StatelessWidget {
                 onWeight: _weight,
                 onStep: _step,
                 trailing: [
+                  IconButton(
+                    key: const ValueKey('prompt-selection-cut-button'),
+                    tooltip: context.l10n.tagMode_cut,
+                    onPressed: () => _cutSelection(context),
+                    icon: const Icon(Icons.content_cut, size: 18),
+                  ),
                   IconButton(
                     key: const ValueKey('prompt-selection-copy-button'),
                     tooltip: context.l10n.common_copy,

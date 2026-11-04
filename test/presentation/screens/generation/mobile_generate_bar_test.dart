@@ -56,7 +56,89 @@ void main() {
     await tester.binding.setSurfaceSize(null);
   });
 
-  testWidgets('生成按钮在重试时显示重试次数', (tester) async {
+  testWidgets('点击生成时底色和标签平滑切换，停止操作立即生效', (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        imageGenerationNotifierProvider.overrideWith(
+          () => _StateImageGenerationNotifier(const ImageGenerationState()),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    var active = false;
+    var cancelled = 0;
+    final theme = AppTheme.getTheme(Brightness.light);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: theme,
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 200,
+                child: StatefulBuilder(
+                  builder: (context, setState) => MobileGenerateActionButton(
+                    isGenerating: active,
+                    showCancel: active,
+                    isPreparing: false,
+                    cooldownRemainingSeconds: 0,
+                    showCost: false,
+                    requiresLogin: false,
+                    onGenerate: () {
+                      (container.read(imageGenerationNotifierProvider.notifier)
+                              as _StateImageGenerationNotifier)
+                          .update(
+                            const ImageGenerationState(
+                              status: GenerationStatus.generating,
+                              currentImage: 1,
+                              totalImages: 2,
+                              progress: 0.5,
+                            ),
+                          );
+                      setState(() => active = true);
+                    },
+                    onCancel: () => cancelled++,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    Color background() =>
+        (tester
+                    .widgetList<DecoratedBox>(
+                      find.descendant(
+                        of: generate,
+                        matching: find.byType(DecoratedBox),
+                      ),
+                    )
+                    .first
+                    .decoration
+                as BoxDecoration)
+            .color!;
+    final initial = background();
+    await tester.tap(generate);
+    await tester.pump();
+    expect(find.text('生成'), findsOneWidget);
+    expect(find.text('1/2 50%'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(background(), isNot(initial));
+    expect(background(), isNot(theme.colorScheme.surfaceContainerHighest));
+    await tester.tap(generate);
+    expect(cancelled, 1);
+    await tester.pumpAndSettle();
+    expect(background(), theme.colorScheme.surfaceContainerHighest);
+    expect(find.text('生成'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('生成按钮显示批次和进度，重试只在后台计数', (tester) async {
     Widget button(ImageGenerationState state) => ProviderScope(
       key: UniqueKey(),
       overrides: [
@@ -96,10 +178,13 @@ void main() {
           progress: 0.4,
           retryAttempt: 3,
           maxRetries: 5,
+          currentImage: 1,
+          totalImages: 4,
         ),
       ),
     );
-    expect(find.text('取消 · 重试 3/5'), findsOneWidget);
+    expect(find.text('1/4 40%'), findsOneWidget);
+    expect(find.textContaining('重试'), findsNothing);
 
     await tester.pumpWidget(
       button(
@@ -109,7 +194,7 @@ void main() {
         ),
       ),
     );
-    expect(find.text('取消 · 40%'), findsOneWidget);
+    expect(find.text('1/1 40%'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('generation-mobile-retry-label')),
       findsNothing,
@@ -124,6 +209,7 @@ class _StateImageGenerationNotifier extends ImageGenerationNotifier {
 
   @override
   ImageGenerationState build() => initial;
+  void update(ImageGenerationState value) => state = value;
 }
 
 Widget _subject({

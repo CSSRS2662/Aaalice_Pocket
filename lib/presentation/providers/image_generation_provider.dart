@@ -315,7 +315,21 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
     if (_isDisposed || state.isBusy) {
       return;
     }
-    _setSubmitting(true);
+    final firstRandomSeed = Random().nextInt(
+      ImageGenerationCoordinator.randomSeedExclusiveUpperBound,
+    );
+    state = state.copyWith(
+      isSubmitting: true,
+      currentImage: 1,
+      totalImages:
+          params.nSamples *
+          (batchSizeOverride ?? ref.read(imagesPerRequestProvider)),
+      batchWidth: params.width,
+      batchHeight: params.height,
+      activeSeed: params.seed >= 0 ? params.seed : firstRandomSeed,
+      progress: 0,
+      errorMessage: state.errorMessage,
+    );
     final invocationSettled = Completer<void>();
     _generationInvocationSettled = invocationSettled;
     final epoch = _lifecycleEpoch;
@@ -348,6 +362,14 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
       final effectiveParams = useRestoredLiveParams
           ? ref.read(generationParamsNotifierProvider)
           : params;
+      if (effectiveParams.seed != params.seed) {
+        state = state.copyWith(
+          activeSeed: effectiveParams.seed >= 0
+              ? effectiveParams.seed
+              : firstRandomSeed,
+          errorMessage: state.errorMessage,
+        );
+      }
       final promptGroupCandidate = ref.read(currentPromptGroupSnapshotProvider);
       final promptGroupSnapshot =
           promptGroupCandidate?.positivePrompt == effectiveParams.prompt &&
@@ -440,6 +462,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         params: prepared.params,
         batchCount: prepared.params.nSamples,
         batchSize: batchSizeOverride ?? ref.read(imagesPerRequestProvider),
+        firstRandomSeed: firstRandomSeed,
         prepareBatch: (batch, current) async {
           if (batch == 0) return current;
           final next = await preparation.prepareSubsequentBatch(current);
@@ -607,6 +630,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
           progress: (startImage - 1) / totalImages,
           batchWidth: params.width,
           batchHeight: params.height,
+          activeSeed: params.seed,
           streamPreviewSlots: [
             for (var i = 0; i < requestSize; i++)
               StreamPreviewSlot(
@@ -618,9 +642,14 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
           clearStreamPreview: true,
           retryAttempt: 0,
         );
-      case GenerationImageStarted(:final imageNumber, :final totalImages):
+      case GenerationImageStarted(
+        :final imageNumber,
+        :final totalImages,
+        :final params,
+      ):
         state = state.copyWith(
           currentImage: imageNumber,
+          activeSeed: params.seed,
           progress: (imageNumber - 1) / totalImages,
           retryAttempt: 0,
         );
@@ -630,6 +659,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         :final totalImages,
         :final attempt,
         :final maxRetries,
+        :final seed,
       ):
         // The retry starts over, so the failed attempt's preview goes away.
         var slots = state.streamPreviewSlots;
@@ -647,6 +677,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         }
         state = state.copyWith(
           currentImage: startImage,
+          activeSeed: seed,
           progress: (startImage - 1) / totalImages,
           streamPreviewSlots: slots,
           clearStreamPreview: true,
@@ -660,6 +691,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         :final progress,
         :final bytes,
         :final focusedPreviewPlacement,
+        :final sampleIndex,
       ):
         _rememberPreview(
           event.runId,
@@ -682,6 +714,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         );
         state = state.copyWith(
           currentImage: imageNumber,
+          activeSeed: sampleIndex == 0 ? params.seed : -1,
           progress: ((imageNumber - 1) + progress) / totalImages,
           streamPreview: bytes,
           focusedPreviewPlacement: focusedPreviewPlacement,
@@ -691,9 +724,14 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
             slot,
           ),
         );
-      case GenerationImageFinalizing(:final imageNumber, :final totalImages):
+      case GenerationImageFinalizing(
+        :final imageNumber,
+        :final totalImages,
+        :final seed,
+      ):
         state = state.copyWith(
           currentImage: imageNumber,
+          activeSeed: seed,
           progress: imageNumber / totalImages,
           streamPreviewSlots: _replacePreviewSlot(
             state.streamPreviewSlots,
@@ -725,6 +763,12 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         final generated = <GeneratedImage>[];
         for (final entry in images.indexed) {
           final bytes = entry.$2;
+          final seed = entry.$1 == 0
+              ? params.seed
+              : await ImageSaveUtils.resolveSeed(bytes: bytes) ?? -1;
+          if (!_isCurrentLifecycle(epoch) || event.runId != _activeRunId) {
+            return;
+          }
           final outputSize =
               NaiResolutionAdapter.readImageSize(bytes) ??
               (params.width, params.height);
@@ -737,7 +781,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
               comparisonSource: _activeComparisonSource,
               fixedTagUsageSnapshot: _activeFixedTagUsageSnapshot,
               metadata: _metadataFromParams(
-                params,
+                entry.$1 == 0 ? params : params.copyWith(seed: seed),
                 outputWidth: outputSize.$1,
                 outputHeight: outputSize.$2,
                 fixedTagUsageSnapshot: _activeFixedTagUsageSnapshot,

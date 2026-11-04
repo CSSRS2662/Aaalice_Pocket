@@ -462,7 +462,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get auth_thirdPartyStreamingHint =>
-      'If the third-party site does not support streaming generation, go to Settings > Generation > Image Output and turn off Streaming preview before generating.';
+      'If the third-party site does not support streaming generation, go to Settings > Generation > Image Output and turn off Streaming generation before generating.';
 
   @override
   String get anlas_thirdPartyUnavailable =>
@@ -712,11 +712,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_generationFeedbackSection => 'Completion Alert';
 
   @override
-  String get settings_generationStreamPreview => 'Streaming preview';
+  String get settings_generationShowStreamPreview => 'Show live image previews';
+
+  @override
+  String get settings_generationShowStreamPreviewSubtitle =>
+      'When off, show only the final image; button progress still updates.';
+
+  @override
+  String get settings_generationStreamPreview => 'Streaming generation';
 
   @override
   String get settings_generationStreamPreviewSubtitle =>
-      'Show intermediate images while generating. Turn this off to wait for the final image instead.';
+      'Receive real-time generation progress; disable this if your service does not support streaming.';
 
   @override
   String get settings_alphaModeTitle => 'Alpha mode for transparent images';
@@ -1000,7 +1007,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get generation_streamingUnsupportedHint =>
-      'Go to Settings > Generation > Image Output, turn off Streaming preview, and try again.';
+      'Go to Settings > Generation > Image Output, turn off Streaming generation, and try again.';
 
   @override
   String get generation_params => 'Parameters';
@@ -15156,6 +15163,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tagMode_cut => 'Cut';
+
+  @override
+  String get prompt_moveTagsToSection => 'Move to section';
+
+  @override
+  String get detail_reusePromptGroup => 'Reuse this section';
+
+  @override
+  String get detail_otherPromptTags => 'Other prompt tags';
+
+  @override
+  String get detail_reusePromptGroupFailed =>
+      'Could not add the prompt section. Please try again.';
 
   @override
   String get tagMode_movePrevious => 'Move backward';

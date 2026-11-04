@@ -88,11 +88,6 @@ class MetadataImportApplier {
       metadata.seed,
       target.updateSeed,
     );
-    count += _applyValue<int>(
-      options.importSteps,
-      metadata.steps,
-      target.updateSteps,
-    );
     count += _applyValue<double>(
       options.importScale,
       metadata.scale,
@@ -115,6 +110,11 @@ class MetadataImportApplier {
       options.importModel,
       resolveImportableModel(metadata),
       target.updateModel,
+    );
+    count += _applyValue<int>(
+      options.importSteps,
+      metadata.steps,
+      target.updateSteps,
     );
     count += _applyValue<bool>(
       options.importSmea,

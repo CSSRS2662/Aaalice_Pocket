@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:nai_launcher/data/models/gallery/prompt_group_snapshot.dart';
+import 'package:nai_launcher/data/models/gallery/local_image_record.dart';
+import 'package:nai_launcher/presentation/widgets/common/image_detail/image_detail_data.dart';
 import 'package:nai_launcher/data/services/image_metadata_service.dart';
 import 'package:nai_launcher/data/services/metadata/hash_calculator.dart';
 import 'package:nai_launcher/data/services/metadata/unified_metadata_parser.dart';
@@ -50,6 +52,33 @@ void main() {
     await Hive.close().timeout(const Duration(seconds: 10));
     await directory.delete(recursive: true);
   });
+
+  test(
+    'gallery records with cached PNG metadata still load local section snapshots',
+    () async {
+      final bytes = await novelAiPngBytes('1girl, night sky');
+      final file = File('${directory.path}/gallery.png');
+      await file.writeAsBytes(bytes);
+      final record = LocalImageRecord(
+        path: file.path,
+        size: bytes.length,
+        modifiedAt: DateTime(2026),
+        metadata: UnifiedMetadataParser.parseFromPng(bytes).metadata,
+      );
+      await PromptGroupRecordStore().record(
+        contentHash: FileHashCalculator().calculateFromBytes(bytes),
+        snapshot: _snapshotOf('1girl'),
+      );
+      final detail = LocalImageDetailData(record);
+      expect(detail.metadata!.promptGroupData, isNull);
+      final metadata = await detail.getMetadataAsync();
+      expect(
+        metadata!.promptGroupSnapshot!.positiveSections.first.text,
+        '1girl',
+      );
+      expect(record.metadata!.promptGroupData, isNull);
+    },
+  );
 
   test(
     'recorded sections are mounted onto metadata parsed from bytes',

@@ -35,6 +35,7 @@ import '../../../providers/prompt_regex_rules_provider.dart';
 import '../comfyui_import_wrapper.dart';
 import '../nai_syntax_controller.dart';
 import '../tag_mode_prompt_field.dart';
+import '../tag_editor_session.dart';
 import '../prompt_text_selection_actions.dart';
 import 'unified_prompt_config.dart';
 import 'prompt_scroll_coordinator.dart';
@@ -103,6 +104,7 @@ class UnifiedPromptInput extends ConsumerStatefulWidget {
   /// Grouped editors keep independent history sessions while sharing the main
   /// prompt's mode toggle through this value.
   final Object? tagModeSessionId;
+  final Future<void> Function(TagEditorSession)? onMoveTagSelection;
 
   /// 是否显示右下角助手
   final bool enableAssistant;
@@ -139,6 +141,7 @@ class UnifiedPromptInput extends ConsumerStatefulWidget {
     this.fitContent = false,
     this.sessionId,
     this.tagModeSessionId,
+    this.onMoveTagSelection,
     this.enableAssistant = true,
     this.showTagModeSwitch = true,
     this.assistantTapRegionGroupId,
@@ -1048,6 +1051,22 @@ class _UnifiedPromptInputState extends ConsumerState<UnifiedPromptInput> {
     );
   }
 
+  void _cutWeightSelection() {
+    if (widget.config.readOnly) return;
+    if (_handleExpandedClipboardAction(isCut: true)) return;
+    _copyWeightSelection();
+    final controller = _effectiveController;
+    final selection = controller.selection;
+    if (!selection.isValid || selection.isCollapsed) return;
+    controller.value = TextEditingValue(
+      text:
+          selection.textBefore(controller.text) +
+          selection.textAfter(controller.text),
+      selection: TextSelection.collapsed(offset: selection.start),
+    );
+    _handleTextChanged(controller.text);
+  }
+
   Widget _buildContextMenu(
     BuildContext context,
     EditableTextState editableTextState,
@@ -1547,6 +1566,8 @@ class _UnifiedPromptInputState extends ConsumerState<UnifiedPromptInput> {
         enableAutocomplete: widget.config.enableAutocomplete,
         enableWheelAdjustment: enableWheelAdjustment,
         onCopySelection: _copyWeightSelection,
+        onCutSelection: _cutWeightSelection,
+        onMoveSelection: widget.onMoveTagSelection,
         onShowRelated: showRelated,
         onChanged: _handleTextChanged,
         onSearch: (replace) => _openSearch(showReplace: replace),
@@ -1563,6 +1584,7 @@ class _UnifiedPromptInputState extends ConsumerState<UnifiedPromptInput> {
             enableWheelAdjustment: enableWheelAdjustment,
             enabled: !_tagMode && !widget.config.readOnly,
             onCopySelection: _copyWeightSelection,
+            onCutSelection: _cutWeightSelection,
             onShowRelated: showRelated,
             child: clipboardAwareInput,
           );

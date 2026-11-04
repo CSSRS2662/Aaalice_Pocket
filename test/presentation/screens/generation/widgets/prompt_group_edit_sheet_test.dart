@@ -7,6 +7,7 @@ import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/screens/generation/widgets/prompt_group_controller.dart';
 import 'package:nai_launcher/presentation/screens/generation/widgets/prompt_group_edit_sheet.dart';
+import 'package:nai_launcher/presentation/widgets/prompt/tag_editor_view.dart';
 
 import '../../../../helpers/memory_local_storage.dart';
 
@@ -96,6 +97,55 @@ bool _clipped(WidgetTester tester, Finder text) =>
     tester.renderObject<RenderParagraph>(text).didExceedMaxLines;
 
 void main() {
+  testWidgets(
+    'multi-selected tags move to a disabled section after cancellation',
+    (tester) async {
+      final (groups, _) = await _openSheet(tester, autocomplete: false);
+      await tester.tap(
+        find.byKey(const ValueKey('tag-mode-button')),
+      );
+      await tester.pumpAndSettle();
+      await tester.longPress(find.text('uniform'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('white_coat'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('tag-action-toolbar')), findsNothing);
+      final move = find.byKey(const ValueKey('tag-selection-move'));
+      await tester.tap(move);
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(
+        groups.sectionById('s1')!.controller.text,
+        'uniform, checkered_skirt, white_coat, open_coat',
+      );
+      expect(
+        tester
+            .widget<TagEditorView>(find.byType(TagEditorView))
+            .session
+            .selected,
+        hasLength(2),
+      );
+      expect(find.byKey(const ValueKey('tag-action-toolbar')), findsNothing);
+      await tester.tap(move);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('prompt_tag_move_s2')));
+      await tester.pumpAndSettle();
+      expect(
+        groups.sectionById('s1')!.controller.text,
+        'checkered_skirt, open_coat',
+      );
+      expect(
+        groups.sectionById('s2')!.controller.text,
+        'smile, uniform, white_coat',
+      );
+      expect(groups.sectionById('s2')!.enabled, isFalse);
+      expect(find.byKey(const ValueKey('tag-selection-bar')), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
   testWidgets('title and include label show in full on a phone', (
     tester,
   ) async {

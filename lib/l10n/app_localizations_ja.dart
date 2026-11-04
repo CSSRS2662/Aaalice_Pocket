@@ -451,7 +451,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get auth_thirdPartyStreamingHint =>
-      'サードパーティサイトがストリーミング生成に対応していない場合は、［設定］>［生成］>［画像出力］で［ストリーミングプレビュー］をオフにしてから生成してください。';
+      'サードパーティサイトがストリーミング生成に対応していない場合は、［設定］>［生成］>［画像出力］で［ストリーミング生成］をオフにしてから生成してください。';
 
   @override
   String get anlas_thirdPartyUnavailable => 'このサイトは Anlas 残高情報を提供していません';
@@ -697,11 +697,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_generationFeedbackSection => '完了通知';
 
   @override
-  String get settings_generationStreamPreview => 'ストリーミングプレビュー';
+  String get settings_generationShowStreamPreview => '生成中の画像プレビューを表示';
+
+  @override
+  String get settings_generationShowStreamPreviewSubtitle =>
+      'オフにすると完成画像のみを表示します。ボタンの進捗は引き続き更新されます。';
+
+  @override
+  String get settings_generationStreamPreview => 'ストリーミング生成';
 
   @override
   String get settings_generationStreamPreviewSubtitle =>
-      '生成中に途中画像を表示します。オフにすると最終画像が完成するまで待機します。';
+      '生成の進捗をリアルタイムで受信します。非対応のサービスではオフにしてください。';
 
   @override
   String get settings_alphaModeTitle => '透過画像のアルファモード';
@@ -981,7 +988,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get generation_streamingUnsupportedHint =>
-      '［設定］>［生成］>［画像出力］で［ストリーミングプレビュー］をオフにしてから、もう一度お試しください。';
+      '［設定］>［生成］>［画像出力］で［ストリーミング生成］をオフにしてから、もう一度お試しください。';
 
   @override
   String get generation_params => 'パラメータ';
@@ -14733,6 +14740,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get tagMode_cut => '切り取り';
+
+  @override
+  String get prompt_moveTagsToSection => 'グループに移動';
+
+  @override
+  String get detail_reusePromptGroup => 'このグループを再利用';
+
+  @override
+  String get detail_otherPromptTags => 'その他のプロンプト';
+
+  @override
+  String get detail_reusePromptGroupFailed =>
+      'プロンプトグループを追加できませんでした。もう一度お試しください。';
 
   @override
   String get tagMode_movePrevious => '前へ移動';

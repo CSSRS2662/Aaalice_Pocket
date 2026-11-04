@@ -232,6 +232,7 @@ const portableSettingKeys = <String>{
   StorageKeys.randomPromptMode,
   StorageKeys.showRandomPromptTools,
   StorageKeys.generationStreamPreviewEnabled,
+  StorageKeys.generationShowStreamPreview,
   StorageKeys.imagesPerRequest,
   StorageKeys.enableAutocomplete,
   StorageKeys.autocompleteResultLimit,

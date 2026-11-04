@@ -18,14 +18,22 @@ import 'prompt_input_footer.dart';
 /// 自左向右：分辨率胶囊 → 透明底色入口 → 可选对比开关 → 种子胶囊。
 /// 透明底色入口向上弹出档位浮层；触屏设备在支持的模型下把生成用的
 /// 透明背景开关（图标 + 文字 + 开关）固定在最右侧，提示词页不再重复。
-class PreviewInfoBar extends ConsumerWidget {
-  final GeneratedImage image;
+class PreviewInfoBar extends ConsumerStatefulWidget {
+  final GeneratedImage? image;
+  final int? width;
+  final int? height;
+  final bool generating;
+  final int activeSeed;
   final bool comparisonEnabled;
   final ValueChanged<bool>? onComparisonChanged;
 
   const PreviewInfoBar({
     super.key,
-    required this.image,
+    this.image,
+    this.width,
+    this.height,
+    this.generating = false,
+    this.activeSeed = -1,
     this.comparisonEnabled = false,
     this.onComparisonChanged,
   });
@@ -36,6 +44,13 @@ class PreviewInfoBar extends ConsumerWidget {
     final scaledLine = MediaQuery.textScalerOf(context).scale(14) + 20;
     return scaledLine < barHeight ? barHeight : scaledLine;
   }
+
+  @override
+  ConsumerState<PreviewInfoBar> createState() => _PreviewInfoBarState();
+}
+
+class _PreviewInfoBarState extends ConsumerState<PreviewInfoBar> {
+  bool _seedCleared = false;
 
   /// 低于该宽度就收起分辨率胶囊（官网在窄容器下同样隐藏它）
   static const double _resolutionMinWidth = 300;
@@ -48,22 +63,40 @@ class PreviewInfoBar extends ConsumerWidget {
   static const double _transparentLabelMinWidth = 260;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // 种子要等 PNG 元数据解析完才知道，解析期间先不占位
-    final seed = ref
-        .watch(generatedImageMetadataProvider(image))
-        .valueOrNull
-        ?.seed;
-    final transparentSupported = ref.watch(
-      generationParamsNotifierProvider.select(
-        (params) => params.capabilities.supportsTransparentBackground,
-      ),
-    );
+  void didUpdateWidget(covariant PreviewInfoBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.image?.id != widget.image?.id ||
+        oldWidget.generating != widget.generating ||
+        oldWidget.activeSeed != widget.activeSeed) {
+      _seedCleared = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final image = widget.image;
+    final metadata = image == null
+        ? null
+        : ref.watch(generatedImageMetadataProvider(image));
+    final rawSeed = widget.generating
+        ? widget.activeSeed
+        : metadata?.valueOrNull?.seed;
+    final seed = rawSeed != null && rawSeed >= 0 ? rawSeed : null;
+    final loadingSeed =
+        seed == null && (widget.generating || metadata?.isLoading == true);
+    final params = ref.read(generationParamsNotifierProvider.notifier);
+    final currentParams = ref.watch(generationParamsNotifierProvider);
+    final locked =
+        seed != null && currentParams.seed == seed && params.isSeedLocked;
+    final width = widget.width ?? image?.width;
+    final height = widget.height ?? image?.height;
+    final onComparisonChanged = widget.onComparisonChanged;
     final showTransparentBackground =
-        context.interactionPolicy.touchAvailable && transparentSupported;
+        context.interactionPolicy.touchAvailable &&
+        currentParams.capabilities.supportsTransparentBackground;
 
     return SizedBox(
-      height: heightFor(context),
+      height: PreviewInfoBar.heightFor(context),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final resolutionMinWidth = showTransparentBackground
@@ -72,17 +105,33 @@ class PreviewInfoBar extends ConsumerWidget {
               ? _resolutionMinWidth
               : _comparisonResolutionMinWidth;
           final showResolution =
-              !constraints.maxWidth.isFinite ||
+              width != null &&
+              height != null &&
               constraints.maxWidth >= resolutionMinWidth;
 
           final compactInfo = !showResolution && onComparisonChanged == null;
+          final seedPill = _SeedPill(
+            seed: _seedCleared && !locked ? null : seed,
+            loading: loadingSeed,
+            locked: locked,
+            compact: compactInfo,
+            onTap: seed == null
+                ? null
+                : () {
+                    if (locked) {
+                      params.unlockSeed(clearSeed: true);
+                    } else {
+                      params.lockSeed(seed);
+                    }
+                    setState(() => _seedCleared = locked);
+                  },
+          );
           final info = compactInfo
               ? Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const _TransparencyBackgroundButton(),
-                    if (seed != null && seed >= 0)
-                      Flexible(child: _SeedPill(seed: seed, compact: true)),
+                    Flexible(child: seedPill),
                   ],
                 )
               : HorizontalActionStrip(
@@ -94,12 +143,12 @@ class PreviewInfoBar extends ConsumerWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text('${image.width}'),
+                              Text('$width'),
                               const Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 6),
                                 child: Icon(Icons.close_rounded, size: 11),
                               ),
-                              Text('${image.height}'),
+                              Text('$height'),
                             ],
                           ),
                         ),
@@ -109,14 +158,12 @@ class PreviewInfoBar extends ConsumerWidget {
                       if (onComparisonChanged != null) ...[
                         const _PillDivider(),
                         _ComparisonToggle(
-                          enabled: comparisonEnabled,
-                          onChanged: onComparisonChanged!,
+                          enabled: widget.comparisonEnabled,
+                          onChanged: onComparisonChanged,
                         ),
                       ],
-                      if (seed != null && seed >= 0) ...[
-                        const SizedBox(width: 6),
-                        _SeedPill(seed: seed),
-                      ],
+                      const SizedBox(width: 6),
+                      seedPill,
                     ],
                   ),
                 );
@@ -130,7 +177,7 @@ class PreviewInfoBar extends ConsumerWidget {
                 switchStyle: true,
                 compact: true,
                 shrinkWrap: true,
-                minHeight: barHeight,
+                minHeight: PreviewInfoBar.barHeight,
                 showSwitch: constraints.maxWidth >= _transparentSwitchMinWidth,
                 showLabel: constraints.maxWidth >= _transparentLabelMinWidth,
                 toggleKey: const ValueKey(
@@ -260,27 +307,55 @@ class _PillDivider extends StatelessWidget {
   }
 }
 
-/// 种子胶囊：点击把这张图的种子写回生成参数
-class _SeedPill extends ConsumerWidget {
-  final int seed;
+class _SeedPill extends StatelessWidget {
+  final int? seed;
+  final bool loading;
+  final bool locked;
   final bool compact;
+  final VoidCallback? onTap;
 
-  const _SeedPill({required this.seed, this.compact = false});
+  const _SeedPill({
+    required this.seed,
+    required this.loading,
+    required this.locked,
+    required this.compact,
+    required this.onTap,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return _InfoPill(
       padding: EdgeInsets.symmetric(horizontal: compact ? 2 : 10),
-      tooltip: context.l10n.generation_previewApplySeed,
-      onTap: () =>
-          ref.read(generationParamsNotifierProvider.notifier).updateSeed(seed),
+      tooltip: loading
+          ? l10n.common_loading
+          : locked
+          ? l10n.generation_seedUnlock
+          : onTap == null
+          ? null
+          : l10n.generation_seedLock,
+      onTap: onTap,
+      selected: locked,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.eco_outlined, size: 13),
+          if (loading && !MediaQuery.disableAnimationsOf(context))
+            const SizedBox.square(
+              dimension: 13,
+              child: CircularProgressIndicator(strokeWidth: 1.5),
+            )
+          else
+            Icon(
+              locked ? Icons.lock_outline_rounded : Icons.eco_outlined,
+              size: 13,
+            ),
           SizedBox(width: compact ? 4 : 6),
           Flexible(
-            child: Text('$seed', maxLines: 1, overflow: TextOverflow.ellipsis),
+            child: Text(
+              loading ? '…' : seed?.toString() ?? l10n.generation_seedRandom,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

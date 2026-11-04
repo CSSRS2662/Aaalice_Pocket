@@ -1002,7 +1002,7 @@ void main() {
           source: 'NovelAI Diffusion V4.5 4BDE2A90',
         );
         final record = LocalImageRecord(
-          path: r'G:\test\image.png',
+          path: File('assets/icons/ai_brands/novelai.png').absolute.path,
           size: 1,
           modifiedAt: DateTime(2026, 5, 4),
           metadata: stale,

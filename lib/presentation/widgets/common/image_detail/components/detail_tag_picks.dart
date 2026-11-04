@@ -44,6 +44,24 @@ class DetailTagPicks extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setRange(
+    DetailTagSide side,
+    List<String> tags, {
+    required int offset,
+    required bool picked,
+  }) {
+    _active = true;
+    final picks = _picked.putIfAbsent(side, () => {});
+    for (final (index, tag) in tags.indexed) {
+      if (picked) {
+        picks[offset + index] = tag;
+      } else {
+        picks.remove(offset + index);
+      }
+    }
+    notifyListeners();
+  }
+
   /// Leaves picking and drops every pick.
   void end() {
     if (!_active && _picked.isEmpty) return;

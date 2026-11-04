@@ -318,6 +318,7 @@ class ImageGenerationState {
   final double progress;
   final int currentImage; // 当前第几张 (1-based)
   final int totalImages; // 总共几张
+  final int activeSeed; // -1 表示当前样本的种子还未知
 
   /// 流式预览图像（渐进式生成过程中的最新预览）
   final Uint8List? streamPreview;
@@ -359,6 +360,7 @@ class ImageGenerationState {
     this.progress = 0.0,
     this.currentImage = 0,
     this.totalImages = 0,
+    this.activeSeed = -1,
     this.streamPreview,
     this.focusedPreviewPlacement,
     this.streamPreviewSlots = const [],
@@ -381,6 +383,7 @@ class ImageGenerationState {
     double? progress,
     int? currentImage,
     int? totalImages,
+    int? activeSeed,
     Uint8List? streamPreview,
     FocusedStreamPreviewPlacement? focusedPreviewPlacement,
     List<StreamPreviewSlot>? streamPreviewSlots,
@@ -404,6 +407,7 @@ class ImageGenerationState {
       progress: progress ?? this.progress,
       currentImage: currentImage ?? this.currentImage,
       totalImages: totalImages ?? this.totalImages,
+      activeSeed: activeSeed ?? this.activeSeed,
       streamPreview: clearStreamPreview
           ? null
           : (streamPreview ?? this.streamPreview),

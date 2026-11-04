@@ -11,7 +11,7 @@ import '../../../themes/theme_extension.dart';
 import '../../../widgets/common/anlas_cost_badge.dart';
 import '../../../widgets/common/themed_button.dart';
 import '../mobile_generation_view_data.dart';
-import '../widgets/generation_controls/generate_button.dart';
+import '../widgets/generation_controls/generation_active_label.dart';
 import '../widgets/generation_controls/random_mode_toggle.dart';
 
 /// 生成页底栏：抽卡开关、加入队列、智能体、队列与生成按钮（V5 体力与 Anlas
@@ -187,15 +187,18 @@ class MobileGenerateActionButton extends StatelessWidget {
     final radius = BorderRadius.circular(appTheme.controlRadius + 4);
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
-        : appTheme.fastDuration;
+        : appTheme.normalDuration;
 
     final Widget content;
     if (cancelMode) {
-      content = _CancelLabel(preparing: isPreparing, color: foreground);
+      content = IconTheme.merge(
+        data: IconThemeData(color: foreground),
+        child: const GenerationActiveLabel(),
+      );
     } else if (waiting) {
       content = IconTheme.merge(
         data: IconThemeData(color: foreground),
-        child: const GenerateButtonSpinner(),
+        child: const Icon(Icons.hourglass_top_rounded, size: 20),
       );
     } else {
       content = Row(
@@ -265,9 +268,27 @@ class MobileGenerateActionButton extends StatelessWidget {
                     horizontal: 16,
                     vertical: 10,
                   ),
-                  child: DefaultTextStyle.merge(
-                    style: TextStyle(color: foreground),
-                    child: content,
+                  child: AnimatedDefaultTextStyle(
+                    duration: duration,
+                    curve: appTheme.standardCurve,
+                    style: theme.textTheme.titleMedium!.copyWith(
+                      color: foreground,
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: duration,
+                      switchInCurve: appTheme.standardCurve,
+                      switchOutCurve: appTheme.standardCurve,
+                      child: KeyedSubtree(
+                        key: ValueKey(
+                          cancelMode
+                              ? 'active'
+                              : waiting
+                              ? 'waiting'
+                              : 'idle',
+                        ),
+                        child: content,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -298,62 +319,6 @@ class _ProgressFill extends ConsumerWidget {
         heightFactor: 1,
         child: ColoredBox(color: color.withValues(alpha: 0.24)),
       ),
-    );
-  }
-}
-
-class _CancelLabel extends ConsumerWidget {
-  const _CancelLabel({required this.preparing, required this.color});
-
-  final bool preparing;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final percent =
-        (ref.watch(
-                  imageGenerationNotifierProvider.select(
-                    selectGenerationProgress,
-                  ),
-                ) *
-                100)
-            .clamp(0, 100)
-            .round();
-    final retry = ref.watch(
-      imageGenerationNotifierProvider.select(selectGenerationRetry),
-    );
-    final label = preparing
-        ? context.l10n.common_cancel
-        : retry != null
-        ? context.l10n.mobileWorkbench_cancelRetry(
-            retry.attempt,
-            retry.maxRetries,
-          )
-        : context.l10n.mobileWorkbench_cancelProgress(percent);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (preparing)
-          IconTheme.merge(
-            data: IconThemeData(color: color),
-            child: const GenerateButtonSpinner(),
-          )
-        else
-          Icon(Icons.stop_circle_outlined, size: 20, color: color),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            label,
-            key: retry != null && !preparing
-                ? const ValueKey('generation-mobile-retry-label')
-                : null,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleMedium?.copyWith(color: color),
-          ),
-        ),
-      ],
     );
   }
 }

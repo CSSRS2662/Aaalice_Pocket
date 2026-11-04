@@ -16,6 +16,8 @@ import 'image_card_controller.dart';
 import 'image_card_effects.dart';
 import 'image_card_models.dart';
 import 'image_card_stream_preview.dart';
+import 'generation_dot_field.dart';
+import 'generation_visual_transition.dart';
 
 class ImageCardSurface extends StatelessWidget {
   const ImageCardSurface({
@@ -323,7 +325,7 @@ class ImageCardSurface extends StatelessWidget {
     // 换源会把 frame 归零，但旧帧仍在 gapless 画，此时藏底层会让透明区闪一下。
     final showsImage = ready || controller.hasPaintedCompletedImage;
     final holdover = controller.effectiveCompletionPreview;
-    return Stack(
+    final surface = Stack(
       fit: StackFit.expand,
       children: [
         if (!showsImage) ...[
@@ -333,12 +335,19 @@ class ImageCardSurface extends StatelessWidget {
               placement: holdover.placement,
             )
           // 只有铺了底层的卡片需要兜底色遮住它，其余卡片首帧前保持原本的空白。
+          else if (!data.showStreamPreview && data.completionPreview != null)
+            const GenerationDotField()
           else if (data.underlay != null)
             const ColoredBox(color: ImageViewportSurface.background),
         ],
         if (showsImage && data.underlay != null) data.underlay!,
         child,
       ],
+    );
+    if (data.completionPreview == null) return surface;
+    return GenerationVisualTransition(
+      stage: showsImage ? 'complete' : 'decoding',
+      child: surface,
     );
   }
 }

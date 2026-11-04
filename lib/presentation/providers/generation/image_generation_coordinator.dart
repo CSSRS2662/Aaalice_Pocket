@@ -109,13 +109,7 @@ class ImageGenerationCoordinator {
         }
         if (_aborted(handle)) break;
 
-        final batchSeed = command.materializeRandomSeed
-            ? command.totalImages == 1 && currentParams.seed != -1
-                  ? currentParams.seed
-                  : _random.nextInt(randomSeedExclusiveUpperBound)
-            : currentParams.seed == -1
-            ? -1
-            : currentParams.seed + batch;
+        final batchSeed = _batchSeed(command, currentParams.seed, batch);
         final startImage = consumedImages + 1;
         final eventParams = currentParams.copyWith(
           nSamples: 1,
@@ -211,6 +205,7 @@ class ImageGenerationCoordinator {
                 if (_aborted(handle) || _skipCurrentRequest) break;
                 batchError = error;
                 AppLogger.e('Failed to generate image $imageNumber: $error');
+                break;
               }
             }
           }
@@ -281,15 +276,17 @@ class ImageGenerationCoordinator {
               vibeEncodings: batchEncodings,
               indexedVibeEncodings: batchIndexedEncodings,
             );
-          } else if (batchError != null) {
+          }
+          if (batchError != null) {
             lastError = batchError;
             yield GenerationRequestFailed(
               runId: command.runId,
               startImage: startImage,
               requestSize: command.batchSize,
               error: batchError,
-              isTerminal: command.batchCount == 1,
+              isTerminal: true,
             );
+            break;
           }
           consumedImages += command.batchSize;
         } finally {
@@ -307,7 +304,7 @@ class ImageGenerationCoordinator {
           );
         }
         yield GenerationCancelled(command.runId);
-      } else if (allImages.isEmpty) {
+      } else if (lastError != null || allImages.isEmpty) {
         yield GenerationFailed(
           command.runId,
           lastError ?? StateError('No images returned from generation'),
@@ -350,6 +347,17 @@ class ImageGenerationCoordinator {
           .whenComplete(updates.close),
     );
     return updates.stream;
+  }
+
+  int _batchSeed(GenerationCommand command, int seed, int batch) {
+    if (!command.materializeRandomSeed) return seed == -1 ? -1 : seed + batch;
+    if (seed >= 0) {
+      return (seed + batch * command.batchSize) & 0xffffffff;
+    }
+    if (batch == 0 && command.firstRandomSeed != null) {
+      return command.firstRandomSeed!;
+    }
+    return _random.nextInt(randomSeedExclusiveUpperBound);
   }
 
   Stream<_RequestSignal> _runRequest({
@@ -413,6 +421,7 @@ class ImageGenerationCoordinator {
                 bytes: Uint8List.fromList(chunk.previewImage!),
                 currentStep: chunk.currentStep,
                 totalSteps: chunk.totalSteps,
+                sampleIndex: sample,
                 focusedPreviewPlacement: chunk.focusedPreviewPlacement,
               ),
             );
@@ -424,6 +433,7 @@ class ImageGenerationCoordinator {
                 runId: command.runId,
                 imageNumber: imageNumber,
                 totalImages: command.totalImages,
+                seed: sample == 0 ? params.seed : -1,
               ),
             );
           }
@@ -475,6 +485,7 @@ class ImageGenerationCoordinator {
             attempt: retries,
             maxRetries: maxRetries,
             error: error,
+            seed: params.seed,
           ),
         );
       }

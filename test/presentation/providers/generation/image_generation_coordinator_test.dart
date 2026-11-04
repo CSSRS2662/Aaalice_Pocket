@@ -19,6 +19,55 @@ void main() {
     registerFallbackValue(const ImageParams());
   });
 
+  test(
+    'a fixed seed starts a multi-image run and advances by batch size',
+    () async {
+      final api = _MockNAIImageGenerationApiService();
+      final sentSeeds = <int>[];
+      when(
+        () => api.generateImageWithEncodingsCancellable(
+          any(),
+          onProgress: any(named: 'onProgress'),
+          focusedInpaintEnabled: any(named: 'focusedInpaintEnabled'),
+          minimumContextMegaPixels: any(named: 'minimumContextMegaPixels'),
+          focusedSelectionRect: any(named: 'focusedSelectionRect'),
+        ),
+      ).thenAnswer((invocation) async {
+        final params = invocation.positionalArguments.single as ImageParams;
+        sentSeeds.add(params.seed);
+        return (
+          [
+            for (var i = 0; i < params.nSamples; i++)
+              Uint8List.fromList([i + 1]),
+          ],
+          <int, String>{},
+        );
+      });
+      final coordinator = ImageGenerationCoordinator(apiService: api);
+      final command = GenerationCommand(
+        runId: 1,
+        params: const ImageParams(prompt: 'test', seed: 42),
+        batchCount: 2,
+        batchSize: 2,
+        prepareBatch: (_, params) async => params,
+        streamPreviewEnabled: false,
+        firstRandomSeed: 12345,
+      );
+      final events = await coordinator
+          .execute(command, coordinator.start(command))
+          .toList();
+
+      expect(sentSeeds, [42, 44]);
+      expect(
+        events.whereType<GenerationRequestStarted>().map(
+          (event) => event.params.seed,
+        ),
+        sentSeeds,
+      );
+      expect(events.last, isA<GenerationCompleted>());
+    },
+  );
+
   test('prepareBatch exceptions become terminal failure events', () async {
     final apiService = _MockNAIImageGenerationApiService();
     final coordinator = ImageGenerationCoordinator(apiService: apiService);
@@ -928,6 +977,48 @@ void main() {
       );
       return coordinator.execute(command, coordinator.start(command)).toList();
     }
+
+    test(
+      'five failed retries stop the remaining batch and retain completed images',
+      () async {
+        final image = Uint8List.fromList([7]);
+        streamReplies = (call) => call == 1
+            ? [ImageStreamChunk.complete(image)]
+            : [ImageStreamChunk.error('API_ERROR_500|down')];
+        final coordinator = ImageGenerationCoordinator(apiService: apiService);
+        final command = GenerationCommand(
+          runId: 1,
+          params: const ImageParams(prompt: 'test'),
+          batchCount: 4,
+          batchSize: 1,
+          prepareBatch: (_, params) async => params,
+        );
+        final events = await coordinator
+            .execute(command, coordinator.start(command))
+            .toList();
+        expect(streamCalls, 7);
+        expect(
+          events.whereType<GenerationRetrying>().map((event) => event.attempt),
+          [1, 2, 3, 4, 5],
+        );
+        expect(
+          events.whereType<GenerationRequestCompleted>().single.images.single,
+          same(image),
+        );
+        expect(
+          events.whereType<GenerationRequestFailed>().single.isTerminal,
+          isTrue,
+        );
+        expect(events.last, isA<GenerationFailed>());
+        expect(events.whereType<GenerationCompleted>(), isEmpty);
+        expect(
+          events.whereType<GenerationRequestStarted>().map(
+            (event) => event.startImage,
+          ),
+          [1, 2],
+        );
+      },
+    );
 
     test('a single-image stream failure is retried five times', () async {
       streamReplies = (_) => [ImageStreamChunk.error('API_ERROR_500|down')];

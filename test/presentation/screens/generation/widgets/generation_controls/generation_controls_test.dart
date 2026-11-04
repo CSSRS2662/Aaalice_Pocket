@@ -342,7 +342,10 @@ void main() {
     generationNotifier.setGenerating(true);
     await tester.pumpAndSettle();
 
-    expect(find.text('取消'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('generation-active-progress')),
+      findsOneWidget,
+    );
     expect(tester.getSize(layoutFinder), idleLayoutSize);
     expect(tester.getRect(primaryFinder), idlePrimaryRect);
     expect(tester.takeException(), isNull);
@@ -367,10 +370,17 @@ void main() {
         expect(bounds.inflate(0.01).contains(primary.bottomRight), isTrue);
         final skip = find.text('跳过当前批次 1/2');
         expect(skip.hitTestable(), findsOneWidget);
-        expect(find.text('取消').hitTestable(), findsOneWidget);
+        expect(
+          find
+              .byKey(const ValueKey('generation-active-progress'))
+              .hitTestable(),
+          findsOneWidget,
+        );
         await tester.tap(skip);
         expect(notifier.skipCount, 1);
-        await tester.tap(find.text('取消'));
+        await tester.tap(
+          find.byKey(const ValueKey('generation-active-progress')),
+        );
         expect(notifier.cancelCount, 1);
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: 'width=$width');
@@ -440,15 +450,18 @@ void main() {
         container.read(imageGenerationNotifierProvider.notifier)
             as _TestImageGenerationNotifier;
     notifier.setPreparing();
-    // 转圈是无限动画，只能定量 pump，不能 pumpAndSettle。
+    // 等待按钮颜色和标签过渡完成。
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('取消'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.byIcon(Icons.stop_circle_outlined), findsNothing);
+    expect(
+      find.byKey(const ValueKey('generation-active-progress')),
+      findsOneWidget,
+    );
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.byIcon(Icons.stop_circle_outlined), findsOneWidget);
 
-    await tester.tap(find.text('取消'));
+    await tester.tap(find.byKey(const ValueKey('generation-active-progress')));
     await tester.pump();
 
     expect(notifier.cancelCount, 1);

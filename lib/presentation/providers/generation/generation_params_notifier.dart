@@ -120,25 +120,23 @@ class GenerationParamsNotifier extends _$GenerationParamsNotifier {
 
   /// 切换种子锁定状态
   void toggleSeedLock() {
-    final wasLocked = _storage.getSeedLocked();
-    final newLocked = !wasLocked;
-
-    if (newLocked) {
-      // 锁定：保存当前种子值（如果是-1则生成新种子）
-      final currentSeed = state.seed;
-      final seedToLock = currentSeed == -1
-          ? Random().nextInt(4294967295)
-          : currentSeed;
-      _storage.setLockedSeedValue(seedToLock);
-      _storage.setSeedLocked(true);
-      state = state.copyWith(seed: seedToLock);
+    if (isSeedLocked) {
+      unlockSeed();
     } else {
-      // 解锁：保留当前种子值，只取消锁定状态
-      _storage.setSeedLocked(false);
-      _storage.setLockedSeedValue(null);
-      // 触发 state 变化以刷新 UI（保持种子值不变）
-      state = state.copyWith();
+      lockSeed(state.seed == -1 ? Random().nextInt(4294967295) : state.seed);
     }
+  }
+
+  void lockSeed(int seed) {
+    _storage.setLockedSeedValue(seed);
+    _storage.setSeedLocked(true);
+    state = state.copyWith(seed: seed);
+  }
+
+  void unlockSeed({bool clearSeed = false}) {
+    _storage.setSeedLocked(false);
+    _storage.setLockedSeedValue(null);
+    state = state.copyWith(seed: clearSeed ? -1 : state.seed);
   }
 
   /// 更新提示词
@@ -258,6 +256,7 @@ class GenerationParamsNotifier extends _$GenerationParamsNotifier {
 
   /// 更新步数
   void updateSteps(int steps) {
+    if (state.usesFixedSettings) return;
     state = state.copyWith(steps: steps);
     _storage.setDefaultSteps(steps);
   }

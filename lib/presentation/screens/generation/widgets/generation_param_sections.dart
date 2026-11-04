@@ -421,9 +421,10 @@ class _SeedSectionState extends ConsumerState<SeedSection> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final seed = ref.watch(
-      generationParamsNotifierProvider.select((params) => params.seed),
-    );
+    final seed = ref.watch(generationParamsNotifierProvider).seed;
+    final locked = ref
+        .read(generationParamsNotifierProvider.notifier)
+        .isSeedLocked;
 
     _syncSeedController(seed);
 
@@ -491,14 +492,7 @@ class _SeedSectionState extends ConsumerState<SeedSection> {
             const SizedBox(width: 8),
             // 种子锁定按钮
             IconButton(
-              icon: Icon(
-                ref
-                        .watch(generationParamsNotifierProvider.notifier)
-                        .isSeedLocked
-                    ? Icons.lock
-                    : Icons.lock_open,
-                size: 20,
-              ),
+              icon: Icon(locked ? Icons.lock : Icons.lock_open, size: 20),
               onPressed: () {
                 // 先同步输入框的值到 state（防止用户输入后 state 未更新）
                 final inputText = _seedController.text.trim();
@@ -518,21 +512,12 @@ class _SeedSectionState extends ConsumerState<SeedSection> {
                 // 更新输入框显示
                 final newSeed = ref.read(generationParamsNotifierProvider).seed;
                 _seedController.text = newSeed == -1 ? '' : newSeed.toString();
-                // 锁定状态存于 notifier 而非 state，同值种子不会触发
-                // select 重建，需手动刷新图标/背景
-                setState(() {});
               },
-              tooltip:
-                  ref
-                      .watch(generationParamsNotifierProvider.notifier)
-                      .isSeedLocked
+              tooltip: locked
                   ? context.l10n.generation_seedUnlock
                   : context.l10n.generation_seedLock,
               style: IconButton.styleFrom(
-                backgroundColor:
-                    ref
-                        .watch(generationParamsNotifierProvider.notifier)
-                        .isSeedLocked
+                backgroundColor: locked
                     ? theme.colorScheme.primary.withValues(alpha: 0.15)
                     : Colors.transparent,
                 shape: RoundedRectangleBorder(

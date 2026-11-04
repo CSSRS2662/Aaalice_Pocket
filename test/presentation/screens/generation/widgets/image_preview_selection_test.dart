@@ -10,6 +10,8 @@ import 'package:nai_launcher/presentation/providers/generation/preview_selection
 import 'package:nai_launcher/presentation/providers/history_click_behavior_provider.dart';
 import 'package:nai_launcher/presentation/providers/image_generation_provider.dart';
 import 'package:nai_launcher/presentation/providers/shortcuts_provider.dart';
+import 'package:nai_launcher/presentation/screens/generation/widgets/generation_canvas_transition.dart';
+import 'package:nai_launcher/presentation/widgets/common/generation_dot_field.dart';
 import 'package:nai_launcher/presentation/widgets/common/image_comparison_view.dart';
 import 'package:nai_launcher/presentation/screens/generation/widgets/image_preview.dart';
 import 'package:nai_launcher/presentation/screens/generation/widgets/preview_info_bar.dart';
@@ -38,6 +40,90 @@ class _DefaultShortcutConfigNotifier extends ShortcutConfigNotifier {
 }
 
 void main() {
+  testWidgets('the previous image exits before dots and the frame stays put', (
+    tester,
+  ) async {
+    final first = _image('first', 20);
+    final next = _image('next', 80);
+    final notifier = _SelectionImageGenerationNotifier(
+      ImageGenerationState(displayImages: [first]),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        imageGenerationNotifierProvider.overrideWith(() => notifier),
+        shortcutConfigNotifierProvider.overrideWith(
+          _DefaultShortcutConfigNotifier.new,
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(_app(container, size: const Size(360, 560)));
+    await tester.pumpAndSettle();
+
+    final frame = find.byKey(const ValueKey('generation-preview-frame'));
+    final footer = find.byType(PreviewInfoBar);
+    final canvas = find.byType(GenerationCanvasTransition);
+    final frameRect = tester.getRect(frame);
+    final footerRect = tester.getRect(footer);
+    expect(frameRect.center, tester.getRect(canvas).center);
+
+    final generating = ImageGenerationState(
+      status: GenerationStatus.generating,
+      currentImage: 1,
+      totalImages: 1,
+      batchWidth: 4,
+      batchHeight: 4,
+      activeSeed: 123456,
+      displayImages: [first],
+    );
+    notifier.replace(generating);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(GenerationDotField), findsNothing);
+    expect(
+      tester
+          .widget<SelectableImageCard>(find.byType(SelectableImageCard))
+          .imageBytes,
+      same(first.bytes),
+    );
+    expect(find.text('123456'), findsOneWidget);
+    expect(tester.getRect(footer).top, footerRect.top);
+    expect(tester.getRect(footer).height, footerRect.height);
+
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.byType(GenerationDotField), findsOneWidget);
+    expect(tester.getRect(frame), frameRect);
+
+    notifier.replace(generating.copyWith(streamPreview: next.bytes));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(tester.getRect(frame), frameRect);
+
+    final completed = ImageGenerationState(
+      status: GenerationStatus.completed,
+      displayImages: [next],
+    );
+    notifier.replace(completed);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(frame), frameRect);
+    expect(tester.getRect(footer).top, footerRect.top);
+    expect(find.byType(GenerationDotField), findsNothing);
+
+    // A fast result replaces the old image without flashing the loader.
+    notifier.replace(generating);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 70));
+    notifier.replace(completed);
+    await tester.pump();
+    expect(find.byType(GenerationDotField), findsNothing);
+    await tester.pumpAndSettle();
+    expect(tester.getRect(frame), frameRect);
+    expect(find.byType(GenerationDotField), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'selected history image replaces display grid and missing id falls back',
     (tester) async {

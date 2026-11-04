@@ -16,12 +16,16 @@ import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/core/utils/nai_api_utils.dart';
 import 'package:nai_launcher/data/datasources/remote/nai_image_enhancement_api_service.dart';
 import 'package:nai_launcher/data/models/image/image_params.dart';
+import 'package:nai_launcher/data/models/gallery/nai_image_metadata.dart';
+import 'package:nai_launcher/data/models/metadata/metadata_import_options.dart';
 import 'package:nai_launcher/data/models/user/user_subscription.dart';
 import 'package:nai_launcher/data/models/vibe/vibe_reference.dart';
 import 'package:nai_launcher/data/services/vibe_library_storage_service.dart';
 import 'package:nai_launcher/data/services/auth_provider.dart';
 import 'package:nai_launcher/presentation/providers/generation/generation_params_notifier.dart';
 import 'package:nai_launcher/presentation/providers/subscription_provider.dart';
+import 'package:nai_launcher/presentation/services/generation_prompt_transfer_service.dart';
+import 'package:nai_launcher/presentation/utils/metadata_import_applier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
@@ -162,6 +166,90 @@ void main() {
     expect(params.cfgRescale, 0.3);
     expect(params.negativePrompt, 'bad hands');
     expect(params.varietyPlus, isTrue);
+  });
+
+  test(
+    'reusing Medium parameters preserves Standard steps across restart',
+    () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(
+        generationParamsNotifierProvider.notifier,
+      );
+      notifier.updateSteps(35);
+      container
+          .read(generationPromptTransferServiceProvider)
+          .replaceMainPrompt(
+            prompt: '1girl',
+            configuration: const GenerationTransferConfiguration(
+              model: ImageModels.animeDiffusionV5FullMedium,
+              steps: 14,
+            ),
+          );
+      expect(
+        container.read(generationParamsNotifierProvider).effectiveSteps,
+        14,
+      );
+      expect(container.read(generationParamsNotifierProvider).steps, 35);
+      await Future<void>.delayed(Duration.zero);
+      expect(LocalStorageService().getDefaultSteps(), 35);
+
+      final restarted = ProviderContainer();
+      addTearDown(restarted.dispose);
+      final restored = restarted.read(
+        generationParamsNotifierProvider.notifier,
+      );
+      restored.updateEffort(GenerationEffort.high);
+      expect(restarted.read(generationParamsNotifierProvider).steps, 35);
+      restored.updateSteps(14);
+      restored.updateEffort(GenerationEffort.medium);
+      restored.updateEffort(GenerationEffort.high);
+      expect(restarted.read(generationParamsNotifierProvider).steps, 14);
+    },
+  );
+
+  test('metadata restores the model before applying editable steps', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(generationParamsNotifierProvider.notifier);
+    notifier.updateSteps(35);
+    final target = MetadataImportTarget(
+      updatePrompt: notifier.updatePrompt,
+      updateNegativePrompt: notifier.updateNegativePrompt,
+      updateSeed: notifier.updateSeed,
+      updateSteps: notifier.updateSteps,
+      updateScale: notifier.updateScale,
+      updateSize: notifier.updateSize,
+      updateSampler: notifier.updateSampler,
+      updateModel: (model) =>
+          notifier.updateModel(model, followDefaults: false),
+      updateSmea: notifier.updateSmea,
+      updateSmeaDyn: notifier.updateSmeaDyn,
+      updateVarietyPlus: notifier.updateVarietyPlus,
+      updateNoiseSchedule: notifier.updateNoiseSchedule,
+      updateCfgRescale: notifier.updateCfgRescale,
+      updateQualityToggle: notifier.updateQualityToggle,
+      updateUcPreset: notifier.updateUcPreset,
+      updateTransparentBackground: notifier.updateTransparentBackground,
+    );
+    for (final (model, steps, expected) in [
+      (ImageModels.animeDiffusionV5FullMedium, 14, 35),
+      (ImageModels.animeDiffusionV5Full, 23, 23),
+    ]) {
+      MetadataImportApplier.applyPromptAndGenerationParams(
+        metadata: NaiImageMetadata(model: model, steps: steps),
+        options: const MetadataImportOptions(
+          importPrompt: false,
+          importNegativePrompt: false,
+          importModel: true,
+          importSteps: true,
+        ),
+        currentModel: container.read(generationParamsNotifierProvider).model,
+        target: target,
+      );
+      expect(container.read(generationParamsNotifierProvider).model, model);
+      expect(container.read(generationParamsNotifierProvider).steps, expected);
+    }
   });
 
   test('effort is ignored on models without effort levels', () {

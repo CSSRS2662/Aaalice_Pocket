@@ -48,8 +48,8 @@ Future<ProviderContainer> _pumpBar(
 }) async {
   final container = ProviderContainer(
     overrides: [
-      localStorageServiceProvider.overrideWith(
-        (ref) => _FakeStorage(defaultModel: defaultModel),
+      localStorageServiceProvider.overrideWithValue(
+        _FakeStorage(defaultModel: defaultModel),
       ),
     ],
   );
@@ -115,7 +115,7 @@ void main() {
     expect(find.text('1216'), findsOneWidget);
   });
 
-  testWidgets('点击种子胶囊把这张图的种子写回生成参数', (tester) async {
+  testWidgets('种子胶囊点击锁定，第二次点击清空并恢复随机', (tester) async {
     const seed = 4201934405;
     final container = await _pumpBar(tester, _image(seed: seed));
 
@@ -125,6 +125,18 @@ void main() {
     await tester.pump();
 
     expect(container.read(generationParamsNotifierProvider).seed, seed);
+    final params = container.read(generationParamsNotifierProvider.notifier);
+    expect(params.isSeedLocked, isTrue);
+    expect(find.byIcon(Icons.lock_outline_rounded), findsOneWidget);
+
+    await tester.tap(find.text('$seed'));
+    await tester.pump();
+
+    expect(params.isSeedLocked, isFalse);
+    expect(container.read(generationParamsNotifierProvider).seed, -1);
+    expect(find.byIcon(Icons.lock_outline_rounded), findsNothing);
+    expect(find.text('$seed'), findsNothing);
+    expect(find.text('随机'), findsOneWidget);
   });
 
   testWidgets('生成结果不带 metadata 时从 PNG 字节解析出种子', (tester) async {
@@ -148,10 +160,10 @@ void main() {
     expect(tester.getSize(find.byType(PreviewInfoBar)).width, lessThan(400));
   });
 
-  testWidgets('元数据没有种子时不显示种子胶囊', (tester) async {
+  testWidgets('元数据没有种子时仍为种子保留位置', (tester) async {
     await _pumpBar(tester, _image());
 
-    expect(find.byIcon(Icons.eco_outlined), findsNothing);
+    expect(find.text('随机'), findsOneWidget);
     // 分辨率与透明底色入口仍然在
     expect(find.text('832'), findsOneWidget);
     expect(find.byType(TransparencyBackgroundIcon), findsOneWidget);
@@ -299,7 +311,14 @@ void main() {
         );
         await tester.tap(seedText);
         await tester.pump();
-        expect(container.read(generationParamsNotifierProvider).seed, seed);
+        expect(
+          container.read(generationParamsNotifierProvider).seed,
+          enabled ? -1 : seed,
+        );
+        expect(
+          find.byIcon(Icons.lock_outline_rounded),
+          enabled ? findsNothing : findsOneWidget,
+        );
         expect(tester.takeException(), isNull);
       }
     });
@@ -414,6 +433,20 @@ class _FakeStorage extends LocalStorageService {
   final String defaultModel;
   String? style;
   bool transparentBackground = false;
+  bool seedLocked = false;
+  int? lockedSeed;
+
+  @override
+  bool getSeedLocked() => seedLocked;
+
+  @override
+  int? getLockedSeedValue() => lockedSeed;
+
+  @override
+  Future<void> setSeedLocked(bool value) async => seedLocked = value;
+
+  @override
+  Future<void> setLockedSeedValue(int? value) async => lockedSeed = value;
 
   @override
   String getDefaultModel() => defaultModel;

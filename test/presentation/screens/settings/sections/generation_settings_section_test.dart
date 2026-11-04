@@ -109,7 +109,7 @@ void main() {
     expect(storage.values, isEmpty);
   });
 
-  testWidgets('流式预览默认开启并可持久化关闭', (tester) async {
+  testWidgets('流式生成兼容选项默认开启并可持久化关闭', (tester) async {
     final storage = _MemoryLocalStorageService();
 
     await tester.pumpWidget(
@@ -127,16 +127,44 @@ void main() {
     );
     await tester.pump();
 
-    final tileFinder = find.widgetWithText(SwitchListTile, '流式预览');
+    final tileFinder = find.widgetWithText(SwitchListTile, '流式生成');
     expect(tileFinder, findsOneWidget);
     expect(tester.widget<SwitchListTile>(tileFinder).value, isTrue);
-    expect(find.textContaining('直接等待最终图像'), findsOneWidget);
+    expect(find.textContaining('站点不支持流式生成'), findsOneWidget);
 
-    await tester.tap(find.text('流式预览'));
+    await tester.ensureVisible(tileFinder);
+    await tester.tap(find.text('流式生成'));
     await tester.pump();
 
     expect(tester.widget<SwitchListTile>(tileFinder).value, isFalse);
     expect(storage.values[StorageKeys.generationStreamPreviewEnabled], isFalse);
+  });
+
+  testWidgets('隐藏预览可单独保存，流式传输仍保持开启', (tester) async {
+    final storage = _MemoryLocalStorageService();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [localStorageServiceProvider.overrideWith((ref) => storage)],
+        child: const MaterialApp(
+          locale: Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(child: GenerationSettingsSection()),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    final preview = find.widgetWithText(SwitchListTile, '显示流式图像预览');
+    expect(tester.widget<SwitchListTile>(preview).value, isTrue);
+    await tester.ensureVisible(preview);
+    await tester.tap(preview);
+    await tester.pumpAndSettle();
+    expect(tester.widget<SwitchListTile>(preview).value, isFalse);
+    expect(storage.values[StorageKeys.generationShowStreamPreview], isFalse);
+    final transport = find.widgetWithText(SwitchListTile, '流式生成');
+    expect(tester.widget<SwitchListTile>(transport).value, isTrue);
   });
 
   testWidgets('按任务流展示输入、输出、重试、提醒四个小节', (tester) async {

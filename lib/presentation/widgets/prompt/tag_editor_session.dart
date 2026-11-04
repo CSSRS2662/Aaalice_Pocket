@@ -510,6 +510,26 @@ class TagEditorSession extends ChangeNotifier {
     clearSelection();
   }
 
+  bool moveSelectedTo(TextEditingController destination) {
+    if (identical(destination, controller) ||
+        !structureComplete ||
+        selected.isEmpty) {
+      return false;
+    }
+    final fragment = copySelection();
+    final text = destination.text;
+    final separator = text.trim().isEmpty || text.trimRight().endsWith(',')
+        ? ''
+        : ', ';
+    final combined = '$text$separator$fragment';
+    destination.value = TextEditingValue(
+      text: combined,
+      selection: TextSelection.collapsed(offset: combined.length),
+    );
+    deleteSelected();
+    return true;
+  }
+
   void insert(String text, {int? at}) {
     if (text.isEmpty) return;
     final source = controller.text;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../themes/theme_extension.dart';
+import 'generation_active_label.dart';
 
 import 'package:nai_launcher/core/utils/localization_extension.dart';
 import 'package:nai_launcher/presentation/providers/generation/image_generation_selectors.dart';
@@ -118,7 +120,7 @@ class GenerateButtonWithCost extends ConsumerWidget {
         onPrimaryContainer: theme.colorScheme.onError,
       ),
     );
-    // Krita 占用时启动器自身没有可取消的任务，只能转圈禁用等待。
+    // Krita 占用时启动器自身没有可取消的任务，保持禁用等待。
     final isLoading = isGenerating && !_showCancelAction;
 
     final buttonTheme = _showCancelAction ? cancelTheme : theme;
@@ -144,7 +146,7 @@ class GenerateButtonWithCost extends ConsumerWidget {
       data: effectiveTheme,
       duration: MediaQuery.disableAnimationsOf(context)
           ? Duration.zero
-          : const Duration(milliseconds: 160),
+          : theme.appTheme.normalDuration,
       curve: Curves.easeOut,
       child: ThemedButton(
         onPressed: _showCancelAction
@@ -154,24 +156,24 @@ class GenerateButtonWithCost extends ConsumerWidget {
             : isGenerating || cooldownRemainingSeconds > 0
             ? null
             : onGenerate,
-        isLoading: isLoading,
-        label: IndexedStack(
-          index: _showCancelAction ? 1 : 0,
+        isLoading: false,
+        label: _GenerationButtonLabels(
+          active: _showCancelAction,
           alignment: Alignment.center,
           children: [
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (!isLoading) ...[
-                  Icon(
-                    requiresLogin
-                        ? Icons.login_rounded
-                        : cooldownRemainingSeconds > 0
-                        ? Icons.hourglass_bottom_outlined
-                        : Icons.auto_awesome,
-                  ),
-                  const SizedBox(width: 8),
-                ],
+                Icon(
+                  isLoading
+                      ? Icons.hourglass_top_rounded
+                      : requiresLogin
+                      ? Icons.login_rounded
+                      : cooldownRemainingSeconds > 0
+                      ? Icons.hourglass_bottom_outlined
+                      : Icons.auto_awesome,
+                ),
+                const SizedBox(width: 8),
                 Text(
                   showCancel
                       ? context.l10n.generation_generate
@@ -181,17 +183,7 @@ class GenerateButtonWithCost extends ConsumerWidget {
                   AnlasCostBadge(isGenerating: isLoading),
               ],
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_isPreparing)
-                  const GenerateButtonSpinner()
-                else
-                  const Icon(Icons.stop_circle_outlined),
-                const SizedBox(width: 8),
-                Text(context.l10n.common_cancel),
-              ],
-            ),
+            const GenerationActiveLabel(),
           ],
         ),
         style: ThemedButtonStyle.filled,
@@ -200,18 +192,42 @@ class GenerateButtonWithCost extends ConsumerWidget {
   }
 }
 
-/// 跟随按钮前景色的小转圈，供准备期的可取消态复用。
-class GenerateButtonSpinner extends StatelessWidget {
-  const GenerateButtonSpinner({super.key});
+class _GenerationButtonLabels extends StatelessWidget {
+  const _GenerationButtonLabels({
+    required this.active,
+    required this.children,
+    this.alignment = Alignment.center,
+  });
+
+  final bool active;
+  final List<Widget> children;
+  final AlignmentGeometry alignment;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: 16,
-      child: CircularProgressIndicator(
-        strokeWidth: 2,
-        color: IconTheme.of(context).color,
-      ),
+    final motion = Theme.of(context).appTheme;
+    return Stack(
+      alignment: alignment,
+      children: [
+        // 用生成标签保留按钮尺寸，进度变化不挤动两侧控件。
+        IndexedStack(
+          index: 1,
+          children: [children[0], const SizedBox.shrink()],
+        ),
+        Positioned.fill(
+          child: AnimatedSwitcher(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : motion.normalDuration,
+            switchInCurve: motion.standardCurve,
+            switchOutCurve: motion.standardCurve,
+            child: KeyedSubtree(
+              key: ValueKey(active),
+              child: children[active ? 1 : 0],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

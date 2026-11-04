@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../data/models/image/image_stream_chunk.dart';
+import 'generation_dot_field.dart';
+import 'generation_visual_transition.dart';
 
 /// 流式预览的持帧渲染层：新帧解码完成前继续画上一帧。
 class ImageCardStreamPreview extends StatefulWidget {
@@ -49,12 +51,22 @@ class _ImageCardStreamPreviewState extends State<ImageCardStreamPreview> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: ImageCardStreamPreviewPainter(
-        previewImage: _preview.image,
-        sourceImage: _source.image,
-        maskImage: _mask.image,
-        placement: widget.placement,
+    return GenerationVisualTransition(
+      stage: _preview.image == null ? 'dots' : 'frame',
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CustomPaint(
+            size: Size.infinite,
+            painter: ImageCardStreamPreviewPainter(
+              previewImage: _preview.image,
+              sourceImage: _source.image,
+              maskImage: _mask.image,
+              placement: widget.placement,
+            ),
+          ),
+          if (_preview.image == null) const GenerationDotField(),
+        ],
       ),
     );
   }
@@ -95,13 +107,10 @@ class _HeldImage {
       return;
     }
     final stream = MemoryImage(bytes).resolve(ImageConfiguration.empty);
-    final listener = ImageStreamListener(
-      (info, _) {
-        _replaceInfo(info);
-        onChanged();
-      },
-      onError: (_, _) {},
-    );
+    final listener = ImageStreamListener((info, _) {
+      _replaceInfo(info);
+      onChanged();
+    }, onError: (_, _) {});
     _stream = stream;
     _listener = listener;
     stream.addListener(listener);

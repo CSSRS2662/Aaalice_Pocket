@@ -6,6 +6,44 @@ import 'package:nai_launcher/presentation/widgets/prompt/tag_editor_session.dart
 import 'package:nai_launcher/presentation/widgets/prompt/nai_syntax_controller.dart';
 
 void main() {
+  test(
+    'moving partial weighted selections preserves shells and disabled tags',
+    () {
+      final source = TextEditingController(
+        text: '{cat, dog}, /*disabled:bird*/, fish',
+      );
+      final destination = TextEditingController(text: 'snow,');
+      final session = TagEditorSession(source);
+      addTearDown(source.dispose);
+      addTearDown(destination.dispose);
+      addTearDown(session.dispose);
+      session.setSelection([
+        session.leaves.first.id,
+        session.leaves.elementAt(2).id,
+      ]);
+      expect(session.moveSelectedTo(destination), isTrue);
+      expect(source.text, '{dog}, fish');
+      expect(destination.text, 'snow,{cat}, /*disabled:bird*/');
+      expect(session.selected, isEmpty);
+      expect(session.touchSelection, isFalse);
+    },
+  );
+
+  test('moving all tags into an empty section clears only the source', () {
+    final source = TextEditingController(text: '1.25::cat, dog::');
+    final destination = TextEditingController();
+    final session = TagEditorSession(source);
+    addTearDown(source.dispose);
+    addTearDown(destination.dispose);
+    addTearDown(session.dispose);
+    session.selectAll();
+    expect(session.moveSelectedTo(source), isFalse);
+    expect(source.text, '1.25::cat, dog::');
+    expect(session.moveSelectedTo(destination), isTrue);
+    expect(source.text, isEmpty);
+    expect(destination.text, '1.25::cat, dog::');
+  });
+
   late TextEditingController source;
   late TagEditorSession session;
   void create(String text) {

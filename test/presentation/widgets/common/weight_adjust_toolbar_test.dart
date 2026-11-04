@@ -816,6 +816,12 @@ void main() {
       await tester.tap(find.byTooltip('Disable'));
       await tester.pump();
       expect(prompt.text, '/*disabled:cat*/, dog');
+      await tester.tap(
+        find.byKey(const ValueKey('prompt-selection-cut-button')),
+      );
+      await tester.pump();
+      expect(clipboard, '/*disabled:cat*/');
+      expect(prompt.text, ', dog');
       expect(tester.takeException(), isNull);
       debugDefaultTargetPlatformOverride = null;
     },

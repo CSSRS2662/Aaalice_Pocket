@@ -80,7 +80,8 @@ class _EditableDoubleFieldState extends State<EditableDoubleField> {
   @override
   void didUpdateWidget(covariant EditableDoubleField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_focusNode.hasFocus && oldWidget.value != widget.value) {
+    if (oldWidget.enabled != widget.enabled ||
+        (!_focusNode.hasFocus && oldWidget.value != widget.value)) {
       _controller.text = _format(widget.value);
     }
   }
@@ -101,6 +102,10 @@ class _EditableDoubleFieldState extends State<EditableDoubleField> {
   }
 
   void _commit() {
+    if (!widget.enabled) {
+      _controller.text = _format(widget.value);
+      return;
+    }
     final parsed = double.tryParse(_controller.text.trim());
     if (parsed == null || !parsed.isFinite) {
       _controller.text = _format(widget.value);

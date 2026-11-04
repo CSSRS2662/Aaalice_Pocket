@@ -1,3 +1,4 @@
+import 'package:nai_launcher/presentation/providers/image_generation_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,6 +43,23 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          imageGenerationNotifierProvider.overrideWith(
+            () => _ButtonGenerationState(
+              ImageGenerationState(
+                status: showCancel && !batchStatus.isPreparing
+                    ? GenerationStatus.generating
+                    : GenerationStatus.idle,
+                isSubmitting: batchStatus.isPreparing,
+                currentImage: batchStatus.currentImage < 1
+                    ? 1
+                    : batchStatus.currentImage,
+                totalImages: batchStatus.totalImages < 1
+                    ? 1
+                    : batchStatus.totalImages,
+                progress: 0.5,
+              ),
+            ),
+          ),
           // Free generation hides the cost badge and avoids unrelated providers.
           isFreeGenerationProvider.overrideWith((ref) => true),
         ],
@@ -103,7 +121,7 @@ void main() {
       onCancel: () => cancelCalled = true,
     );
 
-    expect(find.text(l10n.common_cancel), findsOneWidget);
+    expect(find.text('1/1 50%'), findsOneWidget);
     expect(find.byIcon(Icons.stop_circle_outlined), findsOneWidget);
     expect(find.byType(FilledButton), findsOneWidget);
     expect(find.byType(OutlinedButton), findsNothing);
@@ -161,7 +179,7 @@ void main() {
         find.text('${l10n.generation_skipCurrentBatch} 2/4'),
         findsOneWidget,
       );
-      expect(find.text(l10n.common_cancel), findsOneWidget);
+      expect(find.text('2/4 50%'), findsOneWidget);
       expect(find.byIcon(Icons.skip_next), findsOneWidget);
       expect(find.byIcon(Icons.stop_circle_outlined), findsOneWidget);
     },
@@ -234,4 +252,11 @@ void main() {
 
     expect(find.byType(AnlasCostBadge), findsNothing);
   });
+}
+
+class _ButtonGenerationState extends ImageGenerationNotifier {
+  _ButtonGenerationState(this.initial);
+  final ImageGenerationState initial;
+  @override
+  ImageGenerationState build() => initial;
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/enums/generation_effort.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/localization_extension.dart';
 import '../../../../data/models/image/resolution_preset.dart';
@@ -10,6 +11,7 @@ import '../../../themes/core/layered_surface_style.dart';
 import '../../../themes/theme_extension.dart';
 import '../../../widgets/common/model_family_icon.dart';
 import '../widgets/saved_resolution_presets.dart';
+import 'effort_gauge_icon.dart';
 import 'mobile_quota_pill.dart';
 
 /// 生成页顶栏：左侧模型与尺寸两个菜单相邻，点按直接切换；右端为额度胶囊
@@ -45,14 +47,8 @@ class MobileGenerationHeader extends StatelessWidget
       automaticallyImplyLeading: false,
       toolbarHeight: toolbarHeight,
       titleSpacing: 0,
-      // The quota at the end has no surface of its own: its last digit sits
-      // as far from the edge as the model label's first letter (screen
-      // margin plus the pill's inner padding).
       title: Padding(
-        padding: const EdgeInsetsDirectional.only(
-          start: 12,
-          end: 12 + _HeaderPill._start - MobileQuotaPill.trailingInset,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: MediaQuery.withClampedTextScaling(
           maxScaleFactor: maxTextScale,
           child: const MobileGenerationHeaderBar(),
@@ -62,14 +58,12 @@ class MobileGenerationHeader extends StatelessWidget
   }
 }
 
-/// Model and size side by side at the start, the quota pill at the end. When
-/// the row is short of room the menu chevrons go first; past that the row
-/// scrolls sideways instead of cutting any text.
+/// Model and size keep their natural widths while the quota fills the rest.
+/// Narrow layouts drop the size chevron, then fit the menu labels in place.
 class MobileGenerationHeaderBar extends ConsumerWidget {
   const MobileGenerationHeaderBar({super.key});
 
-  static const double _menuGap = 6;
-  static const double _minQuotaGap = 8;
+  static const double _pillGap = 6;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -81,46 +75,50 @@ class MobileGenerationHeaderBar extends ConsumerWidget {
         (params) => (params.width, params.height),
       ),
     );
-    final modelLabel = MobileGenerationHeader.shortModelLabel(model);
+    final modelLabel = MobileGenerationHeader.shortModelLabel(
+      ImageModels.selectorModel(model),
+    );
+    final hasEffort = ImageModels.effortOf(model) != null;
     final sizeLabel = MobileGenerationHeader.sizeLabel(size.$1, size.$2);
-    final style = Theme.of(context).textTheme.titleSmall;
-    final quotaWidth = MobileQuotaPill.naturalWidth(context, ref, style);
-    final labelsWidth =
-        _HeaderPill.labelWidth(context, modelLabel) +
-        _HeaderPill.labelWidth(context, sizeLabel);
-    double rowWidth({required bool chevrons}) =>
-        labelsWidth +
-        _HeaderPill.chromeWidth(chevron: chevrons) * 2 +
-        _menuGap +
-        _minQuotaGap +
-        quotaWidth;
+    final modelWidth =
+        (_HeaderPill.labelWidth(context, modelLabel) +
+                _HeaderPill.chromeWidth(chevron: false) +
+                (hasEffort
+                    ? _HeaderPill.trailingGap + EffortGaugeIcon.dimension
+                    : 0))
+            .clamp(44.0, double.infinity);
+    final sizeTextWidth = _HeaderPill.labelWidth(context, sizeLabel);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // A little slack keeps rounding from tipping the row over.
-        final room = constraints.maxWidth - 2;
-        final chevrons = rowWidth(chevrons: true) <= room;
-        final fits = chevrons || rowWidth(chevrons: false) <= room;
-        final menus = [
-          MobileModelMenu(label: modelLabel, showChevron: chevrons),
-          const SizedBox(width: _menuGap),
-          MobileSizeMenu(label: sizeLabel, showChevron: chevrons),
-        ];
-        final quota = MobileQuotaPill(textStyle: style);
-        if (fits) {
-          return Row(children: [...menus, const Spacer(), quota]);
-        }
-        return SingleChildScrollView(
-          key: const ValueKey('generation-mobile-header-scroll'),
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ...menus,
-              const SizedBox(width: _minQuotaGap),
-              quota,
-            ],
-          ),
+        final menuRoom =
+            constraints.maxWidth - MobileQuotaPill.minimumWidth - _pillGap * 2;
+        final sizeChevron =
+            modelWidth +
+                sizeTextWidth +
+                _HeaderPill.chromeWidth(chevron: true) <=
+            menuRoom;
+        final sizeWidth =
+            sizeTextWidth + _HeaderPill.chromeWidth(chevron: sizeChevron);
+        final fit = (menuRoom / (modelWidth + sizeWidth)).clamp(0.0, 1.0);
+        return Row(
+          children: [
+            SizedBox(
+              width: modelWidth * fit,
+              child: MobileModelMenu(label: modelLabel),
+            ),
+            const SizedBox(width: _pillGap),
+            SizedBox(
+              width: sizeWidth * fit,
+              child: MobileSizeMenu(label: sizeLabel, showChevron: sizeChevron),
+            ),
+            const SizedBox(width: _pillGap),
+            Expanded(
+              child: MobileQuotaPill(
+                textStyle: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+          ],
         );
       },
     );
@@ -129,11 +127,10 @@ class MobileGenerationHeaderBar extends ConsumerWidget {
 
 /// 模型下拉菜单：列出全部可见模型，当前模型带勾选标记。
 class MobileModelMenu extends ConsumerWidget {
-  const MobileModelMenu({super.key, this.label, this.showChevron = true});
+  const MobileModelMenu({super.key, this.label});
 
   /// Pill text; defaults to the short name of the current model.
   final String? label;
-  final bool showChevron;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -144,6 +141,13 @@ class MobileModelMenu extends ConsumerWidget {
     final current = ImageModels.selectorModel(model);
     final colors = Theme.of(context).colorScheme;
     final pillLabel = label ?? MobileGenerationHeader.shortModelLabel(current);
+    final effort = ImageModels.effortOf(model);
+    final effortLabel = effort == GenerationEffort.medium
+        ? context.l10n.generation_effortMedium
+        : context.l10n.generation_effortHigh;
+    final semanticLabel = effort != null
+        ? '$pillLabel，$effortLabel'
+        : pillLabel;
     return MenuAnchor(
       alignmentOffset: const Offset(0, 6),
       menuChildren: [
@@ -175,8 +179,14 @@ class MobileModelMenu extends ConsumerWidget {
       builder: (context, controller, _) => _HeaderPill(
         key: const ValueKey('generation-mobile-model-action'),
         label: pillLabel,
-        showChevron: showChevron,
-        semanticLabel: context.l10n.mobileWorkbench_selectModel(pillLabel),
+        showChevron: false,
+        trailing: effort != null
+            ? Tooltip(
+                message: effortLabel,
+                child: EffortGaugeIcon(effort: effort),
+              )
+            : null,
+        semanticLabel: context.l10n.mobileWorkbench_selectModel(semanticLabel),
         open: controller.isOpen,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),
@@ -372,6 +382,7 @@ class _HeaderPill extends StatelessWidget {
     required this.open,
     required this.onPressed,
     this.showChevron = true,
+    this.trailing,
   });
 
   final String label;
@@ -379,7 +390,9 @@ class _HeaderPill extends StatelessWidget {
   final bool open;
   final VoidCallback onPressed;
   final bool showChevron;
+  final Widget? trailing;
 
+  static const double trailingGap = 6;
   static const double _start = 12;
   static const double _endWithChevron = 6;
   static const double _chevron = 16;
@@ -427,29 +440,36 @@ class _HeaderPill extends StatelessWidget {
                 start: _start,
                 end: showChevron ? _endWithChevron : _start,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    maxLines: 1,
-                    softWrap: false,
-                    style: theme.textTheme.titleSmall,
-                  ),
-                  if (showChevron)
-                    AnimatedRotation(
-                      turns: open ? 0.5 : 0,
-                      duration: MediaQuery.disableAnimationsOf(context)
-                          ? Duration.zero
-                          : theme.appTheme.fastDuration,
-                      curve: theme.appTheme.standardCurve,
-                      child: Icon(
-                        Icons.expand_more_rounded,
-                        size: _chevron,
-                        color: colors.onSurfaceVariant,
-                      ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: theme.textTheme.titleSmall,
                     ),
-                ],
+                    if (trailing != null) ...[
+                      const SizedBox(width: trailingGap),
+                      trailing!,
+                    ],
+                    if (showChevron)
+                      AnimatedRotation(
+                        turns: open ? 0.5 : 0,
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : theme.appTheme.fastDuration,
+                        curve: theme.appTheme.standardCurve,
+                        child: Icon(
+                          Icons.expand_more_rounded,
+                          size: _chevron,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -66,6 +66,7 @@ import '../../../utils/image_detail_opener.dart';
 import '../../../utils/precise_ref_library_import_helper.dart';
 import '../../tag_library_page/widgets/entry_add_dialog.dart';
 import '../../../widgets/common/image_comparison_view.dart';
+import 'generation_canvas_transition.dart';
 import 'preview_info_bar.dart';
 
 class PreviewNavShortcuts extends ConsumerWidget {
@@ -147,6 +148,11 @@ class ImagePreviewWidget extends ConsumerStatefulWidget {
 }
 
 class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
+  bool _preparingCanvas(ImageGenerationState state) =>
+      state.isPreparing &&
+      (state.status == GenerationStatus.idle ||
+          (state.currentImage > 0 && state.totalImages > 0));
+
   @override
   Widget build(BuildContext context) {
     // 外壳只随图像集合变化重建；流式预览帧由内层 Consumer 单独承担。
@@ -208,14 +214,12 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
                             16,
                             compact ? 4 : 16,
                           ),
-                          child: Center(
-                            child: Consumer(
-                              builder: (context, ref, _) => _buildContent(
-                                context,
-                                ref,
-                                ref.watch(imageGenerationNotifierProvider),
-                                theme,
-                              ),
+                          child: Consumer(
+                            builder: (context, ref, _) => _buildContent(
+                              context,
+                              ref,
+                              ref.watch(imageGenerationNotifierProvider),
+                              theme,
                             ),
                           ),
                         );
@@ -251,72 +255,121 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
     ImageGenerationState state,
     ThemeData theme,
   ) {
-    // 错误状态
-    if (state.status == GenerationStatus.error) {
-      return _buildErrorState(theme, state.errorMessage, context);
-    }
-
-    // 使用批次分辨率（点击生成时捕获），fallback 到全局参数
-    final previewDimensions = ref.watch(
+    final dimensions = ref.watch(
       generationParamsNotifierProvider.select(selectPreviewDimensionsViewData),
     );
-    final batchWidth = state.batchWidth ?? previewDimensions.width;
-    final batchHeight = state.batchHeight ?? previewDimensions.height;
-
-    // 生成中状态
-    if (state.isGenerating) {
-      final previewSlots = _visibleStreamPreviewSlots(state);
-      // 如果有已完成图像或当前请求有多个预览槽位，显示网格视图。
-      if (state.currentImages.isNotEmpty || previewSlots.length > 1) {
-        return _buildGeneratingWithCompletedImages(
-          context,
-          ref,
-          state,
-          theme,
-          batchWidth,
-          batchHeight,
-        );
-      }
-      // 否则只显示生成中卡片
-      return _buildSingleGeneratingState(
-        context,
-        state,
-        theme,
-        batchWidth,
-        batchHeight,
-      );
-    }
-
-    // 角色位置画布不能遮挡生成与错误状态，也不能跨越模型/角色能力边界。
+    final busy = state.isGenerating || _preparingCanvas(state);
+    final finishedSingle = state.isGenerating && state.totalImages == 1
+        ? state.currentImages.singleOrNull
+        : null;
+    final generating = busy && finishedSingle == null;
+    final hasError = !busy && state.status == GenerationStatus.error;
     final showCharacterCanvas =
+        !busy &&
+        !hasError &&
         ref.watch(characterPositionCanvasProvider) &&
         ref.watch(characterPositionCanvasAvailableProvider);
-    if (showCharacterCanvas) {
-      return const CharacterPositionCanvasView();
+    final image =
+        finishedSingle ??
+        (!busy && !hasError && !showCharacterCanvas
+            ? _singleDisplayImage(ref, state)
+            : null);
+    final infoImage =
+        image ??
+        (!generating && !hasError && !showCharacterCanvas
+            ? state.displayImages.firstOrNull
+            : null);
+    final width = generating
+        ? state.batchWidth ?? dimensions.width
+        : infoImage?.width ?? dimensions.width;
+    final height = generating
+        ? state.batchHeight ?? dimensions.height
+        : infoImage?.height ?? dimensions.height;
+    final comparisonAvailable = image?.canCompareWithSource ?? false;
+    final comparisonEnabled =
+        comparisonAvailable && ref.watch(generationComparisonEnabledProvider);
+    final Widget canvas;
+    final bool grid;
+
+    if (generating) {
+      final previewSlots = _visibleStreamPreviewSlots(state);
+      grid =
+          state.isGenerating &&
+          (state.currentImages.isNotEmpty || previewSlots.length > 1);
+      canvas = grid
+          ? _buildGeneratingWithCompletedImages(
+              context,
+              ref,
+              state,
+              theme,
+              width,
+              height,
+            )
+          : _buildSingleGeneratingState(
+              state,
+              width,
+              height,
+              preparing: !state.isGenerating,
+            );
+    } else {
+      grid = image == null && infoImage != null;
+      canvas = switch ((hasError, showCharacterCanvas, image)) {
+        (true, _, _) => _buildErrorState(theme, state.errorMessage, context),
+        (_, true, _) => const CharacterPositionCanvasView(),
+        (_, _, final GeneratedImage result) => _buildSingleAspectRatioCard(
+          aspectRatio: result.aspectRatio,
+          child: _buildGeneratedImageCard(
+            context: context,
+            ref: ref,
+            image: result,
+            showIndex: false,
+            comparisonEnabled: comparisonEnabled,
+          ),
+        ),
+        _ when grid => _buildMultiImageGrid(
+          context,
+          ref,
+          state.displayImages,
+          theme,
+        ),
+        _ => _buildEmptyState(theme, context),
+      };
     }
 
+    return _PreviewCanvasLayout(
+      aspectRatio: grid ? null : width / height,
+      canvas: GenerationCanvasTransition(
+        generating: generating,
+        hasImage: infoImage != null,
+        child: canvas,
+      ),
+      infoBar: PreviewInfoBar(
+        image: infoImage,
+        width: width,
+        height: height,
+        generating: generating,
+        activeSeed: generating ? state.activeSeed : -1,
+        comparisonEnabled: comparisonEnabled,
+        onComparisonChanged: comparisonAvailable
+            ? (enabled) =>
+                  ref.read(generationComparisonEnabledProvider.notifier).state =
+                      enabled
+            : null,
+      ),
+    );
+  }
+
+  GeneratedImage? _singleDisplayImage(
+    WidgetRef ref,
+    ImageGenerationState state,
+  ) {
     final behavior = ref.watch(historyClickBehaviorNotifierProvider);
     if (behavior == HistoryClickBehavior.selectPreview) {
       final selectedId = ref.watch(generationPreviewSelectionProvider);
       final selectedImage = state.findImageById(selectedId);
-      if (selectedImage != null) {
-        return _buildImageView(context, ref, selectedImage, theme);
-      }
+      if (selectedImage != null) return selectedImage;
     }
-
-    // 有图像：根据数量决定布局（使用 displayImages）
-    if (state.hasImages) {
-      if (state.displayImages.length == 1) {
-        // 单图：居中显示
-        return _buildImageView(context, ref, state.displayImages.first, theme);
-      } else {
-        // 多图：自适应网格
-        return _buildMultiImageGrid(context, ref, state.displayImages, theme);
-      }
-    }
-
-    // 空状态
-    return _buildEmptyState(theme, context);
+    return state.displayImages.length == 1 ? state.displayImages.single : null;
   }
 
   List<StreamPreviewSlot> _visibleStreamPreviewSlots(
@@ -479,15 +532,15 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
 
   /// 生成中的居中显示（无已完成图像时）
   Widget _buildSingleGeneratingState(
-    BuildContext context,
     ImageGenerationState state,
-    ThemeData theme,
     int imageWidth,
-    int imageHeight,
-  ) {
+    int imageHeight, {
+    required bool preparing,
+  }) {
     final aspectRatio = imageWidth / imageHeight;
-    final previewSlots = _visibleStreamPreviewSlots(state);
-    final slot = previewSlots.isNotEmpty ? previewSlots.first : null;
+    final slot = preparing
+        ? null
+        : _visibleStreamPreviewSlots(state).firstOrNull;
     return _buildSingleAspectRatioCard(
       aspectRatio: aspectRatio,
       child: _buildGeneratingCard(
@@ -499,7 +552,9 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
         retryAttempt: slot?.retryAttempt ?? state.retryAttempt,
         maxRetries: slot?.maxRetries ?? state.maxRetries,
         postprocessPhase: slot?.postprocessPhase,
-        streamPreview: slot?.previewBytes ?? state.streamPreview,
+        streamPreview: preparing
+            ? null
+            : slot?.previewBytes ?? state.streamPreview,
         focusedPreviewPlacement:
             slot?.focusedPreviewPlacement ?? state.focusedPreviewPlacement,
       ),
@@ -577,75 +632,6 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
           ],
         ],
       ),
-    );
-  }
-
-  Widget _buildImageView(
-    BuildContext context,
-    WidgetRef ref,
-    GeneratedImage image,
-    ThemeData theme,
-  ) {
-    final comparisonAvailable = image.canCompareWithSource;
-    final comparisonEnabled =
-        comparisonAvailable && ref.watch(generationComparisonEnabledProvider);
-
-    // 信息条紧贴图片下沿并与图片左对齐（官网 bottom.start 口径），
-    // 因此先扣掉信息条高度再按比例算卡片尺寸，避免二者互相挤压。
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final gap = WindowSizeClass.fromWidth(constraints.maxWidth).isCompact
-            ? 4.0
-            : 8.0;
-        final availableHeight = constraints.maxHeight.isFinite
-            ? max(
-                0.0,
-                constraints.maxHeight - PreviewInfoBar.heightFor(context) - gap,
-              )
-            : constraints.maxHeight;
-        final cardSize = _fitAspectRatio(
-          aspectRatio: image.aspectRatio,
-          maxSize: Size(constraints.maxWidth, availableHeight),
-        );
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: cardSize.width,
-              height: cardSize.height,
-              child: _buildGeneratedImageCard(
-                context: context,
-                ref: ref,
-                image: image,
-                showIndex: false,
-                comparisonEnabled: comparisonEnabled,
-              ),
-            ),
-            SizedBox(height: gap),
-            SizedBox(
-              width: cardSize.width,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: PreviewInfoBar(
-                  image: image,
-                  comparisonEnabled: comparisonEnabled,
-                  onComparisonChanged: comparisonAvailable
-                      ? (enabled) =>
-                            ref
-                                    .read(
-                                      generationComparisonEnabledProvider
-                                          .notifier,
-                                    )
-                                    .state =
-                                enabled
-                      : null,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -949,34 +935,13 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
 
         return Center(
           child: SizedBox(
+            key: const ValueKey('generation-preview-frame'),
             width: cardSize.width,
             height: cardSize.height,
             child: child,
           ),
         );
       },
-    );
-  }
-
-  Size _fitAspectRatio({required double aspectRatio, required Size maxSize}) {
-    final safeAspectRatio = aspectRatio.isFinite && aspectRatio > 0
-        ? aspectRatio
-        : 1.0;
-    final maxWidth = maxSize.width.isFinite ? max(0.0, maxSize.width) : 500.0;
-    final maxHeight = maxSize.height.isFinite
-        ? max(0.0, maxSize.height)
-        : 650.0;
-
-    var width = maxWidth;
-    var height = width / safeAspectRatio;
-    if (height > maxHeight) {
-      height = maxHeight;
-      width = height * safeAspectRatio;
-    }
-
-    return Size(
-      width.clamp(0.0, maxWidth).toDouble(),
-      height.clamp(0.0, maxHeight).toDouble(),
     );
   }
 
@@ -1245,6 +1210,72 @@ class _ImagePreviewWidgetState extends ConsumerState<ImagePreviewWidget> {
       }
     }
   }
+}
+
+class _PreviewCanvasLayout extends StatelessWidget {
+  const _PreviewCanvasLayout({
+    required this.aspectRatio,
+    required this.canvas,
+    required this.infoBar,
+  });
+
+  final double? aspectRatio;
+  final Widget canvas;
+  final Widget infoBar;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final barHeight = min(
+        PreviewInfoBar.heightFor(context),
+        constraints.maxHeight,
+      );
+      final canvasHeight = constraints.maxHeight - barHeight;
+      final compact = WindowSizeClass.fromWidth(constraints.maxWidth).isCompact;
+      final gap = min(compact ? 4.0 : 8.0, canvasHeight);
+      final ratio = aspectRatio;
+      final barWidth = ratio == null
+          ? constraints.maxWidth
+          : max(
+              min(240.0, constraints.maxWidth),
+              _fitAspectRatio(
+                aspectRatio: ratio,
+                maxSize: Size(constraints.maxWidth, canvasHeight - gap),
+              ).width,
+            );
+      return Column(
+        children: [
+          Expanded(child: canvas),
+          SizedBox(height: gap),
+          SizedBox(
+            width: barWidth,
+            height: barHeight,
+            child: Align(alignment: Alignment.centerLeft, child: infoBar),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Size _fitAspectRatio({required double aspectRatio, required Size maxSize}) {
+  final safeAspectRatio = aspectRatio.isFinite && aspectRatio > 0
+      ? aspectRatio
+      : 1.0;
+  final maxWidth = maxSize.width.isFinite ? max(0.0, maxSize.width) : 500.0;
+  final maxHeight = maxSize.height.isFinite ? max(0.0, maxSize.height) : 650.0;
+
+  var width = maxWidth;
+  var height = width / safeAspectRatio;
+  if (height > maxHeight) {
+    height = maxHeight;
+    width = height * safeAspectRatio;
+  }
+
+  return Size(
+    width.clamp(0.0, maxWidth).toDouble(),
+    height.clamp(0.0, maxHeight).toDouble(),
+  );
 }
 
 List<GeneratedImage> _detailSequenceForPreviewTap(

@@ -520,6 +520,16 @@ class ImageMetadataService {
     }
   }
 
+  /// 按图片内容哈希补齐已有元数据的本机快照，不重新解析 PNG。
+  Future<NaiImageMetadata?> withRecordedSnapshots(
+    String path,
+    NaiImageMetadata? metadata,
+  ) async {
+    if (metadata == null) return null;
+    final hash = await _hashCalculator.calculate(path);
+    return _withRecordedFixedTags(hash, metadata);
+  }
+
   /// 从缓存获取元数据（同步检查）
   NaiImageMetadata? getCached(String path) {
 
