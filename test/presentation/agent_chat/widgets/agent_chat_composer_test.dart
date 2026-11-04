@@ -491,7 +491,8 @@ void main() {
   testWidgets('desktop configuration control combines model and reasoning', (
     tester,
   ) async {
-    const modelName = 'deepseek-v4-flash-vision-exp';
+    const modelName =
+        'deepseek-v4-flash-vision-experimental-long-context-instruct-preview';
     final config = PromptAssistantConfigState.defaults().copyWith(
       providers: const [
         ProviderConfig(

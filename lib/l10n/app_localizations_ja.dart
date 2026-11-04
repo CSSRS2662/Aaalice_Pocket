@@ -1678,9 +1678,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get generation_seed => 'シード';
 
   @override
-  String get generation_previewApplySeed => '表示中の画像のシードを使う';
-
-  @override
   String get generation_imageComparison => '比較';
 
   @override
@@ -15466,21 +15463,6 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get mobileWorkbench_queue => '生成キュー';
-
-  @override
-  String mobileWorkbench_cancelProgress(Object percent) {
-    return 'キャンセル · $percent%';
-  }
-
-  @override
-  String generation_retryProgress(int attempt, int max) {
-    return '再試行 $attempt/$max';
-  }
-
-  @override
-  String mobileWorkbench_cancelRetry(int attempt, int max) {
-    return 'キャンセル · 再試行 $attempt/$max';
-  }
 
   @override
   String get stamina_title => 'V5 スタミナ';

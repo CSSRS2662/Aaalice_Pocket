@@ -3191,12 +3191,6 @@ abstract class AppLocalizations {
   /// **'Seed'**
   String get generation_seed;
 
-  /// No description provided for @generation_previewApplySeed.
-  ///
-  /// In en, this message translates to:
-  /// **'Use the seed of the displayed image'**
-  String get generation_previewApplySeed;
-
   /// No description provided for @generation_imageComparison.
   ///
   /// In en, this message translates to:
@@ -27642,24 +27636,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generation queue'**
   String get mobileWorkbench_queue;
-
-  /// No description provided for @mobileWorkbench_cancelProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel · {percent}%'**
-  String mobileWorkbench_cancelProgress(Object percent);
-
-  /// Shown on the generating card while a failed request is retried
-  ///
-  /// In en, this message translates to:
-  /// **'Retry {attempt}/{max}'**
-  String generation_retryProgress(int attempt, int max);
-
-  /// No description provided for @mobileWorkbench_cancelRetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel · retry {attempt}/{max}'**
-  String mobileWorkbench_cancelRetry(int attempt, int max);
 
   /// No description provided for @stamina_title.
   ///

@@ -687,7 +687,6 @@
   "generation_steps": "步数: {steps}",
   "generation_cfgScale": "CFG 强度：{scale}",
   "generation_seed": "种子",
-  "generation_previewApplySeed": "使用当前图片的种子",
   "generation_imageComparison": "对比",
   "generation_imageComparisonHint": "对比生成图与本次结果的来源图",
   "generation_imageComparisonDivider": "图像对比分割线",
@@ -7355,35 +7354,6 @@
     }
   },
   "mobileWorkbench_queue": "生成队列",
-  "mobileWorkbench_cancelProgress": "取消 · {percent}%",
-  "@mobileWorkbench_cancelProgress": {
-    "placeholders": {
-      "percent": {}
-    }
-  },
-  "generation_retryProgress": "重试 {attempt}/{max}",
-  "@generation_retryProgress": {
-    "description": "Shown on the generating card while a failed request is retried",
-    "placeholders": {
-      "attempt": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "mobileWorkbench_cancelRetry": "取消 · 重试 {attempt}/{max}",
-  "@mobileWorkbench_cancelRetry": {
-    "placeholders": {
-      "attempt": {
-        "type": "int"
-      },
-      "max": {
-        "type": "int"
-      }
-    }
-  },
   "stamina_title": "V5 体力",
   "stamina_subtitle": "Opus 使用上限，随时间自动回充",
   "stamina_barSemantics": "V5 体力 {percent}，点按查看详情",

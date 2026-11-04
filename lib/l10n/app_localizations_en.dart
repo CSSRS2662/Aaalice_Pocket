@@ -1723,10 +1723,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get generation_seed => 'Seed';
 
   @override
-  String get generation_previewApplySeed =>
-      'Use the seed of the displayed image';
-
-  @override
   String get generation_imageComparison => 'Compare';
 
   @override
@@ -15917,21 +15913,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mobileWorkbench_queue => 'Generation queue';
-
-  @override
-  String mobileWorkbench_cancelProgress(Object percent) {
-    return 'Cancel · $percent%';
-  }
-
-  @override
-  String generation_retryProgress(int attempt, int max) {
-    return 'Retry $attempt/$max';
-  }
-
-  @override
-  String mobileWorkbench_cancelRetry(int attempt, int max) {
-    return 'Cancel · retry $attempt/$max';
-  }
 
   @override
   String get stamina_title => 'V5 stamina';

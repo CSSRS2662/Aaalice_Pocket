@@ -1653,9 +1653,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generation_seed => '种子';
 
   @override
-  String get generation_previewApplySeed => '使用当前图片的种子';
-
-  @override
   String get generation_imageComparison => '对比';
 
   @override
@@ -15198,21 +15195,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mobileWorkbench_queue => '生成队列';
 
   @override
-  String mobileWorkbench_cancelProgress(Object percent) {
-    return '取消 · $percent%';
-  }
-
-  @override
-  String generation_retryProgress(int attempt, int max) {
-    return '重试 $attempt/$max';
-  }
-
-  @override
-  String mobileWorkbench_cancelRetry(int attempt, int max) {
-    return '取消 · 重试 $attempt/$max';
-  }
-
-  @override
   String get stamina_title => 'V5 体力';
 
   @override
@@ -17722,9 +17704,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get generation_seed => '種子';
-
-  @override
-  String get generation_previewApplySeed => '使用當前圖片的種子';
 
   @override
   String get generation_imageComparison => '對比';
@@ -31269,21 +31248,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get mobileWorkbench_queue => '生成佇列';
-
-  @override
-  String mobileWorkbench_cancelProgress(Object percent) {
-    return '取消 · $percent%';
-  }
-
-  @override
-  String generation_retryProgress(int attempt, int max) {
-    return '重試 $attempt/$max';
-  }
-
-  @override
-  String mobileWorkbench_cancelRetry(int attempt, int max) {
-    return '取消 · 重試 $attempt/$max';
-  }
 
   @override
   String get stamina_title => 'V5 體力';
