@@ -20499,6 +20499,78 @@ abstract class AppLocalizations {
   /// **'Update Available'**
   String get updateAvailable;
 
+  /// No description provided for @updateProjectPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Project on GitHub'**
+  String get updateProjectPage;
+
+  /// No description provided for @updateViewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get updateViewDetails;
+
+  /// No description provided for @updateInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get updateInstall;
+
+  /// No description provided for @updateUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pocket is up to date.'**
+  String get updateUpToDate;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check for updates. Try again later.'**
+  String get updateCheckFailed;
+
+  /// No description provided for @updateNoNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'This release has no update notes.'**
+  String get updateNoNotes;
+
+  /// No description provided for @updateDownloadProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update · {percent}%'**
+  String updateDownloadProgress(int percent);
+
+  /// No description provided for @updateVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying the APK…'**
+  String get updateVerifying;
+
+  /// No description provided for @updateInstallReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the update in the Android installer.'**
+  String get updateInstallReady;
+
+  /// No description provided for @updateInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not prepare the update. Try again or visit the project page.'**
+  String get updateInstallFailed;
+
+  /// No description provided for @updateInstallPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Pocket to install unknown apps in Android settings, then try again.'**
+  String get updateInstallPermission;
+
+  /// No description provided for @updateInvalidPackage.
+  ///
+  /// In en, this message translates to:
+  /// **'The APK failed verification. Check the release on GitHub.'**
+  String get updateInvalidPackage;
+
   /// No description provided for @currentVersion.
   ///
   /// In en, this message translates to:

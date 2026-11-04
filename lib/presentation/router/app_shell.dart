@@ -17,6 +17,7 @@ import '../../data/services/auth_provider.dart';
 import '../providers/dlss_provider.dart';
 import '../providers/prompt_maximize_provider.dart';
 import '../widgets/app_branch_visibility.dart';
+import '../widgets/common/pocket_startup_update_notice.dart';
 import '../widgets/drop/global_drop_handler.dart';
 import '../widgets/drop/incoming_image_share_handler.dart';
 import '../widgets/shortcuts/shortcut_aware_widget.dart';
@@ -280,7 +281,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         contextType: ShortcutContext.global,
         shortcuts: globalShortcuts,
         autofocus: true,
-        child: dropEnabledContent,
+        child: PocketStartupUpdateNotice(child: dropEnabledContent),
       ),
     );
 

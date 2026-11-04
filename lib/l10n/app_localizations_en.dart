@@ -11743,6 +11743,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateAvailable => 'Update Available';
 
   @override
+  String get updateProjectPage => 'Project on GitHub';
+
+  @override
+  String get updateViewDetails => 'View details';
+
+  @override
+  String get updateInstall => 'Update now';
+
+  @override
+  String get updateUpToDate => 'Pocket is up to date.';
+
+  @override
+  String get updateCheckFailed =>
+      'Could not check for updates. Try again later.';
+
+  @override
+  String get updateNoNotes => 'This release has no update notes.';
+
+  @override
+  String updateDownloadProgress(int percent) {
+    return 'Downloading update · $percent%';
+  }
+
+  @override
+  String get updateVerifying => 'Verifying the APK…';
+
+  @override
+  String get updateInstallReady =>
+      'Confirm the update in the Android installer.';
+
+  @override
+  String get updateInstallFailed =>
+      'Could not prepare the update. Try again or visit the project page.';
+
+  @override
+  String get updateInstallPermission =>
+      'Allow Pocket to install unknown apps in Android settings, then try again.';
+
+  @override
+  String get updateInvalidPackage =>
+      'The APK failed verification. Check the release on GitHub.';
+
+  @override
   String get currentVersion => 'Current Version';
 
   @override

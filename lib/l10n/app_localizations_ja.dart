@@ -11423,7 +11423,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get checkForUpdate => 'アップデートを確認してください';
+  String get checkForUpdate => 'アップデートを確認';
 
   @override
   String lastCheckedAt(Object time) {
@@ -11432,6 +11432,45 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get updateAvailable => 'アップデートが利用可能です';
+
+  @override
+  String get updateProjectPage => 'GitHub のプロジェクト';
+
+  @override
+  String get updateViewDetails => '詳細を見る';
+
+  @override
+  String get updateInstall => '今すぐ更新';
+
+  @override
+  String get updateUpToDate => '最新バージョンを使用しています。';
+
+  @override
+  String get updateCheckFailed => '更新を確認できませんでした。時間をおいて再試行してください。';
+
+  @override
+  String get updateNoNotes => 'このリリースには更新内容の記載がありません。';
+
+  @override
+  String updateDownloadProgress(int percent) {
+    return '更新をダウンロード中 · $percent%';
+  }
+
+  @override
+  String get updateVerifying => 'APK を検証しています…';
+
+  @override
+  String get updateInstallReady => 'Android のインストール画面で更新を確認してください。';
+
+  @override
+  String get updateInstallFailed => '更新を準備できませんでした。再試行するか、プロジェクトページを開いてください。';
+
+  @override
+  String get updateInstallPermission =>
+      'Android の設定で Pocket に不明なアプリのインストールを許可し、再試行してください。';
+
+  @override
+  String get updateInvalidPackage => 'APK を検証できませんでした。GitHub でリリース情報を確認してください。';
 
   @override
   String get currentVersion => '現在のバージョン';

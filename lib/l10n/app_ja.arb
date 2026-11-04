@@ -5641,7 +5641,7 @@
       "count": {}
     }
   },
-  "checkForUpdate": "アップデートを確認してください",
+  "checkForUpdate": "アップデートを確認",
   "lastCheckedAt": "最終チェック日: {time}",
   "@lastCheckedAt": {
     "placeholders": {
@@ -5649,6 +5649,23 @@
     }
   },
   "updateAvailable": "アップデートが利用可能です",
+  "updateProjectPage": "GitHub のプロジェクト",
+  "updateViewDetails": "詳細を見る",
+  "updateInstall": "今すぐ更新",
+  "updateUpToDate": "最新バージョンを使用しています。",
+  "updateCheckFailed": "更新を確認できませんでした。時間をおいて再試行してください。",
+  "updateNoNotes": "このリリースには更新内容の記載がありません。",
+  "updateDownloadProgress": "更新をダウンロード中 · {percent}%",
+  "@updateDownloadProgress": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "updateVerifying": "APK を検証しています…",
+  "updateInstallReady": "Android のインストール画面で更新を確認してください。",
+  "updateInstallFailed": "更新を準備できませんでした。再試行するか、プロジェクトページを開いてください。",
+  "updateInstallPermission": "Android の設定で Pocket に不明なアプリのインストールを許可し、再試行してください。",
+  "updateInvalidPackage": "APK を検証できませんでした。GitHub でリリース情報を確認してください。",
   "currentVersion": "現在のバージョン",
   "cannotOpenUrl": "リンクを開けません",
 

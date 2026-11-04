@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nai_launcher/core/utils/localization_extension.dart';
 
 import '../../../../core/constants/app_version.dart';
+import '../../../../core/platform/platform_capabilities.dart';
 import '../../../../core/services/diagnostic_log_export_service.dart';
+import '../../../../core/services/pocket_update_service.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../widgets/common/app_toast.dart';
+import '../../../widgets/common/pocket_update_panel.dart';
 import '../widgets/settings_card.dart';
 import '../widgets/settings_page_layout.dart';
 
@@ -21,6 +25,7 @@ class AboutSettingsSection extends ConsumerStatefulWidget {
 }
 
 class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
+  bool _checkingUpdate = false;
   bool _isExportingLogs = false;
 
   @override
@@ -43,6 +48,25 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
                   context.l10n.settings_version(AppVersion.versionName),
                 ),
               ),
+              ListTile(
+                leading: const Icon(Icons.code_rounded),
+                title: Text(context.l10n.updateProjectPage),
+                subtitle: const Text('CSSRS2662/Aaalice_Pocket'),
+                trailing: const Icon(Icons.open_in_new_rounded),
+                onTap: () => openPocketProject(context),
+              ),
+              if (PlatformCapabilities.current.isAndroid)
+                ListTile(
+                  leading: const Icon(Icons.system_update_outlined),
+                  title: Text(context.l10n.checkForUpdate),
+                  trailing: _checkingUpdate
+                      ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chevron_right),
+                  onTap: _checkingUpdate ? null : _checkForUpdate,
+                ),
               SwitchListTile(
                 secondary: const Icon(Icons.article_outlined),
                 title: Text(context.l10n.settings_fileLogging),
@@ -87,6 +111,26 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
         ),
       ],
     );
+  }
+
+  Future<void> _checkForUpdate() async {
+    final PocketRelease? release;
+    setState(() => _checkingUpdate = true);
+    try {
+      release = await ref.read(pocketUpdateServiceProvider).check();
+    } on Exception catch (error) {
+      AppLogger.w('Manual update check failed: $error', 'PocketUpdate');
+      if (mounted) AppToast.error(context, context.l10n.updateCheckFailed);
+      return;
+    } finally {
+      if (mounted) setState(() => _checkingUpdate = false);
+    }
+    if (!mounted) return;
+    if (release == null) {
+      AppToast.info(context, context.l10n.updateUpToDate);
+    } else {
+      await showPocketUpdateDetails(context, release);
+    }
   }
 
   Future<void> _exportDiagnosticLogs() async {

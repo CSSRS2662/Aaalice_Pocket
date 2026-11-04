@@ -11236,6 +11236,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateAvailable => '发现新版本';
 
   @override
+  String get updateProjectPage => '前往项目地址';
+
+  @override
+  String get updateViewDetails => '查看详情';
+
+  @override
+  String get updateInstall => '一键更新';
+
+  @override
+  String get updateUpToDate => '当前已是最新版本。';
+
+  @override
+  String get updateCheckFailed => '暂时无法检查更新，请稍后重试。';
+
+  @override
+  String get updateNoNotes => '此版本暂无更新说明。';
+
+  @override
+  String updateDownloadProgress(int percent) {
+    return '正在下载更新 · $percent%';
+  }
+
+  @override
+  String get updateVerifying => '正在校验安装包…';
+
+  @override
+  String get updateInstallReady => '请在 Android 安装界面确认更新。';
+
+  @override
+  String get updateInstallFailed => '暂时无法准备更新，请重试或前往项目地址。';
+
+  @override
+  String get updateInstallPermission => '请在 Android 设置中允许 Pocket 安装未知应用，然后重试。';
+
+  @override
+  String get updateInvalidPackage => '安装包未通过校验，请前往 GitHub 查看发布信息。';
+
+  @override
   String get currentVersion => '当前版本';
 
   @override
@@ -27287,6 +27325,45 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get updateAvailable => '發現新版本';
+
+  @override
+  String get updateProjectPage => '前往專案頁面';
+
+  @override
+  String get updateViewDetails => '查看詳情';
+
+  @override
+  String get updateInstall => '一鍵更新';
+
+  @override
+  String get updateUpToDate => '目前已是最新版本。';
+
+  @override
+  String get updateCheckFailed => '暫時無法檢查更新，請稍後再試。';
+
+  @override
+  String get updateNoNotes => '此版本暫無更新說明。';
+
+  @override
+  String updateDownloadProgress(int percent) {
+    return '正在下載更新 · $percent%';
+  }
+
+  @override
+  String get updateVerifying => '正在驗證安裝套件…';
+
+  @override
+  String get updateInstallReady => '請在 Android 安裝畫面確認更新。';
+
+  @override
+  String get updateInstallFailed => '暫時無法準備更新，請重試或前往專案頁面。';
+
+  @override
+  String get updateInstallPermission =>
+      '請在 Android 設定中允許 Pocket 安裝未知應用程式，然後重試。';
+
+  @override
+  String get updateInvalidPackage => '安裝套件未通過驗證，請前往 GitHub 查看發行資訊。';
 
   @override
   String get currentVersion => '當前版本';

@@ -14,6 +14,7 @@ class MainActivity : FlutterActivity() {
     private var generationServiceChannel: MethodChannel? = null
     private var imageShareChannel: AndroidImageShareChannel? = null
     private var displayRefreshRate: DisplayRefreshRateChannel? = null
+    private var appInstaller: AndroidAppInstaller? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +25,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        appInstaller = AndroidAppInstaller(this, flutterEngine.dartExecutor.binaryMessenger)
         displayRefreshRate = DisplayRefreshRateChannel(
             this,
             flutterEngine.dartExecutor.binaryMessenger,
@@ -126,6 +128,7 @@ class MainActivity : FlutterActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (appInstaller?.onActivityResult(requestCode) == true) return
         fileExportChannel?.onActivityResult(requestCode, resultCode, data)
     }
 
@@ -136,6 +139,8 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        appInstaller?.dispose()
+        appInstaller = null
         imageShareChannel?.dispose()
         imageShareChannel = null
         questionNotifications?.dispose()

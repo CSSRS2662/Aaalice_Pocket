@@ -5443,6 +5443,23 @@
   },
 
   "updateAvailable": "发现新版本",
+  "updateProjectPage": "前往项目地址",
+  "updateViewDetails": "查看详情",
+  "updateInstall": "一键更新",
+  "updateUpToDate": "当前已是最新版本。",
+  "updateCheckFailed": "暂时无法检查更新，请稍后重试。",
+  "updateNoNotes": "此版本暂无更新说明。",
+  "updateDownloadProgress": "正在下载更新 · {percent}%",
+  "@updateDownloadProgress": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "updateVerifying": "正在校验安装包…",
+  "updateInstallReady": "请在 Android 安装界面确认更新。",
+  "updateInstallFailed": "暂时无法准备更新，请重试或前往项目地址。",
+  "updateInstallPermission": "请在 Android 设置中允许 Pocket 安装未知应用，然后重试。",
+  "updateInvalidPackage": "安装包未通过校验，请前往 GitHub 查看发布信息。",
   "currentVersion": "当前版本",
   "cannotOpenUrl": "无法打开链接",
 

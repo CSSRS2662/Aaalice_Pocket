@@ -5640,6 +5640,23 @@
   },
 
   "updateAvailable": "Update Available",
+  "updateProjectPage": "Project on GitHub",
+  "updateViewDetails": "View details",
+  "updateInstall": "Update now",
+  "updateUpToDate": "Pocket is up to date.",
+  "updateCheckFailed": "Could not check for updates. Try again later.",
+  "updateNoNotes": "This release has no update notes.",
+  "updateDownloadProgress": "Downloading update · {percent}%",
+  "updateVerifying": "Verifying the APK…",
+  "updateInstallReady": "Confirm the update in the Android installer.",
+  "updateInstallFailed": "Could not prepare the update. Try again or visit the project page.",
+  "updateInstallPermission": "Allow Pocket to install unknown apps in Android settings, then try again.",
+  "updateInvalidPackage": "The APK failed verification. Check the release on GitHub.",
+  "@updateDownloadProgress": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
   "currentVersion": "Current Version",
   "cannotOpenUrl": "Cannot open link",
 

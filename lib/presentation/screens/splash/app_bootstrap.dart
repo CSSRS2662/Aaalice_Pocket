@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 
 import '../../../app.dart';
+import '../../../core/services/pocket_update_service.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/first_launch_detector.dart';
 import '../../../core/windowing/windows_native_window_state.dart';
 import '../../../core/utils/locale_provider.dart';
 import '../../providers/warmup_provider.dart';
 import '../../widgets/common/desktop_window_frame.dart';
+import '../../widgets/common/pocket_startup_update_notice.dart';
 import 'splash_screen.dart';
 
 /// 应用启动引导器
@@ -101,9 +103,21 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> {
           _warmupCompletionNotified = true;
           AppLogger.i('Main application first frame rendered', 'AppBootstrap');
           widget.onWarmupComplete?.call();
+          if (Platform.isAndroid) unawaited(_checkForPocketUpdate());
         });
       });
     });
+  }
+
+  Future<void> _checkForPocketUpdate() async {
+    try {
+      final update = await ref.read(pocketUpdateServiceProvider).check();
+      if (mounted && update != null) {
+        ref.read(pocketStartupUpdateProvider.notifier).state = update;
+      }
+    } on Exception catch (error) {
+      AppLogger.w('Startup update check failed: $error', 'PocketUpdate');
+    }
   }
 
   void _handleIntroSettled() {

@@ -34,7 +34,7 @@ Upstream NAI Launcher targets Windows, macOS, and Android. Aaalice Pocket target
 - **Android packages only.** For desktop builds, use upstream NAI Launcher.
 - **Own package name and signature.** The package is `com.cssrs2662.aaalicepocket`, signed with this branch's own key. It installs side by side with upstream builds and keeps its data separate.
 - **Independent releases.** Pocket uses its own versioning and release schedule, selectively porting upstream features and fixes that fit Android.
-- **No in-app updater.** Download new versions from this repository's Releases and install over the existing app.
+- **In-app updates.** On Android, Pocket checks GitHub Releases at startup and offers release notes and installation when an update is available. You can also check from Settings → About.
 
 ## ✨ Reworked for phones
 

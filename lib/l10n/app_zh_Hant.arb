@@ -5479,6 +5479,23 @@
     }
   },
   "updateAvailable": "發現新版本",
+  "updateProjectPage": "前往專案頁面",
+  "updateViewDetails": "查看詳情",
+  "updateInstall": "一鍵更新",
+  "updateUpToDate": "目前已是最新版本。",
+  "updateCheckFailed": "暫時無法檢查更新，請稍後再試。",
+  "updateNoNotes": "此版本暫無更新說明。",
+  "updateDownloadProgress": "正在下載更新 · {percent}%",
+  "@updateDownloadProgress": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+  "updateVerifying": "正在驗證安裝套件…",
+  "updateInstallReady": "請在 Android 安裝畫面確認更新。",
+  "updateInstallFailed": "暫時無法準備更新，請重試或前往專案頁面。",
+  "updateInstallPermission": "請在 Android 設定中允許 Pocket 安裝未知應用程式，然後重試。",
+  "updateInvalidPackage": "安裝套件未通過驗證，請前往 GitHub 查看發行資訊。",
   "currentVersion": "當前版本",
   "cannotOpenUrl": "無法開啟連結",
   "model3d_editorTitle": "3D 模型圖層",

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nai_launcher/core/constants/app_version.dart';
 import 'package:nai_launcher/core/services/diagnostic_log_export_service.dart';
+import 'package:nai_launcher/core/services/pocket_update_service.dart';
 import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/l10n/app_localizations.dart';
 import 'package:nai_launcher/presentation/screens/settings/sections/about_settings_section.dart';
@@ -29,6 +30,29 @@ void main() {
 
   setUp(() {
     exportService = _MockDiagnosticLogExportService();
+  });
+
+  testWidgets('关于页可以手动检查更新并打开同一个详情面板', (tester) async {
+    final updateService = _MockPocketUpdateService();
+    when(() => updateService.check()).thenAnswer(
+      (_) async => PocketRelease(
+        version: '1.1.0',
+        notes: '更新内容',
+        apkUrl: Uri.https('github.com', '/test.apk'),
+        apkSize: 280 * 1024 * 1024,
+        sha256: '',
+      ),
+    );
+    await _pumpSubject(tester, exportService, updateService: updateService);
+
+    expect(find.text('前往项目地址'), findsOneWidget);
+    await tester.tap(find.text('检查更新'));
+    await tester.pumpAndSettle();
+
+    verify(() => updateService.check()).called(1);
+    expect(find.text('发现新版本 · v1.1.0'), findsOneWidget);
+    expect(find.text('更新内容', findRichText: true), findsOneWidget);
+    expect(find.text('一键更新').hitTestable(), findsOneWidget);
   });
 
   testWidgets('导出诊断日志入口可见，并在无日志时给出恢复提示', (tester) async {
@@ -144,6 +168,7 @@ Future<void> _pumpSubject(
   DiagnosticLogExportService exportService, {
   Locale locale = const Locale('zh'),
   double textScale = 1,
+  PocketUpdateService? updateService,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -152,6 +177,8 @@ Future<void> _pumpSubject(
           _MemoryLocalStorageService(),
         ),
         diagnosticLogExportServiceProvider.overrideWithValue(exportService),
+        if (updateService != null)
+          pocketUpdateServiceProvider.overrideWithValue(updateService),
       ],
       child: MaterialApp(
         locale: locale,
@@ -174,6 +201,8 @@ Future<void> _pumpSubject(
 
 class _MockDiagnosticLogExportService extends Mock
     implements DiagnosticLogExportService {}
+
+class _MockPocketUpdateService extends Mock implements PocketUpdateService {}
 
 class _MemoryLocalStorageService extends LocalStorageService {
   final Map<String, Object?> _values = {};

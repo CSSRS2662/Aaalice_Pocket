@@ -23,6 +23,7 @@ abstract final class ActionNotice {
     required String actionLabel,
     required VoidCallback onAction,
     Key? actionKey,
+    Duration displayDuration = duration,
   }) {
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
@@ -46,7 +47,7 @@ abstract final class ActionNotice {
     );
     _entry = entry;
     overlay.insert(entry);
-    _timer = Timer(duration, () => _remove(entry));
+    _timer = Timer(displayDuration, () => _remove(entry));
   }
 
   static void dismiss() {
