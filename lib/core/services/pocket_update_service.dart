@@ -69,6 +69,10 @@ class PocketUpdateService {
     if (current == null) {
       throw const FormatException('Invalid installed version');
     }
+    final prerelease = current.group(4)?.toLowerCase();
+    if (prerelease == '-dev' || prerelease?.startsWith('-dev.') == true) {
+      return null;
+    }
     final response = await _dio.getUri<Map<String, dynamic>>(
       _latest,
       options: Options(headers: {'Accept': 'application/vnd.github+json'}),

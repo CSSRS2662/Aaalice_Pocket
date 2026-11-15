@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../utils/app_logger.dart';
+import '../completion_models.dart';
+import 'chinese_fuzzy_match.dart';
 import 'english_words.dart';
 import 'lexical_index_builder.dart';
 import 'search_lexicon.dart';
@@ -73,6 +75,8 @@ class SpellSuggestion {
   final int weight;
 }
 
+typedef LexicalConceptMatch = ({String tag, String tokens, int postCount});
+
 /// The device-local index for pinyin, character and spelling lookups. It is a
 /// cache: built in the background from bundled and installed data, rebuilt
 /// when its inputs change, never synced.
@@ -128,6 +132,7 @@ class LexicalSearchIndex {
 
     final existing = await _openIfCurrent(sources.indexPath, fingerprint);
     if (existing != null) return existing;
+    if (_building != null) return _database;
     _building = _rebuild(sources, fingerprint).whenComplete(() {
       _building = null;
       _lastCheck = null;
@@ -207,47 +212,99 @@ class LexicalSearchIndex {
   Future<List<LexicalLabelMatch>> pinyinMatches(
     String expression, {
     int limit = 200,
+    Set<TagCategory>? scope,
   }) async {
     final db = await database();
-    if (db == null || expression.isEmpty) return const [];
+    if (db == null || expression.isEmpty || scope?.isEmpty == true) {
+      return const [];
+    }
+    final categories = _categoryClause(scope);
     final rows = await db.rawQuery(
       '''
       SELECT e.tag, e.label, e.post_count, e.category, f.py
       FROM label_py f JOIN entries e ON e.id = f.entry
-      WHERE label_py MATCH ?
-      ORDER BY e.post_count DESC
+      WHERE label_py MATCH ? $categories
+      ORDER BY e.syllables, e.post_count DESC, e.id
       LIMIT ?
       ''',
-      [expression, limit],
+      [expression, ...?scope?.map((category) => category.value), limit],
     );
     return rows.map(_labelMatch).toList(growable: false);
   }
 
-  /// Labels sharing characters with the query, best BM25 first.
+  /// Character and adjacent-pair postings, narrowed before the candidate cap.
   Future<List<LexicalLabelMatch>> characterMatches(
-    Iterable<String> characters, {
+    String query, {
     int limit = 300,
+    Set<TagCategory>? scope,
   }) async {
     final db = await database();
-    final terms = characters
-        .where((c) => c.trim().isNotEmpty)
-        .map((c) => '"${c.replaceAll('"', '""')}"')
-        .toSet();
-    if (db == null || terms.isEmpty) return const [];
+    if (db == null || query.length < 2 || scope?.isEmpty == true) {
+      return const [];
+    }
+    final chars = query.split('').toSet().map((term) => '"$term"').join(' OR ');
+    final grams = chineseBigrams(
+      query,
+    ).toSet().map((term) => '"$term"').join(' OR ');
+    final length = query.length;
+    final radius = chineseEditBudget(length) + (length >= 4 ? 1 : 0);
+    final categories = _categoryClause(scope);
     final rows = await db.rawQuery(
       '''
       SELECT e.tag, e.label, e.post_count, e.category, '' AS py
       FROM label_chars f JOIN entries e ON e.id = f.entry
-      WHERE label_chars MATCH ?
-      ORDER BY bm25(label_chars)
+      WHERE label_chars MATCH ? AND e.key_length BETWEEN ? AND ? $categories
+      ORDER BY bm25(label_chars, 1.0, 2.5), abs(e.key_length - ?), e.id
       LIMIT ?
       ''',
-      [terms.join(' OR '), limit],
+      [
+        'chars : ($chars) OR grams : ($grams)',
+        length - radius,
+        length + radius,
+        ...?scope?.map((category) => category.value),
+        length,
+        limit,
+      ],
     );
     return rows.map(_labelMatch).toList(growable: false);
   }
 
-  /// Post-count weight of English tag tokens (4+ letters); missing tokens are
+  static String _categoryClause(Set<TagCategory>? scope) => scope == null
+      ? ''
+      : "AND e.category IN (${List.filled(scope.length, '?').join(',')})";
+
+  Future<List<LexicalConceptMatch>> conceptMatches(
+    List<List<String>> groups, {
+    int limit = 140,
+  }) async {
+    final db = await database();
+    if (db == null || groups.isEmpty) return const [];
+    final expression = groups
+        .map((group) {
+          return '(${group.map((term) => '"$term"').join(' OR ')})';
+        })
+        .join(' AND ');
+    final rows = await db.rawQuery(
+      '''
+      SELECT tag, tokens, post_count
+      FROM tag_concepts
+      WHERE tag_concepts MATCH ?
+      ORDER BY rank, length(tokens), rowid
+      LIMIT ?
+      ''',
+      [expression, limit],
+    );
+    return [
+      for (final row in rows)
+        (
+          tag: row['tag'] as String,
+          tokens: row['tokens'] as String,
+          postCount: row['post_count'] as int,
+        ),
+    ];
+  }
+
+  /// Post-count weight of English tag tokens; missing tokens are
   /// not in any tag name.
   Future<Map<String, int>> vocabularyWeights(Iterable<String> tokens) async {
     final db = await database();
@@ -269,7 +326,7 @@ class LexicalSearchIndex {
     int limit = 3,
   }) async {
     final word = token.toLowerCase();
-    if (word.length < 4) return const [];
+    if (word.length < 3 || word.length > 24) return const [];
     final db = await database();
     if (db == null) return const [];
     final maxDistance = EnglishWords.allowedDistance(word.length);
@@ -280,19 +337,25 @@ class LexicalSearchIndex {
     final rows = <Map<String, Object?>>[];
     for (var offset = 0; offset < probes.length; offset += 400) {
       final chunk = probes.skip(offset).take(400).toList(growable: false);
+      final parameters = List.filled(chunk.length, '?').join(',');
       rows.addAll(
         await db.rawQuery(
-          'SELECT DISTINCT d.token, v.weight FROM en_deletes d '
-          'JOIN en_vocab v ON v.token = d.token '
-          'WHERE d.del IN (${List.filled(chunk.length, '?').join(',')})',
-          chunk,
+          'SELECT v.token, v.weight FROM en_deletes d '
+          'JOIN en_vocab v ON v.id = d.word_id '
+          'WHERE d.signature IN ($parameters) '
+          'UNION SELECT token, weight FROM en_vocab WHERE token IN ($parameters)',
+          [...chunk.map(EnglishWords.deletionKey), ...chunk],
         ),
       );
     }
     final suggestions = <String, SpellSuggestion>{};
     for (final row in rows) {
       final candidate = row['token'] as String;
-      if (candidate == word) continue;
+      if (candidate == word ||
+          suggestions.containsKey(candidate) ||
+          (candidate.length - word.length).abs() > maxDistance) {
+        continue;
+      }
       final distance = EnglishWords.distance(word, candidate);
       if (distance > maxDistance) continue;
       suggestions[candidate] = SpellSuggestion(
@@ -305,7 +368,8 @@ class LexicalSearchIndex {
       ..sort((a, b) {
         final byDistance = a.distance.compareTo(b.distance);
         if (byDistance != 0) return byDistance;
-        return b.weight.compareTo(a.weight);
+        final byWeight = b.weight.compareTo(a.weight);
+        return byWeight != 0 ? byWeight : a.word.compareTo(b.word);
       });
     return ordered.take(limit).toList(growable: false);
   }

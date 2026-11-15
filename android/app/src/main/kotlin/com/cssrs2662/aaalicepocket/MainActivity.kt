@@ -60,7 +60,19 @@ class MainActivity : FlutterActivity() {
                             result.success(null)
                         }
                         "stop" -> {
+                            GenerationForegroundService.clearProgress()
                             stopService(serviceIntent)
+                            result.success(null)
+                        }
+                        "updateProgress" -> {
+                            val current = call.argument<Int>("current")
+                            val progress = if (current == null) null else GenerationForegroundService.Progress(
+                                current,
+                                requireNotNull(call.argument<Int>("total")),
+                                requireNotNull(call.argument<Int>("percent")),
+                                call.argument<Boolean>("queue") == true,
+                            )
+                            GenerationForegroundService.updateProgress(progress)
                             result.success(null)
                         }
                         else -> result.notImplemented()

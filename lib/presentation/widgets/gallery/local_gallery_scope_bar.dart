@@ -44,6 +44,7 @@ class LocalGalleryScopeBar extends ConsumerWidget {
     );
     final hasDate = criteria.dateStart != null || criteria.dateEnd != null;
     final collection = collectionLabel;
+    final samePrompt = ref.watch(localGallerySamePromptViewProvider);
 
     return GalleryScopeRow(
       key: const ValueKey('local-gallery-scope-bar'),
@@ -69,6 +70,15 @@ class LocalGalleryScopeBar extends ConsumerWidget {
           onPressed: onOpenCollections,
           onClear: collection != null ? onClearCollection : null,
           clearTooltip: l10n.common_clear,
+        ),
+        GalleryFilterChipButton(
+          key: const ValueKey('local-gallery-same-prompt-chip'),
+          icon: Icons.collections_outlined,
+          label: l10n.localGallery_samePrompt,
+          active: samePrompt,
+          onPressed: () => ref
+              .read(localGalleryNotifierProvider.notifier)
+              .setSamePromptView(!samePrompt),
         ),
       ],
     );

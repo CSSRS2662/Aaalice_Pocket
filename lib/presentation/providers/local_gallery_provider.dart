@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart' show WidgetRef;
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    show StateProvider, WidgetRef;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/cache/gallery_cache_manager.dart';
+import '../../core/constants/storage_keys.dart';
 import '../../core/exceptions/gallery_exceptions.dart';
+import '../../core/storage/local_storage_service.dart';
 import '../../core/utils/app_logger.dart';
 import '../../data/models/gallery/gallery_index_admission.dart';
 import '../../data/models/gallery/local_image_record.dart';
@@ -146,6 +149,14 @@ class LocalGalleryState with _$LocalGalleryState {
   bool get isLastPage => currentPage >= totalPages - 1;
 }
 
+final localGallerySamePromptViewProvider = StateProvider<bool>(
+  (ref) =>
+      ref
+          .read(localStorageServiceProvider)
+          .getSetting<Object>(StorageKeys.localGallerySamePromptView) ==
+      true,
+);
+
 /// 本地画廊 Notifier（使用统一服务层）
 ///
 /// 职责：
@@ -173,10 +184,14 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
   bool _loadingMore = false;
   DateTime? _lastSynchronizedAt;
   int _filterRequestSerial = 0;
+  int _groupedRequestSerial = 0;
   final Map<String, String> _deferredAdmissions = {};
   final Map<String, String> _deferredRemovals = {};
 
   DateTime? get lastSynchronizedAt => _lastSynchronizedAt;
+
+  bool get _needsGroupedImages =>
+      state.isGroupedView || ref.read(localGallerySamePromptViewProvider);
 
   @override
   LocalGalleryState build() {
@@ -185,6 +200,7 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
     // 监听缓存清理事件
     GalleryCacheManager().registerOnCacheCleared(_resetState);
     ref.onDispose(() {
+      _groupedRequestSerial++;
       GalleryCacheManager().unregisterOnCacheCleared(_resetState);
       for (final timer in _pendingRemovals.values) {
         timer.cancel();
@@ -192,7 +208,14 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
       _pendingRemovals.clear();
     });
 
-    return const LocalGalleryState(filterCriteria: favoritesOnly);
+    return LocalGalleryState(
+      filterCriteria: favoritesOnly,
+      isGroupedView:
+          ref
+              .read(localStorageServiceProvider)
+              .getSetting<Object>(StorageKeys.localGalleryDateView) ==
+          true,
+    );
   }
 
   void _setState(LocalGalleryState newState) {
@@ -207,9 +230,15 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
     _favoriteCountLoad = null;
     _lastSynchronizedAt = null;
     _filterRequestSerial++;
+    _groupedRequestSerial++;
     _deferredAdmissions.clear();
     _deferredRemovals.clear();
-    _setState(const LocalGalleryState(filterCriteria: favoritesOnly));
+    _setState(
+      LocalGalleryState(
+        filterCriteria: favoritesOnly,
+        isGroupedView: state.isGroupedView,
+      ),
+    );
   }
 
   /// 获取共享服务实例，所有调用方等待同一个初始化 Future。
@@ -508,7 +537,7 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
     if (_loadingMore ||
         !state.isInitialized ||
         state.isLoading ||
-        state.isGroupedView ||
+        _needsGroupedImages ||
         !state.canLoadMore) {
       return;
     }
@@ -587,7 +616,7 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
         ),
       );
 
-      if (state.isGroupedView) {
+      if (_needsGroupedImages) {
         await _loadGroupedImages();
       } else {
         // 刷新当前页
@@ -670,7 +699,7 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
         ),
       );
       if (!state.isInitialized) return;
-      if (state.isGroupedView) {
+      if (_needsGroupedImages) {
         await _loadGroupedImages();
       } else {
         await loadPage(state.currentPage, showLoading: false);
@@ -716,10 +745,12 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
       }
 
       // 扫描器抢先收录时同样要重取首页，否则开着图库会看不到新图。
-      if (admission.isIndexed &&
-          state.isInitialized &&
-          state.currentPage == 0) {
-        await loadPage(0, showLoading: false);
+      if (admission.isIndexed && state.isInitialized) {
+        if (_needsGroupedImages) {
+          await _loadGroupedImages();
+        } else if (state.currentPage == 0) {
+          await loadPage(0, showLoading: false);
+        }
       }
     } catch (e) {
       AppLogger.e(
@@ -1037,43 +1068,92 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
 
   /// 设置分组视图
   Future<void> setGroupedView(bool value) async {
+    ref.read(localGallerySamePromptViewProvider.notifier).state = false;
     _setState(state.copyWith(isGroupedView: value));
+    final saved = _saveViewMode();
     if (value) {
       await _loadGroupedImages();
     } else {
       await _applyFilters();
     }
+    await saved;
   }
 
+  Future<void> setSamePromptView(bool value) async {
+    ref.read(localGallerySamePromptViewProvider.notifier).state = value;
+    final saved = _saveViewMode();
+    if (state.isInitialized) {
+      if (_needsGroupedImages) {
+        await _loadGroupedImages();
+      } else {
+        _groupedRequestSerial++;
+        _setState(state.copyWith(isGroupedLoading: false, error: null));
+        await loadPage(state.currentPage);
+      }
+    }
+    await saved;
+  }
+
+  Future<void> _saveViewMode() => ref
+      .read(localStorageServiceProvider)
+      .setSettings({
+        StorageKeys.localGalleryDateView: state.isGroupedView,
+        StorageKeys.localGallerySamePromptView: ref.read(
+          localGallerySamePromptViewProvider,
+        ),
+      })
+      .catchError(
+        (Object error) => AppLogger.w(
+          'Failed to save gallery view mode: $error',
+          'LocalGalleryNotifier',
+        ),
+      );
+
   Future<void> _loadGroupedImages() async {
-    _setState(state.copyWith(isGroupedLoading: true));
+    final serial = ++_groupedRequestSerial;
+    final criteria = state.filterCriteria;
+    _setState(state.copyWith(isGroupedLoading: true, error: null));
     try {
       // 加载所有过滤后的图片用于分组
       final service = await getService();
+      if (serial != _groupedRequestSerial || criteria != state.filterCriteria) {
+        return;
+      }
       final allRecords = <LocalImageRecord>[];
 
-      // 分批加载所有图片
       const batchSize = 100;
-      int page = 0;
-      while (true) {
+      final pageCount = (service.filteredCount / batchSize).ceil();
+      for (var page = 0; page < pageCount; page++) {
         final records = await service.getPage(page, pageSize: batchSize);
-        if (records.isEmpty) break;
+        if (serial != _groupedRequestSerial ||
+            criteria != state.filterCriteria) {
+          return;
+        }
         allRecords.addAll(records);
-        if (records.length < batchSize) break;
-        page++;
       }
 
       _setState(
         state.copyWith(groupedImages: allRecords, isGroupedLoading: false),
       );
     } catch (e) {
+      if (serial != _groupedRequestSerial || criteria != state.filterCriteria) {
+        return;
+      }
       AppLogger.e(
         'Failed to load grouped images',
         e,
         null,
         'LocalGalleryNotifier',
       );
-      _setState(state.copyWith(isGroupedLoading: false));
+      _setState(
+        state.copyWith(
+          isGroupedLoading: false,
+          error: LocalGalleryError(
+            LocalGalleryErrorCode.refreshFailed,
+            details: '$e',
+          ),
+        ),
+      );
     }
   }
 
@@ -1126,7 +1206,7 @@ class LocalGalleryNotifier extends _$LocalGalleryNotifier {
         ),
       );
 
-      if (state.isGroupedView) {
+      if (_needsGroupedImages) {
         await _loadGroupedImages();
       } else {
         await loadPage(0);

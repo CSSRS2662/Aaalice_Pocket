@@ -176,6 +176,7 @@ class _LocalGalleryToolbarState extends ConsumerState<LocalGalleryToolbar> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(localGalleryNotifierProvider);
+    final samePrompt = ref.watch(localGallerySamePromptViewProvider);
     final selectionState = ref.watch(localGallerySelectionNotifierProvider);
     final theme = Theme.of(context);
     final l10n = context.l10n;
@@ -246,9 +247,7 @@ class _LocalGalleryToolbarState extends ConsumerState<LocalGalleryToolbar> {
           : const SizedBox.shrink(),
       count: state.isIndexing
           ? null
-          : GalleryLibraryCountBadge(
-              label: '${state.filteredCount}',
-            ),
+          : GalleryLibraryCountBadge(label: '${state.filteredCount}'),
       search: _buildSearchField(),
       primaryAction: _FilterPanelButton(
         active: criteria.hasMetadataFilters || criteria.hasAdvancedFilters,
@@ -259,13 +258,14 @@ class _LocalGalleryToolbarState extends ConsumerState<LocalGalleryToolbar> {
           surface: GridColumnsSurface.localGallery,
           iconOnly: true,
         ),
-        IconButton(
-          key: const ValueKey('local-gallery-select-action'),
-          tooltip: l10n.localGallery_enterSelectionMode,
-          onPressed: widget.onEnterSelectionMode,
-          icon: const Icon(Icons.checklist_rounded),
-        ),
-        _buildMoreMenu(state),
+        if (!samePrompt)
+          IconButton(
+            key: const ValueKey('local-gallery-select-action'),
+            tooltip: l10n.localGallery_enterSelectionMode,
+            onPressed: widget.onEnterSelectionMode,
+            icon: const Icon(Icons.checklist_rounded),
+          ),
+        _buildMoreMenu(state, samePrompt: samePrompt),
       ],
       filters: LocalGalleryScopeBar(
         onPickDateRange: () => _selectDateRange(context, state),
@@ -283,7 +283,7 @@ class _LocalGalleryToolbarState extends ConsumerState<LocalGalleryToolbar> {
   }
 
   /// 低频操作：日期分组视图、跳转日期、撤销重做、刷新、打开文件夹与清除筛选。
-  Widget _buildMoreMenu(LocalGalleryState state) {
+  Widget _buildMoreMenu(LocalGalleryState state, {required bool samePrompt}) {
     final l10n = context.l10n;
     final colors = Theme.of(context).colorScheme;
     final notifier = ref.read(localGalleryNotifierProvider.notifier);
@@ -292,10 +292,11 @@ class _LocalGalleryToolbarState extends ConsumerState<LocalGalleryToolbar> {
         MenuItemButton(
           key: const ValueKey('local-gallery-more-group-by-date'),
           leadingIcon: const Icon(Icons.calendar_view_day_rounded),
-          trailingIcon: state.isGroupedView
+          trailingIcon: state.isGroupedView && !samePrompt
               ? Icon(Icons.check_rounded, color: colors.primary)
               : null,
-          onPressed: () => notifier.setGroupedView(!state.isGroupedView),
+          onPressed: () =>
+              notifier.setGroupedView(samePrompt || !state.isGroupedView),
           child: Text(l10n.localGallery_groupByDate),
         ),
         if (widget.onJumpToDate != null)

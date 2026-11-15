@@ -11,6 +11,7 @@ import 'completion_category_filter.dart';
 import 'completion_footer.dart';
 import 'completion_header.dart';
 import 'completion_popup_buttons.dart';
+import 'completion_remote_error_message.dart';
 import 'completion_tile_layout.dart';
 
 /// Compact completion popup inspired by editor command palettes.
@@ -256,7 +257,14 @@ class _EmptyCompletionBody extends StatelessWidget {
     final theme = Theme.of(context);
     final loading = state.isLocalLoading || state.isRemoteLoading;
     final related = state.query?.relatedTag != null;
-    final error = state.localError ?? state.remoteError;
+    final remoteError = state.remoteError;
+    final error =
+        state.localError ??
+        remoteError?.details(
+          context,
+          related: related,
+          provider: state.remoteProvider ?? OnlineTagProvider.danbooru,
+        );
     final clearFilter = loading || error != null ? null : onClearFilter;
     final message = _message(context, theme, loading, related, error);
     if (clearFilter == null) {
@@ -334,7 +342,9 @@ class _EmptyCompletionBody extends StatelessWidget {
                           ? l10n.autocomplete_relatedLoading
                           : l10n.autocomplete_loading
                     : error != null
-                    ? l10n.autocomplete_statusError
+                    ? state.localError != null
+                          ? l10n.autocomplete_statusError
+                          : state.remoteError!.summary(context)
                     : filtered
                     ? related
                           ? l10n.autocomplete_relatedFilterEmpty

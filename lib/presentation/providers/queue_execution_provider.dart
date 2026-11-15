@@ -188,6 +188,7 @@ class QueueExecutionNotifier extends _$QueueExecutionNotifier {
       next,
     ) {
       _onGenerationStateChanged(previous, next);
+      if (next.isGenerating) _updateForegroundProgress(state, next.progress);
     });
     listenSelf((_, next) => _syncForegroundHold(next));
     ref.onDispose(() {
@@ -201,7 +202,7 @@ class QueueExecutionNotifier extends _$QueueExecutionNotifier {
 
   /// Android 前台服务在整段队列执行中一直保持，任务之间不释放：应用在后台时
   /// 系统不允许重新启动前台服务，释放后下一张图就失去保活。
-  Future<void> Function()? _releaseForeground;
+  AndroidGenerationTask? _foreground;
   bool _acquiringForeground = false;
   bool _disposed = false;
 
@@ -215,18 +216,26 @@ class QueueExecutionNotifier extends _$QueueExecutionNotifier {
       _releaseForegroundHold();
       return;
     }
-    if (!next.isRunning || _releaseForeground != null || _acquiringForeground) {
+    if (_foreground != null) {
+      _updateForegroundProgress(
+        next,
+        next.isRunning ? ref.read(imageGenerationNotifierProvider).progress : 0,
+      );
+      return;
+    }
+    if (!next.isRunning || _acquiringForeground) {
       return;
     }
     _acquiringForeground = true;
     final service = ref.read(androidForegroundTaskServiceProvider);
     unawaited(() async {
       try {
-        final release = await service.acquire();
+        final foreground = await service.acquireGeneration(queue: true);
         if (!_disposed && _keepsForeground(state)) {
-          _releaseForeground = release;
+          _foreground = foreground;
+          _syncForegroundHold(state);
         } else {
-          await release();
+          await foreground.release();
         }
       } catch (error, stackTrace) {
         AppLogger.e(
@@ -241,12 +250,26 @@ class QueueExecutionNotifier extends _$QueueExecutionNotifier {
     }());
   }
 
+  void _updateForegroundProgress(
+    QueueExecutionState next,
+    double taskProgress,
+  ) {
+    final total = next.totalTasksInSession;
+    if (total < 2) return;
+    final settled = next.completedCount + next.failedCount + next.skippedCount;
+    _foreground?.update(
+      current: settled + 1,
+      total: total,
+      progress: (settled + (next.isRunning ? taskProgress : 0)) / total,
+    );
+  }
+
   void _releaseForegroundHold() {
-    final release = _releaseForeground;
-    _releaseForeground = null;
-    if (release == null) return;
+    final foreground = _foreground;
+    _foreground = null;
+    if (foreground == null) return;
     unawaited(
-      release().catchError((Object error, StackTrace stackTrace) {
+      foreground.release().catchError((Object error, StackTrace stackTrace) {
         AppLogger.e(
           'Unable to release the queue foreground service',
           error,

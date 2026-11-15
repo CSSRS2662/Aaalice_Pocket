@@ -290,6 +290,7 @@ class AgentChatSessionController {
     final cursor = _readState().historyCursor;
     if (currentSession == null ||
         cursor == null ||
+        _readState().sessionTransitioning ||
         _readState().historyLoading) {
       return;
     }
@@ -315,6 +316,11 @@ class AgentChatSessionController {
                 cursor: session_types.EntryCursor(afterSeq: cursor.beforeSeq),
               ),
             );
+      if (!_isMounted() ||
+          !identical(session, currentSession) ||
+          _readState().sessionTransitioning) {
+        return;
+      }
       final existingIds = _visibleEntries.map((entry) => entry.id).toSet();
       _visibleEntries.insertAll(
         0,
@@ -708,6 +714,48 @@ class AgentChatSessionController {
 
   Future<void> newSession() =>
       _runTransition(_createAndActivateSession, loadsContent: true);
+
+  Future<void> clearContext(String sessionId) => _runTransition(() async {
+    final current = _readState();
+    final target = session;
+    if (target == null ||
+        current.activeSessionId != sessionId ||
+        current.compacting) {
+      return;
+    }
+    final oldLeaf = await target.getLeafId();
+    if (_openOperation case final suspended?) {
+      await finishTurn(
+        turnId: suspended.id,
+        outcome: session_types.OperationOutcomeKind.aborted,
+      );
+    }
+    try {
+      await target.moveLane('main', null);
+      if (current.thinkingLevel != ThinkingLevel.off) {
+        await target.appendEntry(
+          session_types.ThinkingLevelEntry(
+            id: target.idGenerator(),
+            thinkingLevel: current.thinkingLevel.name,
+          ),
+          'main',
+        );
+      }
+      await activateSession(sessionId);
+    } catch (error) {
+      try {
+        await target.moveLane('main', oldLeaf);
+        await activateSession(sessionId);
+      } catch (rollbackError) {
+        AppLogger.w(
+          'Clear context rollback failed: $rollbackError',
+          'AgentChat',
+        );
+      }
+      AppLogger.w('Clear context failed: $error', 'AgentChat');
+      rethrow;
+    }
+  }, loadsContent: true);
 
   Future<void> switchSession(String sessionId) {
     final current = _readState();

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../completion_models.dart';
+import 'chinese_fuzzy_match.dart';
 import 'english_words.dart';
 import 'pinyin_syllables.dart';
 import 'search_lexicon.dart';
@@ -38,7 +39,7 @@ class LexicalIndexBuildInput {
 /// Schema of the local index. Bump [LexicalIndexSchema.version] whenever a
 /// table or column changes so stale files are rebuilt.
 abstract final class LexicalIndexSchema {
-  static const version = 2;
+  static const version = 4;
 
   static const statements = [
     '''CREATE TABLE entries(
@@ -47,7 +48,8 @@ abstract final class LexicalIndexSchema {
       label TEXT NOT NULL,
       post_count INTEGER NOT NULL,
       category INTEGER NOT NULL,
-      syllables INTEGER NOT NULL
+      syllables INTEGER NOT NULL,
+      key_length INTEGER NOT NULL
     )''',
     // One row per reading variant of a label; py is exact toneless pinyin,
     // pyf the same with every fuzzy pair folded.
@@ -55,12 +57,15 @@ abstract final class LexicalIndexSchema {
       py, pyf, entry UNINDEXED, prefix='1 2', tokenize='unicode61'
     )''',
     '''CREATE VIRTUAL TABLE label_chars USING fts5(
-      chars, entry UNINDEXED, tokenize='unicode61'
+      chars, grams, entry UNINDEXED, tokenize='unicode61'
     )''',
-    'CREATE TABLE en_vocab(token TEXT PRIMARY KEY, weight INTEGER NOT NULL) WITHOUT ROWID',
+    '''CREATE VIRTUAL TABLE tag_concepts USING fts5(
+      tokens, tag UNINDEXED, post_count UNINDEXED, tokenize='unicode61'
+    )''',
+    'CREATE TABLE en_vocab(id INTEGER PRIMARY KEY, token TEXT NOT NULL UNIQUE, weight INTEGER NOT NULL)',
     // Keyed by the deletion itself: no separate index to store.
-    'CREATE TABLE en_deletes(del TEXT NOT NULL, token TEXT NOT NULL, '
-        'PRIMARY KEY(del, token)) WITHOUT ROWID',
+    'CREATE TABLE en_deletes(signature INTEGER NOT NULL, word_id INTEGER NOT NULL, '
+        'PRIMARY KEY(signature, word_id)) WITHOUT ROWID',
     'CREATE TABLE metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL) WITHOUT ROWID',
   ];
 }
@@ -76,11 +81,8 @@ class _Label {
 
 final RegExp _labelSeparators = RegExp(r'[,，、/;；|]+');
 final RegExp _hanzi = RegExp(r'[㐀-鿿]');
-final RegExp _nonLetters = RegExp(r'[^a-z]+');
+final RegExp _letters = RegExp(r'^[a-z]{3,24}$');
 const int _maxLabelLength = 24;
-// Words below this summed post count are not correction targets: rare
-// words are rarely typed, and their deletions were most of the index.
-const int _spellMinWeight = 1000;
 
 /// Builds the index at `outputPath` (replacing it). Safe to run in an
 /// isolate: it only touches files and its own database connections.
@@ -181,13 +183,12 @@ Future<Map<String, int>> buildLexicalIndex(LexicalIndexBuildInput input) async {
     'SELECT name, post_count FROM tags',
   )) {
     final count = (row['post_count'] as int?) ?? 0;
-    for (final token in (row['name'] as String).toLowerCase().split(
-      _nonLetters,
-    )) {
-      if (token.length >= 4) weights[token] = (weights[token] ?? 0) + count;
+    for (final token in EnglishWords.tokens(row['name'] as String)) {
+      if (_letters.hasMatch(token)) {
+        weights[token] = (weights[token] ?? 0) + count;
+      }
     }
   }
-  await catalog.close();
 
   final temporary = '${input.outputPath}.building';
   File(input.outputPath).parent.createSync(recursive: true);
@@ -207,15 +208,16 @@ Future<Map<String, int>> buildLexicalIndex(LexicalIndexBuildInput input) async {
         final batch = txn.batch();
         for (final label in pending.skip(offset).take(batchSize)) {
           final variants = lexicon.pinyin.readingVariants(label.label);
-          if (variants.isEmpty) continue;
+          final key = chineseSearchKey(label.label);
           entryId++;
-          batch.rawInsert('INSERT INTO entries VALUES (?, ?, ?, ?, ?, ?)', [
+          batch.rawInsert('INSERT INTO entries VALUES (?, ?, ?, ?, ?, ?, ?)', [
             entryId,
             label.tag,
             label.label,
             label.postCount,
             label.category,
-            variants.first.length,
+            variants.isEmpty ? 0 : variants.first.length,
+            key.length,
           ]);
           for (final variant in variants) {
             batch.rawInsert(
@@ -229,8 +231,8 @@ Future<Map<String, int>> buildLexicalIndex(LexicalIndexBuildInput input) async {
             pinyinRows++;
           }
           batch.rawInsert(
-            'INSERT INTO label_chars(chars, entry) VALUES (?, ?)',
-            [_charTokens(label.label), entryId],
+            'INSERT INTO label_chars(chars, grams, entry) VALUES (?, ?, ?)',
+            [key.split('').join(' '), chineseBigrams(key).join(' '), entryId],
           );
         }
         await batch.commit(noResult: true);
@@ -238,28 +240,46 @@ Future<Map<String, int>> buildLexicalIndex(LexicalIndexBuildInput input) async {
     }
     stats['entries'] = entryId;
     stats['pinyinRows'] = pinyinRows;
+    stats['conceptRows'] = await _buildConceptIndex(
+      catalog,
+      db,
+      lexicon.crossLingual,
+    );
 
     final tokens = weights.entries.toList(growable: false);
     var deleteRows = 0;
+    var wordId = 0;
     for (var offset = 0; offset < tokens.length; offset += batchSize) {
       await db.transaction((txn) async {
         final batch = txn.batch();
+        const postingBatchSize = 400;
+        final postingSql = List.filled(postingBatchSize, '(?, ?)').join(',');
+        var postings = <int>[];
         for (final entry in tokens.skip(offset).take(batchSize)) {
-          batch.rawInsert('INSERT INTO en_vocab VALUES (?, ?)', [
+          wordId++;
+          batch.rawInsert('INSERT INTO en_vocab VALUES (?, ?, ?)', [
+            wordId,
             entry.key,
             entry.value,
           ]);
-          if (entry.value < _spellMinWeight) continue;
-          for (final deletion in {
+          final signatures = EnglishWords.deletes1(
             entry.key,
-            ...EnglishWords.deletes1(entry.key),
-          }) {
-            batch.rawInsert('INSERT OR IGNORE INTO en_deletes VALUES (?, ?)', [
-              deletion,
-              entry.key,
-            ]);
+          ).map(EnglishWords.deletionKey).toSet();
+          for (final signature in signatures) {
+            postings.addAll([signature, wordId]);
+            if (postings.length == postingBatchSize * 2) {
+              batch.rawInsert(
+                'INSERT INTO en_deletes VALUES $postingSql',
+                postings,
+              );
+              postings = <int>[];
+            }
             deleteRows++;
           }
+        }
+        if (postings.isNotEmpty) {
+          final values = List.filled(postings.length ~/ 2, '(?, ?)').join(',');
+          batch.rawInsert('INSERT INTO en_deletes VALUES $values', postings);
         }
         await batch.commit(noResult: true);
       });
@@ -272,9 +292,13 @@ Future<Map<String, int>> buildLexicalIndex(LexicalIndexBuildInput input) async {
     });
     await db.execute("INSERT INTO label_py(label_py) VALUES('optimize')");
     await db.execute("INSERT INTO label_chars(label_chars) VALUES('optimize')");
+    await db.execute(
+      "INSERT INTO tag_concepts(tag_concepts) VALUES('optimize')",
+    );
     // Segment merges leave free pages behind.
     await db.execute('VACUUM');
   } finally {
+    await catalog.close();
     await db.close();
   }
   final target = File(input.outputPath);
@@ -283,25 +307,67 @@ Future<Map<String, int>> buildLexicalIndex(LexicalIndexBuildInput input) async {
   return stats;
 }
 
-/// Hanzi as single tokens, ASCII runs as words: `V字手势` → `v 字 手 势`.
-String _charTokens(String label) {
-  final tokens = <String>[];
-  final ascii = StringBuffer();
-  for (final rune in label.toLowerCase().runes) {
-    if (HanziPinyinTable.isHanzi(rune)) {
-      if (ascii.isNotEmpty) {
-        tokens.add(ascii.toString());
-        ascii.clear();
+Future<int> _buildConceptIndex(
+  Database catalog,
+  Database index,
+  CrossLingualLexicon lexicon,
+) async {
+  final vocabulary = lexicon.englishWords;
+  final compoundCache = <String, List<String>>{};
+  const pageSize = 4000;
+  var cursor = 0;
+  var total = 0;
+  while (true) {
+    final rows = await catalog.rawQuery(
+      '''
+      SELECT f.rowid, f.term, t.name, t.post_count
+      FROM tag_search f JOIN tags t ON t.id = f.tag_id
+      WHERE f.rowid > ? AND t.category IN (0, 7)
+      ORDER BY f.rowid LIMIT ?
+      ''',
+      [cursor, pageSize],
+    );
+    if (rows.isEmpty) break;
+    cursor = rows.last['rowid'] as int;
+    await index.transaction((txn) async {
+      final batch = txn.batch();
+      for (final row in rows) {
+        final words = EnglishWords.tokens(row['term'] as String).toList();
+        if (words.isEmpty) continue;
+        final term = words.map(EnglishWords.stem).join(' ');
+        final expanded = words
+            .expand((word) {
+              return compoundCache.putIfAbsent(
+                word,
+                () => _compoundParts(word, vocabulary),
+              );
+            })
+            .map(EnglishWords.stem)
+            .join(' ');
+        for (final view in {term, expanded}) {
+          batch.rawInsert('INSERT INTO tag_concepts VALUES (?, ?, ?)', [
+            view,
+            row['name'],
+            row['post_count'],
+          ]);
+          total++;
+        }
       }
-      tokens.add(String.fromCharCode(rune));
-    } else if ((rune >= 0x61 && rune <= 0x7a) ||
-        (rune >= 0x30 && rune <= 0x39)) {
-      ascii.writeCharCode(rune);
-    } else if (ascii.isNotEmpty) {
-      tokens.add(ascii.toString());
-      ascii.clear();
-    }
+      await batch.commit(noResult: true);
+    });
+    if (rows.length < pageSize) break;
   }
-  if (ascii.isNotEmpty) tokens.add(ascii.toString());
-  return tokens.join(' ');
+  return total;
+}
+
+List<String> _compoundParts(String word, Set<String> vocabulary) {
+  List<String>? match;
+  for (var i = 3; i <= word.length - 3; i++) {
+    final left = word.substring(0, i);
+    final right = word.substring(i);
+    if (!vocabulary.contains(left) || !vocabulary.contains(right)) continue;
+    if (match != null) return [word];
+    match = [left, right];
+  }
+  return match ?? [word];
 }

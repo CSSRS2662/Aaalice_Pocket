@@ -11,9 +11,23 @@ import android.os.IBinder
 import android.os.PowerManager
 
 class GenerationForegroundService : Service() {
+    data class Progress(val current: Int, val total: Int, val percent: Int, val queue: Boolean)
+
     companion object {
         private const val channelId = "image_generation"
         private const val notificationId = 4101
+        private var running: GenerationForegroundService? = null
+        private var progress: Progress? = null
+
+        fun updateProgress(next: Progress?) {
+            val firstProgress = progress == null && next != null
+            progress = next
+            running?.refreshNotification(firstProgress)
+        }
+
+        fun clearProgress() {
+            progress = null
+        }
     }
 
     private var wakeLock: PowerManager.WakeLock? = null
@@ -25,11 +39,13 @@ class GenerationForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(notificationId, buildNotification())
+        running = this
         acquireWakeLock()
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
+        if (running === this) running = null
         wakeLock?.takeIf { it.isHeld }?.release()
         wakeLock = null
         super.onDestroy()
@@ -85,7 +101,7 @@ class GenerationForegroundService : Service() {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
         }
-        return builder
+        builder
             .setSmallIcon(R.drawable.ic_generation_notification)
             .setContentTitle(getString(R.string.generation_notification_title))
             .setContentText(getString(R.string.generation_notification_text))
@@ -94,6 +110,27 @@ class GenerationForegroundService : Service() {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
-            .build()
+        progress?.let { value ->
+            val title = if (value.queue) R.string.generation_queue_notification_title
+                else R.string.generation_batch_notification_title
+            val text = if (value.queue) R.string.generation_queue_notification_progress
+                else R.string.generation_batch_notification_progress
+            builder.setContentTitle(getString(title))
+                .setContentText(getString(text, value.current, value.total, value.percent))
+                .setProgress(100, value.percent, false)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                builder.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+            }
+        }
+        return builder.build()
+    }
+
+    private fun refreshNotification(firstProgress: Boolean) {
+        val notification = buildNotification()
+        if (firstProgress) {
+            startForeground(notificationId, notification)
+        } else {
+            getSystemService(NotificationManager::class.java).notify(notificationId, notification)
+        }
     }
 }

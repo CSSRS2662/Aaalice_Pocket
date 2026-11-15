@@ -120,6 +120,7 @@ class LocalGalleryScreenController extends ChangeNotifier {
   }
 
   void goToPreviousPage() {
+    if (_ref.read(localGallerySamePromptViewProvider)) return;
     final state = _ref.read(localGalleryNotifierProvider);
     if (state.currentPage > 0) {
       _ref
@@ -129,6 +130,7 @@ class LocalGalleryScreenController extends ChangeNotifier {
   }
 
   void goToNextPage() {
+    if (_ref.read(localGallerySamePromptViewProvider)) return;
     final state = _ref.read(localGalleryNotifierProvider);
     if (state.currentPage < state.totalPages - 1) {
       _ref
@@ -149,6 +151,7 @@ class LocalGalleryScreenController extends ChangeNotifier {
   }
 
   void enterSelectionMode() {
+    if (_ref.read(localGallerySamePromptViewProvider)) return;
     _ref.read(localGallerySelectionNotifierProvider.notifier).enter();
   }
 
@@ -531,7 +534,8 @@ class LocalGalleryScreenController extends ChangeNotifier {
     );
     if (picked == null || !_mounted()) return;
     final notifier = _ref.read(localGalleryNotifierProvider.notifier);
-    if (!_ref.read(localGalleryNotifierProvider).isGroupedView) {
+    if (_ref.read(localGallerySamePromptViewProvider) ||
+        !_ref.read(localGalleryNotifierProvider).isGroupedView) {
       await notifier.setGroupedView(true);
     }
     await Future<void>.delayed(const Duration(milliseconds: 300));

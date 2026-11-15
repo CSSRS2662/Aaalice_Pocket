@@ -81,6 +81,7 @@ class _LocalGalleryScreenState extends ConsumerState<LocalGalleryScreen> {
   @override
   Widget build(BuildContext context) {
     final galleryState = ref.watch(localGalleryNotifierProvider);
+    final samePrompt = ref.watch(localGallerySamePromptViewProvider);
     ref.listen(localGalleryNotifierProvider.select((s) => s.filterCriteria), (
       _,
       _,
@@ -114,12 +115,13 @@ class _LocalGalleryScreenState extends ConsumerState<LocalGalleryScreen> {
       child: CardSelectionScope(
         selection: ref.watch(localGallerySelectionNotifierProvider),
         commands: ref.read(localGallerySelectionNotifierProvider.notifier),
-        orderedIds:
-            (galleryState.isGroupedView
-                    ? galleryState.groupedImages
-                    : galleryState.currentImages)
-                .map((e) => e.path)
-                .toList(),
+        orderedIds: samePrompt
+            ? const []
+            : (galleryState.isGroupedView
+                      ? galleryState.groupedImages
+                      : galleryState.currentImages)
+                  .map((e) => e.path)
+                  .toList(),
         child: CardSelectionShortcuts(
           child: AnimatedBuilder(
             animation: _controller,
@@ -244,6 +246,7 @@ class _LocalGalleryShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gallery = viewModel.gallery;
+    final samePrompt = ref.watch(localGallerySamePromptViewProvider);
     return Scaffold(
       body: GalleryCollectionWorkspace(
         sidebarWidthKey: StorageKeys.localGallerySidebarWidth,
@@ -255,10 +258,13 @@ class _LocalGalleryShell extends ConsumerWidget {
                 albumState: ref.watch(galleryAlbumNotifierProvider),
               )
             : null,
-        body: _buildBody(context, ref),
+        body: _buildBody(context, ref, samePrompt: samePrompt),
         // 手机上滚动到底自动加载下一页，不显示分页条。
         footer:
-            !PlatformCapabilities.current.prefersContinuousLibraryScrolling &&
+            !samePrompt &&
+                !PlatformCapabilities
+                    .current
+                    .prefersContinuousLibraryScrolling &&
                 !gallery.isIndexing &&
                 gallery.currentImages.isNotEmpty &&
                 gallery.totalPages > 0
@@ -321,7 +327,11 @@ class _LocalGalleryShell extends ConsumerWidget {
     return viewModel.categories.selectedCategory?.name;
   }
 
-  Widget _buildBody(BuildContext context, WidgetRef ref) {
+  Widget _buildBody(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool samePrompt,
+  }) {
     final gallery = viewModel.gallery;
     if (gallery.error != null) {
       return GalleryErrorView(
@@ -330,10 +340,8 @@ class _LocalGalleryShell extends ConsumerWidget {
             ref.read(localGalleryNotifierProvider.notifier).refresh(),
       );
     }
-    if (gallery.isLoading && gallery.currentImages.isEmpty) {
-      return const GalleryLoadingView();
-    }
-    if (gallery.currentImages.isEmpty) {
+    if (!samePrompt && gallery.currentImages.isEmpty) {
+      if (gallery.isLoading) return const GalleryLoadingView();
       return gallery.hasUserFilters
           ? const GalleryNoResultsView()
           : const GalleryEmptyView();
@@ -343,6 +351,7 @@ class _LocalGalleryShell extends ConsumerWidget {
       use3DCardView: true,
       columns: viewModel.columns,
       itemWidth: viewModel.itemWidth,
+      samePrompt: samePrompt,
       groupedGridViewKey: groupedGridViewKey,
       onReuseMetadata: actions.importImageMetadata,
       onSendAction: (record, action) => actions.routeImageAction(

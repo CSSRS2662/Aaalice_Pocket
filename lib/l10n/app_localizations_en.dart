@@ -1478,6 +1478,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agentChat_moreActions => 'More actions';
 
   @override
+  String get agentChat_clearContext => 'Clear context';
+
+  @override
+  String get agentChat_clearContextConfirm =>
+      'Clear the messages and context of this conversation and start fresh. Your conversation instructions will be kept.';
+
+  @override
+  String get agentChat_clearContextFailed =>
+      'Couldn\'t clear the context. Please try again.';
+
+  @override
   String get agentChat_compact => 'Compact context';
 
   @override
@@ -4729,7 +4740,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Also clear the prompt and characters';
 
   @override
-  String get batchSize_title => 'Batch Size';
+  String get batchSettings_title => 'Batch generation';
+
+  @override
+  String get batchSettings_count => 'Number of batches';
+
+  @override
+  String get batchSize_title => 'Images per batch';
 
   @override
   String batchSize_tooltip(int count) {
@@ -6177,6 +6194,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get localGallery_groupByDate => 'Group by date';
+
+  @override
+  String get localGallery_samePrompt => 'Same prompt';
+
+  @override
+  String get localGallery_samePromptEmpty => 'No prompt groups';
+
+  @override
+  String get localGallery_samePromptEmptyHint =>
+      'Favorite images with recorded prompts to browse them by prompt.';
 
   @override
   String get slideshow_of => 'of';
@@ -13338,11 +13365,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autocomplete_relatedTagsAction => 'Related tags';
 
   @override
-  String get autocomplete_danbooruApi => 'Danbooru online supplement';
+  String get autocomplete_onlineSupplement => 'Online tag suggestions';
 
   @override
-  String get autocomplete_danbooruPrivacy =>
-      'Only the current English tag is sent; the full prompt is never uploaded';
+  String get autocomplete_onlinePrivacy =>
+      'Sends only the current search term or the tag used for related suggestions to the selected provider.';
+
+  @override
+  String get autocomplete_defaultOnlineSource => 'Default online tag source';
+
+  @override
+  String get autocomplete_onlineFallback => 'Try an alternate source';
+
+  @override
+  String autocomplete_onlineFallbackHint(String provider) {
+    return 'If the default source fails and no suggestions are available, try $provider.';
+  }
 
   @override
   String get autocomplete_llmTranslation =>
@@ -13459,7 +13497,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autocomplete_cacheTitle => 'Online & AI Cache';
 
   @override
-  String get autocomplete_clearDanbooruCache => 'Clear Danbooru cache';
+  String get autocomplete_clearDanbooruCache => 'Clear online tag cache';
 
   @override
   String get autocomplete_clearAiCache => 'Clear AI translation cache';
@@ -13600,10 +13638,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autocomplete_statusOnlineOnlyTooltip =>
-      'Local related-tag data is not ready; only Danbooru online results are shown';
+      'Local related-tag data is not ready. Results are limited to online sources.';
 
   @override
   String get autocomplete_statusDictionary => 'Translation';
+
+  @override
+  String get autocomplete_remoteRateLimited =>
+      'Requests are rate limited (HTTP 429)';
+
+  @override
+  String get autocomplete_remoteUnavailable =>
+      'Service temporarily unavailable (HTTP 503)';
+
+  @override
+  String autocomplete_remoteHttpFailure(int status) {
+    return 'Request failed (HTTP $status)';
+  }
+
+  @override
+  String get autocomplete_remoteTimeout => 'Network request timed out';
+
+  @override
+  String get autocomplete_remoteDnsFailure =>
+      'Could not resolve the server address (DNS)';
+
+  @override
+  String get autocomplete_remoteTlsFailure =>
+      'Could not establish a secure connection (TLS)';
+
+  @override
+  String get autocomplete_remoteConnectionFailure =>
+      'Could not connect to the server';
+
+  @override
+  String get autocomplete_remoteInvalidResponse =>
+      'The server returned an unexpected response';
+
+  @override
+  String get autocomplete_remoteCooldown =>
+      'Online requests temporarily paused';
+
+  @override
+  String autocomplete_remoteWait(int seconds) {
+    return 'Retry delay at the time of the request: ${seconds}s';
+  }
 
   @override
   String get autocomplete_statusOnline => 'Online';

@@ -208,6 +208,9 @@ class AgentChatHeader extends StatelessWidget {
           case 'compact':
             await commands.moreAction(AgentChatMoreAction.compact);
             return;
+          case 'clear-context':
+            await commands.moreAction(AgentChatMoreAction.clearContext);
+            return;
           case 'delete':
             await commands.moreAction(AgentChatMoreAction.delete);
             return;
@@ -236,6 +239,13 @@ class AgentChatHeader extends StatelessWidget {
               color: Theme.of(context).colorScheme.primary,
             ),
           _menuItem('compact', Icons.compress_rounded, l10n.agentChat_compact),
+          if (!viewData.state.compacting)
+            _menuItem(
+              'clear-context',
+              Icons.cleaning_services_outlined,
+              l10n.agentChat_clearContext,
+              color: colors.error,
+            ),
           _menuItem(
             'delete',
             Icons.delete_outline_rounded,

@@ -27,6 +27,7 @@ void main() {
         'zebra',
         'new',
         'compact',
+        'clear',
         'rename',
         'instructions',
         'delete',
@@ -95,6 +96,7 @@ void main() {
     test('maps a bare session command', () {
       expect(resolveSessionCommand('/new'), AgentChatMoreAction.newSession);
       expect(resolveSessionCommand('/COMPACT'), AgentChatMoreAction.compact);
+      expect(resolveSessionCommand('/clear'), AgentChatMoreAction.clearContext);
     });
 
     test('ignores a command that carries a message', () {

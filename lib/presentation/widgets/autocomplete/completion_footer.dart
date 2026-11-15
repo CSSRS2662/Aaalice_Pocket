@@ -9,6 +9,7 @@ import '../../../core/autocomplete/zh_dictionary_service.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../adaptive/interaction_policy.dart';
 import 'completion_popup_buttons.dart';
+import 'completion_remote_error_message.dart';
 import 'completion_source_style.dart';
 
 /// The popup footer: the state of each completion source as a dot and an
@@ -286,12 +287,15 @@ class CompletionFooter extends StatelessWidget {
   }
 
   _StatusDescriptor _onlineStatus(BuildContext context) {
+    final provider = state.remoteProvider ?? settings.onlineTagProvider;
+    final sourceLabel =
+        '${context.l10n.autocomplete_statusOnline} · ${provider.label}';
     if (!settings.danbooruEnabled) {
       return _StatusDescriptor(
         key: 'autocomplete-status-online',
         source: CompletionSourceKind.danbooruApi,
         icon: Icons.public_rounded,
-        label: context.l10n.autocomplete_statusOnline,
+        label: sourceLabel,
         value: context.l10n.autocomplete_statusDisabled,
         tone: _StatusTone.inactive,
       );
@@ -301,13 +305,13 @@ class CompletionFooter extends StatelessWidget {
         key: 'autocomplete-status-online',
         source: CompletionSourceKind.danbooruApi,
         icon: Icons.public_rounded,
-        label: context.l10n.autocomplete_statusOnline,
+        label: sourceLabel,
         value: context.l10n.autocomplete_statusSearching,
         tone: _StatusTone.loading,
         loading: true,
       );
     }
-    if (state.remoteError?.isNotEmpty == true) {
+    if (state.remoteError case final error?) {
       return _StatusDescriptor(
         key: 'autocomplete-status-online',
         source: CompletionSourceKind.danbooruApi,
@@ -315,17 +319,21 @@ class CompletionFooter extends StatelessWidget {
         label: context.l10n.autocomplete_statusOnline,
         value: context.l10n.autocomplete_statusError,
         tone: _StatusTone.error,
-        tooltip: state.remoteError,
+        tooltip: error.details(
+          context,
+          related: state.query?.relatedTag != null,
+          provider: provider,
+        ),
       );
     }
     return _StatusDescriptor(
       key: 'autocomplete-status-online',
       source: CompletionSourceKind.danbooruApi,
       icon: Icons.public_rounded,
-      label: context.l10n.autocomplete_statusOnline,
+      label: sourceLabel,
       value: context.l10n.autocomplete_statusReady,
       tone: _StatusTone.ready,
-      tooltip: context.l10n.autocomplete_danbooruPrivacy,
+      tooltip: context.l10n.autocomplete_onlinePrivacy,
     );
   }
 

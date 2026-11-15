@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 
+import 'english_words.dart';
 import 'pinyin_syllables.dart';
 
 /// Bundled data for non-AI lexical search, built by
@@ -149,40 +150,38 @@ class CrossLingualLexicon {
 
   List<String>? candidatesOf(String word) => _words[word];
 
-  bool isDropped(String word) => _drop.contains(word);
+  static final _indefiniteClassifier = RegExp(r'^一[辆輛艘棵颗顆片块塊张張顶頂枚]$');
 
-  bool _known(String word) => _words.containsKey(word) || _drop.contains(word);
+  bool isDropped(String word) =>
+      _drop.contains(word) || _indefiniteClassifier.hasMatch(word);
 
-  /// Bidirectional maximum matching over the lexicon's words; characters no
-  /// word covers stay single. Picks the split with fewer pieces, then fewer
-  /// single characters, then the backward split (usually right for Chinese).
+  Set<String> get englishWords => {
+    for (final alternatives in _words.values)
+      for (final term in alternatives) ...EnglishWords.tokens(term),
+  };
+
+  /// Favors longer known words while accounting for uncovered characters
+  /// across the entire query. Uncovered characters remain in the output.
   List<String> segment(String text) {
-    final chars = text.runes.map(String.fromCharCode).toList(growable: false);
-    if (chars.isEmpty) return const [];
-    final forward = <String>[];
-    for (var start = 0; start < chars.length;) {
-      var length = _maxWordLength.clamp(1, chars.length - start);
-      for (; length > 1; length--) {
-        if (_known(chars.sublist(start, start + length).join())) break;
+    final scores = List<double>.filled(text.length + 1, 0);
+    final lengths = List<int>.filled(text.length, 1);
+    for (var start = text.length - 1; start >= 0; start--) {
+      scores[start] = scores[start + 1] - 2;
+      final longest = _maxWordLength.clamp(1, text.length - start);
+      for (var length = longest; length > 0; length--) {
+        final word = text.substring(start, start + length);
+        final known = _words.containsKey(word);
+        if (!known && !isDropped(word)) continue;
+        final score = scores[start + length] + length * (known ? 2 : 1.9) - 1;
+        if (score <= scores[start]) continue;
+        scores[start] = score;
+        lengths[start] = length;
       }
-      forward.add(chars.sublist(start, start + length).join());
-      start += length;
     }
-    final backward = <String>[];
-    for (var end = chars.length; end > 0;) {
-      var length = _maxWordLength.clamp(1, end);
-      for (; length > 1; length--) {
-        if (_known(chars.sublist(end - length, end).join())) break;
-      }
-      backward.insert(0, chars.sublist(end - length, end).join());
-      end -= length;
-    }
-    int singles(List<String> words) =>
-        words.where((word) => word.runes.length == 1 && !_known(word)).length;
-    if (forward.length != backward.length) {
-      return forward.length < backward.length ? forward : backward;
-    }
-    return singles(forward) < singles(backward) ? forward : backward;
+    return [
+      for (var start = 0; start < text.length; start += lengths[start])
+        text.substring(start, start + lengths[start]),
+    ];
   }
 }
 

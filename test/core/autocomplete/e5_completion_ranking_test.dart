@@ -65,4 +65,24 @@ void main() {
     ], query: query);
     expect(rows.first.canonicalTag, 'exact');
   });
+
+  test('explicit contrasts correct ambiguous cosine ordering', () {
+    for (final (text, wanted, opposite) in const [
+      ('嘴巴没有张开', 'closed_mouth', 'open_mouth'),
+      ('两只眼睛都闭着', 'closed_eyes', 'one_eye_closed'),
+      ('举起右手', 'right_hand_up', 'left_hand_up'),
+      ('在水面下方', 'under_water', 'above_water'),
+      ('跪在地板上', 'kneeling_on_floor', 'standing_on_floor'),
+      ('别把衣角塞进腰里', 'untucked_shirt', 'shirt_tucked_in'),
+      ('别把头发剪成短发', 'long_hair', 'short_hair'),
+      ('视线避开镜头', 'looking_away', 'looking_at_viewer'),
+      ('不要只画一个人', 'two_people', 'solo'),
+    ]) {
+      final rows = CompletionRanker.mergeAndSort([
+        candidate(opposite, .94, 200000),
+        candidate(wanted, .89, 100),
+      ], query: query.copyWith(token: text));
+      expect(rows.first.canonicalTag, wanted, reason: text);
+    }
+  });
 }

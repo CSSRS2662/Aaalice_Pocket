@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -26,6 +27,10 @@ const _tags = <(String, int)>[
   ('sitting', 1000000),
   ('sitting_on_chair', 50000),
   ('sitting_on_office_chair', 3000),
+  ('twintails', 20),
+  ('pince-nez', 4),
+  ('seated_rest', 15),
+  ('holding_hairbrush', 3),
 ];
 
 // AME rows: tag, category, posts, label, aliases.
@@ -42,6 +47,7 @@ const _ame = <List<Object>>[
     <String>['撩头发'],
   ],
   ['chair', 0, 200000, '椅子', <String>[]],
+  ['twintails', 0, 20, '双马尾', <String>[]],
 ];
 
 CompletionQuery _query(String token, {TagCategory? category}) =>
@@ -55,51 +61,6 @@ CompletionQuery _query(String token, {TagCategory? category}) =>
       locale: 'zh',
       categoryFilter: category,
     );
-
-class _FakeCatalog extends Fake implements TagCatalogRepository {
-  final groups = <List<List<String>>>[];
-
-  @override
-  Future<List<TagCatalogRecord>> searchTokenGroups(
-    List<List<String>> groups, {
-    int limit = 300,
-  }) async {
-    this.groups.add(groups);
-    final words = groups.expand((group) => group).toSet();
-    return [
-      if (words.containsAll({'sitting', 'chair'})) ...const [
-        TagCatalogRecord(
-          canonicalTag: 'sitting_on_office_chair',
-          category: TagCategory.general,
-          postCount: 3000,
-        ),
-        TagCatalogRecord(
-          canonicalTag: 'sitting_on_chair',
-          category: TagCategory.general,
-          postCount: 50000,
-        ),
-      ],
-      if (words.containsAll({'flip', 'hair'}))
-        const TagCatalogRecord(
-          canonicalTag: 'hair_flip',
-          category: TagCategory.general,
-          postCount: 30000,
-        ),
-    ];
-  }
-
-  @override
-  Future<List<CompletionCandidate>> search(CompletionQuery query) async => [
-    if (query.token == 'shirt')
-      const CompletionCandidate(
-        canonicalTag: 'shirt',
-        category: TagCategory.general,
-        postCount: 900000,
-        matchKind: CompletionMatchKind.englishExact,
-        sources: {CompletionSourceKind.base},
-      ),
-  ];
-}
 
 class _MemoryStorage extends Fake implements LocalStorageService {
   final values = <String, Object?>{};
@@ -120,7 +81,7 @@ void main() {
   late LexicalSearchIndex index;
   late LexicalIndexSources sources;
   late SearchLexicon lexicon;
-  late _FakeCatalog catalog;
+  late TagCatalogRepository catalog;
   var settings = const AutocompleteSettings();
 
   LexicalEnhancementSource source() => LexicalEnhancementSource(
@@ -136,17 +97,36 @@ void main() {
     final catalogPath = '${directory.path}/catalog.db';
     final db = await databaseFactoryFfi.openDatabase(catalogPath);
     await db.execute(
-      'CREATE TABLE tags(name TEXT, category INTEGER, post_count INTEGER)',
+      'CREATE TABLE tags(id INTEGER PRIMARY KEY, name TEXT, category INTEGER, post_count INTEGER)',
     );
     await db.execute(
       'CREATE TABLE zh_translations(tag TEXT, zh_cn TEXT, mode TEXT)',
     );
+    await db.execute('CREATE TABLE aliases(tag_id INTEGER, alias TEXT)');
+    await db.execute(
+      'CREATE VIRTUAL TABLE tag_search USING fts5('
+      'term, search_key, tag_id UNINDEXED, kind UNINDEXED)',
+    );
     for (final (name, posts) in _tags) {
-      await db.insert('tags', {
+      final id = await db.insert('tags', {
         'name': name,
         'category': 0,
         'post_count': posts,
       });
+      await db.insert('tag_search', {
+        'term': name,
+        'search_key': name,
+        'tag_id': id,
+        'kind': 0,
+      });
+      if (name == 'seated_rest') {
+        await db.insert('tag_search', {
+          'term': 'sitting_on_bench',
+          'search_key': 'sitting_on_bench',
+          'tag_id': id,
+          'kind': 1,
+        });
+      }
     }
     await db.close();
 
@@ -185,23 +165,29 @@ void main() {
       resolveSources: () async => sources,
     );
     expect(await index.ready(), isNotNull);
+    catalog = TagCatalogRepository(
+      database: await databaseFactoryFfi.openDatabase(
+        catalogPath,
+        options: OpenDatabaseOptions(readOnly: true, singleInstance: false),
+      ),
+    );
   });
 
   tearDownAll(() async {
     await index.dispose();
+    await catalog.dispose();
     directory.deleteSync(recursive: true);
   });
 
   setUp(() {
     settings = const AutocompleteSettings();
-    catalog = _FakeCatalog();
   });
 
   test('本项目补充词库的译名同样建入拼音索引并参与指纹', () async {
     final rows = await source().supplement(_query('yekong'), const []);
     expect(rows.first.canonicalTag, 'night_sky');
     expect(rows.first.matchKind, CompletionMatchKind.pinyin);
-    expect(rows.first.translation, '夜空');
+    expect(rows.first.matchHint, '夜空');
 
     final withoutPocket = LexicalIndexSources(
       indexPath: sources.indexPath,
@@ -218,7 +204,7 @@ void main() {
     final rows = await source().supplement(_query('陈山'), const []);
     final shirt = rows.firstWhere((row) => row.canonicalTag == 'shirt');
     expect(shirt.matchKind, CompletionMatchKind.homophone);
-    expect(shirt.translation, '衬衫');
+    expect(shirt.matchHint, '衬衫');
     expect(shirt.matchQuality, 1);
     final tucked = rows.firstWhere(
       (row) => row.canonicalTag == 'shirt_tucked_in',
@@ -268,7 +254,21 @@ void main() {
       (row) => row.matchKind == CompletionMatchKind.approximate,
     );
     expect(approximate.canonicalTag, 'hair_flip');
-    expect(approximate.matchQuality, closeTo(0.75, 0.001));
+    expect(approximate.matchQuality, greaterThan(.85));
+  });
+
+  test('二字漏字、多字、错字和相邻调换能召回低频词', () async {
+    for (final text in ['双尾', '双马马尾', '双码尾', '双尾马']) {
+      final rows = await source().supplement(_query(text), const []);
+      expect(
+        rows
+            .where((row) => row.matchKind == CompletionMatchKind.approximate)
+            .map((row) => row.canonicalTag),
+        contains('twintails'),
+        reason: text,
+      );
+    }
+    expect(await source().supplement(_query('双'), const []), isEmpty);
   });
 
   test('拆词匹配英文 tag，多余词越少越靠前', () async {
@@ -281,7 +281,32 @@ void main() {
       'sitting_on_office_chair',
     ]);
     expect(crossLingual.first.matchHint, '坐在·椅子');
-    expect(catalog.groups.single, [contains('sitting'), contains('chair')]);
+    expect(crossLingual.first.translation, isNull);
+  });
+
+  test('搜索词从英文别名召回，未知概念不会降格为单词命中', () async {
+    final rows = await source().supplement(_query('在长椅上坐着'), const []);
+    expect(
+      rows
+          .where((row) => row.matchKind == CompletionMatchKind.crossLingual)
+          .map((row) => row.canonicalTag),
+      contains('seated_rest'),
+    );
+    final unknown = await source().supplement(_query('龘椅子'), const []);
+    expect(
+      unknown.where((row) => row.matchKind == CompletionMatchKind.crossLingual),
+      isEmpty,
+    );
+  });
+
+  test('英文合成词可以通过多个中文概念查到', () async {
+    final rows = await source().supplement(_query('手持 头发 刷子'), const []);
+    final row = rows.firstWhere(
+      (item) => item.canonicalTag == 'holding_hairbrush',
+    );
+    expect(row.matchKind, CompletionMatchKind.crossLingual);
+    expect(row.matchHint, '手持·头发·刷子');
+    expect(row.translation, isNull);
   });
 
   test('能读成拼音的字母不当作英文拼写错误', () async {
@@ -307,6 +332,16 @@ void main() {
         const [],
       )).where((row) => row.matchKind == CompletionMatchKind.spellCorrected),
       isEmpty,
+    );
+  });
+
+  test('按完整词组检查候选，低频含连字符标签可以纠错', () async {
+    final rows = await source().supplement(_query('pinze-nez'), const []);
+    expect(
+      rows
+          .where((row) => row.matchKind == CompletionMatchKind.spellCorrected)
+          .map((row) => row.canonicalTag),
+      contains('pince-nez'),
     );
   });
 
@@ -341,16 +376,22 @@ void main() {
       matchQuality: quality,
     );
 
-    test('增强结果排在字面结果之后，加权只在同类内重排', () {
+    test('保护可靠前缀，使用记录参与同类结果重排', () {
       final sorted = CompletionRanker.mergeAndSort(
         [
           row(
             'homophone_popular',
             CompletionMatchKind.homophone,
             posts: 9000000,
+            quality: .8,
           ),
           row('literal', CompletionMatchKind.chinesePrefix),
-          row('homophone_used', CompletionMatchKind.homophone, posts: 10),
+          row(
+            'homophone_used',
+            CompletionMatchKind.homophone,
+            posts: 10,
+            quality: .8,
+          ),
           row('initials', CompletionMatchKind.pinyinInitials, quality: 1),
         ],
         query: _query('陈山'),
@@ -364,7 +405,7 @@ void main() {
       ]);
     });
 
-    test('语义结果排在拼音、拆词等词法增强之后', () {
+    test('高相关语义结果能超过低置信拼音与拆词结果', () {
       final sorted = CompletionRanker.mergeAndSort([
         const CompletionCandidate(
           canonicalTag: 'semantic',
@@ -378,9 +419,9 @@ void main() {
         row('split', CompletionMatchKind.crossLingual),
       ], query: _query('坐在椅子上'));
       expect(sorted.map((row) => row.canonicalTag), [
-        'split',
-        'initials',
         'semantic',
+        'initials',
+        'split',
       ]);
     });
 
@@ -389,8 +430,8 @@ void main() {
         row('shirt', CompletionMatchKind.approximate, quality: 0.9),
         row('shirt', CompletionMatchKind.homophone, quality: 0.6),
       ], query: _query('陈山'));
-      expect(sorted.single.matchKind, CompletionMatchKind.homophone);
-      expect(sorted.single.matchQuality, 0.6);
+      expect(sorted.single.matchKind, CompletionMatchKind.approximate);
+      expect(sorted.single.matchQuality, 0.9);
     });
   });
 
@@ -444,6 +485,33 @@ void main() {
     expect(await failing.pinyinMatches('py : (^chen)'), isEmpty);
     expect(builds, 1);
     await failing.dispose();
+  });
+
+  test('首次索引构建期间的并发查询共用一次构建', () async {
+    final release = Completer<void>();
+    var builds = 0;
+    final concurrent = LexicalSearchIndex(
+      databaseFactory: databaseFactoryFfi,
+      build: (_) async {
+        builds++;
+        await release.future;
+        return const {};
+      },
+      resolveSources: () async => LexicalIndexSources(
+        indexPath: '${directory.path}/concurrent/lexical_index.db',
+        catalogPath: sources.catalogPath,
+        catalogVersion: sources.catalogVersion,
+        ameLexiconGz: sources.ameLexiconGz,
+        pinyinGz: sources.pinyinGz,
+        crossLingualGz: sources.crossLingualGz,
+      ),
+    );
+    addTearDown(() async {
+      release.complete();
+      await concurrent.dispose();
+    });
+    await Future.wait([for (var i = 0; i < 5; i++) concurrent.database()]);
+    expect(builds, 1);
   });
 
   test('上下文取光标前最近的 tag', () {

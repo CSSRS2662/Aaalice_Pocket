@@ -6,8 +6,7 @@ import 'tag_usage_history.dart';
 
 /// Boosts from the prompt around the cursor (tags that often appear with the
 /// nearby ones, from the optional co-occurrence pack) and from this device's
-/// accepted completions. Each part adds at most 3000 to a score; match kinds
-/// stay 100000 apart, so boosts only reorder rows of the same kind.
+/// accepted completions. The ranker scales the two bounded signals together.
 class DefaultCompletionRankingSignals implements CompletionRankingSignals {
   DefaultCompletionRankingSignals({
     required TagUsageHistory history,

@@ -22,12 +22,8 @@ tool/.tmp/semantic-search/venv/Scripts/python.exe tool/search_lexicon/build_sear
 
 ## 设备上的索引
 
-应用不修改随包数据库。首次使用时在后台把 AME 词库、`tag_catalog.db` 的中文译名和已安装的 ffdkj 词库（不含画师）合成设备本地索引 `autocomplete/lexical_index.db`：标签读音（精确与模糊折叠两列 FTS5）、汉字 FTS5、英文 tag 词表与拼写删除邻域。输入数据的指纹变化时自动重建。该索引是缓存，不参与云同步。
+应用在后台用随包目录、AME、Pocket 补充译名和已安装的 ffdkj 词库构建设备本地索引 `autocomplete/lexical_index.db`。索引包含精确与折叠拼音、单字与相邻字对、英文词表及其拼写删除签名。一般类 Tag 的英文名称、别名、词干与可拆分的合成词组成独立的概念索引。概念匹配只参与召回与排序，译文仍由共享翻译解析器提供。数据指纹或索引版本变更时自动重建缓存，缓存仅保存在本机。
 
 ## 评测
 
-```powershell
-flutter test tool/search_eval/search_eval_test.dart
-```
-
-在真实目录上对 `tool/search_eval/golden_queries.json` 中的查询分别计算“只用字面来源”和“加入增强后”的排名，报告写到 `tool/.tmp/search-eval/report.json`。字面结果被增强结果挤后时评测失败。
+评测入口和指标见 [Tag 检索评测](../search_eval/README.md)。

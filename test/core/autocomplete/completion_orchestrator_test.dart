@@ -10,6 +10,50 @@ import 'package:nai_launcher/core/autocomplete/tag_catalog_repository.dart';
 import 'package:nai_launcher/core/autocomplete/tag_rename_folder.dart';
 
 void main() {
+  testWidgets('fuses evidence outside the visible top results', (tester) async {
+    final meaning = _DeferredSemanticSource();
+    final orchestrator = CompletionOrchestrator(
+      localSources: [
+        _Source([
+          _candidate('first', CompletionSourceKind.base).copyWith(
+            matchKind: CompletionMatchKind.crossLingual,
+            matchQuality: .88,
+          ),
+          _candidate('supported_by_both', CompletionSourceKind.base).copyWith(
+            matchKind: CompletionMatchKind.crossLingual,
+            matchQuality: .82,
+            matchHint: '词法依据',
+          ),
+        ]),
+      ],
+      dictionaryTranslations: _Translations(const {}),
+      llmTranslations: _Translations(const {}),
+      danbooru: _FakeDanbooru(),
+      semanticSource: meaning,
+    );
+    addTearDown(orchestrator.dispose);
+    final query = orchestrator.query(
+      _query('靠墙的姿势', limit: 1),
+      const AutocompleteSettings(danbooruEnabled: false),
+    );
+    await tester.pump();
+    await query;
+    expect(orchestrator.state.candidates.single.canonicalTag, 'first');
+    await tester.pump(const Duration(milliseconds: 251));
+    meaning.requests.single.complete([
+      _candidate(
+        'supported_by_both',
+        CompletionSourceKind.base,
+      ).copyWith(matchKind: CompletionMatchKind.fullText, semanticScore: .94),
+    ]);
+    await tester.pump();
+    final result = orchestrator.state.candidates.single;
+    expect(result.canonicalTag, 'supported_by_both');
+    expect(result.matchHint, '词法依据');
+    expect(result.semanticScore, .94);
+    expect(orchestrator.state.isLocalLoading, isFalse);
+  });
+
   testWidgets(
     'semantic fallback arrives after lexical results and ignores stale queries',
     (tester) async {
@@ -117,6 +161,153 @@ void main() {
       );
     },
   );
+
+  testWidgets('Chinese completion does not reuse an earlier online error', (
+    tester,
+  ) async {
+    const error = CompletionRemoteError(
+      CompletionRemoteErrorKind.http,
+      statusCode: 503,
+    );
+    final remote = _FakeDanbooru()..error = error;
+    final orchestrator = CompletionOrchestrator(
+      localSources: [
+        _Source([_candidate('skirt', CompletionSourceKind.base)]),
+      ],
+      dictionaryTranslations: _Translations(const {}),
+      llmTranslations: _Translations(const {}),
+      danbooru: remote,
+    );
+    addTearDown(orchestrator.dispose);
+    const settings = AutocompleteSettings();
+
+    var pending = orchestrator.query(_query('skirt'), settings);
+    await tester.pump();
+    await pending;
+    await tester.pump(const Duration(milliseconds: 251));
+    remote.complete(const []);
+    await tester.pump();
+    expect(orchestrator.state.remoteError, error);
+
+    pending = orchestrator.query(_query('裙子'), settings);
+    await tester.pump();
+    await pending;
+    expect(orchestrator.state.isRemoteLoading, isFalse);
+    await tester.pump(const Duration(milliseconds: 251));
+    expect(remote.searchCount, 1);
+    expect(orchestrator.state.remoteError, isNull);
+    expect(orchestrator.state.candidates.single.canonicalTag, 'skirt');
+
+    pending = orchestrator.query(
+      _query('', fullText: 'skirt', relatedTag: 'skirt'),
+      settings,
+    );
+    await tester.pump();
+    await pending;
+    expect(orchestrator.state.isRemoteLoading, isTrue);
+    await tester.pump(const Duration(milliseconds: 251));
+    remote.completeRelated(const []);
+    await tester.pump();
+    expect(orchestrator.state.remoteError, error);
+  });
+
+  testWidgets('switches both online query paths to the selected source', (
+    tester,
+  ) async {
+    final danbooru = _FakeDanbooru();
+    final aibooru = _FakeDanbooru(provider: OnlineTagProvider.aibooru);
+    final orchestrator = CompletionOrchestrator(
+      localSources: const [],
+      dictionaryTranslations: _Translations(const {}),
+      llmTranslations: _Translations(const {}),
+      danbooru: danbooru,
+      aibooru: aibooru,
+    );
+    addTearDown(orchestrator.dispose);
+    const selected = AutocompleteSettings(
+      onlineTagProvider: OnlineTagProvider.aibooru,
+    );
+    final typed = _query('vamp');
+    await orchestrator.query(typed, const AutocompleteSettings());
+    await tester.pump(const Duration(milliseconds: 251));
+    expect(danbooru.searchCount, 1);
+
+    await orchestrator.query(typed, selected);
+    await tester.pump(const Duration(milliseconds: 251));
+    expect(aibooru.searchCount, 1);
+    danbooru.complete([_candidate('vampyr', CompletionSourceKind.danbooruApi)]);
+    aibooru.complete([_candidate('vampire', CompletionSourceKind.danbooruApi)]);
+    await tester.pump();
+    expect(orchestrator.state.remoteProvider, OnlineTagProvider.aibooru);
+    expect(orchestrator.state.candidates.single.canonicalTag, 'vampire');
+
+    await orchestrator.query(
+      _query('', fullText: 'vampire, ', relatedTag: 'vampire'),
+      selected,
+    );
+    await tester.pump(const Duration(milliseconds: 251));
+    expect(danbooru.relatedCount, 0);
+    expect(aibooru.relatedCount, 1);
+    aibooru.completeRelated([
+      _candidate('fangs', CompletionSourceKind.danbooruApi),
+    ]);
+    await tester.pump();
+    expect(orchestrator.state.candidates.single.canonicalTag, 'fangs');
+  });
+
+  for (final (enabled, hasLocal, fails, switches) in [
+    (true, false, true, true),
+    (false, false, true, false),
+    (true, true, true, false),
+    (true, false, false, false),
+  ]) {
+    testWidgets(
+      'online fallback enabled=$enabled local=$hasLocal failure=$fails',
+      (tester) async {
+        final danbooru = _FakeDanbooru()
+          ..error = fails
+              ? const CompletionRemoteError(
+                  CompletionRemoteErrorKind.http,
+                  statusCode: 503,
+                )
+              : null;
+        final aibooru = _FakeDanbooru(provider: OnlineTagProvider.aibooru);
+        final orchestrator = CompletionOrchestrator(
+          localSources: [
+            if (hasLocal)
+              _Source([_candidate('red_eyes', CompletionSourceKind.base)]),
+          ],
+          dictionaryTranslations: _Translations(const {}),
+          llmTranslations: _Translations(const {}),
+          danbooru: danbooru,
+          aibooru: aibooru,
+        );
+        addTearDown(orchestrator.dispose);
+        await orchestrator.query(
+          _query('', fullText: 'vampire, ', relatedTag: 'vampire'),
+          AutocompleteSettings(onlineTagFallback: enabled),
+        );
+        await tester.pump(const Duration(milliseconds: 251));
+        danbooru.completeRelated(const []);
+        await tester.pump();
+        expect(aibooru.relatedCount, switches ? 1 : 0);
+        if (switches) {
+          expect(orchestrator.state.isRemoteLoading, isTrue);
+          aibooru.completeRelated([
+            _candidate('fangs', CompletionSourceKind.danbooruApi),
+          ]);
+          await tester.pump();
+          expect(orchestrator.state.candidates.single.canonicalTag, 'fangs');
+          expect(orchestrator.state.remoteError, isNull);
+          expect(orchestrator.state.remoteProvider, OnlineTagProvider.aibooru);
+        } else {
+          expect(orchestrator.state.remoteError, danbooru.error);
+          expect(orchestrator.state.remoteProvider, OnlineTagProvider.danbooru);
+        }
+        expect(orchestrator.state.isRemoteLoading, isFalse);
+      },
+    );
+  }
 
   test('keeps candidates that have no dictionary translation', () async {
     final orchestrator = CompletionOrchestrator(
@@ -1131,11 +1322,16 @@ class _DeferredSemanticSource implements CompletionSource {
 }
 
 class _FakeDanbooru extends DanbooruCompletionSource {
-  _FakeDanbooru() : super(cache: AutocompleteCacheDatabase());
+  _FakeDanbooru({super.provider}) : super(cache: AutocompleteCacheDatabase());
 
   Completer<List<CompletionCandidate>>? _completer;
   Completer<List<CompletionCandidate>>? _relatedCompleter;
   int searchCount = 0;
+  int relatedCount = 0;
+  CompletionRemoteError? error;
+
+  @override
+  CompletionRemoteError? get lastError => error;
 
   @override
   Future<List<CompletionCandidate>> search(CompletionQuery query) {
@@ -1149,6 +1345,7 @@ class _FakeDanbooru extends DanbooruCompletionSource {
 
   @override
   Future<List<CompletionCandidate>> relatedTags(String tag, {int limit = 20}) {
+    relatedCount++;
     _relatedCompleter = Completer<List<CompletionCandidate>>();
     return _relatedCompleter!.future;
   }

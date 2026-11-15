@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
+import '../utils/app_logger.dart';
 import 'autocomplete_settings.dart';
 import 'completion_models.dart';
 import 'completion_ranker.dart';
@@ -15,6 +16,7 @@ class CompletionOrchestrator extends ChangeNotifier {
     required TranslationResolver dictionaryTranslations,
     required TranslationResolver llmTranslations,
     required DanbooruCompletionSource danbooru,
+    DanbooruCompletionSource? aibooru,
     List<CompletionSource> tagLookupSources = const [],
     CompletionSource? libraryAliases,
     CompletionSource? semanticSource,
@@ -31,6 +33,7 @@ class CompletionOrchestrator extends ChangeNotifier {
            ? llmTranslations.createScope()
            : llmTranslations,
        _danbooru = danbooru,
+       _aibooru = aibooru,
        _libraryAliases = libraryAliases,
        _semanticSource = semanticSource,
        _supplementalSources = supplementalSources,
@@ -44,6 +47,7 @@ class CompletionOrchestrator extends ChangeNotifier {
   final TranslationResolver _dictionaryTranslations;
   final TranslationResolver _llmTranslations;
   final DanbooruCompletionSource _danbooru;
+  final DanbooruCompletionSource? _aibooru;
   final CompletionSource? _libraryAliases;
   final CompletionSource? _semanticSource;
   final List<SupplementalCompletionSource> _supplementalSources;
@@ -67,6 +71,10 @@ class CompletionOrchestrator extends ChangeNotifier {
   Map<String, double> _boosts = const {};
   bool _semanticPending = false;
   bool _supplementPending = false;
+  List<CompletionCandidate>? _typedPrimary;
+  List<CompletionCandidate> _typedSupplements = const [];
+  List<CompletionCandidate> _typedSemantic = const [];
+  List<CompletionCandidate> _typedRemote = const [];
   final Duration _llmDebounceDuration;
 
   CompletionState _state = const CompletionState();
@@ -90,9 +98,28 @@ class CompletionOrchestrator extends ChangeNotifier {
     _sequence++;
     _cancelPendingLlmTranslation();
     _remoteDebounce?.cancel();
-    _danbooru.cancelPending();
+    _cancelRemoteRequests();
+    _clearTypedCandidates();
     _emit(const CompletionState());
   }
+
+  void _clearTypedCandidates() {
+    _typedPrimary = null;
+    _typedSupplements = const [];
+    _typedSemantic = const [];
+    _typedRemote = const [];
+  }
+
+  void _cancelRemoteRequests() {
+    _danbooru.cancelPending();
+    _aibooru?.cancelPending();
+  }
+
+  DanbooruCompletionSource? _remoteSource(OnlineTagProvider provider) =>
+      switch (provider) {
+        OnlineTagProvider.danbooru => _danbooru,
+        OnlineTagProvider.aibooru => _aibooru,
+      };
 
   Future<void> query(
     CompletionQuery query,
@@ -103,10 +130,11 @@ class CompletionOrchestrator extends ChangeNotifier {
     _semanticDebounce?.cancel();
     _cancelPendingLlmTranslation();
     _remoteDebounce?.cancel();
-    _danbooru.cancelPending();
+    _cancelRemoteRequests();
     _boosts = const {};
     _semanticPending = false;
     _supplementPending = false;
+    _clearTypedCandidates();
     final requestedRelatedQuery =
         query.relatedTag != null && query.token.isEmpty;
     if (!settings.enabled ||
@@ -137,16 +165,21 @@ class CompletionOrchestrator extends ChangeNotifier {
     final isLibraryAlias =
         effectiveQuery.kind == CompletionQueryKind.libraryAlias;
 
-    final canLoadRemote =
+    final remoteSource =
         !isLibraryAlias &&
-        settings.danbooruEnabled &&
-        (effectiveQuery.token.length >= 2 || isRelatedQuery);
+            settings.danbooruEnabled &&
+            ((!effectiveQuery.isChinese && effectiveQuery.token.length >= 2) ||
+                isRelatedQuery)
+        ? _remoteSource(settings.onlineTagProvider)
+        : null;
+    final canLoadRemote = remoteSource != null;
     _emit(
       CompletionState(
         query: effectiveQuery,
         candidates: const [],
         isLocalLoading: true,
         isRemoteLoading: canLoadRemote,
+        remoteProvider: canLoadRemote ? settings.onlineTagProvider : null,
       ),
     );
     final activeLocalSources = isLibraryAlias
@@ -160,13 +193,29 @@ class CompletionOrchestrator extends ChangeNotifier {
             limit: CompletionResultLimits.initialRelatedTags,
           )
         : effectiveQuery;
+    final isTyped =
+        !isLibraryAlias &&
+        !isRelatedQuery &&
+        effectiveQuery.token.trim().length >= 2;
+    final canSupplement = isTyped && _supplementalSources.isNotEmpty;
+    final semanticEligible =
+        isTyped &&
+        effectiveQuery.isChinese &&
+        (effectiveQuery.typedCategoryScope?.contains(TagCategory.general) ??
+            true) &&
+        _semanticSource != null;
+    final poolQuery =
+        (canSupplement || semanticEligible) &&
+            !CompletionResultLimits.isAll(initialQuery.limit)
+        ? initialQuery.copyWith(limit: math.max(60, initialQuery.limit))
+        : initialQuery;
     final boosts = isLibraryAlias || isRelatedQuery
         ? Future.value(const <String, double>{})
         : _rankingBoosts(effectiveQuery);
     final localResults = await Future.wait(
       activeLocalSources.map((source) async {
         try {
-          return _LocalSourceResult(await source.search(initialQuery));
+          return _LocalSourceResult(await source.search(poolQuery));
         } catch (error) {
           return _LocalSourceResult(
             const <CompletionCandidate>[],
@@ -198,9 +247,24 @@ class CompletionOrchestrator extends ChangeNotifier {
               .toList(growable: false)
         : CompletionRanker.mergeAndSort(
             localBatches.expand((batch) => batch),
-            query: initialQuery,
+            query: poolQuery,
             boosts: _boosts,
           );
+    final canLoadSemantic =
+        semanticEligible &&
+        candidates
+                .where(
+                  (row) =>
+                      row.matchKind == CompletionMatchKind.chineseExact ||
+                      row.matchKind == CompletionMatchKind.chinesePrefix,
+                )
+                .take(8)
+                .length <
+            8;
+    if (canSupplement || canLoadSemantic) _typedPrimary = candidates;
+    if (poolQuery.limit != initialQuery.limit) {
+      candidates = candidates.take(initialQuery.limit).toList(growable: false);
+    }
     if (isRelatedQuery) {
       candidates = candidates
           .where((candidate) => !candidate.isExisting)
@@ -219,19 +283,6 @@ class CompletionOrchestrator extends ChangeNotifier {
       settings,
     );
     if (!_isCurrent(sequence)) return;
-    final canLoadSemantic =
-        !isLibraryAlias &&
-        !isRelatedQuery &&
-        effectiveQuery.isChinese &&
-        effectiveQuery.token.trim().runes.length >= 2 &&
-        (effectiveQuery.typedCategoryScope?.contains(TagCategory.general) ??
-            true) &&
-        _semanticSource != null;
-    final canSupplement =
-        !isLibraryAlias &&
-        !isRelatedQuery &&
-        effectiveQuery.token.trim().isNotEmpty &&
-        _supplementalSources.isNotEmpty;
     _semanticPending = canLoadSemantic;
     _supplementPending = canSupplement;
     _emit(
@@ -247,7 +298,7 @@ class CompletionOrchestrator extends ChangeNotifier {
     _scheduleLlmTranslations(initialQuery, sequence, settings);
     if (canSupplement) {
       unawaited(
-        _loadSupplements(effectiveQuery, sequence, settings, candidates),
+        _loadSupplements(effectiveQuery, sequence, settings, _typedPrimary!),
       );
     }
     if (canLoadSemantic) {
@@ -259,12 +310,12 @@ class CompletionOrchestrator extends ChangeNotifier {
       unawaited(_expandRelatedLocalResults(effectiveQuery, settings, sequence));
     }
 
-    if (!canLoadRemote) {
+    if (remoteSource == null) {
       _emit(_state.copyWith(isRemoteLoading: false));
       return;
     }
     _remoteDebounce = Timer(const Duration(milliseconds: 250), () {
-      unawaited(_loadRemote(effectiveQuery, sequence, settings));
+      unawaited(_loadRemote(effectiveQuery, sequence, settings, remoteSource));
     });
   }
 
@@ -274,7 +325,7 @@ class CompletionOrchestrator extends ChangeNotifier {
     AutocompleteSettings settings,
   ) async {
     try {
-      var rows = await _semanticSource!.search(query);
+      var rows = await _semanticSource!.search(query.copyWith(limit: 50));
       if (!_isCurrent(sequence)) return;
       // Use the same current dictionary/locale policy as lexical completion.
       // The frozen index labels describe its corpus, not user translation state.
@@ -289,14 +340,13 @@ class CompletionOrchestrator extends ChangeNotifier {
       );
       if (!_isCurrent(sequence)) return;
       _semanticPending = false;
+      _typedSemantic = rows;
       _emit(
         _state.copyWith(
           isLocalLoading: _supplementPending,
-          candidates: CompletionRanker.mergeAndSort(
-            [..._state.candidates, ...rows],
-            query: query,
-            boosts: _boosts,
-          ),
+          candidates: _supplementPending
+              ? _state.candidates
+              : _rankTyped(query),
         ),
       );
     } catch (error) {
@@ -326,8 +376,7 @@ class CompletionOrchestrator extends ChangeNotifier {
     }
   }
 
-  /// Pinyin, approximate, cross-lingual and spelling fallbacks: they see the
-  /// literal results first and add rows ranked below them.
+  /// The literal results are displayed while the lexical fallbacks run.
   Future<void> _loadSupplements(
     CompletionQuery query,
     int sequence,
@@ -353,23 +402,39 @@ class CompletionOrchestrator extends ChangeNotifier {
     rows = await _applyCachedLlmTranslations(rows, query, sequence, settings);
     if (!_isCurrent(sequence)) return;
     _supplementPending = false;
+    _typedSupplements = rows;
     final existing = _state.localError;
     _emit(
       _state.copyWith(
         isLocalLoading: _semanticPending,
-        candidates: rows.isEmpty
-            ? _state.candidates
-            : CompletionRanker.mergeAndSort(
-                [..._state.candidates, ...rows],
-                query: query,
-                boosts: _boosts,
-              ),
+        candidates: _rankTyped(query),
         localError: errors.isEmpty
             ? existing
             : [if (existing != null) existing, ...errors].join('\n'),
       ),
     );
     if (rows.isNotEmpty) _scheduleLlmTranslations(query, sequence, settings);
+  }
+
+  List<CompletionCandidate> _rankTyped(CompletionQuery query) {
+    final local = CompletionRanker.mergeAndSort(
+      [
+        ..._typedPrimary!,
+        ..._typedSupplements,
+        if (!_supplementPending) ..._typedSemantic,
+      ],
+      query: query,
+      boosts: _boosts,
+    );
+    return _preserveCurrentTranslationState(
+      _typedRemote.isEmpty
+          ? local
+          : _mergeRemoteWithoutReordering(
+              local: local,
+              remote: _typedRemote,
+              query: query,
+            ),
+    );
   }
 
   Future<_RelatedTagResolution?> _resolveRelatedTag(
@@ -560,35 +625,56 @@ class CompletionOrchestrator extends ChangeNotifier {
     CompletionQuery query,
     int sequence,
     AutocompleteSettings settings,
+    DanbooruCompletionSource primary,
   ) async {
-    List<CompletionCandidate> remote;
-    try {
-      remote = query.relatedTag != null && query.token.isEmpty
-          ? await _danbooru.relatedTags(query.relatedTag!, limit: query.limit)
-          : await _danbooru.search(query);
-    } catch (error) {
-      if (_isCurrent(sequence)) {
-        _emit(
-          _state.copyWith(
-            isRemoteLoading: false,
-            remoteError: error.toString(),
-          ),
-        );
-      }
-      return;
-    }
+    final related = query.relatedTag != null && query.token.isEmpty;
+    var (remote, remoteError) = await _requestRemote(primary, query);
     if (!_isCurrent(sequence)) return;
-    remote = _filterCategory(remote, query);
-    if (query.relatedTag != null && query.token.isEmpty) {
-      remote = await _relatedRowsToSuggest(remote, query);
+    final alternate = settings.onlineTagFallback
+        ? _remoteSource(settings.onlineTagProvider.alternate)
+        : null;
+    if (alternate != null &&
+        remoteError != null &&
+        remote.isEmpty &&
+        _state.candidates.isEmpty) {
+      _emit(
+        _state.copyWith(remoteProvider: settings.onlineTagProvider.alternate),
+      );
+      (remote, remoteError) = await _requestRemote(alternate, query);
       if (!_isCurrent(sequence)) return;
+    }
+    if (_typedPrimary != null) {
+      remote = await _applyDictionaryTranslations(
+        remote,
+        query,
+        sequence,
+        settings,
+      );
+      remote = await _applyCachedLlmTranslations(
+        remote,
+        query,
+        sequence,
+        settings,
+      );
+      if (!_isCurrent(sequence)) return;
+      _typedRemote = remote;
+      _emit(
+        _state.copyWith(
+          candidates: _rankTyped(query),
+          isRemoteLoading: false,
+          remoteError: remoteError,
+          clearRemoteError: remoteError == null,
+        ),
+      );
+      _scheduleLlmTranslations(query, sequence, settings);
+      return;
     }
     var merged = _mergeRemoteWithoutReordering(
       local: _state.candidates,
       remote: remote,
       query: query,
     );
-    if (query.relatedTag != null) {
+    if (related) {
       merged = merged
           .where((candidate) => !candidate.isExisting)
           .toList(growable: false);
@@ -607,17 +693,6 @@ class CompletionOrchestrator extends ChangeNotifier {
     );
     if (!_isCurrent(sequence)) return;
     merged = _preserveCurrentTranslationState(merged);
-    final semantic = _state.candidates.where(
-      (row) => row.semanticScore != null,
-    );
-    if (semantic.isNotEmpty) {
-      merged = CompletionRanker.mergeAndSort(
-        [...merged, ...semantic],
-        query: query,
-        boosts: _boosts,
-      );
-    }
-    final remoteError = _danbooru.lastError;
     _emit(
       _state.copyWith(
         candidates: merged,
@@ -627,6 +702,37 @@ class CompletionOrchestrator extends ChangeNotifier {
       ),
     );
     _scheduleLlmTranslations(query, sequence, settings);
+  }
+
+  Future<(List<CompletionCandidate>, CompletionRemoteError?)> _requestRemote(
+    DanbooruCompletionSource source,
+    CompletionQuery query,
+  ) async {
+    try {
+      final related = query.relatedTag;
+      final rows = related != null && query.token.isEmpty
+          ? await source.relatedTags(related, limit: query.limit)
+          : await source.search(query);
+      final error = source.lastError;
+      final filtered = _filterCategory(rows, query);
+      return (
+        related != null && query.token.isEmpty
+            ? await _relatedRowsToSuggest(filtered, query)
+            : filtered,
+        error,
+      );
+    } catch (error, stack) {
+      AppLogger.e(
+        '${source.provider.label} completion failed',
+        error,
+        stack,
+        'Autocomplete',
+      );
+      return (
+        const <CompletionCandidate>[],
+        const CompletionRemoteError(CompletionRemoteErrorKind.unexpected),
+      );
+    }
   }
 
   List<CompletionCandidate> _preserveCurrentTranslationState(
@@ -911,7 +1017,7 @@ class CompletionOrchestrator extends ChangeNotifier {
     _sequence++;
     _cancelPendingLlmTranslation();
     _remoteDebounce?.cancel();
-    _danbooru.cancelPending();
+    _cancelRemoteRequests();
     super.dispose();
   }
 }

@@ -339,7 +339,7 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
         : null;
     final invocationId = ++_invocationCounter;
     _activeInvocationId = invocationId;
-    Future<void> Function()? releaseForeground;
+    AndroidGenerationTask? foreground;
 
     try {
       if (!requireAuthenticatedAction(ref, AuthPromptReason.imageGeneration)) {
@@ -394,9 +394,9 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
       }
 
       try {
-        releaseForeground = await ref
+        foreground = await ref
             .read(androidForegroundTaskServiceProvider)
-            .acquire();
+            .acquireGeneration();
       } catch (error, stackTrace) {
         AppLogger.e(
           'Unable to start Android generation foreground service',
@@ -477,8 +477,24 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
       );
       final handle = coordinator.start(command);
       _activeRun = handle;
+      var currentBatch = 1;
+      foreground?.update(current: 1, total: command.batchCount, progress: 0);
       await for (final event in coordinator.execute(command, handle)) {
         await _reduce(event, epoch);
+        if (!_isCurrentLifecycle(epoch) ||
+            _activeInvocationId != invocationId) {
+          continue;
+        }
+        if (event is GenerationRequestStarted) {
+          currentBatch = (event.startImage - 1) ~/ command.batchSize + 1;
+        }
+        if (state.isGenerating) {
+          foreground?.update(
+            current: currentBatch,
+            total: command.batchCount,
+            progress: state.progress,
+          );
+        }
       }
     } finally {
       // 归属判断不可省：被取消后新一次提交已经接管标志，这里不能替它复位。
@@ -495,9 +511,9 @@ class ImageGenerationNotifier extends _$ImageGenerationNotifier {
       if (identical(_generationInvocationSettled, invocationSettled)) {
         _generationInvocationSettled = null;
       }
-      if (releaseForeground != null) {
+      if (foreground != null) {
         try {
-          await releaseForeground();
+          await foreground.release();
         } catch (error, stackTrace) {
           AppLogger.e(
             'Unable to stop Android generation foreground service',

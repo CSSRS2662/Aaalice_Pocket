@@ -12,8 +12,12 @@ import '../../../core/utils/encoded_image_dimensions.dart';
 import '../../../core/platform/platform_capabilities.dart';
 import '../../../core/utils/localization_extension.dart';
 import '../../../data/models/gallery/local_image_record.dart';
+import '../../../data/services/gallery/gallery_path_utils.dart';
+import '../../providers/grid_columns_provider.dart';
+import '../../providers/image_favorite_status_provider.dart';
 import '../../providers/krita/krita_bridge_notifier.dart';
 import '../../providers/local_gallery_provider.dart';
+import '../../providers/local_gallery_prompt_groups_provider.dart';
 import '../../providers/reverse_prompt_provider.dart';
 import '../../router/app_routes.dart';
 import '../../services/image_workflow_launcher.dart';
@@ -31,6 +35,7 @@ import 'gallery_state_views.dart';
 import 'library_scroll_actions.dart';
 import '../../selection/card_drag_select.dart';
 import 'local_image_context_menu.dart';
+import 'local_gallery_prompt_group_grid.dart';
 
 /// 画廊项目构建函数类型
 typedef GalleryItemBuilder<T> =
@@ -578,6 +583,7 @@ class _LocalSelectionStateAdapter implements SelectionState {
 /// 本地画廊内容视图
 class LocalGalleryContentView extends ConsumerWidget {
   final bool use3DCardView;
+  final bool samePrompt;
   final int columns;
   final double itemWidth;
   final void Function(LocalImageRecord record)? onReuseMetadata;
@@ -593,6 +599,7 @@ class LocalGalleryContentView extends ConsumerWidget {
   const LocalGalleryContentView({
     super.key,
     this.use3DCardView = true,
+    this.samePrompt = false,
     required this.columns,
     required this.itemWidth,
     this.onReuseMetadata,
@@ -616,22 +623,29 @@ class LocalGalleryContentView extends ConsumerWidget {
 
     void showImageDetailViewer(
       List<LocalImageRecord> images,
-      int initialIndex,
-    ) {
-      bool getFavoriteStatus(String path) {
-        final providerState = ref.read(localGalleryNotifierProvider);
-        final image = providerState.currentImages
-            .cast<LocalImageRecord?>()
-            .firstWhere((img) => img?.path == path, orElse: () => null);
-        return image?.isFavorite ?? false;
+      int initialIndex, {
+      BuildContext? groupContext,
+    }) {
+      final viewerContext = groupContext ?? context;
+      final container = ProviderScope.containerOf(context, listen: false);
+      void closeViewerForWorkflow() {
+        final navigator = Navigator.of(viewerContext);
+        navigator.pop();
+        if (groupContext != null) navigator.pop();
       }
 
       ImageDetailOpener.showMultipleImmediate(
-        context,
+        viewerContext,
         images: images
             .map(
-              (r) =>
-                  LocalImageDetailData(r, getFavoriteStatus: getFavoriteStatus),
+              (record) => LocalImageDetailData(
+                record,
+                getFavoriteStatus: (path) =>
+                    container.read(
+                      imageFavoriteStatusProvider,
+                    )[galleryFilePathKey(path)] ??
+                    record.isFavorite,
+              ),
             )
             .toList(),
         initialIndex: initialIndex,
@@ -663,8 +677,8 @@ class LocalGalleryContentView extends ConsumerWidget {
             try {
               final bytes = await data.getImageBytes();
               ImageWorkflowLauncher.openImageToImage(ref, bytes);
-              if (!context.mounted) return;
-              Navigator.of(context).pop();
+              if (!context.mounted || !viewerContext.mounted) return;
+              closeViewerForWorkflow();
               context.go(AppRoutes.home);
               AppToast.success(context, context.l10n.gallery_sentToImg2Img);
             } catch (e) {
@@ -681,8 +695,8 @@ class LocalGalleryContentView extends ConsumerWidget {
                     await data.getImageBytes(),
                     name: data.fileInfo?.fileName ?? 'gallery-image',
                   );
-              if (!context.mounted) return;
-              Navigator.of(context).pop();
+              if (!context.mounted || !viewerContext.mounted) return;
+              closeViewerForWorkflow();
               context.go(AppRoutes.home);
               AppToast.success(
                 context,
@@ -694,6 +708,51 @@ class LocalGalleryContentView extends ConsumerWidget {
               }
             }
           },
+        ),
+      );
+    }
+
+    if (samePrompt) {
+      if (!state.isInitialized ||
+          (state.groupedImages.isEmpty &&
+              (state.isLoading ||
+                  state.isPageLoading ||
+                  state.isGroupedLoading))) {
+        return const GalleryLoadingView();
+      }
+      final groups = ref.watch(localGalleryPromptGroupsProvider);
+      if (groups.isEmpty) {
+        if (state.hasUserFilters) return const GalleryNoResultsView();
+        return GalleryEmptyView(
+          title: context.l10n.localGallery_samePromptEmpty,
+          subtitle: context.l10n.localGallery_samePromptEmptyHint,
+          icon: Icons.collections_outlined,
+        );
+      }
+      return LibraryScrollActions(
+        onRefresh:
+            PlatformCapabilities.current.prefersContinuousLibraryScrolling
+            ? () => ref.read(localGalleryNotifierProvider.notifier).refresh()
+            : null,
+        child: LocalGalleryPromptGroupGrid(
+          groups: groups,
+          preferredColumns: ref.watch(
+            gridColumnsProvider(GridColumnsSurface.localGallery),
+          ),
+          history: ref.watch(localGalleryPromptGroupHistoryProvider),
+          onOpen: (group) => unawaited(
+            showLocalGalleryPromptGroup(
+              context,
+              promptKey: group.promptKey,
+              columns: columns,
+              onOpenImage: (groupContext, images, index) =>
+                  showImageDetailViewer(
+                    images,
+                    index,
+                    groupContext: groupContext,
+                  ),
+            ),
+          ),
         ),
       );
     }

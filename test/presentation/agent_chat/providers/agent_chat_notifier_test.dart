@@ -1293,6 +1293,87 @@ User instructions.
       expect(usage.available, isTrue);
     });
 
+    test(
+      'clear context keeps the conversation instructions on the next request',
+      () async {
+        await _selectChatModel(container);
+        final notifier = container.read(provider.notifier);
+        final sessionId = container.read(provider).activeSessionId;
+        await notifier.setSessionInstructions('ONLY_NIGHT_SCENES');
+        await notifier.send('old request');
+        await notifier.renameSession(sessionId, 'Night scenes');
+        await notifier.newSession();
+        final otherId = container.read(provider).activeSessionId;
+        final metadata = (await sessionRepo.list()).firstWhere(
+          (item) => item.id == sessionId,
+        );
+        final stored = await sessionRepo.open(metadata);
+        expect(await stored.getName(), 'Night scenes');
+        await stored.appendEntry(
+          CompactionEntry(
+            id: 'old-compaction',
+            summary: 'old summary',
+            retainedTail: const [],
+            tokensBefore: 100,
+          ),
+          'main',
+        );
+        await stored.appendRecord(
+          OperationStartedRecord(
+            id: 'old-suspended-run',
+            lane: 'main',
+            sourceLeafId: await stored.getLeafId(),
+            intent: const RunIntent(kind: RunIntentKind.run),
+          ),
+        );
+        await notifier.switchSession(sessionId);
+        expect(container.read(provider).messages, isNotEmpty);
+
+        await notifier.clearContext(otherId);
+        expect(container.read(provider).messages, isNotEmpty);
+        await notifier.clearContext(sessionId);
+        final cleared = container.read(provider);
+        expect(cleared.activeSessionId, sessionId);
+        expect(cleared.sessionInstructions, 'ONLY_NIGHT_SCENES');
+        expect(cleared.messages, isEmpty);
+        expect(cleared.turns, isEmpty);
+        expect(cleared.queuedMessages, isEmpty);
+        expect(cleared.totalUsage?.totalTokens, 0);
+        expect(
+          cleared.sessions.firstWhere((item) => item.id == sessionId).name,
+          'Night scenes',
+        );
+
+        final reopened = await sessionRepo.open(metadata);
+        expect(await reopened.findOpenOperations('main'), isEmpty);
+        expect(
+          (await reopened.findEntriesOnBranch()).whereType<MessageEntry>(),
+          isEmpty,
+        );
+        expect(
+          (await reopened.findEntriesOnBranch()).whereType<CompactionEntry>(),
+          isEmpty,
+        );
+        expect(
+          (await reopened.findEntries()).whereType<MessageEntry>(),
+          isNotEmpty,
+        );
+
+        await notifier.switchSession(otherId);
+        await notifier.switchSession(sessionId);
+        expect(container.read(provider).messages, isEmpty);
+        await notifier.send('fresh request');
+        expect(requests.last.systemPrompt, contains('ONLY_NIGHT_SCENES'));
+        expect(
+          requests.last.messages.whereType<UserMessage>().map(
+            (message) => message.text,
+          ),
+          ['fresh request'],
+        );
+        expect(requests.last.messages, hasLength(1));
+      },
+    );
+
     test('conversation instructions stay with their own session', () async {
       await _selectChatModel(container);
       final notifier = container.read(provider.notifier);

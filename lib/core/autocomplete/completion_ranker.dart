@@ -1,10 +1,13 @@
+import 'dart:math' as math;
+
+import 'completion_intent.dart';
 import 'completion_models.dart';
 
 class CompletionRanker {
   const CompletionRanker._();
 
-  /// Merges rows of the same tag and sorts them. [boosts] (context and
-  /// habit, by stable id) reorder rows within a match kind, never across.
+  /// Merges independent lexical and semantic evidence before applying
+  /// context, habit and explicit query constraints.
   static List<CompletionCandidate> mergeAndSort(
     Iterable<CompletionCandidate> candidates, {
     required CompletionQuery query,
@@ -16,10 +19,8 @@ class CompletionRanker {
       final key = incoming.stableId;
       final existing = merged[key];
       if (existing == null) {
-        merged[key] = _score(
-          incoming.copyWith(isExisting: query.existingTags.contains(key)),
-          query,
-          boosts,
+        merged[key] = incoming.copyWith(
+          isExisting: query.existingTags.contains(key),
         );
         continue;
       }
@@ -35,24 +36,20 @@ class CompletionRanker {
         ...existing.sources,
         ...incoming.sources,
       };
-      final incomingWins =
-          _matchPriority(incoming.matchKind) <
-              _matchPriority(existing.matchKind) ||
-          (incoming.matchKind == existing.matchKind &&
-              incoming.matchQuality > existing.matchQuality);
-      final matchKind = incomingWins ? incoming.matchKind : existing.matchKind;
+      final evidence = _lexicalStrength(incoming) > _lexicalStrength(existing)
+          ? incoming
+          : existing;
       final translation = existing.translation?.trim().isNotEmpty == true
           ? existing.translation
           : incoming.translation;
-      final matchedAlias = existing.matchedAlias ?? incoming.matchedAlias;
       final mergedCandidate = CompletionCandidate(
         canonicalTag: existing.canonicalTag,
         category: baseOwnsRecord ? existing.category : incoming.category,
         postCount: baseOwnsRecord ? existing.postCount : incoming.postCount,
         aliases: aliases,
         translation: translation,
-        matchedAlias: matchedAlias,
-        matchKind: matchKind,
+        matchedAlias: evidence.matchedAlias,
+        matchKind: evidence.matchKind,
         sources: sources,
         isExisting: query.existingTags.contains(key),
         isTranslating: existing.isTranslating || incoming.isTranslating,
@@ -68,34 +65,39 @@ class CompletionRanker {
           existing.semanticScore,
           incoming.semanticScore,
         ),
-        matchHint: incomingWins ? incoming.matchHint : existing.matchHint,
-        matchQuality: incomingWins
-            ? incoming.matchQuality
-            : existing.matchQuality,
+        matchHint: evidence.matchHint,
+        matchQuality: evidence.matchQuality,
       );
-      merged[key] = _score(mergedCandidate, query, boosts);
+      merged[key] = mergedCandidate;
     }
 
-    final results = merged.values.toList()
-      ..sort((a, b) {
-        final band = _band(a, query).compareTo(_band(b, query));
-        if (band != 0) return band;
-        if (query.relatedTag != null) {
-          final relatedScore = (b.relatedScore ?? 0).compareTo(
-            a.relatedScore ?? 0,
-          );
-          if (relatedScore != 0) return relatedScore;
-          final occurrences = (b.cooccurrenceCount ?? 0).compareTo(
-            a.cooccurrenceCount ?? 0,
-          );
-          if (occurrences != 0) return occurrences;
-        }
-        final score = b.score.compareTo(a.score);
-        if (score != 0) return score;
-        final count = b.postCount.compareTo(a.postCount);
-        if (count != 0) return count;
-        return a.canonicalTag.compareTo(b.canonicalTag);
-      });
+    final intent = query.isChinese && query.relatedTag == null
+        ? CompletionIntent(query.token)
+        : null;
+    final results =
+        [for (final row in merged.values) _score(row, intent, boosts)]
+          ..sort((a, b) {
+            final band = _band(a, query).compareTo(_band(b, query));
+            if (band != 0) return band;
+            final aLiteral = _literalStrength(a.matchKind) != null;
+            final bLiteral = _literalStrength(b.matchKind) != null;
+            if (aLiteral != bLiteral) return aLiteral ? -1 : 1;
+            if (query.relatedTag != null) {
+              final relatedScore = (b.relatedScore ?? 0).compareTo(
+                a.relatedScore ?? 0,
+              );
+              if (relatedScore != 0) return relatedScore;
+              final occurrences = (b.cooccurrenceCount ?? 0).compareTo(
+                a.cooccurrenceCount ?? 0,
+              );
+              if (occurrences != 0) return occurrences;
+            }
+            final score = b.score.compareTo(a.score);
+            if (score != 0) return score;
+            final count = b.postCount.compareTo(a.postCount);
+            if (count != 0) return count;
+            return a.canonicalTag.compareTo(b.canonicalTag);
+          });
     return results.take(limit ?? query.limit).toList(growable: false);
   }
 
@@ -113,49 +115,68 @@ class CompletionRanker {
   /// Whether [kind] matched the typed text itself rather than a reading,
   /// a correction or a meaning of it.
   static bool _isLiteralMatch(CompletionMatchKind kind) =>
-      _matchPriority(kind) <=
-      _matchPriority(CompletionMatchKind.chineseContains);
+      _literalStrength(kind) != null ||
+      kind == CompletionMatchKind.chineseContains;
 
   static CompletionCandidate _score(
     CompletionCandidate candidate,
-    CompletionQuery query,
+    CompletionIntent? intent,
     Map<String, double> boosts,
   ) {
-    final priority = _matchPriority(candidate.matchKind);
-    // Preserve exact/prefix/contains lexical matches. For fuzzy fallback rows,
-    // cosine order must not be overwritten by tag popularity or source boosts.
-    // Semantic rows sit in the full-text band, below every lexical kind.
-    if (candidate.matchKind == CompletionMatchKind.fullText &&
-        candidate.semanticScore != null) {
+    final popularity = math.log(1 + math.max(0, candidate.postCount)) * .002;
+    final context =
+        (boosts[candidate.stableId] ?? 0).clamp(0.0, 6000.0) * .00001;
+    final literal = _literalStrength(candidate.matchKind);
+    if (literal != null) {
       return candidate.copyWith(
-        score:
-            1000000.0 -
-            priority * 100000.0 +
-            10000 +
-            candidate.semanticScore!.clamp(-1, 1) * 80000,
+        score: literal + candidate.matchQuality * .04 + popularity + context,
       );
     }
-    final sourceBoost = candidate.sources.contains(CompletionSourceKind.base)
-        ? 2000.0
-        : candidate.sources.contains(CompletionSourceKind.zhDictionary)
-        ? 1000.0
-        : 0.0;
-    final popularity = candidate.postCount <= 0
+    final lexical = _lexicalStrength(candidate);
+    final cosine = candidate.semanticScore;
+    final semantic = cosine == null
         ? 0.0
-        : candidate.postCount.toString().length * 10.0;
-    // Quality spans 40000 so exact rows of a kind stay above prefix rows; the
-    // context and habit boost (at most 6000) then reorders within those.
-    final quality = candidate.matchQuality.clamp(0.0, 1.0) * 40000.0;
-    final boost = (boosts[candidate.stableId] ?? 0).clamp(0.0, 6000.0);
+        : ((cosine - .78) * 2.6 + .36).clamp(0.0, 1.0);
+    final corroboration = math.min(lexical, semantic) * .07;
+    final constraints = intent?.adjustment(candidate.canonicalTag) ?? 0;
     return candidate.copyWith(
       score:
-          1000000.0 -
-          priority * 100000.0 +
-          quality +
-          sourceBoost +
+          math.max(lexical, semantic) +
+          corroboration +
+          context +
           popularity +
-          boost,
+          constraints,
     );
+  }
+
+  static double? _literalStrength(CompletionMatchKind kind) => switch (kind) {
+    CompletionMatchKind.englishExact => 2.2,
+    CompletionMatchKind.englishPrefix => 2.0,
+    CompletionMatchKind.aliasExact => 1.8,
+    CompletionMatchKind.aliasPrefix => 1.6,
+    CompletionMatchKind.chineseExact => 1.4,
+    CompletionMatchKind.chinesePrefix => 1.25,
+    _ => null,
+  };
+
+  static double _lexicalStrength(CompletionCandidate row) {
+    final literal = _literalStrength(row.matchKind);
+    final quality = row.matchQuality.clamp(0.0, 1.0);
+    if (literal != null) return literal + quality * .04;
+    return switch (row.matchKind) {
+      CompletionMatchKind.chineseContains => .53 + .22 * quality,
+      CompletionMatchKind.homophone => .37 + .45 * quality,
+      CompletionMatchKind.spellCorrected => .37 + .55 * quality,
+      CompletionMatchKind.englishVariant => .47 + .37 * quality,
+      CompletionMatchKind.pinyin => .44 + .45 * quality,
+      CompletionMatchKind.shuangpin => .38 + .48 * quality,
+      CompletionMatchKind.crossLingual => .24 + .68 * quality,
+      CompletionMatchKind.approximate => .20 + .67 * quality,
+      CompletionMatchKind.fuzzyPinyin => .32 + .43 * quality,
+      CompletionMatchKind.pinyinInitials => .24 + .41 * quality,
+      CompletionMatchKind.fullText => row.semanticScore == null ? .38 : 0,
+      _ => 0,
+    };
   }
 
   static T? _greaterNullable<T extends num>(T? left, T? right) {
@@ -163,25 +184,4 @@ class CompletionRanker {
     if (right == null) return left;
     return left >= right ? left : right;
   }
-
-  static int _matchPriority(CompletionMatchKind kind) => switch (kind) {
-    CompletionMatchKind.englishExact => 0,
-    CompletionMatchKind.englishPrefix => 1,
-    CompletionMatchKind.aliasExact => 2,
-    CompletionMatchKind.aliasPrefix => 3,
-    CompletionMatchKind.chineseExact => 4,
-    CompletionMatchKind.chinesePrefix => 5,
-    CompletionMatchKind.chineseContains => 6,
-    CompletionMatchKind.homophone => 7,
-    CompletionMatchKind.spellCorrected => 8,
-    CompletionMatchKind.englishVariant => 9,
-    CompletionMatchKind.pinyin => 10,
-    CompletionMatchKind.shuangpin => 11,
-    CompletionMatchKind.crossLingual => 12,
-    CompletionMatchKind.approximate => 13,
-    CompletionMatchKind.fuzzyPinyin => 14,
-    CompletionMatchKind.pinyinInitials => 15,
-    CompletionMatchKind.related => 16,
-    CompletionMatchKind.fullText => 17,
-  };
 }

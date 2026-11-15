@@ -2783,6 +2783,24 @@ abstract class AppLocalizations {
   /// **'More actions'**
   String get agentChat_moreActions;
 
+  /// No description provided for @agentChat_clearContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear context'**
+  String get agentChat_clearContext;
+
+  /// No description provided for @agentChat_clearContextConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the messages and context of this conversation and start fresh. Your conversation instructions will be kept.'**
+  String get agentChat_clearContextConfirm;
+
+  /// No description provided for @agentChat_clearContextFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t clear the context. Please try again.'**
+  String get agentChat_clearContextFailed;
+
   /// No description provided for @agentChat_compact.
   ///
   /// In en, this message translates to:
@@ -8389,10 +8407,22 @@ abstract class AppLocalizations {
   /// **'Also clear the prompt and characters'**
   String get prompt_clearAllAlsoPositive;
 
+  /// No description provided for @batchSettings_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch generation'**
+  String get batchSettings_title;
+
+  /// No description provided for @batchSettings_count.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of batches'**
+  String get batchSettings_count;
+
   /// No description provided for @batchSize_title.
   ///
   /// In en, this message translates to:
-  /// **'Batch Size'**
+  /// **'Images per batch'**
   String get batchSize_title;
 
   /// No description provided for @batchSize_tooltip.
@@ -10943,6 +10973,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Group by date'**
   String get localGallery_groupByDate;
+
+  /// No description provided for @localGallery_samePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Same prompt'**
+  String get localGallery_samePrompt;
+
+  /// No description provided for @localGallery_samePromptEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No prompt groups'**
+  String get localGallery_samePromptEmpty;
+
+  /// No description provided for @localGallery_samePromptEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite images with recorded prompts to browse them by prompt.'**
+  String get localGallery_samePromptEmptyHint;
 
   /// No description provided for @slideshow_of.
   ///
@@ -23169,17 +23217,35 @@ abstract class AppLocalizations {
   /// **'Related tags'**
   String get autocomplete_relatedTagsAction;
 
-  /// No description provided for @autocomplete_danbooruApi.
+  /// No description provided for @autocomplete_onlineSupplement.
   ///
   /// In en, this message translates to:
-  /// **'Danbooru online supplement'**
-  String get autocomplete_danbooruApi;
+  /// **'Online tag suggestions'**
+  String get autocomplete_onlineSupplement;
 
-  /// No description provided for @autocomplete_danbooruPrivacy.
+  /// No description provided for @autocomplete_onlinePrivacy.
   ///
   /// In en, this message translates to:
-  /// **'Only the current English tag is sent; the full prompt is never uploaded'**
-  String get autocomplete_danbooruPrivacy;
+  /// **'Sends only the current search term or the tag used for related suggestions to the selected provider.'**
+  String get autocomplete_onlinePrivacy;
+
+  /// No description provided for @autocomplete_defaultOnlineSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Default online tag source'**
+  String get autocomplete_defaultOnlineSource;
+
+  /// No description provided for @autocomplete_onlineFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Try an alternate source'**
+  String get autocomplete_onlineFallback;
+
+  /// No description provided for @autocomplete_onlineFallbackHint.
+  ///
+  /// In en, this message translates to:
+  /// **'If the default source fails and no suggestions are available, try {provider}.'**
+  String autocomplete_onlineFallbackHint(String provider);
 
   /// No description provided for @autocomplete_llmTranslation.
   ///
@@ -23344,7 +23410,7 @@ abstract class AppLocalizations {
   /// No description provided for @autocomplete_clearDanbooruCache.
   ///
   /// In en, this message translates to:
-  /// **'Clear Danbooru cache'**
+  /// **'Clear online tag cache'**
   String get autocomplete_clearDanbooruCache;
 
   /// No description provided for @autocomplete_clearAiCache.
@@ -23572,7 +23638,7 @@ abstract class AppLocalizations {
   /// No description provided for @autocomplete_statusOnlineOnlyTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Local related-tag data is not ready; only Danbooru online results are shown'**
+  /// **'Local related-tag data is not ready. Results are limited to online sources.'**
   String get autocomplete_statusOnlineOnlyTooltip;
 
   /// No description provided for @autocomplete_statusDictionary.
@@ -23580,6 +23646,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Translation'**
   String get autocomplete_statusDictionary;
+
+  /// No description provided for @autocomplete_remoteRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests are rate limited (HTTP 429)'**
+  String get autocomplete_remoteRateLimited;
+
+  /// No description provided for @autocomplete_remoteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Service temporarily unavailable (HTTP 503)'**
+  String get autocomplete_remoteUnavailable;
+
+  /// No description provided for @autocomplete_remoteHttpFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Request failed (HTTP {status})'**
+  String autocomplete_remoteHttpFailure(int status);
+
+  /// No description provided for @autocomplete_remoteTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Network request timed out'**
+  String get autocomplete_remoteTimeout;
+
+  /// No description provided for @autocomplete_remoteDnsFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not resolve the server address (DNS)'**
+  String get autocomplete_remoteDnsFailure;
+
+  /// No description provided for @autocomplete_remoteTlsFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not establish a secure connection (TLS)'**
+  String get autocomplete_remoteTlsFailure;
+
+  /// No description provided for @autocomplete_remoteConnectionFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect to the server'**
+  String get autocomplete_remoteConnectionFailure;
+
+  /// No description provided for @autocomplete_remoteInvalidResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned an unexpected response'**
+  String get autocomplete_remoteInvalidResponse;
+
+  /// No description provided for @autocomplete_remoteCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Online requests temporarily paused'**
+  String get autocomplete_remoteCooldown;
+
+  /// No description provided for @autocomplete_remoteWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry delay at the time of the request: {seconds}s'**
+  String autocomplete_remoteWait(int seconds);
 
   /// No description provided for @autocomplete_statusOnline.
   ///

@@ -5,4 +5,8 @@
     <string name="generation_notification_channel_description">讓進行中的圖像生成與 Agent 任務可在背景繼續執行</string>
     <string name="generation_notification_title">AI 任務進行中</string>
     <string name="generation_notification_text">圖像生成或 Agent 任務正在進行，點按可返回應用程式。</string>
+    <string name="generation_batch_notification_title">批次產圖中</string>
+    <string name="generation_batch_notification_progress">第 %1$d / %2$d 批 · %3$d%%</string>
+    <string name="generation_queue_notification_title">產圖佇列</string>
+    <string name="generation_queue_notification_progress">第 %1$d / %2$d 項 · %3$d%%</string>
 </resources>

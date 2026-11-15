@@ -188,7 +188,9 @@ class _AgentChatSlashMenuState extends State<AgentChatSlashMenu> {
   Widget _item(ThemeData theme, int index) {
     final command = widget.commands[index];
     final highlighted = index == widget.highlightIndex;
-    final destructive = command.sessionAction == AgentChatMoreAction.delete;
+    final destructive =
+        command.sessionAction == AgentChatMoreAction.delete ||
+        command.sessionAction == AgentChatMoreAction.clearContext;
     final accent = destructive
         ? theme.colorScheme.error
         : theme.colorScheme.primary;
@@ -259,6 +261,7 @@ class _AgentChatSlashMenuState extends State<AgentChatSlashMenu> {
       switch (command.sessionAction) {
         AgentChatMoreAction.newSession => Icons.add_comment_outlined,
         AgentChatMoreAction.compact => Icons.compress_rounded,
+        AgentChatMoreAction.clearContext => Icons.cleaning_services_outlined,
         AgentChatMoreAction.rename => Icons.edit_outlined,
         AgentChatMoreAction.instructions => Icons.sticky_note_2_outlined,
         AgentChatMoreAction.delete => Icons.delete_outline_rounded,

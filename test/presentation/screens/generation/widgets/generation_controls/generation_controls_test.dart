@@ -552,9 +552,15 @@ void main() {
     expect(find.byType(ListView), findsOneWidget);
     expect(tester.takeException(), isNull);
 
+    await tester.tap(find.byIcon(Icons.add_rounded));
+    await tester.pump();
+    expect(container.read(generationParamsNotifierProvider).nSamples, 2);
+
+    await tester.ensureVisible(find.text('4'));
     await tester.tap(find.text('4'));
     await tester.pump();
     expect(container.read(imagesPerRequestProvider), 4);
+    expect(find.text('总图像数 = 2 × 4 = 8 张'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

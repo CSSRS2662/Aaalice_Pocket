@@ -2,10 +2,12 @@
 
 The user selected E5-small for the Android prototype. The application now wires
 `E5CompletionSource` into `CompletionOrchestrator`, separately from the lexical
-`FastTagService`. Lexical results appear first; a 250 ms debounce starts semantic
-retrieval and stale responses are ignored. Exact/prefix/contains matches keep
-their existing priority; semantic fallback rows retain cosine ordering rather
-than being reordered by popularity. Already-used tags still appear last.
+`FastTagService`. Literal results appear first. For eligible queries with fewer
+than eight exact or prefix hits, a 250 ms debounce starts semantic retrieval.
+The ranker preserves exact and reliable prefix matches, then combines cosine
+similarity with lexical evidence, context and explicit semantic contrasts.
+Stale responses are ignored, and a written tag that matches literally remains
+visible at the top.
 
 Only Chinese queries of at least two characters and general categories are
 eligible. Library aliases, related-tag requests, author/series/character filters

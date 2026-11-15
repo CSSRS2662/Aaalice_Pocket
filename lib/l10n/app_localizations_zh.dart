@@ -1419,6 +1419,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentChat_moreActions => '更多操作';
 
   @override
+  String get agentChat_clearContext => '清空上下文';
+
+  @override
+  String get agentChat_clearContextConfirm => '清空当前对话的消息和上下文，从头开始聊天。对话提示词会保留。';
+
+  @override
+  String get agentChat_clearContextFailed => '无法清空上下文，请重试。';
+
+  @override
   String get agentChat_compact => '压缩上下文';
 
   @override
@@ -4510,7 +4519,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get prompt_clearAllAlsoPositive => '同时清空正面提示词与角色';
 
   @override
-  String get batchSize_title => '批次大小';
+  String get batchSettings_title => '批次生成';
+
+  @override
+  String get batchSettings_count => '批次数';
+
+  @override
+  String get batchSize_title => '每批张数';
 
   @override
   String batchSize_tooltip(int count) {
@@ -5901,6 +5916,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get localGallery_groupByDate => '按日期分组';
+
+  @override
+  String get localGallery_samePrompt => '同词';
+
+  @override
+  String get localGallery_samePromptEmpty => '暂无同词图片';
+
+  @override
+  String get localGallery_samePromptEmptyHint => '收藏带有提示词的图片后，就可以在这里按同词浏览。';
 
   @override
   String get slideshow_of => '/';
@@ -12761,10 +12785,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_relatedTagsAction => '相关标签';
 
   @override
-  String get autocomplete_danbooruApi => 'Danbooru 在线补充';
+  String get autocomplete_onlineSupplement => '在线标签补充';
 
   @override
-  String get autocomplete_danbooruPrivacy => '仅发送当前英文标签，不会上传完整提示词';
+  String get autocomplete_onlinePrivacy => '只向所选来源发送当前搜索词或要联想的标签。';
+
+  @override
+  String get autocomplete_defaultOnlineSource => '默认在线联想源';
+
+  @override
+  String get autocomplete_onlineFallback => '失败时查询备用源';
+
+  @override
+  String autocomplete_onlineFallbackHint(String provider) {
+    return '首选来源失败且没有可用候选时，尝试 $provider。';
+  }
 
   @override
   String get autocomplete_llmTranslation => '使用 Prompt Assistant 补译缺失汉化';
@@ -12870,7 +12905,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_cacheTitle => '在线与 AI 缓存';
 
   @override
-  String get autocomplete_clearDanbooruCache => '清除 Danbooru 缓存';
+  String get autocomplete_clearDanbooruCache => '清除在线标签缓存';
 
   @override
   String get autocomplete_clearAiCache => '清除 AI 汉化缓存';
@@ -13000,11 +13035,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autocomplete_statusOnlineOnly => '仅在线';
 
   @override
-  String get autocomplete_statusOnlineOnlyTooltip =>
-      '本地相关标签数据尚未就绪，当前只显示 Danbooru 在线结果';
+  String get autocomplete_statusOnlineOnlyTooltip => '本地相关标签数据尚未就绪，当前仅使用在线来源。';
 
   @override
   String get autocomplete_statusDictionary => '汉化';
+
+  @override
+  String get autocomplete_remoteRateLimited => '请求受到限流（HTTP 429）';
+
+  @override
+  String get autocomplete_remoteUnavailable => '服务暂不可用（HTTP 503）';
+
+  @override
+  String autocomplete_remoteHttpFailure(int status) {
+    return '请求失败（HTTP $status）';
+  }
+
+  @override
+  String get autocomplete_remoteTimeout => '网络请求超时';
+
+  @override
+  String get autocomplete_remoteDnsFailure => '无法解析服务地址（DNS）';
+
+  @override
+  String get autocomplete_remoteTlsFailure => '无法建立安全连接（TLS）';
+
+  @override
+  String get autocomplete_remoteConnectionFailure => '无法连接到服务器';
+
+  @override
+  String get autocomplete_remoteInvalidResponse => '服务器返回了意外的响应';
+
+  @override
+  String get autocomplete_remoteCooldown => '在线请求暂缓';
+
+  @override
+  String autocomplete_remoteWait(int seconds) {
+    return '本次请求需等待 $seconds 秒后再试';
+  }
 
   @override
   String get autocomplete_statusOnline => '在线';
@@ -17510,6 +17578,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get agentChat_moreActions => '更多操作';
 
   @override
+  String get agentChat_clearContext => '清除對話脈絡';
+
+  @override
+  String get agentChat_clearContextConfirm =>
+      '清除這段對話的訊息與脈絡，重新開始聊天。這段對話的專用提示詞會保留。';
+
+  @override
+  String get agentChat_clearContextFailed => '無法清除對話脈絡，請再試一次。';
+
+  @override
   String get agentChat_compact => '壓縮上下文';
 
   @override
@@ -20601,7 +20679,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get prompt_clearAllAlsoPositive => '同時清空正面提示詞與角色';
 
   @override
-  String get batchSize_title => '批次大小';
+  String get batchSettings_title => '批次產圖';
+
+  @override
+  String get batchSettings_count => '批次數';
+
+  @override
+  String get batchSize_title => '每批張數';
 
   @override
   String batchSize_tooltip(int count) {
@@ -20613,7 +20697,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String batchSize_formula(int batchCount, int batchSize, int total) {
-    return '總影象數 = $batchCount × $batchSize = $total 張';
+    return '總張數 = $batchCount × $batchSize = $total 張';
   }
 
   @override
@@ -21992,6 +22076,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get localGallery_groupByDate => '按日期分組';
+
+  @override
+  String get localGallery_samePrompt => '同詞';
+
+  @override
+  String get localGallery_samePromptEmpty => '暫無同詞圖片';
+
+  @override
+  String get localGallery_samePromptEmptyHint => '收藏帶有提示詞的圖片後，就可以在這裡按同詞瀏覽。';
 
   @override
   String get slideshow_of => '/';
@@ -28853,10 +28946,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_relatedTagsAction => '相關標籤';
 
   @override
-  String get autocomplete_danbooruApi => 'Danbooru 線上補充';
+  String get autocomplete_onlineSupplement => '線上標籤建議';
 
   @override
-  String get autocomplete_danbooruPrivacy => '僅傳送當前英文標籤，不會上傳完整提示詞';
+  String get autocomplete_onlinePrivacy => '只會將目前的搜尋詞或用來聯想的標籤傳給所選服務。';
+
+  @override
+  String get autocomplete_defaultOnlineSource => '預設線上聯想來源';
+
+  @override
+  String get autocomplete_onlineFallback => '失敗時查詢備用來源';
+
+  @override
+  String autocomplete_onlineFallbackHint(String provider) {
+    return '首選來源失敗且沒有可用建議時，改查 $provider。';
+  }
 
   @override
   String get autocomplete_llmTranslation => '使用 Prompt Assistant 補譯缺失漢化';
@@ -28962,7 +29066,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_cacheTitle => '線上與 AI 快取';
 
   @override
-  String get autocomplete_clearDanbooruCache => '清除 Danbooru 快取';
+  String get autocomplete_clearDanbooruCache => '清除線上標籤快取';
 
   @override
   String get autocomplete_clearAiCache => '清除 AI 漢化快取';
@@ -29092,11 +29196,44 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get autocomplete_statusOnlineOnly => '僅線上';
 
   @override
-  String get autocomplete_statusOnlineOnlyTooltip =>
-      '本地相關標籤資料尚未就緒，當前只顯示 Danbooru 線上結果';
+  String get autocomplete_statusOnlineOnlyTooltip => '本機的相關標籤資料尚未就緒，目前只使用線上來源。';
 
   @override
   String get autocomplete_statusDictionary => '漢化';
+
+  @override
+  String get autocomplete_remoteRateLimited => '請求受到流量限制（HTTP 429）';
+
+  @override
+  String get autocomplete_remoteUnavailable => '服務暫時無法使用（HTTP 503）';
+
+  @override
+  String autocomplete_remoteHttpFailure(int status) {
+    return '請求失敗（HTTP $status）';
+  }
+
+  @override
+  String get autocomplete_remoteTimeout => '網路請求逾時';
+
+  @override
+  String get autocomplete_remoteDnsFailure => '無法解析伺服器位址（DNS）';
+
+  @override
+  String get autocomplete_remoteTlsFailure => '無法建立安全連線（TLS）';
+
+  @override
+  String get autocomplete_remoteConnectionFailure => '無法連線到伺服器';
+
+  @override
+  String get autocomplete_remoteInvalidResponse => '伺服器傳回非預期的回應';
+
+  @override
+  String get autocomplete_remoteCooldown => '暫停傳送線上請求';
+
+  @override
+  String autocomplete_remoteWait(int seconds) {
+    return '這次請求需等候 $seconds 秒後再試';
+  }
 
   @override
   String get autocomplete_statusOnline => '線上';

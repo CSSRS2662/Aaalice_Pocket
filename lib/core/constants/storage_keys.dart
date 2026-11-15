@@ -202,6 +202,10 @@ class StorageKeys {
       'autocomplete_open_on_tag_click';
   static const String autocompleteDanbooruEnabled =
       'autocomplete_danbooru_enabled';
+  // Per-device online source and permission to query an alternate service.
+  static const String autocompleteOnlineSource = 'autocomplete_online_source';
+  static const String autocompleteOnlineFallback =
+      'autocomplete_online_fallback';
   static const String autocompleteLlmTranslationEnabled =
       'autocomplete_llm_translation_enabled';
   static const String autocompleteZhInstallPromptDismissed =
@@ -338,6 +342,9 @@ class StorageKeys {
   /// 各瀑布流的列数（本机偏好，不参与云同步）
   static const String localGalleryMasonryColumns =
       'local_gallery_masonry_columns';
+  static const String localGalleryDateView = 'local_gallery_date_view';
+  static const String localGallerySamePromptView =
+      'local_gallery_same_prompt_view';
   static const String historyMasonryColumns = 'history_masonry_columns';
   static const String onlineGalleryMasonryColumns =
       'online_gallery_masonry_columns';

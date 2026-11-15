@@ -813,7 +813,7 @@ class _AutocompleteWrapperState extends ConsumerState<AutocompleteWrapper> {
             (state.isLocalLoading ||
                 state.isRemoteLoading ||
                 state.localError?.isNotEmpty == true ||
-                state.remoteError?.isNotEmpty == true ||
+                state.remoteError != null ||
                 state.translationError?.isNotEmpty == true ||
                 state.query?.relatedTag != null ||
                 ((_keepEmptyQueryVisible ?? false) && state.query != null));

@@ -249,12 +249,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('重命名'), findsOneWidget);
     expect(find.text('压缩上下文'), findsOneWidget);
+    expect(find.text('清空上下文'), findsOneWidget);
     expect(find.text('删除'), findsOneWidget);
     expect(find.text('在独立窗口中打开'), findsNothing);
     expect(find.text('智能体'), findsOneWidget);
     await tester.tap(find.text('重命名'), kind: PointerDeviceKind.mouse);
     await tester.pumpAndSettle();
     expect(actions, [AgentChatMoreAction.rename]);
+
+    await tester.tap(
+      find.byKey(const ValueKey('agent-chat-desktop-more')),
+      kind: PointerDeviceKind.mouse,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('清空上下文'), kind: PointerDeviceKind.mouse);
+    await tester.pumpAndSettle();
+    expect(actions, [
+      AgentChatMoreAction.rename,
+      AgentChatMoreAction.clearContext,
+    ]);
 
     await tester.tap(
       find.byKey(const ValueKey('agent-chat-desktop-more')),

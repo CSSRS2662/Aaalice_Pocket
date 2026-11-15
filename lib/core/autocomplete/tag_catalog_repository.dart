@@ -3,7 +3,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../database/asset_database_manager.dart';
 import 'completion_models.dart';
 import 'chinese_query_variants.dart';
-import 'lexical/english_words.dart';
 
 enum BundledTranslationMode {
   missing(0),
@@ -417,51 +416,46 @@ class TagCatalogRepository implements CompletionSource {
     return candidates;
   }
 
-  /// General tags whose name or alias matches every group: a group matches
-  /// when any of its words does (by stem prefix; `a_b` as a phrase). Most
-  /// used first. Used to search Chinese words translated to tag tokens.
-  Future<List<TagCatalogRecord>> searchTokenGroups(
+  /// A single catalog lookup for multiple spelling alternatives per word.
+  Future<List<CompletionCandidate>> searchSpellingCandidates(
     List<List<String>> groups, {
-    int limit = 300,
+    required Set<TagCategory>? scope,
+    int limit = 160,
   }) async {
-    final clauses = <String>[];
-    for (final group in groups) {
-      final terms = <String>{};
-      for (final candidate in group) {
-        final words = candidate
-            .toLowerCase()
-            .split(_nonAlphanumeric)
-            .where((word) => word.isNotEmpty)
-            .toList(growable: false);
-        if (words.length > 1) {
-          terms.add('"${words.join(' ')}"');
-        } else if (words.length == 1) {
-          terms.add('"${EnglishWords.stem(words.single)}"*');
-        }
-      }
-      if (terms.isEmpty) return const [];
-      clauses.add('(${terms.join(' OR ')})');
+    final categories = _scopeCategoryValues(scope);
+    if (groups.isEmpty || (scope != null && categories.isEmpty)) {
+      return const [];
     }
-    if (clauses.isEmpty) return const [];
+    final filter = categories.isEmpty
+        ? ''
+        : 'AND t.category IN (${List.filled(categories.length, '?').join(',')})';
+    final clauses = groups.map(
+      (words) => '(${words.map((word) => '"$word"').join(' OR ')})',
+    );
     await initialize();
     final rows = await _database!.rawQuery(
       '''
-      SELECT DISTINCT t.name, t.category, t.post_count
+      SELECT f.term, f.kind, t.name, t.category, t.post_count
       FROM tag_search f
       JOIN tags t ON t.id = f.tag_id
-      WHERE tag_search MATCH ? AND t.category IN (0, 7)
-      ORDER BY t.post_count DESC
+      WHERE tag_search MATCH ? $filter
+      ORDER BY bm25(tag_search), length(f.term), f.rowid
       LIMIT ?
       ''',
-      [clauses.join(' AND '), limit],
+      ['term : (${clauses.join(' AND ')})', ...categories, limit],
     );
     return [
       for (final row in rows)
-        TagCatalogRecord(
-          canonicalTag: row['name'] as String,
-          category: TagCategory.general,
-          postCount: (row['post_count'] as num).toInt(),
-        ),
+        if (TagCategory.fromCatalog(row['category'] as int)
+            case final category?)
+          CompletionCandidate(
+            canonicalTag: row['name'] as String,
+            category: category,
+            postCount: row['post_count'] as int,
+            matchedAlias: row['kind'] == 1 ? row['term'] as String : null,
+            matchKind: CompletionMatchKind.spellCorrected,
+            sources: const {CompletionSourceKind.base},
+          ),
     ];
   }
 

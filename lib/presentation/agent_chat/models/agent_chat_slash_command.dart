@@ -35,6 +35,7 @@ class AgentChatSlashCommand {
 const Map<String, AgentChatMoreAction> agentChatSessionCommands = {
   'new': AgentChatMoreAction.newSession,
   'compact': AgentChatMoreAction.compact,
+  'clear': AgentChatMoreAction.clearContext,
   'rename': AgentChatMoreAction.rename,
   'instructions': AgentChatMoreAction.instructions,
   'delete': AgentChatMoreAction.delete,
@@ -69,6 +70,7 @@ String sessionCommandDescription(
 ) => switch (action) {
   AgentChatMoreAction.newSession => l10n.agentChat_newChat,
   AgentChatMoreAction.compact => l10n.agentChat_compact,
+  AgentChatMoreAction.clearContext => l10n.agentChat_clearContext,
   AgentChatMoreAction.rename => l10n.common_rename,
   AgentChatMoreAction.instructions => l10n.agentChat_sessionInstructions,
   AgentChatMoreAction.delete => l10n.common_delete,

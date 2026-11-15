@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../autocomplete_settings.dart';
 import '../completion_models.dart';
 import '../tag_catalog_repository.dart';
+import 'chinese_fuzzy_match.dart';
 import 'english_words.dart';
 import 'lexical_search_index.dart';
 import 'pinyin_syllables.dart';
@@ -17,8 +18,7 @@ import 'search_lexicon.dart';
 ///   matched literally, then the letters read as full pinyin, Ziranma double
 ///   pinyin or syllable initials.
 ///
-/// Each row carries a match kind below the literal kinds, so literal matches
-/// always come first.
+/// Candidates carry the evidence needed by the shared ranker.
 class LexicalEnhancementSource implements SupplementalCompletionSource {
   LexicalEnhancementSource({
     required LexicalSearchIndex index,
@@ -36,9 +36,10 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
   final AutocompleteSettings Function() _settings;
 
   static final RegExp _hanzi = RegExp(r'[㐀-鿿]');
-  static final RegExp _letterQuery = RegExp(r"^[a-zA-Z][a-zA-Z\s_']*$");
-  static final RegExp _separators = RegExp(r"[\s_']+");
-  static const int _perStage = 24;
+  static final RegExp _letterQuery = RegExp(r"^[a-zA-Z][a-zA-Z\s_'\-]*$");
+  static final RegExp _separators = RegExp(r"[\s_'\-]+");
+  static final RegExp _conceptRuns = RegExp(r'[㐀-鿿]+|[a-z0-9]+');
+  static const int _perStage = 40;
 
   static const Set<CompletionMatchKind> _literalChinese = {
     CompletionMatchKind.chineseExact,
@@ -86,45 +87,48 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
     List<CompletionCandidate> primary,
     AutocompleteSettings settings,
   ) async {
-    final text = token.replaceAll(_separators, '');
+    final text = chineseSearchKey(token);
+    if (text.length < 2 || text.length > 32) return const [];
     final lexicon = await _lexicon();
     final results = <CompletionCandidate>[];
-    var strong = primary
+    final scope = query.typedCategoryScope;
+    final strong = primary
         .where((row) => _literalChinese.contains(row.matchKind))
         .length;
 
     if (settings.pinyinSearchEnabled) {
       final variants = lexicon.pinyin.readingVariants(text, maxVariants: 6);
       if (variants.isNotEmpty) {
-        final homophones = await _homophones(variants);
-        strong += homophones.where((row) => row.matchQuality >= 0.6).length;
+        final homophones = await _homophones(variants, scope);
         results.addAll(homophones);
         if (settings.fuzzyPinyinRules.isNotEmpty) {
           results.addAll(
-            await _fuzzy(variants, settings.fuzzyPinyinRules, results),
+            await _fuzzy(variants, settings.fuzzyPinyinRules, results, scope),
           );
         }
       }
     }
     if (settings.approximateMatchEnabled &&
-        text.runes.length >= 2 &&
-        strong < 8) {
-      results.addAll(await _approximate(text));
+        strong < (text.length == 2 ? 3 : 8)) {
+      results.addAll(await _approximate(text, scope, lexicon.crossLingual));
     }
-    if (settings.crossLingualEnabled) {
-      results.addAll(await _crossLingual(text, lexicon, strong));
+    if (settings.crossLingualEnabled &&
+        (scope?.contains(TagCategory.general) ?? true)) {
+      results.addAll(await _crossLingual(token, lexicon.crossLingual, strong));
     }
     return results;
   }
 
   Future<List<CompletionCandidate>> _homophones(
     List<List<String>> variants,
+    Set<TagCategory>? scope,
   ) async {
     // Labels that start with the reading only: mid-label homophones
     // (葛城（闪乱… for 城山) are noise more often than what was meant.
     final rows = await _index.pinyinMatches(
       _expression('py', [for (final variant in variants) _phrase(variant)]),
       limit: 160,
+      scope: scope,
     );
     final best = <String, CompletionCandidate>{};
     for (final row in rows) {
@@ -145,6 +149,7 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
     List<List<String>> variants,
     Set<FuzzyPinyinRule> rules,
     List<CompletionCandidate> found,
+    Set<TagCategory>? scope,
   ) async {
     final expression = _expression('pyf', [
       for (final variant in variants)
@@ -152,7 +157,7 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
     ]);
     final known = found.map((row) => row.stableId).toSet();
     final best = <String, CompletionCandidate>{};
-    for (final row in await _index.pinyinMatches(expression, limit: 200)) {
+    for (final row in await _index.pinyinMatches(expression, scope: scope)) {
       final syllables = row.pinyin.split(' ');
       var quality = 0.0;
       for (final variant in variants) {
@@ -182,18 +187,36 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
     return _top(best.values);
   }
 
-  Future<List<CompletionCandidate>> _approximate(String text) async {
-    final chars = text.runes.map(String.fromCharCode).toList(growable: false);
+  Future<List<CompletionCandidate>> _approximate(
+    String text,
+    Set<TagCategory>? scope,
+    CrossLingualLexicon lexicon,
+  ) async {
+    final anchors = text.length < 5
+        ? const <String>[]
+        : [
+            for (final word in lexicon.segment(text))
+              if (word.length >= 2 &&
+                  !lexicon.isDropped(word) &&
+                  lexicon.candidatesOf(word) != null)
+                word,
+          ];
     final best = <String, CompletionCandidate>{};
-    for (final row in await _index.characterMatches(chars, limit: 240)) {
-      if (row.label == text) continue;
-      final label = row.label.runes.map(String.fromCharCode).toList();
-      final common = _lcs(chars, label);
-      final similarity = common / math.max(chars.length, label.length);
-      if (common < 2 || similarity < 0.5) continue;
+    for (final row in await _index.characterMatches(text, scope: scope)) {
+      final label = chineseSearchKey(row.label);
+      if (label.startsWith(text)) continue;
+      final quality = chineseFuzzyQuality(text, label);
+      if (quality <= 0) continue;
+      final coverage = anchors.isEmpty
+          ? 1.0
+          : anchors.where(label.contains).length / anchors.length;
       _keepBest(
         best,
-        _labelCandidate(row, CompletionMatchKind.approximate, similarity),
+        _labelCandidate(
+          row,
+          CompletionMatchKind.approximate,
+          quality * (.82 + .18 * coverage),
+        ),
       );
     }
     return _top(best.values);
@@ -201,44 +224,57 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
 
   Future<List<CompletionCandidate>> _crossLingual(
     String text,
-    SearchLexicon lexicon,
+    CrossLingualLexicon lexicon,
     int strong,
   ) async {
     final groups = <List<String>>[];
     final words = <String>[];
-    for (final segment in lexicon.crossLingual.segment(text)) {
-      if (lexicon.crossLingual.isDropped(segment)) continue;
-      final candidates = lexicon.crossLingual.candidatesOf(segment);
-      if (candidates == null || candidates.isEmpty) continue;
-      groups.add(candidates);
-      words.add(segment);
+    var covered = 0;
+    var unknown = 0;
+    for (final run in _conceptRuns.allMatches(text.toLowerCase())) {
+      final part = run.group(0)!;
+      final chinese = _hanzi.hasMatch(part);
+      for (final segment in chinese ? lexicon.segment(part) : [part]) {
+        if (lexicon.isDropped(segment)) continue;
+        final alternatives = chinese ? lexicon.candidatesOf(segment) : [part];
+        if (alternatives == null) {
+          unknown += segment.length;
+          continue;
+        }
+        covered += segment.length;
+        if (words.contains(segment)) continue;
+        groups.add([
+          for (final term in alternatives)
+            EnglishWords.concepts(term).join(' '),
+        ]);
+        words.add(segment);
+      }
     }
-    // One known word only helps when nothing matched literally.
-    if (groups.isEmpty || (groups.length == 1 && strong > 0)) return const [];
-    final records = await _catalog.searchTokenGroups(groups);
-    final scored = <(double, TagCatalogRecord)>[];
-    for (final record in records) {
-      final extra = _unmatchedWords(record.canonicalTag, groups);
-      scored.add((1 / (1 + extra), record));
+    if (groups.isEmpty ||
+        groups.length > 8 ||
+        unknown > covered ||
+        (groups.length == 1 && (unknown > 0 || strong > 0))) {
+      return const [];
     }
-    scored.sort((a, b) {
-      final quality = b.$1.compareTo(a.$1);
-      if (quality != 0) return quality;
-      return b.$2.postCount.compareTo(a.$2.postCount);
-    });
+    final coverage = covered / (covered + unknown);
+    final confidence = (.6 + .4 * coverage) * (groups.length == 1 ? .82 : 1);
+    final best = <String, CompletionCandidate>{};
     final hint = words.join('·');
-    return [
-      for (final (quality, record) in scored.take(_perStage))
+    for (final row in await _index.conceptMatches(groups)) {
+      _keepBest(
+        best,
         CompletionCandidate(
-          canonicalTag: record.canonicalTag,
-          category: record.category,
-          postCount: record.postCount,
+          canonicalTag: row.tag,
+          category: TagCategory.general,
+          postCount: row.postCount,
           matchKind: CompletionMatchKind.crossLingual,
           sources: const {CompletionSourceKind.base},
           matchHint: hint,
-          matchQuality: quality,
+          matchQuality: confidence * _conceptQuality(row.tokens, groups),
         ),
-    ];
+      );
+    }
+    return _top(best.values);
   }
 
   // ------------------------------------------------------------ letters
@@ -253,16 +289,21 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
     if (settings.pinyinSearchEnabled) {
       final letters = token.toLowerCase().replaceAll(_separators, '');
       if (letters.length >= 2) {
-        results.addAll(await _pinyinLetters(letters, settings));
+        results.addAll(
+          await _pinyinLetters(letters, settings, query.typedCategoryScope),
+        );
       }
     }
     // Letters that read as whole syllables with matches are pinyin, not an
     // English typo (chenshan is not a misspelt henshin).
+    final shortInitials = token.length <= 3;
     final readsAsPinyin = results.any(
       (row) =>
           row.matchQuality >= 1 &&
           (row.matchKind == CompletionMatchKind.pinyin ||
-              row.matchKind == CompletionMatchKind.shuangpin),
+              row.matchKind == CompletionMatchKind.shuangpin ||
+              (shortInitials &&
+                  row.matchKind == CompletionMatchKind.pinyinInitials)),
     );
     final literal = primary.any(
       (row) => _literalEnglish.contains(row.matchKind),
@@ -277,12 +318,8 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
     CompletionQuery query,
     String token,
   ) async {
-    final words = token
-        .toLowerCase()
-        .split(_separators)
-        .where((word) => word.isNotEmpty)
-        .toList(growable: false);
-    if (words.isEmpty) return const [];
+    final words = EnglishWords.tokens(token).toList(growable: false);
+    if (words.isEmpty || words.length > 8) return const [];
     final results = <CompletionCandidate>[];
 
     final stems = words.map(EnglishWords.stem).toList(growable: false);
@@ -297,32 +334,47 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
       );
     }
 
-    final weights = await _index.vocabularyWeights(
-      words.where((word) => word.length >= 4),
-    );
-    final corrected = [...words];
-    var changed = false;
-    var distance = 0;
-    for (var i = 0; i < words.length; i++) {
-      final word = words[i];
-      if (word.length < 4 || weights.containsKey(word)) continue;
-      final suggestions = await _index.spellingSuggestions(word, limit: 1);
-      if (suggestions.isEmpty) continue;
-      corrected[i] = suggestions.first.word;
-      distance += suggestions.first.distance;
-      changed = true;
-    }
-    if (changed) {
-      results.addAll(
-        await _searchRewritten(
-          query,
-          corrected,
-          CompletionMatchKind.spellCorrected,
-          1 / (1 + distance),
+    final weights = await _index.vocabularyWeights(words);
+    final alternatives = await Future.wait([
+      for (final word in words)
+        if (weights.containsKey(word))
+          Future.value(const <SpellSuggestion>[])
+        else
+          _index.spellingSuggestions(word, limit: 10),
+    ]);
+    if (alternatives.every((choices) => choices.isEmpty)) return results;
+    final groups = [
+      for (var i = 0; i < words.length; i++)
+        [words[i], ...alternatives[i].map((item) => item.word)],
+    ];
+    final best = <String, CompletionCandidate>{};
+    for (final row in await _catalog.searchSpellingCandidates(
+      groups,
+      scope: query.typedCategoryScope,
+    )) {
+      final term = EnglishWords.tokens(
+        row.matchedAlias ?? row.canonicalTag,
+      ).toList(growable: false);
+      final corrected = <String>[];
+      var distance = 0;
+      for (var i = 0; i < words.length; i++) {
+        final matches = groups[i].where(term.contains);
+        if (matches.isEmpty) break;
+        final chosen = matches.first;
+        corrected.add(chosen);
+        distance += EnglishWords.distance(words[i], chosen);
+      }
+      if (corrected.length != words.length || distance == 0) continue;
+      final exact = term.join(' ') == corrected.join(' ');
+      _keepBest(
+        best,
+        row.copyWith(
+          matchHint: corrected.join(' '),
+          matchQuality: (1 - distance / (token.length + 2)) * (exact ? 1 : .67),
         ),
       );
     }
-    return results;
+    return [...results, ..._top(best.values)];
   }
 
   Future<List<CompletionCandidate>> _searchRewritten(
@@ -355,6 +407,7 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
   Future<List<CompletionCandidate>> _pinyinLetters(
     String letters,
     AutocompleteSettings settings,
+    Set<TagCategory>? scope,
   ) async {
     final lexicon = await _lexicon();
     final syllables = lexicon.pinyin.syllables;
@@ -375,6 +428,7 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
       final rows = await _index.pinyinMatches(
         'py : (^${terms.join(' + ')})',
         limit: 120,
+        scope: scope,
       );
       for (final row in rows) {
         final sameLength = row.pinyin.split(' ').length == pieces.length;
@@ -453,20 +507,6 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
     return label.length == query.length ? 1 : 0.6;
   }
 
-  static int _lcs(List<String> a, List<String> b) {
-    var previous = List<int>.filled(b.length + 1, 0);
-    for (var i = 1; i <= a.length; i++) {
-      final current = List<int>.filled(b.length + 1, 0);
-      for (var j = 1; j <= b.length; j++) {
-        current[j] = a[i - 1] == b[j - 1]
-            ? previous[j - 1] + 1
-            : math.max(previous[j], current[j - 1]);
-      }
-      previous = current;
-    }
-    return previous[b.length];
-  }
-
   static const Set<String> _stopWords = {
     'on',
     'in',
@@ -484,20 +524,28 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
     'up',
   };
 
-  /// Content words of [tag] that no query word accounts for.
-  static int _unmatchedWords(String tag, List<List<String>> groups) {
-    final stems = {
-      for (final group in groups)
-        for (final candidate in group)
-          for (final word in candidate.split('_'))
-            if (word.isNotEmpty) EnglishWords.stem(word),
-    };
-    var extra = 0;
-    for (final word in tag.toLowerCase().split(RegExp('[^a-z0-9]+'))) {
-      if (word.isEmpty || _stopWords.contains(word)) continue;
-      if (!stems.any(word.startsWith)) extra++;
+  static double _conceptQuality(String term, List<List<String>> groups) {
+    final padded = ' $term ';
+    final covered = <String>{};
+    var penalty = 0.0;
+    var last = -1;
+    for (final alternatives in groups) {
+      for (var i = 0; i < alternatives.length; i++) {
+        final alternative = alternatives[i];
+        final position = padded.indexOf(' $alternative ');
+        if (position < 0) continue;
+        if (position < last) penalty += .06;
+        penalty += i * .035;
+        covered.addAll(alternative.split(' '));
+        last = position;
+        break;
+      }
     }
-    return extra;
+    final extra = term
+        .split(' ')
+        .where((word) => !_stopWords.contains(word) && !covered.contains(word))
+        .length;
+    return ((1 - penalty) / (1 + extra * .48)).clamp(0, 1);
   }
 
   static CompletionCandidate _labelCandidate(
@@ -508,7 +556,7 @@ class LexicalEnhancementSource implements SupplementalCompletionSource {
     canonicalTag: row.tag,
     category: _category(row.category),
     postCount: row.postCount,
-    translation: row.label,
+    matchHint: row.label,
     matchKind: kind,
     sources: const {CompletionSourceKind.base},
     matchQuality: quality,

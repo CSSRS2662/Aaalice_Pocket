@@ -1,11 +1,9 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../database/services/service_providers.dart';
 import '../storage/local_storage_service.dart';
-import '../network/network_failure_diagnostics.dart';
 import '../network/network_client_provider.dart';
 import 'autocomplete_cache_database.dart';
 import 'autocomplete_settings.dart';
@@ -37,30 +35,19 @@ final autocompleteCacheStatisticsProvider =
       return ref.watch(autocompleteCacheDatabaseProvider).statistics();
     });
 
-final danbooruCompletionSourceProvider = Provider<DanbooruCompletionSource>((
-  ref,
-) {
-  final dio = ref
-      .watch(networkClientFactoryProvider)
-      .createDio(
-        BaseOptions(
-          baseUrl: 'https://danbooru.donmai.us',
-          connectTimeout: const Duration(seconds: 15),
-          receiveTimeout: const Duration(seconds: 15),
-          sendTimeout: const Duration(seconds: 15),
-          headers: const {
-            'Accept': 'application/json',
-            'User-Agent': 'Aaalice-NAI-Launcher/Autocomplete',
-          },
-        ),
+final onlineCompletionSourceProvider =
+    Provider.family<DanbooruCompletionSource, OnlineTagProvider>((
+      ref,
+      provider,
+    ) {
+      final source = DanbooruCompletionSource(
+        provider: provider,
+        clientFactory: ref.watch(networkClientFactoryProvider),
+        cache: ref.watch(autocompleteCacheDatabaseProvider),
       );
-  addNetworkFailureDiagnostics(dio, scope: 'Danbooru autocomplete');
-  ref.onDispose(dio.close);
-  return DanbooruCompletionSource(
-    dio: dio,
-    cache: ref.watch(autocompleteCacheDatabaseProvider),
-  );
-});
+      ref.onDispose(source.dispose);
+      return source;
+    });
 
 class AutocompleteServices {
   const AutocompleteServices({
@@ -68,6 +55,7 @@ class AutocompleteServices {
     required this.dictionaryTranslations,
     required this.llmTranslations,
     required this.danbooru,
+    this.aibooru,
     this.tagLookupSources = const [],
     this.libraryAliases,
     this.semanticSource,
@@ -84,6 +72,7 @@ class AutocompleteServices {
   final TranslationResolver dictionaryTranslations;
   final TranslationResolver llmTranslations;
   final DanbooruCompletionSource danbooru;
+  final DanbooruCompletionSource? aibooru;
   final CompletionSource? libraryAliases;
   final CompletionSource? semanticSource;
 
@@ -116,6 +105,7 @@ class AutocompleteServices {
     dictionaryTranslations: dictionaryTranslations,
     llmTranslations: llmTranslations,
     danbooru: danbooru,
+    aibooru: aibooru,
     libraryAliases: libraryAliases,
     semanticSource: semanticSource,
     supplementalSources: supplementalSources,

@@ -487,6 +487,38 @@ class AgentChatPanelCoordinator {
     await _notifier.deleteSession(sessionId);
   }
 
+  Future<void> _clearContext(BuildContext context, AgentChatState state) async {
+    if (!canManageAgentChatSessions(state) ||
+        state.activeSessionId.isEmpty ||
+        state.compacting) {
+      return;
+    }
+    final l10n = context.l10n;
+    final confirmed = await ThemedConfirmDialog.show(
+      context: context,
+      title: l10n.agentChat_clearContext,
+      content: l10n.agentChat_clearContextConfirm,
+      confirmText: l10n.common_clear,
+      type: ThemedConfirmDialogType.danger,
+      icon: Icons.cleaning_services_outlined,
+    );
+    if (!confirmed || !_isMounted() || !context.mounted) return;
+    final current = _ref.read(agentChatNotifierProvider);
+    if (current.activeSessionId != state.activeSessionId ||
+        !canManageAgentChatSessions(current) ||
+        current.compacting) {
+      return;
+    }
+    _controller.cancelEditingUserMessage();
+    try {
+      await _notifier.clearContext(state.activeSessionId);
+    } catch (_) {
+      if (context.mounted) {
+        AppToast.error(context, l10n.agentChat_clearContextFailed);
+      }
+    }
+  }
+
   Future<void> _handleMoreAction(
     BuildContext context,
     AgentChatState state,
@@ -503,6 +535,8 @@ class AgentChatPanelCoordinator {
         final outcome = await _notifier.compactNow();
         if (!_isMounted() || !context.mounted) return;
         _reportCompaction(context, outcome);
+      case AgentChatMoreAction.clearContext:
+        await _clearContext(context, state);
       case AgentChatMoreAction.delete:
         await _deleteSession(context, state.activeSessionId);
     }

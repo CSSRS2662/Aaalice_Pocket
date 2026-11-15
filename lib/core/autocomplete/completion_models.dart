@@ -166,6 +166,7 @@ class CompletionQuery {
     }
     return typedCategories.isEmpty ? null : typedCategories;
   }
+
   bool get isEnglish => !isChinese;
 
   CompletionQuery copyWith({
@@ -250,8 +251,7 @@ class CompletionCandidate {
   /// Chinese words a cross-lingual query was split into.
   final String? matchHint;
 
-  /// 0..1 closeness within the match kind (exact over prefix over contains);
-  /// orders rows of the same kind before popularity.
+  /// 0..1 confidence from the lexical evidence, before cross-source fusion.
   final double matchQuality;
 
   String get stableId => canonicalTag.toLowerCase();
@@ -338,6 +338,37 @@ abstract interface class ScopedTranslationResolver
   TranslationResolver createScope();
 }
 
+enum OnlineTagProvider {
+  danbooru('Danbooru', 'https://danbooru.donmai.us'),
+  aibooru('AIBooru', 'https://aibooru.online');
+
+  const OnlineTagProvider(this.label, this.baseUrl);
+
+  final String label;
+  final String baseUrl;
+
+  OnlineTagProvider get alternate => this == danbooru ? aibooru : danbooru;
+}
+
+enum CompletionRemoteErrorKind {
+  http,
+  timeout,
+  dns,
+  tls,
+  connection,
+  invalidResponse,
+  cooldown,
+  unexpected,
+}
+
+class CompletionRemoteError {
+  const CompletionRemoteError(this.kind, {this.statusCode, this.waitSeconds});
+
+  final CompletionRemoteErrorKind kind;
+  final int? statusCode;
+  final int? waitSeconds;
+}
+
 class CompletionState {
   const CompletionState({
     this.query,
@@ -346,6 +377,7 @@ class CompletionState {
     this.isRemoteLoading = false,
     this.localError,
     this.remoteError,
+    this.remoteProvider,
     this.translationError,
   });
 
@@ -354,7 +386,8 @@ class CompletionState {
   final bool isLocalLoading;
   final bool isRemoteLoading;
   final String? localError;
-  final String? remoteError;
+  final CompletionRemoteError? remoteError;
+  final OnlineTagProvider? remoteProvider;
   final String? translationError;
 
   CompletionState copyWith({
@@ -364,8 +397,9 @@ class CompletionState {
     bool? isRemoteLoading,
     String? localError,
     bool clearLocalError = false,
-    String? remoteError,
+    CompletionRemoteError? remoteError,
     bool clearRemoteError = false,
+    OnlineTagProvider? remoteProvider,
     String? translationError,
     bool clearTranslationError = false,
   }) {
@@ -376,6 +410,7 @@ class CompletionState {
       isRemoteLoading: isRemoteLoading ?? this.isRemoteLoading,
       localError: clearLocalError ? null : localError ?? this.localError,
       remoteError: clearRemoteError ? null : remoteError ?? this.remoteError,
+      remoteProvider: remoteProvider ?? this.remoteProvider,
       translationError: clearTranslationError
           ? null
           : translationError ?? this.translationError,

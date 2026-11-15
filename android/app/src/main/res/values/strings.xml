@@ -5,4 +5,8 @@
     <string name="generation_notification_channel_description">Keeps active generation and Agent tasks running in the background</string>
     <string name="generation_notification_title">AI task in progress</string>
     <string name="generation_notification_text">Generation or Agent tasks are running. Tap to return to the app.</string>
+    <string name="generation_batch_notification_title">Generating in batches</string>
+    <string name="generation_batch_notification_progress">Batch %1$d of %2$d · %3$d%%</string>
+    <string name="generation_queue_notification_title">Generation queue</string>
+    <string name="generation_queue_notification_progress">Task %1$d of %2$d · %3$d%%</string>
 </resources>

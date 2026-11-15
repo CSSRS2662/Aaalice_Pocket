@@ -556,8 +556,8 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
         signal: signal,
       );
       final compactResult = result.valueOrNull;
-      state = state.copyWith(compacting: false);
       if (compactResult == null) {
+        state = state.copyWith(compacting: false);
         final error = result.errorOrNull;
         return (
           messages: messages,
@@ -602,6 +602,7 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
         contextWindow: contextWindow,
       );
       state = state.copyWith(
+        compacting: false,
         messages: List.of(compressed),
         totalUsage: _sessionController.totalUsage,
         lastRequestUsage: compactResult.usage,
@@ -1037,6 +1038,13 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
     _refreshRoute();
   }
 
+  Future<void> clearContext(String sessionId) async {
+    await ensureInitialized();
+    if (!mounted || _runActive) return;
+    await _sessionController.clearContext(sessionId);
+    if (mounted) _refreshRoute();
+  }
+
   /// 将主分支回退到最后一条用户消息之前，并返回该消息供输入框恢复。
   ///
   /// 原条目仍保留在会话树中，只移动 main lane 指针；后续发送会从回退点
@@ -1446,7 +1454,9 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
   /// 手动 compaction。
   Future<AgentChatCompactionOutcome> compactNow() async {
     final agent = _sessionController.agent;
-    if (agent == null || state.status == AgentChatRunStatus.running) {
+    if (agent == null ||
+        !canManageAgentChatSessions(state) ||
+        state.compacting) {
       return const AgentChatCompactionSkipped(
         AgentChatCompactionSkipReason.busy,
       );

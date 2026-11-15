@@ -5,4 +5,8 @@
     <string name="generation_notification_channel_description">進行中の画像生成と Agent タスクをバックグラウンドで継続します</string>
     <string name="generation_notification_title">AI タスクを実行中</string>
     <string name="generation_notification_text">画像生成または Agent タスクを実行中です。タップしてアプリに戻ります。</string>
+    <string name="generation_batch_notification_title">バッチ生成中</string>
+    <string name="generation_batch_notification_progress">バッチ %1$d / %2$d · %3$d%%</string>
+    <string name="generation_queue_notification_title">生成キュー</string>
+    <string name="generation_queue_notification_progress">タスク %1$d / %2$d · %3$d%%</string>
 </resources>

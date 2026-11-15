@@ -4,6 +4,13 @@ import 'dart:math' as math;
 /// participle phrases, so a light suffix stemmer suffices: its stems are only
 /// used as search prefixes, never shown.
 abstract final class EnglishWords {
+  static final _wordBoundary = RegExp(r'[^a-z0-9]+');
+
+  static Iterable<String> tokens(String text) =>
+      text.toLowerCase().split(_wordBoundary).where((word) => word.isNotEmpty);
+
+  static List<String> concepts(String text) => tokens(text).map(stem).toList();
+
   static final RegExp _consonantPair = RegExp(r'([bcdfgklmnprstvz])\1$');
 
   /// `socks` → sock, `dresses` → dress, `sitting` → sit, `curled` → curl.
@@ -71,6 +78,16 @@ abstract final class EnglishWords {
     for (var i = 0; i < word.length; i++)
       word.substring(0, i) + word.substring(i + 1),
   };
+
+  /// A compact posting key. The original word is always checked with
+  /// [distance], so collisions cannot turn into matches.
+  static int deletionKey(String word) {
+    var key = 0x811c9dc5;
+    for (final unit in word.codeUnits) {
+      key = ((key ^ unit) * 16777619) & 0xffffffff;
+    }
+    return key;
+  }
 
   /// Deletion neighbourhood up to [depth] letters, including [word] itself.
   /// Against an index of words plus their single deletions it finds words one

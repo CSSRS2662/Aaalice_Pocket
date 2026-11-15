@@ -15,6 +15,8 @@ class AutocompleteSettings {
     this.replaceUnderscores = false,
     this.openOnTagClick = false,
     this.danbooruEnabled = true,
+    this.onlineTagProvider = OnlineTagProvider.danbooru,
+    this.onlineTagFallback = false,
     this.relatedTagsEnabled = true,
     this.autoDownloadRelatedData = true,
     this.llmTranslationEnabled = false,
@@ -40,6 +42,8 @@ class AutocompleteSettings {
   final bool replaceUnderscores;
   final bool openOnTagClick;
   final bool danbooruEnabled;
+  final OnlineTagProvider onlineTagProvider;
+  final bool onlineTagFallback;
   final bool relatedTagsEnabled;
   final bool autoDownloadRelatedData;
   final bool llmTranslationEnabled;
@@ -83,6 +87,8 @@ class AutocompleteSettings {
     bool? replaceUnderscores,
     bool? openOnTagClick,
     bool? danbooruEnabled,
+    OnlineTagProvider? onlineTagProvider,
+    bool? onlineTagFallback,
     bool? relatedTagsEnabled,
     bool? autoDownloadRelatedData,
     bool? llmTranslationEnabled,
@@ -108,6 +114,8 @@ class AutocompleteSettings {
       replaceUnderscores: replaceUnderscores ?? this.replaceUnderscores,
       openOnTagClick: openOnTagClick ?? this.openOnTagClick,
       danbooruEnabled: danbooruEnabled ?? this.danbooruEnabled,
+      onlineTagProvider: onlineTagProvider ?? this.onlineTagProvider,
+      onlineTagFallback: onlineTagFallback ?? this.onlineTagFallback,
       relatedTagsEnabled: relatedTagsEnabled ?? this.relatedTagsEnabled,
       autoDownloadRelatedData:
           autoDownloadRelatedData ?? this.autoDownloadRelatedData,
@@ -199,6 +207,16 @@ class AutocompleteSettingsNotifier extends StateNotifier<AutocompleteSettings> {
               StorageKeys.autocompleteDanbooruEnabled,
               defaultValue: true,
             ) ??
+            true,
+        onlineTagProvider:
+            storage.getSetting<Object>(StorageKeys.autocompleteOnlineSource) ==
+                OnlineTagProvider.aibooru.name
+            ? OnlineTagProvider.aibooru
+            : OnlineTagProvider.danbooru,
+        onlineTagFallback:
+            storage.getSetting<Object>(
+              StorageKeys.autocompleteOnlineFallback,
+            ) ==
             true,
         relatedTagsEnabled:
             storage.getSetting<bool>(
@@ -406,6 +424,18 @@ class AutocompleteSettingsNotifier extends StateNotifier<AutocompleteSettings> {
   Future<void> setDanbooruEnabled(bool value) => _set(
     state.copyWith(danbooruEnabled: value),
     StorageKeys.autocompleteDanbooruEnabled,
+    value,
+  );
+
+  Future<void> setOnlineTagProvider(OnlineTagProvider value) => _set(
+    state.copyWith(onlineTagProvider: value),
+    StorageKeys.autocompleteOnlineSource,
+    value.name,
+  );
+
+  Future<void> setOnlineTagFallback(bool value) => _set(
+    state.copyWith(onlineTagFallback: value),
+    StorageKeys.autocompleteOnlineFallback,
     value,
   );
 

@@ -1,14 +1,17 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 
-import '../utils/app_logger.dart';
 import '../network/network_client_factory.dart';
+import '../network/network_failure_diagnostics.dart';
+import '../utils/app_logger.dart';
 import 'autocomplete_cache_database.dart';
 import 'completion_models.dart';
 
 class DanbooruCompletionSource implements CompletionSource {
   DanbooruCompletionSource({
+    this.provider = OnlineTagProvider.danbooru,
     Dio? dio,
     NetworkClientFactory? clientFactory,
     required AutocompleteCacheDatabase cache,
@@ -18,7 +21,7 @@ class DanbooruCompletionSource implements CompletionSource {
            dio ??
            (clientFactory ?? NetworkClientFactory()).createDio(
              BaseOptions(
-               baseUrl: 'https://danbooru.donmai.us',
+               baseUrl: provider.baseUrl,
                connectTimeout: const Duration(seconds: 15),
                receiveTimeout: const Duration(seconds: 15),
                sendTimeout: const Duration(seconds: 15),
@@ -27,8 +30,16 @@ class DanbooruCompletionSource implements CompletionSource {
                  'User-Agent': 'Aaalice-NAI-Launcher/Autocomplete',
                },
              ),
-           );
+           ) {
+    if (_ownsDio) {
+      addNetworkFailureDiagnostics(
+        _dio,
+        scope: '${provider.label} autocomplete',
+      );
+    }
+  }
 
+  final OnlineTagProvider provider;
   final Dio _dio;
   final bool _ownsDio;
   final AutocompleteCacheDatabase _cache;
@@ -37,13 +48,24 @@ class DanbooruCompletionSource implements CompletionSource {
   DateTime? _lastRequestAt;
   DateTime? _breakerOpenUntil;
   int _consecutiveFailures = 0;
-  String? _lastError;
+  int _requestSequence = 0;
+  CompletionRemoteError? _lastError;
 
   bool get circuitOpen =>
       _breakerOpenUntil != null && DateTime.now().isBefore(_breakerOpenUntil!);
-  String? get lastError => _lastError;
+  CompletionRemoteError? get lastError => _lastError;
+
+  String get _cachePrefix =>
+      provider == OnlineTagProvider.danbooru ? '' : '${provider.name}:';
+
+  int? get _waitSeconds {
+    final milliseconds =
+        _breakerOpenUntil?.difference(DateTime.now()).inMilliseconds ?? 0;
+    return milliseconds > 0 ? (milliseconds / 1000).ceil() : null;
+  }
 
   void cancelPending() {
+    _requestSequence++;
     _cancelToken?.cancel('Autocomplete query replaced');
     _cancelToken = null;
   }
@@ -55,14 +77,18 @@ class DanbooruCompletionSource implements CompletionSource {
 
   @override
   Future<List<CompletionCandidate>> search(CompletionQuery query) async {
+    cancelPending();
+    final sequence = _requestSequence;
     final token = query.token.trim().toLowerCase();
     if (query.isChinese || token.length < 2) return const [];
     final scope = query.typedCategoryScope;
     if (scope != null && scope.isEmpty) return const [];
     // The API filters one category; several are narrowed after the fetch.
-    final apiCategory = scope != null && scope.length == 1 ? scope.single : null;
+    final apiCategory = scope != null && scope.length == 1
+        ? scope.single
+        : null;
     final key =
-        'tags:$token:${scope == null ? 'all' : (scope.map((c) => c.value).toList()..sort()).join('+')}'
+        '${_cachePrefix}tags:$token:${scope == null ? 'all' : (scope.map((c) => c.value).toList()..sort()).join('+')}'
         ':${query.limit}';
     final now = DateTime.now();
     final memory = _memory[key];
@@ -73,6 +99,7 @@ class DanbooruCompletionSource implements CompletionSource {
     }
 
     final disk = await _cache.getRemote(key);
+    if (sequence != _requestSequence) return const [];
     if (disk != null &&
         now.toUtc().difference(disk.fetchedAt) < const Duration(days: 7)) {
       final candidates = _decodeCandidates(disk.payload);
@@ -81,11 +108,10 @@ class DanbooruCompletionSource implements CompletionSource {
       return candidates;
     }
     if (circuitOpen) {
-      _lastError = 'Danbooru requests are temporarily paused';
+      _recordCooldown();
       return _staleCandidates(disk, now);
     }
 
-    cancelPending();
     final cancelToken = CancelToken();
     _cancelToken = cancelToken;
     try {
@@ -114,8 +140,9 @@ class DanbooruCompletionSource implements CompletionSource {
           cancelToken: cancelToken,
         );
         final data = response.data;
+        if (sequence != _requestSequence) return const [];
         if (data is! List) {
-          throw StateError('Unexpected Danbooru tags response');
+          throw const FormatException('Unexpected Danbooru tags response');
         }
         candidates.addAll(_extractTagCandidates(data, token));
         if (data.length < pageSize) break;
@@ -127,19 +154,26 @@ class DanbooruCompletionSource implements CompletionSource {
       _memory[key] = _MemoryEntry(candidates, now);
       return candidates;
     } on DioException catch (error, stack) {
-      if (CancelToken.isCancel(error)) return const [];
-      _lastError = error.message ?? error.toString();
+      if (sequence != _requestSequence || CancelToken.isCancel(error)) {
+        return const [];
+      }
       _registerFailure();
+      _lastError = _describeDioFailure(error);
       AppLogger.w(
-        'Danbooru autocomplete request failed: $error',
+        '${provider.label} autocomplete request failed: $error',
         'Autocomplete',
       );
       AppLogger.d('$stack', 'Autocomplete');
       return _staleCandidates(disk, now);
     } catch (error, stack) {
-      _lastError = error.toString();
+      if (sequence != _requestSequence) return const [];
       _registerFailure();
-      AppLogger.e('Danbooru autocomplete response failed', error, stack);
+      _recordResponseFailure(error);
+      AppLogger.e(
+        '${provider.label} autocomplete response failed',
+        error,
+        stack,
+      );
       return _staleCandidates(disk, now);
     } finally {
       if (identical(_cancelToken, cancelToken)) _cancelToken = null;
@@ -150,12 +184,14 @@ class DanbooruCompletionSource implements CompletionSource {
     String tag, {
     int limit = 20,
   }) async {
+    cancelPending();
+    final sequence = _requestSequence;
     final normalized = tag.trim().toLowerCase().replaceAll(' ', '_');
     if (normalized.isEmpty) return const [];
     final requestedLimit = CompletionResultLimits.isAll(limit)
         ? 500
         : limit.clamp(1, 500);
-    final key = 'related:v3:$normalized:$requestedLimit';
+    final key = '${_cachePrefix}related:v3:$normalized:$requestedLimit';
     final now = DateTime.now();
     final memory = _memory[key];
     if (memory != null &&
@@ -164,6 +200,7 @@ class DanbooruCompletionSource implements CompletionSource {
       return memory.candidates;
     }
     final disk = await _cache.getRemote(key);
+    if (sequence != _requestSequence) return const [];
     if (disk != null &&
         now.toUtc().difference(disk.fetchedAt) < const Duration(days: 7)) {
       final candidates = _decodeCandidates(disk.payload);
@@ -172,10 +209,9 @@ class DanbooruCompletionSource implements CompletionSource {
       return candidates;
     }
     if (circuitOpen) {
-      _lastError = 'Danbooru requests are temporarily paused';
+      _recordCooldown();
       return _staleCandidates(disk, now);
     }
-    cancelPending();
     final cancelToken = CancelToken();
     _cancelToken = cancelToken;
     try {
@@ -193,25 +229,76 @@ class DanbooruCompletionSource implements CompletionSource {
         response.data,
         requestedLimit,
       );
+      if (sequence != _requestSequence) return const [];
       await _cache.putRemote(key, candidates.map(_encodeCandidate).toList());
+      if (sequence != _requestSequence) return const [];
       _memory[key] = _MemoryEntry(candidates, now);
       _consecutiveFailures = 0;
       _lastError = null;
       return candidates;
     } on DioException catch (error) {
-      if (CancelToken.isCancel(error)) return const [];
-      _lastError = error.message ?? error.toString();
+      if (sequence != _requestSequence || CancelToken.isCancel(error)) {
+        return const [];
+      }
       _registerFailure();
-      AppLogger.w('Danbooru related tags failed: $error');
+      _lastError = _describeDioFailure(error);
+      AppLogger.w('${provider.label} related tags failed: $error');
       return _staleCandidates(disk, now);
     } catch (error) {
-      _lastError = error.toString();
+      if (sequence != _requestSequence) return const [];
       _registerFailure();
-      AppLogger.w('Danbooru related tags failed: $error');
+      _recordResponseFailure(error);
+      AppLogger.w('${provider.label} related tags failed: $error');
       return _staleCandidates(disk, now);
     } finally {
       if (identical(_cancelToken, cancelToken)) _cancelToken = null;
     }
+  }
+
+  void _recordCooldown() {
+    _lastError = CompletionRemoteError(
+      CompletionRemoteErrorKind.cooldown,
+      waitSeconds: _waitSeconds,
+    );
+  }
+
+  void _recordResponseFailure(Object error) {
+    _lastError = CompletionRemoteError(
+      error is FormatException
+          ? CompletionRemoteErrorKind.invalidResponse
+          : CompletionRemoteErrorKind.unexpected,
+      waitSeconds: _waitSeconds,
+    );
+  }
+
+  CompletionRemoteError _describeDioFailure(DioException error) {
+    final cause = error.error;
+    final statusCode = error.type == DioExceptionType.badResponse
+        ? error.response?.statusCode
+        : null;
+    final kind = switch (error.type) {
+      DioExceptionType.badResponse when statusCode != null =>
+        CompletionRemoteErrorKind.http,
+      DioExceptionType.connectionTimeout ||
+      DioExceptionType.sendTimeout ||
+      DioExceptionType.receiveTimeout => CompletionRemoteErrorKind.timeout,
+      DioExceptionType.badCertificate => CompletionRemoteErrorKind.tls,
+      _ when cause is TlsException => CompletionRemoteErrorKind.tls,
+      _
+          when cause is SocketException &&
+              cause.message.startsWith('Failed host lookup') =>
+        CompletionRemoteErrorKind.dns,
+      DioExceptionType.connectionError => CompletionRemoteErrorKind.connection,
+      _ when cause is SocketException => CompletionRemoteErrorKind.connection,
+      _ when cause is FormatException =>
+        CompletionRemoteErrorKind.invalidResponse,
+      _ => CompletionRemoteErrorKind.unexpected,
+    };
+    return CompletionRemoteError(
+      kind,
+      statusCode: statusCode,
+      waitSeconds: _waitSeconds,
+    );
   }
 
   Future<Response<dynamic>> _requestWithRetry(
@@ -232,16 +319,34 @@ class DanbooruCompletionSource implements CompletionSource {
         if (CancelToken.isCancel(error)) rethrow;
         final status = error.response?.statusCode;
         if (status != 429 && status != 503) rethrow;
+        final retryAfter = error.response?.headers.value('retry-after');
+        if (retryAfter != null && _pauseUntilRetryAfter(retryAfter)) rethrow;
         if (attempt == 1) rethrow;
-        final retryAfter = int.tryParse(
-          error.response?.headers.value('retry-after') ?? '',
-        );
-        await Future<void>.delayed(
-          Duration(seconds: (retryAfter ?? 1).clamp(1, 5)),
-        );
+        await Future<void>.delayed(const Duration(seconds: 1));
       }
     }
     throw lastError!;
+  }
+
+  bool _pauseUntilRetryAfter(String value) {
+    final now = DateTime.now();
+    final seconds = int.tryParse(value.trim());
+    DateTime until;
+    if (seconds != null) {
+      if (seconds <= 0) return false;
+      until = now.add(Duration(seconds: seconds));
+    } else {
+      try {
+        until = HttpDate.parse(value);
+      } on FormatException {
+        return false;
+      }
+      if (!until.isAfter(now)) return false;
+    }
+    if (_breakerOpenUntil == null || until.isAfter(_breakerOpenUntil!)) {
+      _breakerOpenUntil = until;
+    }
+    return true;
   }
 
   Future<void> _waitForRateLimit() async {
@@ -258,7 +363,10 @@ class DanbooruCompletionSource implements CompletionSource {
   void _registerFailure() {
     _consecutiveFailures++;
     if (_consecutiveFailures >= 3) {
-      _breakerOpenUntil = DateTime.now().add(const Duration(seconds: 30));
+      final until = DateTime.now().add(const Duration(seconds: 30));
+      if (_breakerOpenUntil == null || until.isAfter(_breakerOpenUntil!)) {
+        _breakerOpenUntil = until;
+      }
       _consecutiveFailures = 0;
     }
   }
@@ -346,7 +454,9 @@ class DanbooruCompletionSource implements CompletionSource {
     dynamic values;
     if (data is Map) values = data['related_tags'] ?? data['tags'];
     values ??= data;
-    if (values is! List) return const [];
+    if (values is! List) {
+      throw const FormatException('Unexpected Danbooru related tags response');
+    }
 
     final candidates = <CompletionCandidate>[];
     for (final item in values) {
@@ -372,6 +482,7 @@ class DanbooruCompletionSource implements CompletionSource {
         postCount = (tag['post_count'] as num?)?.toInt() ?? 0;
         relatedScore =
             (item['jaccard'] as num?)?.toDouble() ??
+            (item['jaccard_similarity'] as num?)?.toDouble() ??
             (item['score'] as num?)?.toDouble() ??
             (item['similarity'] as num?)?.toDouble() ??
             (item['frequency'] as num?)?.toDouble();

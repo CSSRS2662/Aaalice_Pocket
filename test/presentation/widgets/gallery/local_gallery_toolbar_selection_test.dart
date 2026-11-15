@@ -235,6 +235,28 @@ void main() {
     expect(calls, ['clear-collection']);
   });
 
+  testWidgets('同词在分类右侧，可以切换进出分组浏览', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final container = await _pumpToolbar(tester, selectionActive: false);
+    final chip = find.byKey(const ValueKey('local-gallery-same-prompt-chip'));
+    final category = find.byKey(
+      const ValueKey('local-gallery-collection-chip'),
+    );
+
+    expect(
+      tester.getTopLeft(chip).dx,
+      greaterThan(tester.getTopRight(category).dx),
+    );
+    await tester.tap(chip);
+    await tester.pump();
+    expect(container.read(localGallerySamePromptViewProvider), isTrue);
+    await tester.tap(chip);
+    await tester.pump();
+    expect(container.read(localGallerySamePromptViewProvider), isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('更多菜单收纳日期分组、跳转、撤销重做与刷新', (tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

@@ -139,6 +139,38 @@ const _touch = InteractionPolicy(
 );
 
 void main() {
+  testWidgets('related service failure shows a reason and diagnostic details', (
+    tester,
+  ) async {
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await _pumpOverlay(
+      tester,
+      scrollController: controller,
+      width: 320,
+      textScale: 3,
+      state: CompletionState(
+        query: _typedQuery.copyWith(token: '', relatedTag: 'blood_sucking'),
+        remoteProvider: OnlineTagProvider.aibooru,
+        remoteError: const CompletionRemoteError(
+          CompletionRemoteErrorKind.http,
+          statusCode: 503,
+          waitSeconds: 30,
+        ),
+      ),
+    );
+
+    expect(find.text('服务暂不可用（HTTP 503）'), findsOneWidget);
+    final detail = find.byWidgetPredicate(
+      (widget) =>
+          widget is Tooltip &&
+          widget.message?.contains('AIBooru · /related_tag.json') == true &&
+          widget.message?.contains('本次请求需等待 30 秒后再试') == true,
+    );
+    expect(detail, findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('tiles keep every piece of candidate information', (
     tester,
   ) async {

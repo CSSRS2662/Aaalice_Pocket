@@ -61,6 +61,50 @@ void main() {
     await releaseNext();
   });
 
+  test(
+    'progress follows the queue and falls back to the active owner',
+    () async {
+      final updates = <Object?>[];
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call.method);
+        if (call.method == 'updateProgress') updates.add(call.arguments);
+        return null;
+      });
+      final agent = await service.acquire();
+      final batch = await service.acquireGeneration();
+      final queue = await service.acquireGeneration(queue: true);
+
+      batch.update(current: 1, total: 3, progress: 0.16);
+      queue.update(current: 1, total: 4, progress: 0.1);
+      queue.update(current: 2, total: 4, progress: 0.34);
+      await Future<void>.delayed(const Duration(milliseconds: 310));
+      expect(updates, [
+        {'current': 2, 'total': 4, 'percent': 34, 'queue': true},
+      ]);
+
+      batch.update(current: 2, total: 3, progress: 0.45);
+      await Future<void>.delayed(const Duration(milliseconds: 310));
+      expect(updates, hasLength(1));
+
+      await queue.release();
+      expect(updates.last, {
+        'current': 2,
+        'total': 3,
+        'percent': 45,
+        'queue': false,
+      });
+      await batch.release();
+      expect(updates.last, isNull);
+
+      batch.update(current: 3, total: 3, progress: 1);
+      await Future<void>.delayed(const Duration(milliseconds: 310));
+      expect(updates, hasLength(3));
+      expect(calls, isNot(contains('stop')));
+      await agent();
+      expect(calls.last, 'stop');
+    },
+  );
+
   test('failed start is reported and does not acquire an owner', () async {
     var failed = false;
     messenger.setMockMethodCallHandler(channel, (call) async {

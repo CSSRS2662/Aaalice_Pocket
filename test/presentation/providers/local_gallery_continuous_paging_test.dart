@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nai_launcher/core/constants/storage_keys.dart';
 import 'package:nai_launcher/data/models/gallery/local_image_record.dart';
 import 'package:nai_launcher/data/services/gallery/gallery_filter_service.dart';
 import 'package:nai_launcher/data/services/gallery/unified_gallery_service.dart';
@@ -12,6 +15,17 @@ import 'package:nai_launcher/presentation/providers/local_gallery_provider.dart'
 
 void main() {
   late _PagedGalleryService service;
+
+  setUpAll(() async {
+    final scratch = await Directory('tool/.tmp').create(recursive: true);
+    final storage = await scratch.createTemp('gallery-views-');
+    Hive.init(storage.path);
+    addTearDown(() async {
+      await Hive.close();
+      await storage.delete(recursive: true);
+    });
+    await Hive.openBox(StorageKeys.settingsBox);
+  });
 
   setUp(() => service = _PagedGalleryService(total: 120));
 
@@ -32,6 +46,77 @@ void main() {
       .toList();
 
   group('continuous paging', () {
+    test(
+      'gallery restores same-prompt, date and ordinary views from disk',
+      () async {
+        Future<ProviderContainer> restart() async {
+          await Hive.box(StorageKeys.settingsBox).close();
+          await Hive.openBox(StorageKeys.settingsBox);
+          return createContainer();
+        }
+
+        final first = createContainer().read(
+          localGalleryNotifierProvider.notifier,
+        );
+        await first.initialize();
+        await first.setGroupedView(true);
+        await first.setSamePromptView(true);
+
+        final samePrompt = await restart();
+        final notifier = samePrompt.read(localGalleryNotifierProvider.notifier);
+        expect(samePrompt.read(localGallerySamePromptViewProvider), isTrue);
+        await notifier.initialize();
+        expect(
+          samePrompt.read(localGalleryNotifierProvider).groupedImages,
+          hasLength(120),
+        );
+        await notifier.setSamePromptView(false);
+
+        final date = await restart();
+        final dateNotifier = date.read(localGalleryNotifierProvider.notifier);
+        expect(date.read(localGallerySamePromptViewProvider), isFalse);
+        expect(date.read(localGalleryNotifierProvider).isGroupedView, isTrue);
+        await dateNotifier.initialize();
+        expect(
+          date.read(localGalleryNotifierProvider).groupedImages,
+          hasLength(120),
+        );
+        await dateNotifier.setGroupedView(false);
+
+        final ordinary = await restart();
+        expect(ordinary.read(localGallerySamePromptViewProvider), isFalse);
+        expect(
+          ordinary.read(localGalleryNotifierProvider).isGroupedView,
+          isFalse,
+        );
+        await ordinary.read(localGalleryNotifierProvider.notifier).initialize();
+        expect(paths(ordinary), hasLength(50));
+      },
+    );
+
+    test(
+      'same-prompt mode loads every filtered page and restores paging',
+      () async {
+        final container = createContainer();
+        final notifier = container.read(localGalleryNotifierProvider.notifier);
+        await notifier.initialize();
+        await notifier.loadPage(1);
+        service.loadedPages.clear();
+
+        await notifier.setSamePromptView(true);
+
+        final state = container.read(localGalleryNotifierProvider);
+        expect(container.read(localGallerySamePromptViewProvider), isTrue);
+        expect(service.loadedPages, [0, 1]);
+        expect(state.groupedImages, hasLength(120));
+        expect(state.currentPage, 1);
+
+        await notifier.setSamePromptView(false);
+        expect(container.read(localGallerySamePromptViewProvider), isFalse);
+        expect(paths(container).first, 'img_50');
+      },
+    );
+
     test('loadMore 追加下一页，到最后一页后不再请求', () async {
       final container = createContainer();
       final notifier = container.read(localGalleryNotifierProvider.notifier);

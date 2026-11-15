@@ -135,8 +135,13 @@ void main() {
     expect(params.isSeedLocked, isFalse);
     expect(container.read(generationParamsNotifierProvider).seed, -1);
     expect(find.byIcon(Icons.lock_outline_rounded), findsNothing);
-    expect(find.text('$seed'), findsNothing);
-    expect(find.text('随机'), findsOneWidget);
+    expect(find.text('$seed'), findsOneWidget);
+    expect(find.text('随机'), findsNothing);
+
+    await tester.tap(find.text('$seed'));
+    await tester.pump();
+    expect(params.isSeedLocked, isTrue);
+    expect(container.read(generationParamsNotifierProvider).seed, seed);
   });
 
   testWidgets('生成结果不带 metadata 时从 PNG 字节解析出种子', (tester) async {

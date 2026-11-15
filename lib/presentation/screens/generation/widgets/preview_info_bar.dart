@@ -18,7 +18,7 @@ import 'prompt_input_footer.dart';
 /// 自左向右：分辨率胶囊 → 透明底色入口 → 可选对比开关 → 种子胶囊。
 /// 透明底色入口向上弹出档位浮层；触屏设备在支持的模型下把生成用的
 /// 透明背景开关（图标 + 文字 + 开关）固定在最右侧，提示词页不再重复。
-class PreviewInfoBar extends ConsumerStatefulWidget {
+class PreviewInfoBar extends ConsumerWidget {
   final GeneratedImage? image;
   final int? width;
   final int? height;
@@ -45,13 +45,6 @@ class PreviewInfoBar extends ConsumerStatefulWidget {
     return scaledLine < barHeight ? barHeight : scaledLine;
   }
 
-  @override
-  ConsumerState<PreviewInfoBar> createState() => _PreviewInfoBarState();
-}
-
-class _PreviewInfoBarState extends ConsumerState<PreviewInfoBar> {
-  bool _seedCleared = false;
-
   /// 低于该宽度就收起分辨率胶囊（官网在窄容器下同样隐藏它）
   static const double _resolutionMinWidth = 300;
   static const double _comparisonResolutionMinWidth = 400;
@@ -63,34 +56,22 @@ class _PreviewInfoBarState extends ConsumerState<PreviewInfoBar> {
   static const double _transparentLabelMinWidth = 260;
 
   @override
-  void didUpdateWidget(covariant PreviewInfoBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.image?.id != widget.image?.id ||
-        oldWidget.generating != widget.generating ||
-        oldWidget.activeSeed != widget.activeSeed) {
-      _seedCleared = false;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final image = widget.image;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final image = this.image;
     final metadata = image == null
         ? null
         : ref.watch(generatedImageMetadataProvider(image));
-    final rawSeed = widget.generating
-        ? widget.activeSeed
-        : metadata?.valueOrNull?.seed;
+    final rawSeed = generating ? activeSeed : metadata?.valueOrNull?.seed;
     final seed = rawSeed != null && rawSeed >= 0 ? rawSeed : null;
     final loadingSeed =
-        seed == null && (widget.generating || metadata?.isLoading == true);
+        seed == null && (generating || metadata?.isLoading == true);
     final params = ref.read(generationParamsNotifierProvider.notifier);
     final currentParams = ref.watch(generationParamsNotifierProvider);
     final locked =
         seed != null && currentParams.seed == seed && params.isSeedLocked;
-    final width = widget.width ?? image?.width;
-    final height = widget.height ?? image?.height;
-    final onComparisonChanged = widget.onComparisonChanged;
+    final width = this.width ?? image?.width;
+    final height = this.height ?? image?.height;
+    final onComparisonChanged = this.onComparisonChanged;
     final showTransparentBackground =
         context.interactionPolicy.touchAvailable &&
         currentParams.capabilities.supportsTransparentBackground;
@@ -111,7 +92,7 @@ class _PreviewInfoBarState extends ConsumerState<PreviewInfoBar> {
 
           final compactInfo = !showResolution && onComparisonChanged == null;
           final seedPill = _SeedPill(
-            seed: _seedCleared && !locked ? null : seed,
+            seed: seed,
             loading: loadingSeed,
             locked: locked,
             compact: compactInfo,
@@ -123,7 +104,6 @@ class _PreviewInfoBarState extends ConsumerState<PreviewInfoBar> {
                     } else {
                       params.lockSeed(seed);
                     }
-                    setState(() => _seedCleared = locked);
                   },
           );
           final info = compactInfo
@@ -158,7 +138,7 @@ class _PreviewInfoBarState extends ConsumerState<PreviewInfoBar> {
                       if (onComparisonChanged != null) ...[
                         const _PillDivider(),
                         _ComparisonToggle(
-                          enabled: widget.comparisonEnabled,
+                          enabled: comparisonEnabled,
                           onChanged: onComparisonChanged,
                         ),
                       ],

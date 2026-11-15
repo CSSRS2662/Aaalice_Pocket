@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/autocomplete/autocomplete_providers.dart';
 import '../../core/autocomplete/autocomplete_settings.dart';
+import '../../core/autocomplete/completion_models.dart';
 import '../../core/autocomplete/e5_completion_source.dart';
 import '../../core/autocomplete/lexical/lexical_search_providers.dart';
 import '../../core/autocomplete/llm_translation_resolver.dart';
@@ -44,7 +45,12 @@ final autocompleteServicesProvider = Provider<AutocompleteServices>((ref) {
     tagLookupSources: [fastTags],
     dictionaryTranslations: fastTags,
     llmTranslations: ref.watch(llmTranslationResolverProvider),
-    danbooru: ref.watch(danbooruCompletionSourceProvider),
+    danbooru: ref.watch(
+      onlineCompletionSourceProvider(OnlineTagProvider.danbooru),
+    ),
+    aibooru: ref.watch(
+      onlineCompletionSourceProvider(OnlineTagProvider.aibooru),
+    ),
     libraryAliases: ref.watch(tagLibraryCompletionSourceProvider),
     semanticSource: ref.watch(e5CompletionSourceProvider),
     supplementalSources: [ref.watch(lexicalEnhancementSourceProvider)],

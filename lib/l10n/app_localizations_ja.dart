@@ -1442,6 +1442,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get agentChat_moreActions => '操作メニュー';
 
   @override
+  String get agentChat_clearContext => 'コンテキストをクリア';
+
+  @override
+  String get agentChat_clearContextConfirm =>
+      'この会話のメッセージとコンテキストをクリアして、会話をやり直します。この会話専用の指示は保持されます。';
+
+  @override
+  String get agentChat_clearContextFailed => 'コンテキストをクリアできませんでした。もう一度お試しください。';
+
+  @override
   String get agentChat_compact => 'コンテキスト圧縮';
 
   @override
@@ -4601,7 +4611,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get prompt_clearAllAlsoPositive => 'プロンプトとキャラクターも消去';
 
   @override
-  String get batchSize_title => 'バッチサイズ';
+  String get batchSettings_title => 'バッチ生成';
+
+  @override
+  String get batchSettings_count => 'バッチ数';
+
+  @override
+  String get batchSize_title => 'バッチごとの画像数';
 
   @override
   String batchSize_tooltip(int count) {
@@ -6011,6 +6027,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get localGallery_groupByDate => '日付でグループ化';
+
+  @override
+  String get localGallery_samePrompt => '同じプロンプト';
+
+  @override
+  String get localGallery_samePromptEmpty => 'プロンプトのグループがありません';
+
+  @override
+  String get localGallery_samePromptEmptyHint =>
+      'プロンプトが記録された画像をお気に入りにすると、ここでグループごとに閲覧できます。';
 
   @override
   String get slideshow_of => '件中';
@@ -12973,10 +12999,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get autocomplete_relatedTagsAction => '関連タグ';
 
   @override
-  String get autocomplete_danbooruApi => 'Danbooru オンライン補完';
+  String get autocomplete_onlineSupplement => 'オンラインタグ候補';
 
   @override
-  String get autocomplete_danbooruPrivacy => '現在の英語タグのみ送信し、プロンプト全体は送信しません';
+  String get autocomplete_onlinePrivacy =>
+      '現在の検索語または関連タグの検索に使うタグのみを、選択したサービスに送信します。';
+
+  @override
+  String get autocomplete_defaultOnlineSource => '既定のオンラインタグソース';
+
+  @override
+  String get autocomplete_onlineFallback => '失敗時に代替ソースを使用';
+
+  @override
+  String autocomplete_onlineFallbackHint(String provider) {
+    return '既定のソースが失敗し、候補がない場合は $provider を使用します。';
+  }
 
   @override
   String get autocomplete_llmTranslation => '不足する翻訳に Prompt Assistant を使用';
@@ -13085,7 +13123,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get autocomplete_cacheTitle => 'オンライン・AI キャッシュ';
 
   @override
-  String get autocomplete_clearDanbooruCache => 'Danbooru キャッシュを消去';
+  String get autocomplete_clearDanbooruCache => 'オンラインタグキャッシュを消去';
 
   @override
   String get autocomplete_clearAiCache => 'AI 翻訳キャッシュを消去';
@@ -13220,10 +13258,44 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get autocomplete_statusOnlineOnlyTooltip =>
-      'ローカル関連タグデータが未準備のため、Danbooru のオンライン結果のみ表示しています';
+      'ローカルの関連タグデータが未準備のため、オンラインソースのみを使用します。';
 
   @override
   String get autocomplete_statusDictionary => '翻訳';
+
+  @override
+  String get autocomplete_remoteRateLimited => 'リクエストの回数制限に達しました（HTTP 429）';
+
+  @override
+  String get autocomplete_remoteUnavailable => 'サービスを一時的に利用できません（HTTP 503）';
+
+  @override
+  String autocomplete_remoteHttpFailure(int status) {
+    return 'リクエストに失敗しました（HTTP $status）';
+  }
+
+  @override
+  String get autocomplete_remoteTimeout => '通信がタイムアウトしました';
+
+  @override
+  String get autocomplete_remoteDnsFailure => 'サーバーのアドレスを解決できませんでした（DNS）';
+
+  @override
+  String get autocomplete_remoteTlsFailure => '安全な接続を確立できませんでした（TLS）';
+
+  @override
+  String get autocomplete_remoteConnectionFailure => 'サーバーに接続できませんでした';
+
+  @override
+  String get autocomplete_remoteInvalidResponse => 'サーバーから予期しない応答が返されました';
+
+  @override
+  String get autocomplete_remoteCooldown => 'オンラインリクエストを一時停止しています';
+
+  @override
+  String autocomplete_remoteWait(int seconds) {
+    return 'このリクエストの再試行には $seconds 秒の待機が必要です';
+  }
 
   @override
   String get autocomplete_statusOnline => 'オンライン';
